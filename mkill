@@ -1,0 +1,8 @@
+HOST=$(uname -a | awk '{print $1}')
+
+if [[ "$HOST" == "Darwin" ]]  ; then
+	ps -A -O user | grep $1 | awk '{print "kill -9 " $1}' | sh -v 2>/dev/null
+else
+	ps -Af | grep $1 | awk '{print "kill -9 " $2}' | sh -v
+fi
+

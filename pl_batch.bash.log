@@ -1,0 +1,4 @@
+Wed Oct  7 10:26:50 EDT 2009 wsp076582wss.tch.harvard.edu | pl_batch.bash | Stage Init | (/Users/danginsburg; test.txt) pl_batch.bash -t /Users/danginsburg/tmp/test.txt -T FS -v 10 | ok
+Wed Oct  7 10:26:50 EDT 2009 wsp076582wss.tch.harvard.edu | pl_batch.bash | Stage (test.txt) Normal termination -- processed 0 / 1 | ok
+Wed Oct  7 10:31:37 EDT 2009 wsp076582wss.tch.harvard.edu | pl_batch.bash | Stage Init | (/Users/danginsburg; test.txt) pl_batch.bash -t /Users/danginsburg/tmp/test.txt -T FS -v 10 | ok
+Wed Oct  7 10:31:37 EDT 2009 wsp076582wss.tch.harvard.edu | pl_batch.bash | Stage (test.txt) Normal termination -- processed 0 / 1 | ok
