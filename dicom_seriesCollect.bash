@@ -190,6 +190,7 @@ A_dicomCopy="copying the DICOM files from source to collection"
 A_noFilesFlagged="scanning for DICOM files to flag"
 A_badLogDir="checking on the log directory"
 A_badLogFile="checking on the log file"
+A_badOutDir="checking on <outputOverride>"
 
 # Error messages
 EM_fileCheck="it seems that a dependency is missing."
@@ -204,6 +205,7 @@ EM_dicomCopy="some copy error ocurred. Do you have sufficient rights and space?"
 EM_noFilesFlagged="I couldn't find any files in target series."
 EM_badLogDir="I couldn't access the <logDir>. Does it exist?"
 EM_badLogFile="I couldn't access a specific log file. Does it exist?"
+EM_badOutDir="I couldn't create the <outputOverride> dir."
 
 # Error codes
 EC_fileCheck=1
@@ -218,6 +220,7 @@ EC_dicomCopy=17
 EC_noFilesFlagged=30
 EC_badLogDir=20
 EC_badLogFile=21
+EC_badOutDir=22
 
 # Defaults
 D_whatever=
@@ -516,8 +519,8 @@ dirExist_check $G_LOGDIR "created" || mkdir $G_LOGDIR || fatal badLogDir
 
 if (( Gb_useOverrideOut )) ; then
     statusPrint	"Checking on <outputOverride>"
-    G_OUTDIR=$(echo "$G_OUTDIR" | tr ' ' '-')
-    dirExist_check $G_OUTDIR || mkdir $G_OUTDIR || fatal badOutDir
+    G_OUTDIR=$(echo $G_OUTDIR | tr ' ' '-' | tr -d '"')
+    dirExist_check $G_OUTDIR "not found - creating" || mkdir "${G_OUTDIR}" || fatal badOutDir
     cd $G_OUTDIR >/dev/null
     G_OUTDIR=$(pwd)
     cd $topDir
@@ -530,6 +533,7 @@ for file in $REQUIREDFILES ; do
 done
 
 statusPrint	"Checking on <outputRootDir>"
+G_OUTROOTDIR=$(echo $G_OUTROOTDIR | tr -d '"')
 dirExist_check $G_OUTROOTDIR "not found - creating"		\
 		|| mkdir -p $G_OUTROOTDIR			\
 	 	|| fatal noOutRootDir

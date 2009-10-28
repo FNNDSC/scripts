@@ -50,7 +50,8 @@ G_IMAGEMODEL="DTI"
 G_RECONALG="fact"
 G_FALOWERTHRESHOLD="-x"
 
-G_CLUSTERDIR=${G_OUTDIR}/seychelles
+G_CLUSTERNAME=seychelles
+G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
 G_SCHEDULELOG="schedule.log"
 G_MAILTO="rudolph@nmr.mgh.harvard.edu"
 
@@ -576,32 +577,34 @@ while getopts v:D:d:B:A:F:I:kEL:O:R:o:fS:t:cC:g:GUb:M:m option ; do
 		E) 	Gb_useExpertOptions=1		;;
 		k)	Gb_skipEddyCurrentCorrection=1	;;
 		L)	G_LOGDIR=$OPTARG		;;
-                O) 	Gb_useOverrideOut=1	
-			G_OUTDIR=$OPTARG                ;;
-                R)      G_DIRSUFFIX=$OPTARG             ;;
+        O) 	Gb_useOverrideOut=1	
+            G_OUTDIR=$OPTARG  
+			G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}        ;;
+        R)  G_DIRSUFFIX=$OPTARG             ;;
 		o)	G_OUTSUFFIX=$OPTARG		;;
 		g)	Gb_forceGradientFile=1	
 			G_GRADIENTFILE=$OPTARG		;;
-                B)      Gb_b0override=1
-                        Gi_b0vols=$OPTARG               ;;
-                I)      G_IMAGEMODEL=$OPTARG            ;;
-                A)      G_RECONALG=$OPTARG              ;;
-                F)      Gb_useFA=1
-                        G_FALOWERTHRESHOLD=$OPTARG      ;;
+        B)  Gb_b0override=1
+            Gi_b0vols=$OPTARG               ;;
+        I)  G_IMAGEMODEL=$OPTARG            ;;
+        A)  G_RECONALG=$OPTARG              ;;
+        F)  Gb_useFA=1
+            G_FALOWERTHRESHOLD=$OPTARG      ;;
 		G)	Gb_GEGradientInlineFix=0	;;
 		S)	G_DICOMSERIESLIST=$OPTARG	;;
 		f) 	Gb_forceStage=1			;;
 		t)	G_STAGES=$OPTARG		;;
 		c)	Gb_runCluster=1			;;
-		C)	G_CLUSTERDIR=$OPTARG		;;
+		C)	G_CLUSTERNAME=$OPTARG
+			G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}       ;;
 		U)	Gb_useDiffUnpack=0		;;
 		b)	Gi_bValue=$OPTARG		;;
-                M)      Gb_mailStd=1
-                        Gb_mailErr=1
-                        G_MAILTO=$OPTARG                ;;
-                m)      Gb_mailStd=1
-                        Gb_mailErr=0
-                        G_MAILTO=$OPTARG                ;;
+        M)  Gb_mailStd=1
+            Gb_mailErr=1
+            G_MAILTO=$OPTARG                ;;
+        m)  Gb_mailStd=1
+            Gb_mailErr=0
+            G_MAILTO=$OPTARG                ;;
 		\?) synopsis_show 
 		    exit 0;;
 	esac
@@ -685,8 +688,8 @@ G_LOGDIR=$(echo $G_LOGDIR | sed 's|/local_mount||g')
 ## Any output dir overrides?
 if (( Gb_useOverrideOut )) ; then
     statusPrint	"Checking on <outputOverride>"
-    G_OUTDIR=$(echo "$G_OUTDIR" | tr ' ' '-')
-    dirExist_check $G_OUTDIR || mkdir $G_OUTDIR || fatal badOutDir
+    G_OUTDIR=$(echo "$G_OUTDIR" | tr ' ' '-' | tr -d '"')
+    dirExist_check $G_OUTDIR || mkdir "$G_OUTDIR" || fatal badOutDir
     cd $G_OUTDIR >/dev/null
     G_OUTDIR=$(pwd)
 fi
@@ -740,13 +743,13 @@ if (( ${barr_stage[1]} )) ; then
     STAGE=1-$STAGE1PROC
     EXOPTS=$(eval expertOpts_parse $STAGE1PROC)
     if (( Gb_useOverrideOut )) ;  then
-	EXOPTS="$EXOPTS -O \"$G_OUTDIR\"/stage-1-dicomInput"
+		EXOPTS="$EXOPTS -R \"$G_OUTDIR\""
     fi
     TARGETSPEC=""
     if (( Gb_useDICOMFile )) ; then
-	TARGETSPEC="-d $G_DICOMINPUTFILE"
+		TARGETSPEC="-d $G_DICOMINPUTFILE"
     else
-	TARGETSPEC="-S ^${G_DICOMSERIESLIST}^"
+		TARGETSPEC="-S ^${G_DICOMSERIESLIST}^"
     fi
     STAGECMD="$STAGE1PROC				\
 		-v 10 -D "$G_DICOMINPUTDIR"		\
@@ -763,16 +766,12 @@ if (( ${barr_stage[1]} )) ; then
 fi
 
 # Check on the stage 1 logs to determine the actual output directory
-if (( !Gb_useOverrideOut )) ; then
-    LOGFILE=${G_LOGDIR}/${STAGE1PROC}.log
-    statusPrint "Checking if stage 1 output log exists"
-    fileExist_check $LOGFILE || fatal badLogFile
-    STAGE1DIR=$(cat $LOGFILE | grep Collection | tail -n 1 	|\
-		awk -F \| '{print $4}'				|\
-		sed 's/^[ \t]*//;s/[ \t]*$//')
-else
-    STAGE1DIR="${G_OUTDIR}/stage-1-dicomInput"
-fi
+LOGFILE=${G_LOGDIR}/${STAGE1PROC}.log
+statusPrint "Checking if stage 1 output log exists"
+fileExist_check $LOGFILE || fatal badLogFile
+STAGE1DIR=$(cat $LOGFILE | grep Collection | tail -n 1 	|\
+	awk -F \| '{print $4}'				|\
+	sed 's/^[ \t]*//;s/[ \t]*$//')
 
 if (( ! ${#STAGE1DIR} )) ; then fatal dependencyStage; fi
 

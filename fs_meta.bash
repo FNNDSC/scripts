@@ -35,7 +35,8 @@ G_DICOMINPUTFILE="-x"
 G_DICOMSERIESLIST="3D SPGR;MPRAGE;t1_mpr_ns_sag_1mm_iso"
 G_RECONALLARGS=""
 
-G_CLUSTERDIR=${G_OUTDIR}/seychelles
+G_CLUSTERNAME=seychelles
+G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
 G_SCHEDULELOG="schedule.log"
 G_MAILTO="rudolph@nmr.mgh.harvard.edu"
 
@@ -403,22 +404,24 @@ while getopts v:D:d:EF:L:O:R:o:ft:S:cC:M:m: option ; do
 		E) 	Gb_useExpertOptions=1		        ;;
                 F)      G_RECONALLARGS=$OPTARG                  ;;
 		L)	G_LOGDIR=$OPTARG		        ;;
-                O) 	Gb_useOverrideOut=1	
-			G_OUTDIR=$OPTARG                        ;;
-                R)      G_DIRSUFFIX=$OPTARG                     ;;
+        O) 	Gb_useOverrideOut=1	
+            G_OUTDIR=$OPTARG  
+			G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}        ;;
+        R)  G_DIRSUFFIX=$OPTARG                     ;;
 		o)	G_OUTSUFFIX=$OPTARG		        ;;
 		S)	Gb_useDICOMSeries=1
 			G_DICOMSERIESLIST=$OPTARG	        ;;
 		f) 	Gb_forceStage=1			        ;;
 		t)	G_STAGES=$OPTARG		        ;;
 		c)	Gb_runCluster=1			        ;;
-		C)	G_CLUSTERDIR=${G_OUTDIR}/$OPTARG        ;;
-                M)      Gb_mailStd=1
-                        Gb_mailErr=1
-                        G_MAILTO=$OPTARG                        ;;
-                m)      Gb_mailStd=1
-                        Gb_mailErr=0
-                        G_MAILTO=$OPTARG                        ;;
+		C)	G_CLUSTERNAME=$OPTARG
+			G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}       ;;
+        M)  Gb_mailStd=1
+            Gb_mailErr=1
+            G_MAILTO=$OPTARG                        ;;
+        m)  Gb_mailStd=1
+            Gb_mailErr=0
+            G_MAILTO=$OPTARG                        ;;
 		\?) synopsis_show 
 		    exit 0;;
 	esac
@@ -455,8 +458,8 @@ fi
 
 if (( Gb_useOverrideOut )) ; then
     statusPrint	"Checking on <outputOverride>"
-    G_OUTDIR=$(echo "$G_OUTDIR" | tr ' ' '-')
-    dirExist_check $G_OUTDIR "created" || mkdir $G_OUTDIR || fatal badOutDir
+    G_OUTDIR=$(echo "$G_OUTDIR" | tr ' ' '-' | tr -d '"')
+    dirExist_check $G_OUTDIR "created" || mkdir "$G_OUTDIR" || fatal badOutDir
     cd $G_OUTDIR >/dev/null
     G_OUTDIR=$(pwd)
     cd $topDir
@@ -506,7 +509,7 @@ if (( ${barr_stage[1]} )) ; then
     STAGE=1-$STAGE1PROC
     EXOPTS=$(eval expertOpts_parse $STAGE1PROC)
     if (( Gb_useOverrideOut )) ;  then
-	EXOPTS="$EXOPTS -O \"$G_OUTDIR\"/stage-1-dicomInput"
+		EXOPTS="$EXOPTS -R \"$G_OUTDIR\""
     fi
     if (( Gb_useDICOMFile )) ; then
 	TARGETSPEC="-d $G_DICOMINPUTFILE"
@@ -529,16 +532,12 @@ if (( ${barr_stage[1]} )) ; then
 fi
 
 # Check on the stage 1 logs to determine the actual output directory
-if (( !Gb_useOverrideOut )) ; then
-    LOGFILE=${G_LOGDIR}/${STAGE1PROC}.log
-    statusPrint "Checking if stage 1 output log exists"
-    fileExist_check $LOGFILE || fatal badLogFile
-    STAGE1DIR=$(cat $LOGFILE | grep Collection | tail -n 1 	|\
-		awk -F \| '{print $4}'				|\
-		sed 's/^[ \t]*//;s/[ \t]*$//')
-else
-    STAGE1DIR="${G_OUTDIR}/stage-1-dicomInput"
-fi
+LOGFILE=${G_LOGDIR}/${STAGE1PROC}.log
+statusPrint "Checking if stage 1 output log exists"
+fileExist_check $LOGFILE || fatal badLogFile
+STAGE1DIR=$(cat $LOGFILE | grep Collection | tail -n 1 	|\
+	awk -F \| '{print $4}'				|\
+	sed 's/^[ \t]*//;s/[ \t]*$//')
 
 if (( ! ${#STAGE1DIR} )) ; then fatal dependencyStage; fi
 
