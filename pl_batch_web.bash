@@ -11,7 +11,7 @@
 # $2 = Scripts directory
 # $3 = Command-line arguments to fs_meta.bash (in quotes)
 # $4 = Working directory to execute from
-# TODO : Clean this up to use Rudolph's common.bash framework
+# $5 = basename of log files
 
 PKGDIR=$1
 FSLDIR=$PKGDIR/fsl
@@ -25,4 +25,4 @@ export FSLDIR PATH
 echo $PATH
 
 cd $4
-pl_batch.bash $3 > /home/danginsburg/pl_batch.bash.std 2> /home/danginsburg/pl_batch.bash.err
+pl_batch.bash $3 > $5.std 2> $5.err
