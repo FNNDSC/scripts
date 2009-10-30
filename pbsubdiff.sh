@@ -9,7 +9,7 @@
 #
 
 # "include" the set of common script functions
-source /homes/9/rudolph/arch/scripts/common.bash
+source common.bash
 
 G_SCHEDULEFILE="-x"
 G_PARENTID="00000"
