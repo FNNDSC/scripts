@@ -135,7 +135,7 @@
 #
 
 # includes
-lappend auto_path ~/src/devel/tcl_packages
+lappend auto_path [file dirname $argv0]/tcl_packages
 package require parval
 package require misc
 
