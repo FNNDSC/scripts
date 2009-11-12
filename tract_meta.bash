@@ -611,6 +611,7 @@ while getopts v:D:d:B:A:F:I:kEL:O:R:o:fS:t:cC:g:GUb:M:m option ; do
 done
 
 verbosity_check
+topDir=$(pwd)
 echo ""
 cprint  "hostname"      "[ $(hostname) ]"
 
