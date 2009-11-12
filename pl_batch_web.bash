@@ -14,6 +14,7 @@
 # $5 = basename of log files
 
 # Set freesurfer home
+export FREESURFER_HOME=/usr/local/freesurfer/dev
 PKGDIR=$1
 FSLDIR=$PKGDIR/fsl
 FSDIR=$PKGDIR/freesurfer
