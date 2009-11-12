@@ -490,8 +490,8 @@ function cluster_schedule
 	CLUSTERSH=${G_LOGDIR}/tract-cluster.sh
 	echo "#!/bin/bash" 					> $CLUSTERSH
 	echo "export PATH=$PATH"				>> $CLUSTERSH	
-	echo "source /usr/local/freesurfer/dev/SetUpFreeSurfer.sh" >>$CLUSTERSH
-	echo "source /space/heisenberg/1/users/opt/packages/fsl/etc/fslconf/fsl.sh" >> $CLUSTERSH
+	echo "source $FREESURFER_HOME/SetUpFreeSurfer.sh" >>$CLUSTERSH
+	echo "source /usr/share/fsl/etc/fslconf/fsl.sh" >> $CLUSTERSH
 	echo "export SUBJECTS_DIR=$SUBJECTS_DIR"		>> $CLUSTERSH	
 	echo "$STAGECMD" 					>> $CLUSTERSH
 	chmod 755 $CLUSTERSH
