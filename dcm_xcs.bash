@@ -291,7 +291,15 @@ if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE ]] ; then
 	cat ${G_DICOMROOT}/dcm_MRID_age.log | awk -f /local_mount/space/osx1927/1/users/dicom/repo/trunk/scripts/dayAge_calc.awk  | sort -n -k 3 > ${G_DICOMROOT}/dcm_MRID_ageDays.log
 
 	# Also, run mri_info
-	$G_MRI_INFO_BATCH -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR} 
+	STAGE1PROC=mri_info_batch.bash
+	statusPrint "$(date) | Processing STAGE - mri_info_batch.bash | START" "\n"
+    STAGE=1-$STAGE1PROC
+    STAGECMD="$STAGE1PROC	\
+              -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}"
+    stage_run "$STAGE" "$STAGECMD" 					\
+			  "${G_LOGDIR}/${STAGE1PROC}.std"		\
+              "${G_LOGDIR}/${STAGE1PROC}.err"
+    statusPrint "$(date) | Processing STAGE -  mri_info_batch.bash | END" "\n"
 	
 	echo "Appened to dcm_MRID*.log: $MRID $AGE $G_OUTPUTDICOMDIR" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE
 fi
