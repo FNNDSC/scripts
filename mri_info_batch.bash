@@ -217,7 +217,7 @@ if [[ "$G_LOGDIR" == "-x" ]] ; then
     G_LOGDIR=${G_DICOMINPUTDIR}/mri_info${G_DIRSUFFIX}
 fi
 dirExist_check $G_LOGDIR "created" || mkdir $G_LOGDIR || fatal badLogDir
-G_LOGDIR=$(echo $G_LOGDIR | sed 's|/local_mount||g')
+#G_LOGDIR=$(echo $G_LOGDIR | sed 's|/local_mount||g')
 
 statusPrint	"Checking for SUBJECTS_DIR env variable"
 b_subjectsDir=$(set | grep SUBJECTS_DIR | wc -l)
