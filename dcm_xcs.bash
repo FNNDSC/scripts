@@ -288,7 +288,7 @@ if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE ]] ; then
 	printf "%55s%50s%10s\n" "$G_OUTPUTDICOMDIR" "$MRID" "$AGE" >> ${G_DICOMROOT}/dcm_MRID_age.log
 	
 	# Finally regenerate dcm_MRID_ageDays.log
-	cat ${G_DICOMROOT}/dcm_MRID_age.log | awk -f /Users/dicom/arch/scripts/dayAge_calc.awk  | sort -n -k 3 > ${G_DICOMROOT}/dcm_MRID_ageDays.log
+	cat ${G_DICOMROOT}/dcm_MRID_age.log | awk -f /local_mount/space/osx1927/1/users/dicom/repo/trunk/scripts/dayAge_calc.awk  | sort -n -k 3 > ${G_DICOMROOT}/dcm_MRID_ageDays.log
 
 	# Also, run mri_info
 	$G_MRI_INFO_BATCH -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR} 
