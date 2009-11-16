@@ -10,6 +10,8 @@
 
 # "include" the set of common script functions
 source common.bash
+declare -i Gb_forceStage=1
+
 source /opt/arch/Darwin/packages/freesurfer/dev/SetUpFreeSurfer.sh
 export DCMDICTPATH=/opt/local/lib/dicom.dic
 
