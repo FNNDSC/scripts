@@ -9,23 +9,22 @@
 #
 
 # "include" the set of common script functions
-source /homes/9/rudolph/arch/scripts/common.bash
-source /usr/local/freesurfer/dev/SetUpFreeSurfer.sh
+source common.bash
+source /opt/arch/Darwin/packages/freesurfer/dev/SetUpFreeSurfer.sh
+export DCMDICTPATH=/opt/local/lib/dicom.dic
 
 let b_alreadyProcessed=0
 
 MAILMSG="mail.msg"
 G_LOGDIR="/tmp"
-G_DICOMROOT=/space/kaos/5/users/dicom/files
-G_DICOMROOT=/space/kaos/1/users/dicom/files
+G_DICOMROOT=/local_mount/space/osx1927/1/users/dicom/files
 G_OUTPUTDICOMDIR="-x"
 G_OUTPUTDICOMFILE="-x"
 G_CALLINGENTITY="-x"
 G_CALLEDENTITY="-x"
 
-G_DCM_MKINDX="/homes/9/rudolph/arch/scripts/dcm_mkIndx.bash -a"
-G_DCM_BDAGE="/homes/9/rudolph/arch/scripts/dcm_bdayAgeGet.bash"
-G_DCM_CALLBACK="/homes/9/rudolph/arch/scripts/track_meta.bash"
+G_DCM_MKINDX="dcm_mkIndx.bash -a"
+G_DCM_BDAGE="dcm_bdayAgeGet.bash"
 
 G_SYNOPSIS="
 
@@ -176,8 +175,8 @@ while getopts v:p:f:a:c:l:d: option ; do
 	in
 		v) Gi_verbose=$OPTARG 					;;
 		p) G_OUTPUTDICOMDIR=$OPTARG				;;
-                f) G_OUTPUTDICOMFILE=$OPTARG				;;
-                a) G_CALLINGENTITY=$OPTARG				;;
+		f) G_OUTPUTDICOMFILE=$OPTARG				;;
+		a) G_CALLINGENTITY=$OPTARG				;;
 		c) G_CALLEDENTITY=$OPTARG				;;
 		d) G_DICOMROOT=$OPTARG					;;
 		l) G_LOGDIR=$OPTARG					;;
@@ -234,8 +233,8 @@ if (( ${#DCM_FILE} )) ; then
 	INDEX2=$(eval $G_DCM_BDAGE $DCM_FILE 2>/dev/null)
 fi
 
-TO="rudolph@nmr.mgh.harvard.edu,ellen@nmr.mgh.harvard.edu,neel@nmr.mgh.harvard.edu,hagmann@nmr.mgh.harvard.edu,orapalino@partners.org"
-#TO="rudolph@nmr.mgh.harvard.edu,JOSAPHAT@HELIX.MGH.HARVARD.EDU"
+#TO="rudolph@nmr.mgh.harvard.edu,ellen@nmr.mgh.harvard.edu,neel@nmr.mgh.harvard.edu,hagmann@nmr.mgh.harvard.edu,orapalino@partners.org"
+TO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
 #TO="rudolph@nmr.mgh.harvard.edu"
 SUBJ="New DICOM Series Received"
 
@@ -264,7 +263,7 @@ $INDEX2
 
 if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG ]] ; then
 	cp /tmp/$MAILMSG ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
-	/bin/mail -s "$SUBJ" "$TO" <${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
+	/usr/bin/mail -s "$SUBJ" "$TO" <${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
 else
 	rm -f /tmp/storescp*
 fi
