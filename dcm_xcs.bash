@@ -16,6 +16,7 @@ export DCMDICTPATH=/opt/local/lib/dicom.dic
 let b_alreadyProcessed=0
 
 MAILMSG="mail.msg"
+LOGGENFILE="loggenfile.txt"
 G_LOGDIR="/tmp"
 G_DICOMROOT=/local_mount/space/osx1927/1/users/dicom/files
 G_OUTPUTDICOMDIR="-x"
@@ -25,6 +26,7 @@ G_CALLEDENTITY="-x"
 
 G_DCM_MKINDX="dcm_mkIndx.bash -a"
 G_DCM_BDAGE="dcm_bdayAgeGet.bash"
+G_MRI_INFO_BATCH="mri_info_batch.bash"
 
 G_SYNOPSIS="
 
@@ -272,8 +274,27 @@ echo "$INDEX1" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt
 if (( ${#INDEX2} )) ; then
   echo "$INDEX2" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt
 fi
-
 chmod 2775 ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}
+
+# Append the new entry to the dcm_MRID*.log if it has not yet been done
+if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE ]] ; then
+	
+	# First get the MRID to add entry to dcm_MRID.log
+	MRID=$(grep ID  ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt | awk '{print $3}')
+	printf "%-55s%25s\n" "$G_OUTPUTDICOMDIR" "$MRID" >> ${G_DICOMROOT}/dcm_MRID.log
+	
+	# Now get the Age to add to dcm_MRID_age.log
+	AGE=$(dcm_bdayAgeGet.bash | grep Age | awk '{print $5}' | tr '\n' ' ')
+	printf "%55s%50s%10s\n" "$G_OUTPUTDICOMDIR" "$MRID" "$AGE" >> ${G_DICOMROOT}/dcm_MRID_age.log
+	
+	# Finally regenerate dcm_MRID_ageDays.log
+	cat ${G_DICOMROOT}/dcm_MRID_age.log | awk -f /Users/dicom/arch/scripts/dayAge_calc.awk  | sort -n -k 3 > ${G_DICOMROOT}/dcm_MRID_ageDays.log
+
+	# Also, run mri_info
+	$G_MRI_INFO_BATCH -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR} 
+	
+	echo "Appened to dcm_MRID*.log: $MRID $AGE $G_OUTPUTDICOMDIR" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE
+fi
 
 STAGE="Normal termination"
 stage_stamp "$STAGE" $STAMPLOG
