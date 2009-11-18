@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # "include" the set of common script functions
-source ~/arch/scripts/common.bash
+source common.bash
 
 declare -i Gb_customStorescu=0
 declare -i Gi_verbose=0
