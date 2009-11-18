@@ -86,7 +86,7 @@ if ($dcmmsecs =~ /[0-9]/) {
   $fname = sprintf("%d-%06d-%06d.dcm",$dcmmsecs,
 	$dcmhead{'0020,0011'},$dcmhead{'0020,0013'});
 } else {
-  $fname = sprintf("%06d-%06d.dcm",
+  $fname = sprintf("0-%06d-%06d.dcm",
 	$dcmhead{'0020,0011'},$dcmhead{'0020,0013'});
 }
 if ( -f "$outdir/$newdir/$fname" ) {
