@@ -661,6 +661,7 @@ cprint		"MRID"		"[ $MRID ]"
 
 ## Did the user provide a gradient table override?
 if (( Gb_forceGradientFile )) ; then
+    G_GRADIENTFILE=$(echo "$G_GRADIENTFILE" | tr -d '"')
     statusPrint "Checking on <gradientTableFile>"
     fileExist_check $G_GRADIENTFILE || fatal noGradientFile
 fi
