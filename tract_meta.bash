@@ -337,6 +337,7 @@ A_noDicomFile="checking on input DICOM directory / file"
 A_noDicomDirArg="checking on -d <dicomInputDir> argument"
 A_unknownManufacturer="checking on the diffusion data"
 A_ge_diffusionProcess="running ge_diffusionProcess.bash"
+A_siemens_diffusionProcess="running siemens_diffusionProcess.bash"
 A_reconAlg="checking on the reconstruction algorithm"
 A_imageModel="checking on the image model"
 A_fa="checking on the FA argument "
@@ -356,6 +357,7 @@ EM_noDicomFile="I couldn't find any DICOM *dcm files. Do any exist?"
 EM_noDicomDirArg="it seems as though you didn't specify a -D <dicomInputDir>."
 EM_unknownManufacturer="the manufacturer field for the DICOM data is unknown."
 EM_ge_diffusionProcess="some internal error occurred."
+EM_siemens_diffusionProcess="some internal error occurred."
 EM_reconAlg="must be either 'fact' or 'rk2'."
 EM_imageModel="must be either 'hardi' or 'dti'."
 EM_fa="No <lth> has been specified."
@@ -375,9 +377,11 @@ EC_noDicomDirArg=51
 EC_noDicomFile=52
 EC_unknownManufacturer=60
 EC_ge_diffusionProcess=61
+EC_siemens_diffusionProcess=62
 EC_reconAlg=70
 EC_imageModel=71
 EC_fa=80
+
 
 # Defaults
 D_whatever=
@@ -618,7 +622,7 @@ cprint  "hostname"      "[ $(hostname) ]"
 ## Check on script preconditions
 REQUIREDFILES="common.bash dcm2trk.bash tract_slice.bash dicom_dirSend.bash \
 		dicom_seriesCollect.bash mri_info $XVFB dcm_mkIndx.bash	\
-		ge_diffusionProcess.bash"
+		ge_diffusionProcess.bash siemens_diffusionProcess.bash"
 
 cprint	"Use diff_unpack for dcm->nii"	"[ $Gb_useDiffUnpack ]"
 if (( Gb_useDiffUnpack )) ; then
@@ -795,12 +799,44 @@ if (( ${barr_stage[2]} )) ; then
     case $G_MANUFACTURER
     in
       "Siemens" )
-#         DIFFUSIONDICOM=$(ls -1 $STAGE2IN | head -n 1)
         statusPrint "Extracting meta data: mri_info"
         DIFFUSIONINFO=$(mri_info ${STAGE2IN}/$DIFFUSIONDICOM 2>/dev/null)
 	if (( Gb_forceGradientFile )) ; then test 1==1; fi
         ret_check $? || fatal mri_info
-# 	DIFFUSIONINPUT=$STAGE2IN/$DIFFUSIONDICOM
+        
+        # There are two possibilities for Siemens scans:
+        #  1. mri_info knows about this type of Siemens scan
+        #     and grabs the gradient table from the freesurfer
+        #     MGH gradient table
+        #  OR
+        #  2. mri_info does not know about this type of Siemens scan,
+        #     in which case we need to extract the gradients ourselves
+        #     using dcm2nii. This next test determines whether the
+        #     gradient file was automatically detected and if not
+        #     the gradients will be extracted manually.   
+        if (( !Gb_forceGradientFile )) ; then
+        	G_GRADIENTFILE=$(echo "$DIFFUSIONINFO" 				|\
+				 grep GradFile | awk '{print $2}')
+		if [[ "$G_GRADIENTFILE" == "" ]] ; then
+			statusPrint "Extracting meta data: siemens_diffusionProcess.bash"
+			TARGETSPEC=""
+        		if (( Gb_useDICOMFile )) ; then
+            			TARGETSPEC="-d $G_DICOMINPUTFILE"
+        		fi
+			siemens_diffusionProcess.bash -D $G_DICOMINPUTDIR 		   \
+			    $TARGETSPEC                                                    \
+                            -L $G_LOGDIR                                                   \
+                             >${G_LOGDIR}/${STAGE2PROC}-siemens_diffusionProcess.bash.std       \
+	                    2>${G_LOGDIR}/${STAGE2PROC}-siemens_diffusionProcess.bash.err
+			DIFFUSIONINFO=$(cat                                                \
+                            ${G_LOGDIR}/${STAGE2PROC}-siemens_diffusionProcess.bash.std)
+			ret_check $? || fatal siemens_diffusionProcess
+        	fi
+        	if (( !Gb_useDiffUnpack )) ; then
+			DIFFUSIONINPUT=$(find $G_DICOMINPUTDIR -name "*.nii.gz" | head -n 1)
+		fi
+	fi
+        
         # Add oblique correction to the dti_recon expertOpts file
         DTIOPT=${STAGE2DIR}/dti_recon.opt
 	if [[ ! -f $DTIOPT ]] ; then

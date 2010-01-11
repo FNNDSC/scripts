@@ -532,14 +532,16 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file || fatal fileCheck
 done
 
-statusPrint	"Checking on <outputRootDir>"
-G_OUTROOTDIR=$(echo $G_OUTROOTDIR | tr -d '"')
-dirExist_check $G_OUTROOTDIR "not found - creating"		\
-		|| mkdir -p $G_OUTROOTDIR			\
-	 	|| fatal noOutRootDir
-cd $G_OUTROOTDIR >/dev/null
-G_OUTROOTDIR=$(pwd)
-cd $topDir >/dev/null
+if (( ! $Gb_useOverrideOut )) ; then
+	statusPrint	"Checking on <outputRootDir>"
+	G_OUTROOTDIR=$(echo $G_OUTROOTDIR | tr -d '"')
+	dirExist_check $G_OUTROOTDIR "not found - creating"		\
+			|| mkdir -p $G_OUTROOTDIR			\
+		 	|| fatal noOutRootDir
+	cd $G_OUTROOTDIR >/dev/null
+	G_OUTROOTDIR=$(pwd)
+	cd $topDir >/dev/null
+fi
 STAMPLOG=${G_LOGDIR}/${G_SELF}.log
 
 # Convert a user specified list to table

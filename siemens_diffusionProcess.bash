@@ -12,7 +12,6 @@ declare -i Gb_runCluster=0
 declare -i b_GE=0
 declare -i b_STAGEDONE=0
 declare -i Gb_useDICOMFile=0
-declare -i Gb_fixGradientTable=0
 
 G_LOGDIR="-x"
 G_OUTDIR="/space/kaos/5/users/dicom/postproc"
@@ -26,11 +25,11 @@ G_SYNOPSIS="
 
  NAME
 
-	ge_diffusionProcess.bash
+	siemens_diffusionProcess.bash
 
  SYNOPSIS
 
-       	ge_diffusionProcess.bash					\\
+       	siemens_diffusionProcess.bash					\\
 				[-G]					\\
 				[-D <dicomInputDir>]			\\
 				[-d <dicomSeriesFile>]			\\
@@ -43,8 +42,8 @@ G_SYNOPSIS="
 
  DESCRIPTION
 
-        'ge_diffusionProcess.bash' performs processing on diffusion
-	sequences captured on GE machines. It's main purpose is to 
+        'siemens_diffusionProcess.bash' performs processing on diffusion
+	sequences captured on Siemens machines. It's main purpose is to 
 	extract a gradient table from the diffusion sequence. This 
 	gradient file is saved to the <dicomInputDir> and named
 	<MRID>_gradient.txt.
@@ -59,7 +58,7 @@ G_SYNOPSIS="
 	outputs from previous stages. Some rudimentary condition checking
 	is performed.
 
-		1	-	Collect the GE diffusion sequence.
+		1	-	Collect the Siemens diffusion sequence.
 		2	-	Convert to nifti using 'dcm2nii' (and as
 				a side effect generate the bval and bvec
 				tables).
@@ -80,12 +79,6 @@ G_SYNOPSIS="
 	the name of a file in the sequence to process.
 
  NOTE
-	o GE sequences require the 'Z' direction to be multiplied by -1, i.e.
-	  [ X Y -Z ]
-	o 28 (and 17) direction tables required an additional swap of X/Y
-	  followed by a sign toggle on the new Y, i.e. [ Y -X -Z].
-	o 28 (and 17) direction scans also had FA maps that had wrong
-	  directional colour coding.
 
  PRECONDITIONS
 
@@ -99,11 +92,6 @@ G_SYNOPSIS="
 
         -v (optional)
         Verbose output.
-
-	-G (Optional: Default $Gb_fixGradientTable)
-	If specified, attempt an in-line fixing of the final gradient table. This
-	will sign toggle the Z direction, and for 28 and 17 direction tables, 
-	perform a [ Y -X -Z ].
 
 	-D <dicomInputDir>
 	The directory to be scanned for specific diffusion sequences. This
@@ -169,7 +157,7 @@ A_bvConvert="checking on bval/bvec tables"
 A_noCollection="checking for DIFFUSION sequences"
 
 # Error messages
-EM_manufacturer="this doesn't seem to be a GE sequence."
+EM_manufacturer="this doesn't seem to be a Siemens sequence."
 EM_fileCheck="it seems that a dependency is missing."
 EM_metaLog="it seems as though this stage has already run.\n\tYou can force execution with a '-f'"
 EM_badLogDir="I couldn't access the <logDir>. Does it exist?"
@@ -252,42 +240,6 @@ function MRID_find
     echo $MRID
 }
 
-function gradientTable_fix
-{
-    # ARGS
-    # $1                        gradient table
-    #
-    # DESC
-    # Attempts and in-line correction of the gradient
-    # table. Typically this simply means toggling the sign
-    # in the third column.
-    # 
-    # 	[ X  Y	-Z]
-    # 
-    # For 28 and 17 direction tables, an additional swap
-    # of X and Y sign toggle is required:
-    # 
-    # 	[ Y -X -Z]
-    #
-    # POSTCONDITIONS
-    # o Original gradient table is backed up to <table>.bak
-    # 
-
-    local gradientTable=$1
-    declare -i i_gradientDirs=$nDIR    
-    
-    cp $gradientTable $gradientTable.bak
-    if (( i_gradientDirs == 28 || i_gradientDirs == 17 )) ; then
-        cat $gradientTable.bak						|\
-	 awk '{printf("%10.6f\t%10.6f\t%10.6f\n", $2, -1*$1, -1*$3)}'	\
-	> $gradientTable
-    else
-        cat $gradientTable.bak						|\
-	 awk '{printf("%10.6f\t%10.6f\t%10.6f\n", $1, $2, -1*$3)}'	\
-	> $gradientTable
-    fi
-    return 0
-}
 
 ###\\\
 # Process command options
@@ -297,7 +249,6 @@ while getopts v:D:EL:O:ft:S:i:d:G option ; do
 	case "$option"
 	in
 		v) 	Gi_verbose=$OPTARG		;;
-		G)	Gb_fixGradientTable=1		;;
 		D)	G_DICOMINPUTDIR=$OPTARG		;;
 		d)	Gb_useDICOMFile=1		
 			G_DICOMINPUTFILE=$OPTARG	;;
@@ -338,16 +289,16 @@ statusPrint	"Checking on <dicomInputDir>/<dcm> file"
 DICOMTOPFILE=$(ls -1 ${G_DICOMINPUTDIR}/*1.dcm 2>/dev/null | head -n 1)
 fileExist_check $DICOMTOPFILE || fatal noDicomFile
 
-G_OUTDIR=$G_DICOMINPUTDIR/GE_DIFFUSION
+G_OUTDIR=$G_DICOMINPUTDIR/SIEMENS_DIFFUSION
 statusPrint	"Querying <dicomInputDir> for sequences"
 G_DCM_MKINDX=$(dcm_mkIndx.bash -i $DICOMTOPFILE)
 ret_check $?
 MANUFACTURER=$(echo "$G_DCM_MKINDX" 	|\
 		 grep Manu 		|\
 		 awk '{for(i=2; i<=NF; i++) printf("%s ", $i); printf("\n");}')
-declare -i b_GE=0
-b_GE=$(echo "$MANUFACTURER" | grep GE | wc -l)
-if (( !b_GE )) ; then fatal manufacturer ; fi
+declare -i b_SIEMENS=0
+b_SIEMENS=$(echo "$MANUFACTURER" | grep -i SIEMENS | wc -l)
+if (( !b_SIEMENS )) ; then fatal manufacturer ; fi
 
 statusPrint	"Checking on <logDir>"
 if [[ "$G_LOGDIR" == "-x" ]] ; then
@@ -485,11 +436,6 @@ if (( !${#nB0} )) ; then nB0="Unknown" ; fi
 cprint	"B0 Volumes"		"$nB0"
 GRADIENTTABLE=$(cat ${STAGE2FILEBASE}.bvec.tp | tail -n $nDir)
 echo "$GRADIENTTABLE" > $PRUNEDTABLE
-if (( Gb_fixGradientTable )) ; then
-    statusPrint "Fixing Gradient Table"
-    gradientTable_fix $PRUNEDTABLE
-    ret_check $?
-fi
 statusPrint	"GradFile $PRUNEDTABLE" "\n"
 
 STAGE="Normal termination"
