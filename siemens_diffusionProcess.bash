@@ -342,7 +342,7 @@ if (( ${barr_stage[1]} )) ; then
     STAGECMD="$STAGE1PROC				\
 		-v 10 -D "$G_DICOMINPUTDIR"		\
 		$TARGETSPEC				\
-		-L $G_LOGDIR -A	-l			\
+		-L $G_LOGDIR -A	-l -C			\
 		-O $G_OUTDIR				\
 		$EXOPTS"
     STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
