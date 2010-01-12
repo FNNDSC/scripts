@@ -825,15 +825,16 @@ if (( ${barr_stage[2]} )) ; then
         		fi
 			siemens_diffusionProcess.bash -D $G_DICOMINPUTDIR 		   \
 			    $TARGETSPEC                                                    \
+			    -O $G_OUTDIR/siemens_diffusionProcess                          \
                             -L $G_LOGDIR                                                   \
-                             >${G_LOGDIR}/${STAGE2PROC}-siemens_diffusionProcess.bash.std       \
+                             >${G_LOGDIR}/${STAGE2PROC}-siemens_diffusionProcess.bash.std  \
 	                    2>${G_LOGDIR}/${STAGE2PROC}-siemens_diffusionProcess.bash.err
 			DIFFUSIONINFO=$(cat                                                \
                             ${G_LOGDIR}/${STAGE2PROC}-siemens_diffusionProcess.bash.std)
 			ret_check $? || fatal siemens_diffusionProcess
         	fi
         	if (( !Gb_useDiffUnpack )) ; then
-			DIFFUSIONINPUT=$(find $G_DICOMINPUTDIR -name "*.nii.gz" | head -n 1)
+			DIFFUSIONINPUT=$(find $G_OUTDIR/siemens_diffusionProcess -name "*.nii.gz" | head -n 1)
 		fi
 	fi
         
@@ -859,6 +860,7 @@ if (( ${barr_stage[2]} )) ; then
         fi
         ge_diffusionProcess.bash -D $G_DICOMINPUTDIR $GEOPTS		   \
             $TARGETSPEC                                                    \
+            -O $G_OUTDIR/ge_diffusionProcess                               \
             -L $G_LOGDIR                                                   \
              >${G_LOGDIR}/${STAGE2PROC}-ge_diffusionProcess.bash.std       \
 	    2>${G_LOGDIR}/${STAGE2PROC}-ge_diffusionProcess.bash.err  
@@ -866,7 +868,7 @@ if (( ${barr_stage[2]} )) ; then
             ${G_LOGDIR}/${STAGE2PROC}-ge_diffusionProcess.bash.std)
         ret_check $? || fatal ge_diffusionProcess
 	if (( !Gb_useDiffUnpack )) ; then
-	  DIFFUSIONINPUT=$(find $G_DICOMINPUTDIR -name "*.nii.gz" | head -n 1)
+	  DIFFUSIONINPUT=$(find $G_OUTDIR/ge_diffusionProcess -name "*.nii.gz" | head -n 1)
 	fi
 	if (( !Gb_GEGradientInlineFix )) ; then
 	   grep "Z" $(expertOpts_file $STAGE2PROC)			   \

@@ -143,6 +143,7 @@ A_manufacturer="checking on the scanner manufacturer"
 A_fileCheck="checking for a required file dependency"
 A_metaLog="checking the fs_meta.bash.log file"
 A_badLogDir="checking on the log directory"
+A_badOutDir="checking on output directory"
 A_badLogFile="checking on the log file"
 A_badClusterDir="checking on the cluster directory"
 A_dependencyStage="checking for a required dependency from an earlier stage"
@@ -163,6 +164,7 @@ EM_metaLog="it seems as though this stage has already run.\n\tYou can force exec
 EM_badLogDir="I couldn't access the <logDir>. Does it exist?"
 EM_badLogFile="I couldn't access a specific log file. Does it exist?"
 EM_badLogDir="I couldn't access the <clusterDir>. Does it exist?"
+EM_badOutDir="I couldn't create the <outputOverride> dir."
 EM_dependencyStage="it seems that a stage dependency is missing."
 EM_stageRun="I encountered an error processing this stage."
 EM_noSubjectsDirVar="it seems that the SUBJECTS_DIR environment var is not set."
@@ -182,6 +184,7 @@ EC_metaLog=80
 EC_badLogDir=20
 EC_badLogFile=21
 EC_badClusterDir=22
+EC_badOutDir=23
 EC_stageRun=30
 EC_noSubjectsDirVar=100
 EC_noSubjectsDir=101
@@ -289,7 +292,12 @@ statusPrint	"Checking on <dicomInputDir>/<dcm> file"
 DICOMTOPFILE=$(ls -1 ${G_DICOMINPUTDIR}/*1.dcm 2>/dev/null | head -n 1)
 fileExist_check $DICOMTOPFILE || fatal noDicomFile
 
-G_OUTDIR=$G_DICOMINPUTDIR/SIEMENS_DIFFUSION
+if (( !Gb_useOverrideOut )) ; then
+	G_OUTDIR=$G_DICOMINPUTDIR/SIEMENS_DIFFUSION
+else
+	G_OUTDIR=$(echo "$G_OUTDIR" | tr ' ' '-' | tr -d '"')
+fi
+
 statusPrint	"Querying <dicomInputDir> for sequences"
 G_DCM_MKINDX=$(dcm_mkIndx.bash -i $DICOMTOPFILE)
 ret_check $?
@@ -363,7 +371,7 @@ if (( !Gb_useOverrideOut )) ; then
 		awk -F \| '{print $4}'				|\
 		sed 's/^[ \t]*//;s/[ \t]*$//')
 else
-    STAGE1DIR="${G_OUTDIR}/stage-1-dicomInput"
+    STAGE1DIR="${G_OUTDIR}"
 fi
 
 if (( ! ${#STAGE1DIR} )) ; then fatal noCollection; fi
