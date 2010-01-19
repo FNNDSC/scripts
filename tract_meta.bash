@@ -53,7 +53,7 @@ G_FALOWERTHRESHOLD="-x"
 G_CLUSTERNAME=seychelles
 G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
 G_SCHEDULELOG="schedule.log"
-G_MAILTO="rudolph@nmr.mgh.harvard.edu"
+G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
 
 G_STAGES="12345"
 
@@ -404,10 +404,10 @@ function mail_reports
       	    cp ${G_LOGDIR}/${G_SELF}.std ${G_LOGDIR}/${G_SELF}.std.mail
       	    mail -s "stdout: ${G_SELF}" $G_MAILTO < ${G_LOGDIR}/${G_SELF}.std.mail
     	fi
-	for LOG in ${G_OUTDIR}/*.log ; do
-	    cp $LOG ${LOG}.mail
-	    mail -s "$LOG: ${G_SELF}" $G_MAILTO < ${LOG}.std.mail
-	done
+#	for LOG in ${G_OUTDIR}/*.log ; do
+#	    cp $LOG ${LOG}.mail
+#	    mail -s "$LOG: ${G_SELF}" $G_MAILTO < ${LOG}.std.mail
+#	done
     fi
     if (( Gb_mailErr )) ; then
   	if [[ -f ${G_LOGDIR}/${G_SELF}.err ]] ; then
