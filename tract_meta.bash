@@ -679,7 +679,7 @@ cprint          "Image Model"   "[ $G_IMAGEMODEL ]"
 if [[ $G_RECONALG != "fact" && $G_RECONALG != "rk2" ]] ; then
     fatal reconAlg
 fi
-if [[ $G_IMAGEMODEL != "dti" && G_IMAGEMODEL != "hardi" ]] ; then
+if [[ $G_IMAGEMODEL != "dti" && $G_IMAGEMODEL != "hardi" ]] ; then
     fatal imageModel
 fi
 
