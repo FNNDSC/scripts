@@ -253,8 +253,8 @@ G_SYNOPSIS="
 	on seychelles, and parsed by 'pbsubdiff.sh'.
 	
 	[-X] [-Y] [-Z] (Optional)
-    Specifying any of the above multiplies the corresponding column
-    in the gradient file with -1.
+        Specifying any of the above multiplies the corresponding column
+        in the gradient file with -1.
 
         -M | -m <mailReportsTo>
         Email the output of each sub-stage to <mailReportsTo>. Useful if
@@ -581,7 +581,7 @@ function matlabFile_create
 # Process command options
 ###///
 
-while getopts v:D:d:B:A:F:I:kEL:O:R:o:fS:t:cC:g:GUb:M:m option ; do 
+while getopts v:D:d:B:A:F:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:M:m option ; do 
 	case "$option"
 	in
 		v) 	Gi_verbose=$OPTARG		;;
@@ -613,7 +613,7 @@ while getopts v:D:d:B:A:F:I:kEL:O:R:o:fS:t:cC:g:GUb:M:m option ; do
 			G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}       ;;
 		U)	Gb_useDiffUnpack=0		;;
 		b)	Gi_bValue=$OPTARG		;;
-		X)  G_iX="-X"                     ;;
+        X)  G_iX="-X"                     ;;
         Y)  G_iY="-Y"                       ;;
         Z)  G_iZ="-Z"                       ;;
         M)  Gb_mailStd=1
