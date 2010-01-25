@@ -62,6 +62,11 @@ G_MATLAB64="/space/lyon/9/pubsw/Linux2-2.3-x86_64/bin/matlab.new -nosplash -node
 G_MATLABDARWIN="/space/lyon/9/pubsw/MacOS10.5-i686/bin/matlab -nosplash -nodesktop -nojvm -nodisplay "
 G_MATLAB="$G_MATLAB32"
 
+# Possibly multiply xyz columns of gradient table with -1
+G_iX=""
+G_iY=""
+G_iZ=""
+
 G_SYNOPSIS="
 
  NAME
@@ -85,6 +90,7 @@ G_SYNOPSIS="
 				[-k] [-U] [-b <bFieldVal>]		\\
 				[-t <stage>] [-f]			\\
 				[-c] [-C <clusterDir>]                  \\
+				[-X] [-Y] [-Z]              \\
                                 [-M | -m <mailReportsTo>]
 
  DESCRIPTION
@@ -245,6 +251,10 @@ G_SYNOPSIS="
 	file is 'schedule.log', formatted in the standard stage-stamp manner.
 	This schedule.log file is polled by a 'filewatch' process running
 	on seychelles, and parsed by 'pbsubdiff.sh'.
+	
+	[-X] [-Y] [-Z] (Optional)
+    Specifying any of the above multiplies the corresponding column
+    in the gradient file with -1.
 
         -M | -m <mailReportsTo>
         Email the output of each sub-stage to <mailReportsTo>. Useful if
@@ -603,6 +613,9 @@ while getopts v:D:d:B:A:F:I:kEL:O:R:o:fS:t:cC:g:GUb:M:m option ; do
 			G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}       ;;
 		U)	Gb_useDiffUnpack=0		;;
 		b)	Gi_bValue=$OPTARG		;;
+		X)  G_iX="-X"                     ;;
+        Y)  G_iY="-Y"                       ;;
+        Z)  G_iZ="-Z"                       ;;
         M)  Gb_mailStd=1
             Gb_mailErr=1
             G_MAILTO=$OPTARG                ;;
@@ -918,6 +931,7 @@ if (( ${barr_stage[2]} )) ; then
 		-E $EXOPTS                              \
 		-b $Gi_bValue				\
                 $B0Vols                                 \
+                $G_iX $G_iY $G_iZ                       \
 		-t $STAGESTEPS -f"
     stage_run "$STAGE" "$STAGECMD"                      \
                 "${G_LOGDIR}/${STAGE2PROC}.std"         \
