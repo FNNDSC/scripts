@@ -677,6 +677,7 @@ if (( ${barr_stage[3]} )) ; then
                 181                         \
                 ${NIIOUT3}                  \
                 $EXOPTS                     \
+                -nt                         \
                 -b0 $Gi_b0Volumes           \
                 -mat ${OUTPUT}.dat          \
                 -ot nii"                        
@@ -742,7 +743,6 @@ if (( ${barr_stage[4]} )) ; then
                 $EXOPTS                                 \
                 $RECONALG                               \
                 -at 35                                  \
-                -nt                                     \
                 -it nii                                 \
                 -m $MASK                                \
                 $G_iX $G_iY $G_iZ"	
