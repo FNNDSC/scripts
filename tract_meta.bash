@@ -506,7 +506,8 @@ function cluster_schedule
 	echo "export PATH=$PATH"				>> $CLUSTERSH	
 	echo "source $FREESURFER_HOME/SetUpFreeSurfer.sh" >>$CLUSTERSH
 	echo "source /usr/share/fsl/etc/fslconf/fsl.sh" >> $CLUSTERSH
-	echo "export SUBJECTS_DIR=$SUBJECTS_DIR"		>> $CLUSTERSH	
+	echo "export SUBJECTS_DIR=$SUBJECTS_DIR"		>> $CLUSTERSH
+	echo "export DSI_PATH=$(echo $PATH | tr ":" "\n" | grep dtk)/matrices" >> $CLUSTERSH 	
 	echo "$STAGECMD" 					>> $CLUSTERSH
 	chmod 755 $CLUSTERSH
 	STAGECMD="${G_LOGDIR}/tract-cluster.sh"

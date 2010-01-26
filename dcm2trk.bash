@@ -163,8 +163,8 @@ G_SYNOPSIS="
 
 		1 - convert from dicom to nifti format
 		2 - perform eddy current correction
-		3 - run 'dti_recon' 
-		4 - run 'dti_tracker'
+		3 - run 'dti_recon' (or 'odf_recon')
+		4 - run 'dti_tracker' (or 'odf_tracker')
 		5 - run 'spline_filter'
 
 	The output of one stage is typically the input to its
@@ -412,7 +412,7 @@ cprint          "Image Model"   "[ $G_IMAGEMODEL ]"
 if [[ $G_RECONALG != "fact" && $G_RECONALG != "rk2" ]] ; then
     fatal reconAlg
 fi
-if [[ $G_IMAGEMODEL != "dti" && G_IMAGEMODEL != "hardi" ]] ; then
+if [[ $G_IMAGEMODEL != "dti" && $G_IMAGEMODEL != "hardi" ]] ; then
     fatal imageModel
 fi
 
@@ -425,7 +425,8 @@ echo $G_OUTDIR
 REQUIREDFILES="	common.bash mri_info		        \
 		mri_convert eddy_correct 	        \
 		dti_recon dti_tracker spline_filter     \
-                vol_thFind.py"
+                vol_thFind.py hardi_mat odf_recon       \
+                odf_tracker"
 
 cprint	"Use diff_unpack for dcm->nii"	"[ $Gb_useDiffUnpack ]"
 
@@ -463,11 +464,21 @@ NIIDIR2=${G_OUTDIR}/stage-2-eddy_correct
 NIIOUT2=${NIIDIR2}/${G_OUTPUTPREFIX}-eddy_correct
 REFVOL=0
 # Stage 3
-NIIDIR3=${G_OUTDIR}/stage-3-dti_recon
-NIIOUT3=${NIIDIR3}/${G_OUTPUTPREFIX}-dti_recon
+if [[ "$G_IMAGEMODEL" == "dti" ]] ; then
+    NIIDIR3=${G_OUTDIR}/stage-3-dti_recon
+    NIIOUT3=${NIIDIR3}/${G_OUTPUTPREFIX}-dti_recon
+else
+    NIIDIR3=${G_OUTDIR}/stage-3-odf_recon
+    NIIOUT3=${NIIDIR3}/${G_OUTPUTPREFIX}-odf_recon
+fi
 # Stage 4
-NIIDIR4=${G_OUTDIR}/stage-4-dti_tracker
-NIIOUT4=${NIIDIR4}/${G_OUTPUTPREFIX}-dti_tracker
+if [[ "$G_IMAGEMODEL" == "dti" ]] ; then
+    NIIDIR4=${G_OUTDIR}/stage-4-dti_tracker
+    NIIOUT4=${NIIDIR4}/${G_OUTPUTPREFIX}-dti_tracker
+else
+    NIIDIR4=${G_OUTDIR}/stage-4-odf_tracker
+    NIIOUT4=${NIIDIR4}/${G_OUTPUTPREFIX}-odf_tracker
+fi
 # Stage 5
 NIIDIR5=${G_OUTDIR}/stage-5-spline_filter
 NIIOUT5=${NIIDIR5}/${G_OUTPUTPREFIX}-spline_filter
@@ -521,6 +532,24 @@ if (( ${barr_stage[1]} )) ; then
                 "${NIIDIR1}/${STAGE1PROC}.err"          \
                 "NOECHO"                                \
          || fatal stageRun
+         
+      # For HARDI-only, we also need to run hardi_mat.  The reason
+      # this is not its own stage is that DTI does not have an equivalent
+      # and making this part of stage 1 was the easiest way to modify
+      # this script.
+      if [[ "$G_IMAGEMODEL" == "hardi" ]] ; then
+        STAGE1PROC=hardi_mat
+        STAGE=1-$STAGE1PROC
+        STAGECMD="hardi_mat                             \
+                ${G_GRADIENTTABLE}                      \
+                $OUTPUT.dat                             \
+                -ref $INPUT -oc"
+        stage_run "$STAGE" "$STAGECMD"                  \
+                "${NIIDIR1}/${STAGE1PROC}.std"          \
+                "${NIIDIR1}/${STAGE1PROC}.err"          \
+                "NOECHO"                                \
+         || fatal stageRun
+      fi
     else
       if (( b_NIIGZ )) ; then
 	cp $G_DICOMFILE ${NIIOUT1}.gz
@@ -541,6 +570,7 @@ if (( ${barr_stage[1]} )) ; then
          || fatal stageRun
       fi
     fi
+    
     statusPrint "$(date) | Processing STAGE 1 - dicom --> nii | END" "\n"
 fi
 
@@ -596,7 +626,12 @@ if (( ${barr_stage[2]} )) ; then
 fi
 
 if (( ${barr_stage[3]} )) ; then
-    statusPrint "$(date) | Processing STAGE 3 - dti_recon | START" "\n"
+    if [[ "$G_IMAGEMODEL" == "dti" ]] ; then
+        STAGEEXE="dti_recon"
+    else
+        STAGEEXE="odf_recon"
+    fi
+    statusPrint "$(date) | Processing STAGE 3 - ${STAGEEXE} | START" "\n"
     statusPrint "Checking stage dependencies"
     if (( ${barr_stage[2]} )) ; then
         fileExist_check ${NIIOUT2}.nii || fatal dependencyStage
@@ -607,7 +642,7 @@ if (( ${barr_stage[3]} )) ; then
     fi
     statusPrint "Checking for gradient table"
     fileExist_check $G_GRADIENTTABLE || fatal noGradientFile
-    STAGE3PROC=dti_recon
+    STAGE3PROC=$STAGEEXE
     STAGE=3-$STAGE3PROC
     dirExist_check      $NIIDIR3 >/dev/null || mkdir $NIIDIR3
     EXOPTS=$(eval expertOpts_parse dti_recon)
@@ -622,27 +657,48 @@ if (( ${barr_stage[3]} )) ; then
       Gi_b0Volumes=1 ; 
     fi
     cprint "b0 Volumes" " [ $Gi_b0Volumes ]"
-    STAGECMD="dti_recon					\
-                $RAWDATAFILE				\
-                ${NIIOUT3}                              \
-                $EXOPTS                                 \
-                -gm ${G_GRADIENTTABLE}			\
-		-ot nii					\
-		-b $Gi_bValue				\
-		-b0 $Gi_b0Volumes"
+    if [[ "$G_IMAGEMODEL" == "dti" ]] ; then
+    	STAGECMD="${STAGEEXE}               \
+                $RAWDATAFILE                \
+                ${NIIOUT3}                  \
+                $EXOPTS                     \
+                -gm ${G_GRADIENTTABLE}      \
+                -ot nii                     \
+                -b $Gi_bValue               \
+                -b0 $Gi_b0Volumes"
+    else
+        declare -i gradientRows=0
+        gradientRows=$(wc -l $G_GRADIENTTABLE | awk '{print $1}')
+        GRADIENTROWS=$(( gradientRows + 1 ))
+        OUTPUT=$(echo ${NIIOUT1} | sed 's/\(.*\)\.nii/\1/')
+        STAGECMD="${STAGEEXE}               \
+                $RAWDATAFILE                \
+                $GRADIENTROWS               \
+                181                         \
+                ${NIIOUT3}                  \
+                $EXOPTS                     \
+                -b0 $Gi_b0Volumes           \
+                -mat ${OUTPUT}.dat          \
+                -ot nii"                        
+    fi
     stage_run "$STAGE" "$STAGECMD"                      \
                 "${NIIDIR3}/${STAGE3PROC}.std"          \
                 "${NIIDIR3}/${STAGE3PROC}.err"          \
                 "NOECHO"                                \
         || fatal stageRun
-    statusPrint "$(date) | Processing STAGE 3 - dti_recon | END" "\n"
+    statusPrint "$(date) | Processing STAGE 3 - ${STAGEEXE} | END" "\n"
 fi
 
 if (( ${barr_stage[4]} )) ; then
-    statusPrint "$(date) | Processing STAGE 4 - dti_tracker | START" "\n"
+    if [[ "$G_IMAGEMODEL" == "dti" ]] ; then
+        STAGEEXE="dti_tracker"
+    else
+        STAGEEXE="odf_tracker"
+    fi
+    statusPrint "$(date) | Processing STAGE 4 - ${STAGEEXE} | START" "\n"
     statusPrint "Checking stage dependencies"
     fileExist_check ${NIIOUT3}_dwi.nii || fatal dependencyStage
-    STAGE4PROC=dti_tracker
+    STAGE4PROC=$STAGEEXE
     STAGE=4-$STAGE4PROC
     dirExist_check      $NIIDIR4 >/dev/null || mkdir $NIIDIR4
     EXOPTS=$(eval expertOpts_parse dti_tracker)
@@ -661,22 +717,43 @@ if (( ${barr_stage[4]} )) ; then
         MASK="$MASK $FAminTH $FAmaxTH"
     fi
     cd $NIIDIR4
-    STAGECMD="dti_tracker				\
+        
+    if [[ "$G_IMAGEMODEL" == "dti" ]] ; then	        
+    	STAGECMD="${STAGEEXE}				\
+    	        ${NIIOUT3}                              \
+    	        ${NIIOUT4}.trk                          \
+    	        $EXOPTS                                 \
+    	        -$G_RECONALG                            \
+    	        -at 35					\
+    	        -it nii					\
+    	        -m $MASK	        		\
+    	        $G_iX $G_iY $G_iZ"
+    else
+        # The default for odf_recon is non-interpolate streamline,
+        # the "-fact" command-line argument is not supported.  However,
+        # rk2 is supported.
+        RECONALG=""
+        if [[ "$G_RECONALG" == "rk2" ]] ; then
+            RECONALG="-rk2";
+        fi
+        STAGECMD="${STAGEEXE}                           \
                 ${NIIOUT3}                              \
                 ${NIIOUT4}.trk                          \
                 $EXOPTS                                 \
-                -$G_RECONALG                            \
-                -at 35					\
-		-it nii					\
-		-m $MASK	        		\
-		$G_iX $G_iY $G_iZ"
+                $RECONALG                               \
+                -at 35                                  \
+                -nt                                     \
+                -it nii                                 \
+                -m $MASK                                \
+                $G_iX $G_iY $G_iZ"	
+    fi				
     stage_run "$STAGE" "$STAGECMD"                      \
                 "${NIIDIR4}/${STAGE4PROC}.std"          \
                 "${NIIDIR4}/${STAGE4PROC}.err"          \
                 "NOECHO"                                \
         || fatal stageRun
 
-    statusPrint "$(date) | Processing STAGE 4 - dti_tracker | END" "\n"
+    statusPrint "$(date) | Processing STAGE 4 - ${STAGEEXE} | END" "\n"
 fi
 
 if (( ${barr_stage[5]} )) ; then
