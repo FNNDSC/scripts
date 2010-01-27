@@ -705,7 +705,34 @@ if (( ${barr_stage[4]} )) ; then
     EXOPTS=$(eval expertOpts_parse dti_tracker)
     MASK=${NIIOUT3}_dwi.nii
     if (( Gb_useFA )) ; then
-        MASK=${NIIOUT3}_fa.nii
+    	
+    	
+        if [[ "$G_IMAGEMODEL" == "hardi" ]] ; then
+            # If we are doing hardi, we first need to run dti_recon because
+	    # the hardi pipeline does not output the FA image.  There is some
+	    # question over what the validity is of using the FA mask with 
+	    # HARDI, but if the user wants to do it this appears to be the only
+	    # way
+	    NIIOUT_FOR_FA=${NIIDIR4}/${G_OUTPUTPREFIX}-dti_tracker_for_fa	    
+	    STAGECMD="dti_recon                 \
+                    $RAWDATAFILE                \
+                    ${NIIOUT_FOR_FA}            \
+	            -gm ${G_GRADIENTTABLE}      \
+	            -ot nii                     \
+	            -b $Gi_bValue               \
+	            -b0 $Gi_b0Volumes"
+                                
+            stage_run "4-dti_recon_for_fa" "$STAGECMD"  \
+                    "${NIIDIR4}/dti_recon_for_fa.std"   \
+                    "${NIIDIR4}/dti_recon_for_fa.err"   \
+                    "NOECHO"                            \
+                    || fatal stageRun
+            
+            MASK=${NIIOUT_FOR_FA}_fa.nii                 
+        else
+            MASK=${NIIOUT3}_fa.nii     
+        fi
+    	
         lprint "Analzying for lower intensity"
         FAminTH=$(vol_thFind.py -v $MASK -t $G_FALOWERTHRESHOLD 2>/dev/null)
         ret_check $? || fatal faRun
