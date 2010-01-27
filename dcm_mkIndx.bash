@@ -130,7 +130,7 @@ SETOLD=$(/bin/ls *-1.dcm 2>/dev/null)
 # DRG - The above test does not work when the series does not start with InstanceID 1.  To workaround this, the below
 #       code users mri_probedicom to find the SeriesInstanceID (0020,000e) and then gets the first unique filename
 #       from each series 
-SETNEW=$(/bin/ls -1 *.dcm | xargs -i% echo "echo %; mri_probedicom --i % --t 0020 000e" | sh |  sed '$!N;s/\n/ /' | uniq -f 1 | awk '{print $1}')
+SETNEW=$(/bin/ls -1 *.dcm 2>/dev/null | xargs -i% echo "echo %; mri_probedicom --i % --t 0020 000e" | sh |  sed '$!N;s/\n/ /' | uniq -f 1 | awk '{print $1}')
 
 declare -i lenOLD=0
 declare -i lenNEW=0
