@@ -636,7 +636,7 @@ cprint  "hostname"      "[ $(hostname) ]"
 ## Check on script preconditions
 REQUIREDFILES="common.bash dcm2trk.bash tract_slice.bash dicom_dirSend.bash \
 		dicom_seriesCollect.bash mri_info $XVFB dcm_mkIndx.bash	\
-		ge_diffusionProcess.bash siemens_diffusionProcess.bash"
+		ge_diffusionProcess.bash siemens_diffusionProcess.bash convert"
 
 cprint	"Use diff_unpack for dcm->nii"	"[ $Gb_useDiffUnpack ]"
 if (( Gb_useDiffUnpack )) ; then
@@ -938,6 +938,25 @@ if (( ${barr_stage[2]} )) ; then
                 "${G_LOGDIR}/${STAGE2PROC}.std"         \
                 "${G_LOGDIR}/${STAGE2PROC}.err"         \
          || fatal stageRun
+         
+         
+    # Now, generate a preview mosaic image for the trk file
+    statusPrint "$(date) | Processing STAGE 2 - generate preview mosaic | BEGIN" "\n"
+    cd $STAGE2DIR/final-trackvis
+    tract_slice.bash -v 10 -V -d 1 -B $XVFB                           \
+                     -T 1 -t ${MRID}${G_OUTSUFFIX}.trk                \
+                     >${G_LOGDIR}/${STAGE2PROC}-tract_slice.bash.std  \
+	    			2>${G_LOGDIR}/${STAGE2PROC}-tract_slice.bash.err
+    
+    convert -page +0+0 AXI/*.png -page +1000+0 COR/*.png     \
+            -background wheat -page +500+800 SAG/*.png       \
+            -mosaic ${MRID}${G_OUTSUFFIX}.trk.png            \
+            > ${G_LOGDIR}/${STAGE2PROC}-convert.std          \
+           2> ${G_LOGDIR}/${STAGE2PROC}-convert.err
+       
+    statusPrint "$(date) | Processing STAGE 2 - generate preview mosaic | END" "\n"
+    
+         
     statusPrint "$(date) | Processing STAGE 2 - dicom --> trk | END" "\n"
 fi
 

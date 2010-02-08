@@ -406,7 +406,7 @@ if (( Gb_XBuffer )) ; then
     export DISPLAY=:${G_XDisplay}
     cprint "Setting Xvfb display"	"[ $G_XDisplay ]"
     STAGE="Xvfb"
-    STAGECMD="$G_XVFB :${G_XDisplay} -screen 1 1600x1200x24"
+    STAGECMD="$G_XVFB :${G_XDisplay} -screen 1 1600x1200x24 2>/dev/null"
 #     stage_run "$STAGE" "$STAGECMD" ./${STAGE}.std" "./${STAGE}.err || fatal noXvfb
     echo "$STAGECMD &" | sh
 fi
@@ -447,9 +447,16 @@ for plane in "SAG" "COR" "AXI" ; do
 	    Gi_sliceEnd=$i_maxSlices
 	fi
 	if (( Gi_totalSlices )) ; then
-	    Gi_sliceStep=$(echo "$i_maxSlices/$Gi_totalSlices" | bc)
-	    Gi_sliceStart=0
-	    Gi_sliceEnd=$i_maxSlices
+	    if [ "$Gi_totalSlices" -eq "1" ] ; then
+	    	# Just output the center slice
+	    	Gi_sliceStep=1
+	    	Gi_sliceStart=$(echo "$i_maxSlices/2" | bc)
+	    	Gi_sliceEnd=$Gi_sliceStart	    	
+	    else
+	    	Gi_sliceStep=$(echo "$i_maxSlices/$Gi_totalSlices" | bc)
+	    	Gi_sliceStart=0
+	    	Gi_sliceEnd=$i_maxSlices
+	    fi
 	fi
 	# echo $i_maxSlices $Gi_totalSlices $Gi_sliceStart $Gi_sliceEnd $Gi_sliceStep
         cprint "Number of slices to create in $STAGE..." "[ $i_maxSlices ]"
@@ -486,7 +493,7 @@ for plane in "SAG" "COR" "AXI" ; do
 			$ROTATECMD					\
 			-mag $G_imageMagFactor				\
 			-sc $snapshotFile"
-            stage_run "$STAGE" "$STAGECMD" "./${STAGE}.std" "./${STAGE}.err"
+            stage_run "$STAGE" "$STAGECMD" "./${STAGE}.std" "./${STAGE}.err" "NOECHO"
 
 	    # Get image size
 	    imageSize=$(identify $snapshotFile.png			|\
@@ -533,14 +540,14 @@ for plane in "SAG" "COR" "AXI" ; do
 		convert ${snapshotFile}-cropped.jpg 			\
 			-gravity South -background skyblue -splice 0x18	\
 			-draw "text 0,0 '$LABEL'" ${snapshotFile}.png 
-		rm ${snapshotFile}-cropped.jpg
+		rm ${snapshotFile}-cropped.jpg 2>/dev/null
 		ret_check $?
 	    fi
 
 	    if (( Gb_cleanTmpImages )) ; then
 		printf "%40s"	"Cleaning tmp images..."
-		rm ${snapshotFile}-cropped.png
-		rm ${snapshotFile}.orig.png
+		rm ${snapshotFile}-cropped.png 2>/dev/null
+		rm ${snapshotFile}.orig.png 2>/dev/null
 		ret_check $?
 	    fi
 	done
