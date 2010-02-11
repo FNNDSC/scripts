@@ -283,11 +283,11 @@ if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE ]] ; then
 	
 	# First get the MRID to add entry to dcm_MRID.log
 	MRID=$(grep ID  ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt | awk '{print $3}')
-	printf "%-55s%25s\n" "$G_OUTPUTDICOMDIR" "$MRID" >> ${G_DICOMROOT}/dcm_MRID.log
+	printf "%-55s\t%25s\n" "$G_OUTPUTDICOMDIR" "$MRID" >> ${G_DICOMROOT}/dcm_MRID.log
 	
 	# Now get the Age to add to dcm_MRID_age.log
 	AGE=$(dcm_bdayAgeGet.bash | grep Age | awk '{print $5}' | tr '\n' ' ')
-	printf "%55s%50s%10s\n" "$G_OUTPUTDICOMDIR" "$MRID" "$AGE" >> ${G_DICOMROOT}/dcm_MRID_age.log
+	printf "%55s\t%50s\t%10s\n" "$G_OUTPUTDICOMDIR" "$MRID" "$AGE" >> ${G_DICOMROOT}/dcm_MRID_age.log
 	
 	# Finally regenerate dcm_MRID_ageDays.log
 	cat ${G_DICOMROOT}/dcm_MRID_age.log | awk -f /local_mount/space/osx1927/1/users/dicom/repo/trunk/scripts/dayAge_calc.awk  | sort -n -k 3 > ${G_DICOMROOT}/dcm_MRID_ageDays.log
