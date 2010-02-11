@@ -130,7 +130,13 @@ SETOLD=$(find . -name "*-1.dcm" -print 2>/dev/null)
 # DRG - The above test does not work when the series does not start with InstanceID 1.  To workaround this, the below
 #       code users mri_probedicom to find the SeriesInstanceID (0020,000e) and then gets the first unique filename
 #       from each series 
-SETNEW=$(find . -name "*.dcm" -print 2>/dev/null | xargs -i% echo "echo %; mri_probedicom --i % --t 0020 000e" | sh |  sed '$!N;s/\n/ /' | uniq -f 1 | awk '{print $1}')
+SERIESNUMS=$(find . -name "*.dcm" -print 2>/dev/null | awk -F "-" '{print $2}' | uniq)
+SETNEW=""
+for SERIES in $SERIESNUMS ; do
+    DCMFILE=$(find . -name "*-$SERIES-*.dcm" | grep -m 1 $SERIES | sed 's/^.\///' )
+    SETNEW="$SETNEW $DCMFILE" 
+done
+
 declare -i lenOLD=0
 declare -i lenNEW=0
 lenOLD=$(echo ${#SETOLD})
@@ -141,8 +147,6 @@ if (( lenOLD )) ; then
 else
     SET=$SETNEW
 fi
-
-echo ${#SETOLD}
 
 SET=$(echo "$SETOLD" "$SETNEW")
 if (( b_FORCESET )) ; then SET=$TOPSET ; fi
