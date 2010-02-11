@@ -441,6 +441,7 @@ if (( ${barr_stage[2]} )) ; then
     dirExist_check $STAGE2IN || fatal dependencyStage
     DIFFUSIONDICOM=$(ls -1 $STAGE2IN | head -n 1)
     STAGECMD="$STAGE2PROC				\
+        -p n -d n -e n                  \
 		$DIFFUSIONDICOM"
     stage_run "$STAGE" "$STAGECMD"                      \
                 "${G_LOGDIR}/${STAGE2PROC}.std"         \
