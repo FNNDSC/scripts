@@ -126,15 +126,14 @@ if (( Gi_showAll )) ; then
 fi
 
 if (( !b_FORCESET )) ; then	
-	SETOLD=$(find . -maxdepth 1 -name "*-1.dcm" -printf "%f\n" 2>/dev/null)
+	SETOLD=$(find . -maxdepth 1 -name "*-1.dcm" -print 2>/dev/null)
 	#SETNEW=$(/bin/ls *0001.dcm 2>/dev/null)
 	# DRG - The above test does not work when the series does not start with InstanceID 1.  To workaround this, the below
 	#       code users mri_probedicom to find the SeriesInstanceID (0020,000e) and then gets the first unique filename
 	#       from each series 
-	SERIESNUMS=$(find . -maxdepth 1 -name "*.dcm" -printf "%f\n" 2>/dev/null | uniq)
-	SETNEW=""
+	SERIESNUMS=$(find . -maxdepth 1 -name "*.dcm" -print 2>/dev/null | awk -F "-" '{print $2}' | uniq)
 	for SERIES in $SERIESNUMS ; do
-	    DCMFILE=$(find . -maxdepth 1 -name "*-$SERIES-*.dcm" -printf "%f\n" | grep -m 1 $SERIES )
+	    DCMFILE=$(find . -maxdepth 1 -name "*-$SERIES-*.dcm" -print | grep -m 1 $SERIES | sed 's/^.\///')
 	    SETNEW="$SETNEW $DCMFILE" 
 	done
 	
