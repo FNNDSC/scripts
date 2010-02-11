@@ -125,31 +125,33 @@ if (( Gi_showAll )) ; then
  
 fi
 
-SETOLD=$(find . -name "*-1.dcm" -print 2>/dev/null)
-#SETNEW=$(/bin/ls *0001.dcm 2>/dev/null)
-# DRG - The above test does not work when the series does not start with InstanceID 1.  To workaround this, the below
-#       code users mri_probedicom to find the SeriesInstanceID (0020,000e) and then gets the first unique filename
-#       from each series 
-SERIESNUMS=$(find . -name "*.dcm" -print 2>/dev/null | awk -F "-" '{print $2}' | uniq)
-SETNEW=""
-for SERIES in $SERIESNUMS ; do
-    DCMFILE=$(find . -name "*-$SERIES-*.dcm" | grep -m 1 $SERIES | sed 's/^.\///' )
-    SETNEW="$SETNEW $DCMFILE" 
-done
-
-declare -i lenOLD=0
-declare -i lenNEW=0
-lenOLD=$(echo ${#SETOLD})
-lenNEW=$(echo ${#SETNEW})
-
-if (( lenOLD )) ; then
-    SET=$SETOLD
+if (( !b_FORCESET )) ; then	
+	SETOLD=$(find . -maxdepth 1 -name "*-1.dcm" -printf "%f\n" 2>/dev/null)
+	#SETNEW=$(/bin/ls *0001.dcm 2>/dev/null)
+	# DRG - The above test does not work when the series does not start with InstanceID 1.  To workaround this, the below
+	#       code users mri_probedicom to find the SeriesInstanceID (0020,000e) and then gets the first unique filename
+	#       from each series 
+	SERIESNUMS=$(find . -maxdepth 1 -name "*.dcm" -printf "%f\n" 2>/dev/null | uniq)
+	SETNEW=""
+	for SERIES in $SERIESNUMS ; do
+	    DCMFILE=$(find . -maxdepth 1 -name "*-$SERIES-*.dcm" -printf "%f\n" | grep -m 1 $SERIES )
+	    SETNEW="$SETNEW $DCMFILE" 
+	done
+	
+	declare -i lenOLD=0
+	declare -i lenNEW=0
+	lenOLD=$(echo ${#SETOLD})
+	lenNEW=$(echo ${#SETNEW})
+	
+	if (( lenOLD )) ; then
+	    SET=$SETOLD
+	else
+	    SET=$SETNEW
+	fi
+    SET=$(echo "$SETOLD" "$SETNEW")
 else
-    SET=$SETNEW
+    SET=$TOPSET ; 
 fi
-
-SET=$(echo "$SETOLD" "$SETNEW")
-if (( b_FORCESET )) ; then SET=$TOPSET ; fi
 
 MANUFACTURER=$(mri_probedicom --i $TOPSET --t 8 70)
 SCANNER=$(mri_probedicom --i $TOPSET --t 8 1090)
