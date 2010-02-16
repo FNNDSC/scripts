@@ -62,6 +62,8 @@ G_MATLAB64="/space/lyon/9/pubsw/Linux2-2.3-x86_64/bin/matlab.new -nosplash -node
 G_MATLABDARWIN="/space/lyon/9/pubsw/MacOS10.5-i686/bin/matlab -nosplash -nodesktop -nojvm -nodisplay "
 G_MATLAB="$G_MATLAB32"
 
+G_XVFBDISPLAY="2"
+
 # Possibly multiply xyz columns of gradient table with -1
 G_iX=""
 G_iY=""
@@ -577,7 +579,6 @@ function matlabFile_create
     return 0
 }
 
-
 ###\\\
 # Process command options
 ###///
@@ -943,7 +944,7 @@ if (( ${barr_stage[2]} )) ; then
     # Now, generate a preview mosaic image for the trk file
     statusPrint "$(date) | Processing STAGE 2 - generate preview mosaic | BEGIN" "\n"
     cd $STAGE2DIR/final-trackvis
-    tract_slice.bash -v 10 -V -d 1 -B $XVFB                           \
+    tract_slice.bash -v 10 -V -d ${G_XVFBDISPLAY} -B $XVFB                           \
                      -T 1 -t ${MRID}${G_OUTSUFFIX}.trk                \
                      >${G_LOGDIR}/${STAGE2PROC}-tract_slice.bash.std  \
 	    			2>${G_LOGDIR}/${STAGE2PROC}-tract_slice.bash.err
@@ -966,7 +967,7 @@ STAGE2OUTFILE=$(find $STAGE2OUTDIR -iname "*.trk")
 STAGE3IN=$STAGE2OUTFILE
 STAGE3PROC=tract_slice.bash
 STAGE3REQUIREDFILES="$XVFB"
-STAGE3DISPLAY="1"
+STAGE3DISPLAY=${G_XVFBDISPLAY}
 STAGE=3-$STAGE3PROC
 STAGE3DIR="${G_OUTDIR}/tract_meta-stage-$STAGE"
 if (( ${barr_stage[3]} )) ; then
