@@ -490,7 +490,7 @@ function stage_stamp
 	if (( !${#logFile} )) ; then
 	    logFile="stdout"
 	fi
-        echo -e "$(date) $(hostname) | $G_SELF | Stage $stage | ok" >> $logFile
+        echo -e "$(date) $(hostname) $(user) | $G_SELF | Stage $stage | ok" >> $logFile
 	if [[ $logFile == "stdout" ]] ; then
 	   cat $logFile
 	   rm $logFile
