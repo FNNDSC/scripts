@@ -486,11 +486,12 @@ function stage_stamp
 {
         local stage=$1
         local logFile=$2
+        local clusterUser="$3"
 
 	if (( !${#logFile} )) ; then
 	    logFile="stdout"
 	fi
-        echo -e "$(date) $(hostname) $USER | $G_SELF | Stage $stage | ok" >> $logFile
+        echo -e "$(date) $(hostname) $clusterUser | $G_SELF | Stage $stage | ok" >> $logFile
 	if [[ $logFile == "stdout" ]] ; then
 	   cat $logFile
 	   rm $logFile

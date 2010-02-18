@@ -64,6 +64,8 @@ G_MATLAB="$G_MATLAB32"
 
 G_XVFBDISPLAY="2"
 
+G_CLUSTERUSER=""
+
 # Possibly multiply xyz columns of gradient table with -1
 G_iX=""
 G_iY=""
@@ -93,7 +95,8 @@ G_SYNOPSIS="
 				[-t <stage>] [-f]			\\
 				[-c] [-C <clusterDir>]                  \\
 				[-X] [-Y] [-Z]              \\
-                                [-M | -m <mailReportsTo>]
+                                [-M | -m <mailReportsTo>]              \\
+                                [-n <clusterUserName>]
 
  DESCRIPTION
 
@@ -263,6 +266,12 @@ G_SYNOPSIS="
         running on a cluster and no output monitoring easily available.
         Use the small '-m' to only email the output from stdout logs; use
         capital '-M' to email stdout, stderr, and log file.
+        
+        -n <clusterUserName> (Optional)
+        If specified, this option specified the name of the user that
+        submitted the job to the cluster.  This name is added to the
+        schedule.log file output for the cluster.  If not specified,
+        it will be left blank.
 
 STAGES
 
@@ -514,7 +523,7 @@ function cluster_schedule
 	chmod 755 $CLUSTERSH
 	STAGECMD="${G_LOGDIR}/tract-cluster.sh"
         STAGECMD=$(echo $STAGECMD | sed 's|/local_mount||g')
-	stage_stamp "$STAGECMD" ${G_CLUSTERDIR}/$G_SCHEDULELOG
+    stage_stamp "$STAGECMD" ${G_CLUSTERDIR}/$G_SCHEDULELOG "$G_CLUSTERUSER"
 	stage_stamp "$STAGE Schedule for cluster" $STAMPLOG
 	stage_stamp "$STAGE" $STAMPLOG
 }
@@ -583,7 +592,7 @@ function matlabFile_create
 # Process command options
 ###///
 
-while getopts v:D:d:B:A:F:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:M:m option ; do 
+while getopts v:D:d:B:A:F:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:n:M:m option ; do 
 	case "$option"
 	in
 		v) 	Gi_verbose=$OPTARG		;;
@@ -624,6 +633,7 @@ while getopts v:D:d:B:A:F:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:M:m option ; do
         m)  Gb_mailStd=1
             Gb_mailErr=0
             G_MAILTO=$OPTARG                ;;
+        n) 	G_CLUSTERUSER=$OPTARG		;;
 		\?) synopsis_show 
 		    exit 0;;
 	esac
