@@ -395,6 +395,10 @@ function cluster_schedule
         stage_stamp "$STAGECMD" ${G_CLUSTERDIR}/$G_SCHEDULELOG "$G_CLUSTERUSER"
         stage_stamp "$STAGE Schedule for cluster" $STAMPLOG
         stage_stamp "$STAGE" $STAMPLOG
+        
+        # Also append to output of XML file used by web front end
+        LINENUMBER=$(wc -l "${G_CLUSTERDIR}/$G_SCHEDULELOG")
+        cluster_genXML.bash -f ${G_CLUSTERDIR}/$G_SCHEDULELOG -l ${LINENUMBER} >> "${G_CLUSTERDIR}/$G_SCHEDULELOG.xml"
 }
 
 ###\\\
