@@ -516,7 +516,7 @@ function cluster_schedule
 	echo "#!/bin/bash" 					> $CLUSTERSH
 	echo "export PATH=$PATH"				>> $CLUSTERSH	
 	echo "source $FREESURFER_HOME/SetUpFreeSurfer.sh" >>$CLUSTERSH
-	echo "source /usr/share/fsl/etc/fslconf/fsl.sh" >> $CLUSTERSH
+	echo "source $FSL_DIR/etc/fslconf/fsl.sh" >> $CLUSTERSH
 	echo "export SUBJECTS_DIR=$SUBJECTS_DIR"		>> $CLUSTERSH
 	echo "export DSI_PATH=$(echo $PATH | tr ":" "\n" | grep dtk)/matrices" >> $CLUSTERSH 	
 	echo "$STAGECMD" 					>> $CLUSTERSH
