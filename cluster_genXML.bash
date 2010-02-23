@@ -137,7 +137,7 @@ do
 			SCANNER_MANUFACTURER=$(echo -e $TOCFILE | grep "Scanner Manufacturer" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
 			SCANNER_MODEL=$(echo -e $TOCFILE | grep "Scanner Model" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
 			SOFTWARE_VER=$(echo -e $TOCFILE | grep "Software Ver" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-			SCANNAME=$(echo -e $TOCFILE | grep $SCANFILE | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
+			SCANNAME=$(echo -e $TOCFILE | grep $SCANFILE | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' | tr -d "<>")
 								
 			echo "<ClusterJob>"
 			echo "    <Command>$CLUSTERCMD</Command>"
