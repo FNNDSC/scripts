@@ -19,7 +19,7 @@ G_DICOMINPUTDIR="-x"
 G_DICOMINPUTFILE="-x"
 G_DICOMSERIESLIST="ISO DIFFUSION TRUE AXIAL"
 
-G_STAGES="123"
+G_STAGES="12"
 
 G_SYNOPSIS="
 
@@ -59,12 +59,8 @@ G_SYNOPSIS="
 	is performed.
 
 		1	-	Collect the Siemens diffusion sequence.
-		2	-	Convert to nifti using 'dcm2nii' (and as
-				a side effect generate the bval and bvec
-				tables).
-		3	-	Process bval/bvec to create simple
-				gradient table.
-
+		2	-	Used gdcmdump to create a gradient table
+		
 	The design philosophy of this particular app is to only run
 	stages if their preconditions are satisfied. Strictly speaking,
 	it should not be necessary to explicitly call certain stages as the
@@ -85,8 +81,7 @@ G_SYNOPSIS="
 	o common.bash script source
 	o dicom_seriesCollect.bash
 	o NMR FreeSurfer dev environment
-	o tp.py
-	o dcm2nii
+	o gdcmdump
 
  ARGUMENTS
 
@@ -272,7 +267,7 @@ topDir=$(pwd)
 echo ""
 cprint  "hostname"      "[ $(hostname) ]"
 
-REQUIREDFILES="common.bash dicom_seriesCollect.bash tp.py dcm2nii dcm_mkIndx.bash"
+REQUIREDFILES="common.bash dicom_seriesCollect.bash gdcmdump dcm_mkIndx.bash"
 for file in $REQUIREDFILES ; do
         printf "%40s"   "Checking for $file..."
         file_checkOnPath $file || fatal fileCheck
@@ -384,66 +379,52 @@ cd $G_OUTDIR
 MRID=$(MRID_find $G_DICOMINPUTDIR)
 STAGE2FILEBASE=${MRID}_diffusion
 STAGE2IN=$STAGE1OUT
-STAGE2PROC=dcm2nii
+STAGE2PROC=gdcmdump
 STAGE=2-$STAGE2PROC
 STAGE2DIR="${G_OUTDIR}"
 if (( ${barr_stage[2]} )) ; then
-    statusPrint "$(date) | Processing STAGE 2 - dcm  --> nifti | START" "\n"
+    statusPrint "$(date) | Processing STAGE 2 - gdcmdump | START" "\n"
     statusPrint "Checking previous stage dependencies"
     dirExist_check $STAGE2IN || fatal dependencyStage
-    DIFFUSIONDICOM=$(ls -1 $STAGE2IN | head -n 1)
-    STAGECMD="$STAGE2PROC				\
-                 -p n -d n -e n         \
-                 $DIFFUSIONDICOM"
-    stage_run "$STAGE" "$STAGECMD"                      \
-                "${G_LOGDIR}/${STAGE2PROC}.std"         \
-                "${G_LOGDIR}/${STAGE2PROC}.err"         \
-                "NOTEE"                                 \
-        || fatal stageRun
-    NIFTI=$(ls -1 *.nii.gz | head -n 1)
-    DCM2NIINAME=$(basename $NIFTI .nii.gz)
-    BVAL=$(ls -1 ${DCM2NIINAME}.bval | head -n 1)
-    BVEC=$(ls -1 ${DCM2NIINAME}.bvec | head -n 1)
+    
+    # Clear output files
+    cat /dev/null >  ${STAGE2FILEBASE}.bvec
+    cat /dev/null >  ${STAGE2FILEBASE}.bval
+    
+    DIFFUSIONDICOMS=$(ls -1 $STAGE2IN/*.dcm)
+    for DIFFUSIONDICOM in $DIFFUSIONDICOMS ; do 
+    	# Extract the gradient using gdcmdump
+    	# !! NOTE: Please note the "-1*$1", this is negating the x-component of the gradient
+    	#          that comes out of gdcmdump.  From emperical experience, this appears to
+    	#          be necessary, although the reason it is necessary is not clear. !!
+    	GRADIENT=$($STAGE2PROC -C $DIFFUSIONDICOM | grep DiffusionGradientDirection | grep -o "Data.*" | tr -d "Data '" | awk -F '\\' '{print -1*$1 " " $2 " " $3 }')
+    	BVAL=$($STAGE2PROC -C $DIFFUSIONDICOM | grep alBValue | awk -F '= ' '{print $2}') 
+    	if [ "$GRADIENT" != "-0  " ] ; then    		
+    		echo $GRADIENT >> ${STAGE2FILEBASE}.bvec
+    		echo $BVAL >> ${STAGE2FILEBASE}.bval
+    	else
+    		echo "0 0 0" >> ${STAGE2FILEBASE}.bvec
+    		echo "0" >> ${STAGE2FILEBASE}.bval    		
+    	fi
+    done
+       
+    BVAL=$(ls -1 ${STAGE2FILEBASE}.bval | head -n 1)
+    BVEC=$(ls -1 ${STAGE2FILEBASE}.bvec | head -n 1)    
     if (( ! ${#BVAL}  || ! ${#BVEC} )) ; then fatal bvConvert; fi
-    mv ${DCM2NIINAME}.nii.gz 	${STAGE2FILEBASE}.nii.gz
-    mv ${DCM2NIINAME}.bval	${STAGE2FILEBASE}.bval
-    mv ${DCM2NIINAME}.bvec	${STAGE2FILEBASE}.bvec
-    statusPrint "$(date) | Processing STAGE 2 - dcm --> nifti | END" "\n"
+    
+    statusPrint "$(date) | Processing STAGE 2 - gdcmdump | END" "\n"
 fi
 
 STAGE2OUT=${G_OUTDIR}/${STAGE2FILEBASE}.bval
-
-# Stage 3
-STAGE3PROC=tp.py
-STAGE3IN=${STAGE2OUT}
-STAGE3OUT=${G_OUTDIR}/${STAGE2FILEBASE}.bval.tp
-b_STAGEDONE=$(ls -1 $STAGE3OUT 2>/dev/null | wc -l)
-cprint "Does transposed bval exist?" "[ $b_STAGEDONE ]"
-if (( ${barr_stage[3]} && ! $b_STAGEDONE )) ; then
-    statusPrint "$(date) | Processing STAGE 3 - transposing | START" "\n"
-    statusPrint "Checking stage dependencies"
-    fileExist_check $STAGE3IN || fatal dependencyStage
-    STAGE="3-$STAGE3PROC-run"
-    for EXT in bval bvec ; do 
-        STAGECMD="tp.py -i ${STAGE2FILEBASE}.$EXT -s ' '	\
-		-o ${STAGE2FILEBASE}.$EXT.tp"
-         stage_run "$STAGE" "$STAGECMD"                         \
-                "${G_LOGDIR}/${STAGE3PROC}.std"                 \
-                "${G_LOGDIR}/${STAGE3PROC}.err"                 \
-                "NOTEE"                                         \
-            || stageRun
-    done
-    statusPrint "$(date) | Processing STAGE 3 - transposing | END" "\n"
-fi
-
 PRUNEDTABLE=${G_OUTDIR}/${MRID}_gradientTable.txt
 STAGE2FILEBASE=${G_OUTDIR}/$STAGE2FILEBASE
-nB0=$( cat ${STAGE2FILEBASE}.bval.tp | sed 's/^0/X/' | grep X | wc -l)
-nDir=$(cat ${STAGE2FILEBASE}.bval.tp | sed 's/^0/X/' | grep -v X | wc -l)
+
+nB0=$( cat ${STAGE2FILEBASE}.bval | sed 's/^0/X/' | grep X | wc -l)
+nDir=$(cat ${STAGE2FILEBASE}.bval | sed 's/^0/X/' | grep -v X | wc -l)
 cprint	"Gradient nDir"		"$nDir"
 if (( !${#nB0} )) ; then nB0="Unknown" ; fi
 cprint	"B0 Volumes"		"$nB0"
-GRADIENTTABLE=$(cat ${STAGE2FILEBASE}.bvec.tp | tail -n $nDir)
+GRADIENTTABLE=$(cat ${STAGE2FILEBASE}.bvec | tail -n $nDir)
 echo "$GRADIENTTABLE" > $PRUNEDTABLE
 statusPrint	"GradFile $PRUNEDTABLE" "\n"
 
