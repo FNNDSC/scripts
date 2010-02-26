@@ -20,7 +20,7 @@ while [ 1 ] ; do
     IDLEPCNT=$(rrdtool fetch $G_RRDFILE AVERAGE -s -30s | tail -2 | head -1 | awk '{print $2}')
     COUNT=$(rrdtool fetch $G_RRDFILE AVERAGE -s -30s | tail -2 | head -1 | awk '{print $3}')
     if [ "$IDLEPCNT" != "nan" ] ; then
-	USEPCNT=$(echo "${IDLEPCNT} ${COUNT}" | awk '{print (100.0-$1)/$2}')
+	USEPCNT=$(echo "${IDLEPCNT} ${COUNT}" | awk '{print 100.0-($1/$2)}')
 		echo $USEPCNT > $G_OUTFILE
     fi
     sleep 1;
