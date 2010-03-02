@@ -74,8 +74,8 @@ G_SYNOPSIS="
 	process specification.
 
         -T <pipelineType>
-        The pipeline batch to create. Currently 'FS' (for FreeSurfer) and 'Tract'
-        (for tractography) are understood.
+        The pipeline batch to create. Currently 'FS' (for FreeSurfer),  'Tract'
+        (for tractography) and 'Fetal' (for Fetal) are understood.
 	
 	-t <batchTableFile>
         The table file to process.
@@ -184,6 +184,7 @@ case "$(echo $G_PIPELINETYPE | tr '[A-Z]' '[a-z]')"
     in
         "fs")           PIPELINE="fs"           ;;
         "tract")        PIPELINE="tract"        ;;
+        "fetal")        PIPELINE="fetal"        ;;
 esac
 
 topDir=$(pwd)

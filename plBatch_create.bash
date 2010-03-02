@@ -30,6 +30,9 @@ G_SERIESLIST_TRACT="ISODIFFUSION,ISODIFFUSIONTRUEAXIAL,DIFFUSION"
 G_DEFAULTCOM_FS="-v 10 -t 123"
 G_SERIESLIST_FS="MPRAGE,SPGR"
 
+G_DEFAULTCOM_FETAL="-v 10 -t 123"
+G_SERIESLIST_FETAL=""
+
 G_OUTPUTSUFFIX=""
 G_DIRSUFFIX=""
 G_DCMMRIDTABLE=${G_DEFAULTDIR}/dcm_MRID_age.log
@@ -100,8 +103,8 @@ G_SYNOPSIS="
         The table file to create.
 
         -T <pipelineType>
-        The pipeline batch to create. Currently 'FS' (for FreeSurfer) and 'Tract'
-        (for tractography) are understood.
+        The pipeline batch to create. Currently 'FS' (for FreeSurfer),  'Tract'
+        (for tractography) and 'Fetal' (for Fetal) are understood.
     
         -z (Optional)
         If specified, use a 'fuzzy' search as opposed to an exact match.
@@ -136,7 +139,7 @@ G_SYNOPSIS="
 	
 	o A FreeSurfer 'std' or 'dev' environment.
 
-        o 'tract_meta.bash', 'fs_meta.bash' and related.
+        o 'tract_meta.bash', 'fs_meta.bash', 'fetal_meta.bash' and related.
 
  POSTCONDITIONS
 
@@ -257,6 +260,7 @@ if (( !Gb_userCom )) ; then
     in
         "fs")           G_DEFAULTCOM=$G_DEFAULTCOM_FS           ;;
         "tract")        G_DEFAULTCOM=$G_DEFAULTCOM_TRACT        ;;
+        "fetal")        G_DEFAULTCOM=$G_DEFAULTCOM_FETAL        ;;
     esac
 fi
 
@@ -265,6 +269,7 @@ if (( !Gb_userSeries )) ; then
     in
         "fs")           G_SERIESLIST=$G_SERIESLIST_FS           ;;
         "tract")        G_SERIESLIST=$G_SERIESLIST_TRACT        ;;
+        "fetal")        G_SERIESLIST=$G_SERIESLIST_FETAL        ;;
     esac
 fi
 
