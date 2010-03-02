@@ -44,6 +44,10 @@ G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvar
 
 G_STAGES="123"
 
+G_SLICE_SELECTION="0.5"
+G_MARGIN="5"
+G_HEAD_CIRCUMFERENCE="25"
+
 G_CLUSTERUSER=""
 
 G_SYNOPSIS="
@@ -67,7 +71,10 @@ G_SYNOPSIS="
                                 [-c] [-C <clusterDir>]                  \\
                                 [-M | -m <mailReportsTo>]               \\
                                 [-n <clusterUserName>]                  \\
-                                [-r <matlabServerName>]
+                                [-r <matlabServerName>]                 \\
+                                [-s <sliceNum>]                         \\
+                                [-H <headCircumference>]                \\
+                                [-g <margin>]
 
  DESCRIPTION
 
@@ -205,7 +212,20 @@ G_SYNOPSIS="
         run matlab on using ssh.  Note that in order for this to work without 
         stopping to prompt for passwords, seamless logins must be setup using 
         ssh-keygen and authorized_keys.
-
+        
+        -s <sliceNum> (Optional)
+        If specified, this option specified the slice [0.0, 1.0] to use for
+        region extraction.  The default is 0.5, which for example if there were
+        50 slices would use the 25th[50*0.5] slice.
+        
+        -H <headCircumference> (Optional)
+        If specified, this option specified the head circumference in (cm).  The
+        default is 25 which is the mean for GA 27 weeks.
+        
+        -g <margin> (Optional)
+        If specified, this option provides the margin in voxels around the
+        extracted region (default: 5).
+        
 STAGES
 
         'fetal_meta.bash' offers the following stages:
@@ -395,7 +415,7 @@ function cluster_schedule
 # Process command options
 ###///
 
-while getopts v:D:d:EL:O:R:o:S:ft:cC:M:m:n:r: option ; do
+while getopts v:D:d:EL:O:R:o:S:ft:cC:M:m:n:r:s:H:g: option ; do
     case "$option"
         in
         v)      Gi_verbose=$OPTARG              ;;
@@ -424,6 +444,9 @@ while getopts v:D:d:EL:O:R:o:S:ft:cC:M:m:n:r: option ; do
         n)      G_CLUSTERUSER=$OPTARG           ;;
         r)      Gb_runMatlabRemotely=1
                 G_MATLABSERVER=$OPTARG          ;;
+        s)      G_SLICE_SELECTION=$OPTARG       ;;
+        g)      G_MARGIN=$OPTARG                ;;
+        H)      G_HEAD_CIRCUMFERENCE=$OPTARG    ;;                
         \?)     synopsis_show
                 exit 0;;
     esac
@@ -599,8 +622,14 @@ if (( ${barr_stage[3]} )) ; then
     	REMOTESSH_PREFIX="ssh ${G_MATLABSERVER} \""
         REMOTESSH_POSTFIX="\""
     fi
+
+    cprint          "Slice Selection"		"[ $G_SLICE_SELECTION ]"
+    cprint          "Margin"         		"[ $G_MARGIN ]"
+    cprint          "Head Circumference"   	"[ $G_HEAD_CIRCUMFERENCE ]"
+    
+
     STAGECMD="${REMOTESSH_PREFIX}matlab               \
-              -r \\\"fetalbrain_extract('${STAGE3IN}') ; \
+              -r \\\"fetalbrain_extract('${STAGE3IN}',${G_SLICE_SELECTION},${G_MARGIN},${G_HEAD_CIRCUMFERENCE} ) ; \
               exit\\\" -nodisplay ${REMOTESSH_POSTFIX}"
 
     statusPrint "$(date) | Executing Matlab script" "\n"
