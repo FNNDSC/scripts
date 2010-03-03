@@ -21,6 +21,7 @@ declare -i Gb_b0VolOverride=0
 declare -i Gb_useFA=0
 
 G_OUTDIR="./"
+G_LOGDIR="./"
 G_DICOMFILE="-x"
 G_OUTPUTPREFIX="dcm2trk"
 G_GRADIENTTABLE="-x"
@@ -44,64 +45,64 @@ G_SYNOPSIS="
 
  NAME
 
-	dcm2trk.bash
+        dcm2trk.bash
 
  SYNOPSIS
 
-	dcm2trk.bash		-d <dicomFile>		        	\\		
-				-g <gradientTableFile>  		\\
-				[-b <bFieldValue>] [-B <b0override>]	\\
+        dcm2trk.bash            -d <dicomFile>                          \\              
+                                -g <gradientTableFile>                  \\
+                                [-b <bFieldValue>] [-B <b0override>]    \\
                                 [-A <reconAlg>] [-I <imageModel>]       \\
                                 [-F <lth>]                              \\
-				[-v <verbosity>]			\\
-				[-o <outputPrefix>]			\\
-				[-O <outputDirectory>]			\\
-				[-X] [-Y] [-Z]				\\
-				[-E] [-U]				\\
-				[-t <stage>] [-f]		
+                                [-v <verbosity>]                        \\
+                                [-o <outputPrefix>]                     \\
+                                [-O <outputDirectory>]                  \\
+                                [-X] [-Y] [-Z]                          \\
+                                [-E] [-U]                               \\
+                                [-t <stage>] [-f]               
 
  DESCRIPTION
 
-	'dcm2trk.bash' is a core component of a diffusion processing pipeline
-	infrastructure. It's primary purpose is to convert a diffusion scan
-	volume to a TrackVis format trk file.
+        'dcm2trk.bash' is a core component of a diffusion processing pipeline
+        infrastructure. It's primary purpose is to convert a diffusion scan
+        volume to a TrackVis format trk file.
 
-	A core design requirement is to create a trk file that is identical
-	to that produced by the GUI front end diffusion toolkit. To this end,
-	the script will by default use all the underlying processing steps
-	used by the diffusion toolkit.	
+        A core design requirement is to create a trk file that is identical
+        to that produced by the GUI front end diffusion toolkit. To this end,
+        the script will by default use all the underlying processing steps
+        used by the diffusion toolkit.  
 
         The <dicomFile> and <gradientTableFile> are strictly speaking the
         only arguments required to run the entire pipeline. If individual
         stages are run in isolation, these arguments might not be applicable
         and can be omitted.
 
- 	The number of b0 volumes in the input is determined by the
-	difference between the number of rows in the gradient table
-	and the number of frames in the input dicom volume.
+        The number of b0 volumes in the input is determined by the
+        difference between the number of rows in the gradient table
+        and the number of frames in the input dicom volume.
 
  ARGUMENTS
 
-	-d <dicomFile> (Required for stage 1)
-	A single file in a particular DICOM run to process. This can be a
+        -d <dicomFile> (Required for stage 1)
+        A single file in a particular DICOM run to process. This can be a
         relative or absolute file/directory spec. This file can also be
-	a *.nii.gz, in which case the script will automatically skip the
-	processing in stage 1, unzip the file, and place in the appropriate
-	directory for downstream processing.
+        a *.nii.gz, in which case the script will automatically skip the
+        processing in stage 1, unzip the file, and place in the appropriate
+        directory for downstream processing.
 
-	-g <gradientTableFile> (Required for stage 3)
-	The gradient table file for the DICOM images.
+        -g <gradientTableFile> (Required for stage 3)
+        The gradient table file for the DICOM images.
 
-	-U (Optional)
-	If specified, do NOT use 'diff_unpack' to convert from original
-	DICOM data to nifti format. By default, the script will attempt
-	to create a final trackvis trk file using the same components as
-	the front end diffusion toolkit. In some cases better dcm to nifti
-	conversion is possible using 'mri_convert' (for Siemens) or 
-	'dcm2nii'(for GE). To use these alternatives, specifiy a '-U'.
+        -U (Optional)
+        If specified, do NOT use 'diff_unpack' to convert from original
+        DICOM data to nifti format. By default, the script will attempt
+        to create a final trackvis trk file using the same components as
+        the front end diffusion toolkit. In some cases better dcm to nifti
+        conversion is possible using 'mri_convert' (for Siemens) or 
+        'dcm2nii'(for GE). To use these alternatives, specifiy a '-U'.
 
-	-b <bFieldValue> (Optional: $Gi_bValue)
-	The b value field.
+        -b <bFieldValue> (Optional: $Gi_bValue)
+        The b value field.
 
         -B <b0override> (Optional)
         If true, override the calculated number of b0 volumes with
@@ -117,77 +118,77 @@ G_SYNOPSIS="
         '-F 0.0'.
 
         -v <level> (Optional)
-	Verbosity level.
+        Verbosity level.
 
-	-o <outputPrefix> Optional: $G_OUTPUTPREFIX)
-	All files created in the <outputDirectory> will be prefixed with
-	<outputPrefix>. If running specific stages in isolation, it is 
+        -o <outputPrefix> Optional: $G_OUTPUTPREFIX)
+        All files created in the <outputDirectory> will be prefixed with
+        <outputPrefix>. If running specific stages in isolation, it is 
         recommended that the <outputPrefix> be specified each time.
 
-	-O <outputDirectory> (Optional: $G_OUTDIR)
-	The root output directory to house conversion. See OUTPUT section
-	for more detail. If this directory does not exist, the script  
+        -O <outputDirectory> (Optional: $G_OUTDIR)
+        The root output directory to house conversion. See OUTPUT section
+        for more detail. If this directory does not exist, the script  
         will attempt to create it.
 
-	[-X] [-Y] [-Z] (Optional)
-	Specifying any of the above multiplies the corresponding column
-	in the gradient file with -1.
+        [-X] [-Y] [-Z] (Optional)
+        Specifying any of the above multiplies the corresponding column
+        in the gradient file with -1.
 
-	[-t <stages>] (Optional: $G_STAGES)
-	The stages to process. See STAGES section for more detail.
+        [-t <stages>] (Optional: $G_STAGES)
+        The stages to process. See STAGES section for more detail.
 
-	[-f] (Optional: $Gb_forceStage)
-	If true, force re-running a stage that has already been processed.
+        [-f] (Optional: $Gb_forceStage)
+        If true, force re-running a stage that has already been processed.
 
-	[-E] (Optional)
-	Use expert options. This script pipeline relies upon a number
-	of underlying processes. Each of these processes accepts its
-	own set of control options. Many of these options are not exposed
-	by 'dcm2trk.bash', but can be specified by passing this -E flag.
+        [-E] (Optional)
+        Use expert options. This script pipeline relies upon a number
+        of underlying processes. Each of these processes accepts its
+        own set of control options. Many of these options are not exposed
+        by 'dcm2trk.bash', but can be specified by passing this -E flag.
         Currently, 'mri_convert', 'dti_tracker', and 'dti_recon' understand
         the -E flag.
 
-	In such a case, 'dcm2trk' will search in the <outputDirectory>
-	for text files of the form <processName>.opt that contain additional
-	options for <processName>. If found, the contents are read and
-	also passed to the <processName> as 'dcm2trk' executes it.
+        In such a case, 'dcm2trk' will search in the <outputDirectory>
+        for text files of the form <processName>.opt that contain additional
+        options for <processName>. If found, the contents are read and
+        also passed to the <processName> as 'dcm2trk' executes it.
 
-	For example, by default 'dti_tracker' uses a FACT reconstruction.
-	To change this to Runge Kutta, for example, create a text file
-	in the <outputDirectory> called 'dti_tracker.opt' containing the
-	string '-rk2'. Use additional settings if necessary.
+        For example, by default 'dti_tracker' uses a FACT reconstruction.
+        To change this to Runge Kutta, for example, create a text file
+        in the <outputDirectory> called 'dti_tracker.opt' containing the
+        string '-rk2'. Use additional settings if necessary.
 
  STAGES
 
-	'dcm2trk' offers the following stages:
+        'dcm2trk' offers the following stages:
 
-		1 - convert from dicom to nifti format
-		2 - perform eddy current correction
-		3 - run 'dti_recon' (or 'odf_recon')
-		4 - run 'dti_tracker' (or 'odf_tracker')
-		5 - run 'spline_filter'
+                1 - convert from dicom to nifti format
+                2 - perform eddy current correction
+                3 - run 'dti_recon' (or 'odf_recon')
+                4 - run 'dti_tracker' (or 'odf_tracker')
+                5 - run 'spline_filter'
 
-	The output of one stage is typically the input to its
-	successor stage. The script will abort if a given stage
-	has already been run for a particular dataset. A re-run
-	can be forced with the '-f' flag. It is the responsibility
-	of the caller to check for any dependency impications of
-	re-running stages.
+        The output of one stage is typically the input to its
+        successor stage. The script will abort if a given stage
+        has already been run for a particular dataset. A re-run
+        can be forced with the '-f' flag. It is the responsibility
+        of the caller to check for any dependency impications of
+        re-running stages.
 
  OUTPUT
 
-	Several directories are created in the <outputDirectory>. The 
-	final output trk file from the whole pipeline is stored here:
+        Several directories are created in the <outputDirectory>. The 
+        final output trk file from the whole pipeline is stored here:
 
-		<outputDirectory>/final-trackvis/<outputPrefix>.trk
+                <outputDirectory>/final-trackvis/<outputPrefix>.trk
 
 
  PRECONDITIONS
 
-	o '~/arch/scripts/common.bash'
-	Houses a set of common script run-time functions.
-	
-	o A FreeSurfer 'std' or 'dev' environment.
+        o '~/arch/scripts/common.bash'
+        Houses a set of common script run-time functions.
+        
+        o A FreeSurfer 'std' or 'dev' environment.
 
         o The following files need to exist on the current \$PATH:
 
@@ -200,25 +201,25 @@ G_SYNOPSIS="
                 * 'spline_filter'
                   Part of TrackVis.
 
-		* 'mri_convert', 'mri_info'
-		  Convert MRI data file types.
+                * 'mri_convert', 'mri_info'
+                  Convert MRI data file types.
 
-		* 'eddy_correct'
-		  Part of the FSL toolset.
+                * 'eddy_correct'
+                  Part of the FSL toolset.
 
 
  POSTCONDITIONS
 
-	o For a given diffusion volume, a corresponding TrackVis format
-	  'trk' file that visualizes the track data is generated.
+        o For a given diffusion volume, a corresponding TrackVis format
+          'trk' file that visualizes the track data is generated.
 
  HISTORY
 
-	11 February 2008
-	o Initial design and coding.
+        11 February 2008
+        o Initial design and coding.
 
-	10 July 2008
-	o Added input *.nii.gz for automatic skip of stage 1.
+        10 July 2008
+        o Added input *.nii.gz for automatic skip of stage 1.
         
         29 April 2009
         o Added orientation check and correction to stage 2 to fix
@@ -297,7 +298,7 @@ EC_faRun=81
 function b0Volumes_findNumber
 {
     # ARGS
-    #	<internal global>
+    #   <internal global>
     #
     # DESC
     # This function determines the number of b0 directions
@@ -309,7 +310,7 @@ function b0Volumes_findNumber
     declare -i D4=0
     declare -i b0Vols=0
 
-    statusPrint	"Calculating the number of b0 volumes"
+    statusPrint "Calculating the number of b0 volumes"
     D4=$(mri_info $NIIOUT1 2>/dev/null | grep dimension | awk '{print $8}')
     gradientRows=$(wc -l $G_GRADIENTTABLE | awk '{print $1}')
     ret_check $? || fatal tableRows
@@ -321,16 +322,16 @@ function b0Volumes_findNumber
 function stage2_niiConvert
 {
     # ARGS
-    #	<internal global>
+    #   <internal global>
     # 
     # DESC
-    # 	The output of stage 2 eddy_correct is converted
-    #	to nifti format
+    #   The output of stage 2 eddy_correct is converted
+    #   to nifti format
     #
-    statusPrint	"Forcing run of 'mri_convert'"		
-    mri_convert ${G_OUTPUTPREFIX}-eddy_correct.img ${NIIOUT2}.nii	\
-		2>mri_convert.err.log					\
-		>mri_convert.std.log
+    statusPrint "Forcing run of 'mri_convert'"          
+    mri_convert ${G_OUTPUTPREFIX}-eddy_correct.img ${NIIOUT2}.nii       \
+                2>mri_convert.err.log                                   \
+                >mri_convert.std.log
     fileExist_check ${NIIOUT2}.nii || fatal stage2nii
 }
 
@@ -340,13 +341,13 @@ function stage2_niiConvert
 
 
 while getopts v:fg:d:D:b:B:I:A:F:o:O:XYZt:hEU option ; do 
-	case "$option"
-	in
-		v) Gi_verbose=$OPTARG 					;;
-		f) Gb_forceStage=1					;;
+        case "$option"
+        in
+                v) Gi_verbose=$OPTARG                                   ;;
+                f) Gb_forceStage=1                                      ;;
                 g) G_GRADIENTTABLE=$OPTARG                              ;;
                 d) G_DICOMFILE=$OPTARG                                  ;;
-		b) Gi_bValue=$OPTARG					;;
+                b) Gi_bValue=$OPTARG                                    ;;
                 B) Gb_b0VolOverride=1  
                    Gi_b0Volumes=$OPTARG                                 ;;
                 I) G_IMAGEMODEL=$OPTARG                                 ;;
@@ -355,15 +356,15 @@ while getopts v:fg:d:D:b:B:I:A:F:o:O:XYZt:hEU option ; do
                    G_FALOWERTHRESHOLD=$OPTARG                           ;;
                 o) G_OUTPUTPREFIX=$OPTARG                               ;;
                 O) G_OUTDIR=$OPTARG                                     ;;
-		X) G_iX="-ix"						;;
-		Y) G_iY="-iy"						;;
-		Z) G_iZ="-iz"						;;
-		U) Gb_useDiffUnpack=0					;;
+                X) G_iX="-ix"                                           ;;
+                Y) G_iY="-iy"                                           ;;
+                Z) G_iZ="-iz"                                           ;;
+                U) Gb_useDiffUnpack=0                                   ;;
                 t) G_STAGES=$OPTARG                                     ;;
                 E) Gb_useExpertOptions=1                                ;;
-		*) synopsis_show 
-		    exit 0;;
-	esac
+                *) synopsis_show 
+                    exit 0;;
+        esac
 done
 
 
@@ -387,7 +388,7 @@ if [[ "$G_DICOMFILE" != "-x" ]] ; then
 fi
 
 if [[ $G_GRADIENTTABLE != "-x" ]] ; then
-    statusPrint	"Checking on <gradientTableFile>" "\n"
+    statusPrint "Checking on <gradientTableFile>" "\n"
     DIR=$(dirname $G_GRADIENTTABLE)
     FILE=$(basename $G_GRADIENTTABLE)
     statusPrint "Checking on DIR" 
@@ -421,17 +422,18 @@ dirExist_check "$G_OUTDIR" || fatal noOutputDir
 cd $G_OUTDIR
 G_OUTDIR=$(pwd)
 echo $G_OUTDIR
+G_LOGDIR=$G_OUTDIR
 
-REQUIREDFILES="	common.bash mri_info		        \
-		mri_convert eddy_correct 	        \
-		dti_recon dti_tracker spline_filter     \
+REQUIREDFILES=" common.bash mri_info                    \
+                mri_convert eddy_correct                \
+                dti_recon dti_tracker spline_filter     \
                 vol_thFind.py hardi_mat odf_recon       \
                 odf_tracker"
 
-cprint	"Use diff_unpack for dcm->nii"	"[ $Gb_useDiffUnpack ]"
+cprint  "Use diff_unpack for dcm->nii"  "[ $Gb_useDiffUnpack ]"
 
 if (( Gb_useDiffUnpack )) ; then
-	REQUIREDFILES="$REQUIREDFILES diff_unpack"
+        REQUIREDFILES="$REQUIREDFILES diff_unpack"
 fi
 
 for file in $REQUIREDFILES ; do
@@ -514,17 +516,17 @@ if (( ${barr_stage[1]} )) ; then
     if (( Gb_useDiffUnpack )) ; then
       INPUT=$G_DICOMFILE
       if (( b_NIIGZ )) ; then
-	DICOMDIR=$(dirname $G_DICOMFILE)
-	INPUTFILE=$(/bin/ls -1 $DICOMDIR | head -n 1)
-	INPUT=$DICOMDIR/$INPUTFILE 
+        DICOMDIR=$(dirname $G_DICOMFILE)
+        INPUTFILE=$(/bin/ls -1 $DICOMDIR | head -n 1)
+        INPUT=$DICOMDIR/$INPUTFILE 
       fi
       STAGE1PROC=diff_unpack
       STAGE=1-$STAGE1PROC
       EXOPTS=$(eval expertOpts_parse diff_unpack)
       OUTPUT=$(echo ${NIIOUT1} | sed 's/\(.*\)\.nii/\1/')
-      STAGECMD="diff_unpack				\
-                $INPUT					\
-                $OUTPUT					\
+      STAGECMD="diff_unpack                             \
+                $INPUT                                  \
+                $OUTPUT                                 \
                 -ot nii                                 \
                 $EXOPTS"
       stage_run "$STAGE" "$STAGECMD"                    \
@@ -552,13 +554,13 @@ if (( ${barr_stage[1]} )) ; then
       fi
     else
       if (( b_NIIGZ )) ; then
-	cp $G_DICOMFILE ${NIIOUT1}.gz
-	gunzip ${NIIOUT1}.gz
+        cp $G_DICOMFILE ${NIIOUT1}.gz
+        gunzip ${NIIOUT1}.gz
       else
         STAGE1PROC=mri_convert
         STAGE=1-$STAGE1PROC
         EXOPTS=$(eval expertOpts_parse mri_convert)
-        STAGECMD="UNPACK_MGH_DTI=0 mri_convert		\
+        STAGECMD="UNPACK_MGH_DTI=0 mri_convert          \
                 -ot nii                                 \
                 $EXOPTS                                 \
                 $G_DICOMFILE                            \
@@ -593,9 +595,9 @@ if (( ${barr_stage[2]} )) ; then
                 "${NIIDIR2}/${STAGE2PROC}.err"          \
                 "NOECHO"                                \
          || fatal stageRun
-	eval $STAGECMD ; 
+        eval $STAGECMD ; 
     else
-	statusPrint "Previous ECC output detected. Skipping ECC" 
+        statusPrint "Previous ECC output detected. Skipping ECC" 
     fi           
     ret_check $?
     statusPrint "Checking for output ECC nii format file"
@@ -635,10 +637,10 @@ if (( ${barr_stage[3]} )) ; then
     statusPrint "Checking stage dependencies"
     if (( ${barr_stage[2]} )) ; then
         fileExist_check ${NIIOUT2}.nii || fatal dependencyStage
-	RAWDATAFILE=${NIIOUT2}.nii
+        RAWDATAFILE=${NIIOUT2}.nii
     else
         fileExist_check ${NIIOUT1} || fatal dependencyStage
-	RAWDATAFILE=${NIIOUT1}
+        RAWDATAFILE=${NIIOUT1}
     fi
     statusPrint "Checking for gradient table"
     fileExist_check $G_GRADIENTTABLE || fatal noGradientFile
@@ -646,6 +648,7 @@ if (( ${barr_stage[3]} )) ; then
     STAGE=3-$STAGE3PROC
     dirExist_check      $NIIDIR3 >/dev/null || mkdir $NIIDIR3
     EXOPTS=$(eval expertOpts_parse dti_recon)
+    echo "EXOPTS: ${EXOPTS}"
     cd $NIIDIR3
     if (( ! Gb_b0VolOverride )) ; then
       b0Volumes_findNumber
@@ -658,7 +661,7 @@ if (( ${barr_stage[3]} )) ; then
     fi
     cprint "b0 Volumes" " [ $Gi_b0Volumes ]"
     if [[ "$G_IMAGEMODEL" == "dti" ]] ; then
-    	STAGECMD="${STAGEEXE}               \
+        STAGECMD="${STAGEEXE}               \
                 $RAWDATAFILE                \
                 ${NIIOUT3}                  \
                 $EXOPTS                     \
@@ -705,22 +708,22 @@ if (( ${barr_stage[4]} )) ; then
     EXOPTS=$(eval expertOpts_parse dti_tracker)
     MASK=${NIIOUT3}_dwi.nii
     if (( Gb_useFA )) ; then
-    	
-    	
+        
+        
         if [[ "$G_IMAGEMODEL" == "hardi" ]] ; then
             # If we are doing hardi, we first need to run dti_recon because
-	    # the hardi pipeline does not output the FA image.  There is some
-	    # question over what the validity is of using the FA mask with 
-	    # HARDI, but if the user wants to do it this appears to be the only
-	    # way
-	    NIIOUT_FOR_FA=${NIIDIR4}/${G_OUTPUTPREFIX}-dti_tracker_for_fa	    
-	    STAGECMD="dti_recon                 \
+            # the hardi pipeline does not output the FA image.  There is some
+            # question over what the validity is of using the FA mask with 
+            # HARDI, but if the user wants to do it this appears to be the only
+            # way
+            NIIOUT_FOR_FA=${NIIDIR4}/${G_OUTPUTPREFIX}-dti_tracker_for_fa           
+            STAGECMD="dti_recon                 \
                     $RAWDATAFILE                \
                     ${NIIOUT_FOR_FA}            \
-	            -gm ${G_GRADIENTTABLE}      \
-	            -ot nii                     \
-	            -b $Gi_bValue               \
-	            -b0 $Gi_b0Volumes"
+                    -gm ${G_GRADIENTTABLE}      \
+                    -ot nii                     \
+                    -b $Gi_bValue               \
+                    -b0 $Gi_b0Volumes"
                                 
             stage_run "4-dti_recon_for_fa" "$STAGECMD"  \
                     "${NIIDIR4}/dti_recon_for_fa.std"   \
@@ -732,7 +735,7 @@ if (( ${barr_stage[4]} )) ; then
         else
             MASK=${NIIOUT3}_fa.nii     
         fi
-    	
+        
         lprint "Analzying for lower intensity"
         FAminTH=$(vol_thFind.py -v $MASK -t $G_FALOWERTHRESHOLD 2>/dev/null)
         ret_check $? || fatal faRun
@@ -746,16 +749,16 @@ if (( ${barr_stage[4]} )) ; then
     fi
     cd $NIIDIR4
         
-    if [[ "$G_IMAGEMODEL" == "dti" ]] ; then	        
-    	STAGECMD="${STAGEEXE}				\
-    	        ${NIIOUT3}                              \
-    	        ${NIIOUT4}.trk                          \
-    	        $EXOPTS                                 \
-    	        -$G_RECONALG                            \
-    	        -at 35					\
-    	        -it nii					\
-    	        -m $MASK	        		\
-    	        $G_iX $G_iY $G_iZ"
+    if [[ "$G_IMAGEMODEL" == "dti" ]] ; then            
+        STAGECMD="${STAGEEXE}                           \
+                ${NIIOUT3}                              \
+                ${NIIOUT4}.trk                          \
+                $EXOPTS                                 \
+                -$G_RECONALG                            \
+                -at 35                                  \
+                -it nii                                 \
+                -m $MASK                                \
+                $G_iX $G_iY $G_iZ"
     else
         # The default for odf_recon is non-interpolate streamline,
         # the "-fact" command-line argument is not supported.  However,
@@ -772,8 +775,8 @@ if (( ${barr_stage[4]} )) ; then
                 -at 35                                  \
                 -it nii                                 \
                 -m $MASK                                \
-                $G_iX $G_iY $G_iZ"	
-    fi				
+                $G_iX $G_iY $G_iZ"      
+    fi                          
     stage_run "$STAGE" "$STAGECMD"                      \
                 "${NIIDIR4}/${STAGE4PROC}.std"          \
                 "${NIIDIR4}/${STAGE4PROC}.err"          \
@@ -791,11 +794,11 @@ if (( ${barr_stage[5]} )) ; then
     STAGE=5-$STAGE5PROC
     dirExist_check      $NIIDIR5 >/dev/null || mkdir $NIIDIR5
     cd $NIIDIR5
-    STAGECMD="spline_filter				\
+    STAGECMD="spline_filter                             \
                 ${NIIOUT4}.trk                          \
-		1					\
-		${NIIOUT5}.trk				\
-                > ${NIIDIR5}/spline_filter.std		\
+                1                                       \
+                ${NIIOUT5}.trk                          \
+                > ${NIIDIR5}/spline_filter.std          \
                 2> ${NIIDIR5}/spline_filter.err"
     stage_run "$STAGE" "$STAGECMD"                      \
                 "${NIIDIR5}/${STAGE5PROC}.std"          \

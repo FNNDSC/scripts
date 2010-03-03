@@ -488,9 +488,11 @@ PRUNEDTABLE=${G_OUTDIR}/${MRID}_gradientTable.txt
 STAGE2FILEBASE=${G_OUTDIR}/$STAGE2FILEBASE
 nB0=$( cat ${STAGE2FILEBASE}.bval.tp | sed 's/^0/X/' | grep X | wc -l)
 nDir=$(cat ${STAGE2FILEBASE}.bval.tp | sed 's/^0/X/' | grep -v X | wc -l)
+nBVal=$(cat ${STAGE2FILEBASE}.bval.tp | sed 's/^0/X/' | grep -v X | head -1)
 cprint	"Gradient nDir"		"$nDir"
 if (( !${#nB0} )) ; then nB0="Unknown" ; fi
 cprint	"B0 Volumes"		"$nB0"
+cprint  "DTI bValue"        "$nBVal"
 GRADIENTTABLE=$(cat ${STAGE2FILEBASE}.bvec.tp | tail -n $nDir)
 echo "$GRADIENTTABLE" > $PRUNEDTABLE
 if (( Gb_fixGradientTable )) ; then
