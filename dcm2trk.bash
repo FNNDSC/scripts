@@ -18,7 +18,6 @@ declare -i Gb_useExpertOptions=0
 declare -i Gb_ECCdetected=0
 declare -i Gb_useDiffUnpack=1
 declare -i Gb_b0VolOverride=0
-declare -i Gb_useFA=0
 
 G_OUTDIR="./"
 G_LOGDIR="./"
@@ -29,7 +28,8 @@ G_STAGES="12345"
 
 G_IMAGEMODEL="DTI"
 G_RECONALG="fact"
-G_FALOWERTHRESHOLD="-x"
+G_MASKIMAGE="dwi"
+G_LOWERTHRESHOLD="0.0"
 
 G_EXP_eddy_recon=""
 G_EXP_dti_recon=""
@@ -53,6 +53,7 @@ G_SYNOPSIS="
                                 -g <gradientTableFile>                  \\
                                 [-b <bFieldValue>] [-B <b0override>]    \\
                                 [-A <reconAlg>] [-I <imageModel>]       \\
+                                [-i <maskImage>]                        \\
                                 [-F <lth>]                              \\
                                 [-v <verbosity>]                        \\
                                 [-o <outputPrefix>]                     \\
@@ -111,11 +112,17 @@ G_SYNOPSIS="
         [-A <reconAlg>] [-I <imageModel>] (Optional: Default 'fact'/'DTI')
         Specifies the reconstruction algorithm and model to use. The default
         algorithm is 'fact', and the default model is DTI.
-
-        [-F <lth>] (Optional)
-        If specified, use the FA volume as a mask. Moreover, use the <lth> as
-        a lower cutoff threshold on the mask. To use the entire FA volume, use
-        '-F 0.0'.
+        
+        [-i <maskImage>] (Optional: Default 'dwi')
+        Selects which volume to use as a mask.  Acceptable values are 'dwi',
+        'fa', and 'adc'.  If specified, the lower threshold for the mask is
+        given by the '-F' option.
+                
+        [-F <lth>] (Optional: Default '0.0')
+        Use the <lth> as a lower cutoff threshold on the mask. To use the entire 
+        volume, use '-F 0.0'.  The mask image that is used depends on what is
+        specified for the '-i' option.  This option only has an effect if the
+        mask is not 'dwi'.
 
         -v <level> (Optional)
         Verbosity level.
@@ -250,8 +257,9 @@ A_tableRows="checking the number of rown in the gradient table"
 A_stageRun="running a stage in the processing pipeline"
 A_reconAlg="checking on the reconstruction algorithm"
 A_imageModel="checking on the image model"
+A_maskImage="checking on mask image"
 A_fa="checking on the FA argument "
-A_faRun="analyzing the FA volume"
+A_faRun="analyzing the Mask volume"
 
 # Error messages
 EM_dependency="it seems that a dependency is missing."
@@ -271,6 +279,7 @@ EM_tableRows="the 'wc' command returned an error."
 EM_stageRun="I encountered an error processing this stage."
 EM_reconAlg="must be either 'fact' or 'rk2'."
 EM_imageModel="must be either 'hardi' or 'dti'."
+EM_maskImage="must be either 'dwi', 'fa', or 'adc'."
 EM_fa="No <lth> has been specified."
 EM_faRun="the underlying analysis failed."
 
@@ -292,6 +301,7 @@ EC_tableRows=121
 EC_stageRun=30
 EC_reconAlg=70
 EC_imageModel=71
+EC_maskImage=72
 EC_fa=80
 EC_faRun=81
 
@@ -340,7 +350,7 @@ function stage2_niiConvert
 ###///
 
 
-while getopts v:fg:d:D:b:B:I:A:F:o:O:XYZt:hEU option ; do 
+while getopts v:fg:d:D:b:B:I:A:F:i:o:O:XYZt:hEU option ; do 
         case "$option"
         in
                 v) Gi_verbose=$OPTARG                                   ;;
@@ -352,8 +362,8 @@ while getopts v:fg:d:D:b:B:I:A:F:o:O:XYZt:hEU option ; do
                    Gi_b0Volumes=$OPTARG                                 ;;
                 I) G_IMAGEMODEL=$OPTARG                                 ;;
                 A) G_RECONALG=$OPTARG                                   ;;
-                F) Gb_useFA=1
-                   G_FALOWERTHRESHOLD=$OPTARG                           ;;
+                F) G_LOWERTHRESHOLD=$OPTARG                             ;;
+                i) G_MASKIMAGE=$OPTARG                                  ;;
                 o) G_OUTPUTPREFIX=$OPTARG                               ;;
                 O) G_OUTDIR=$OPTARG                                     ;;
                 X) G_iX="-ix"                                           ;;
@@ -406,15 +416,20 @@ fi
 
 G_RECONALG=$(echo $G_RECONALG | tr '[A-Z]' '[a-z]')
 G_IMAGEMODEL=$(echo $G_IMAGEMODEL | tr '[A-Z]' '[a-z]')
+G_MASKIMAGE=$(echo $G_MASKIMAGE | tr '[A-Z]' '[a-z]')
 
 cprint          "Algorithm"     "[ $G_RECONALG ]"
 cprint          "Image Model"   "[ $G_IMAGEMODEL ]"
+cprint          "Mask Image"    "[ $G_MASKIMAGE  ]"
 
 if [[ $G_RECONALG != "fact" && $G_RECONALG != "rk2" ]] ; then
     fatal reconAlg
 fi
 if [[ $G_IMAGEMODEL != "dti" && $G_IMAGEMODEL != "hardi" ]] ; then
     fatal imageModel
+fi
+if [[ $G_MASKIMAGE != "dwi" && $G_MASKIMAGE != "fa" && $G_MASKIMAGE != "adc" ]] ; then
+    fatal maskImage
 fi
 
 statusPrint     "Checking if <outputDirectory> is accessible"
@@ -679,7 +694,6 @@ if (( ${barr_stage[3]} )) ; then
                 $GRADIENTROWS               \
                 181                         \
                 ${NIIOUT3}                  \
-                $EXOPTS                     \
                 -nt                         \
                 -b0 $Gi_b0Volumes           \
                 -mat ${OUTPUT}.dat          \
@@ -706,47 +720,47 @@ if (( ${barr_stage[4]} )) ; then
     STAGE=4-$STAGE4PROC
     dirExist_check      $NIIDIR4 >/dev/null || mkdir $NIIDIR4
     EXOPTS=$(eval expertOpts_parse dti_tracker)
-    MASK=${NIIOUT3}_dwi.nii
-    if (( Gb_useFA )) ; then
-        
-        
+    
+    MASK=${NIIOUT3}_${G_MASKIMAGE}.nii    
+    if [[ $G_MASKIMAGE != "dwi" ]] ; then
         if [[ "$G_IMAGEMODEL" == "hardi" ]] ; then
             # If we are doing hardi, we first need to run dti_recon because
-            # the hardi pipeline does not output the FA image.  There is some
-            # question over what the validity is of using the FA mask with 
+            # the hardi pipeline does not output the FA/ADC image.  There is some
+            # question over what the validity is of using the FA/ADC mask with 
             # HARDI, but if the user wants to do it this appears to be the only
             # way
-            NIIOUT_FOR_FA=${NIIDIR4}/${G_OUTPUTPREFIX}-dti_tracker_for_fa           
+            NIIOUT_FOR_MASK=${NIIDIR4}/${G_OUTPUTPREFIX}-dti_tracker_for_${G_MASKIMAGE}  
             STAGECMD="dti_recon                 \
                     $RAWDATAFILE                \
-                    ${NIIOUT_FOR_FA}            \
+                    ${NIIOUT_FOR_MASK}          \
                     -gm ${G_GRADIENTTABLE}      \
                     -ot nii                     \
                     -b $Gi_bValue               \
                     -b0 $Gi_b0Volumes"
                                 
-            stage_run "4-dti_recon_for_fa" "$STAGECMD"  \
-                    "${NIIDIR4}/dti_recon_for_fa.std"   \
-                    "${NIIDIR4}/dti_recon_for_fa.err"   \
-                    "NOECHO"                            \
+            stage_run "4-dti_recon_for_${G_MASKIMAGE}" "$STAGECMD"  \
+                    "${NIIDIR4}/dti_recon_for_${G_MASKIMAGE}.std"   \
+                    "${NIIDIR4}/dti_recon_for_${G_MASKIMAGE}.err"   \
+                    "NOECHO"                                        \
                     || fatal stageRun
             
-            MASK=${NIIOUT_FOR_FA}_fa.nii                 
+            MASK=${NIIOUT_FOR_MASK}_${G_MASKIMAGE}.nii                 
         else
-            MASK=${NIIOUT3}_fa.nii     
+            MASK=${NIIOUT3}_${G_MASKIMAGE}.nii     
         fi
         
         lprint "Analzying for lower intensity"
-        FAminTH=$(vol_thFind.py -v $MASK -t $G_FALOWERTHRESHOLD 2>/dev/null)
+        MASKminTH=$(vol_thFind.py -v $MASK -t $G_LOWERTHRESHOLD 2>/dev/null)
         ret_check $? || fatal faRun
-        cprint "Lower threshold spec"           " [ $G_FALOWERTHRESHOLD ]"
-        cprint "Lower threshold intensity"      " [ $FAminTH ]"
+        cprint "Lower threshold spec"           " [ $G_LOWERTHRESHOLD ]"
+        cprint "Lower threshold intensity"      " [ $MASKminTH ]"
         lprint "Analzying for upper intensity"
-        FAmaxTH=$(vol_thFind.py -v $MASK -t 1.0 2>/dev/null)
+        MASKmaxTH=$(vol_thFind.py -v $MASK -t 1.0 2>/dev/null)
         ret_check $? || fatal faRun
-        cprint "Upper threshold intensity"      " [ $FAmaxTH ]"
-        MASK="$MASK $FAminTH $FAmaxTH"
+        cprint "Upper threshold intensity"      " [ $MASKmaxTH ]"
+        MASK="$MASK $MASKminTH $MASKmaxTH"
     fi
+               
     cd $NIIDIR4
         
     if [[ "$G_IMAGEMODEL" == "dti" ]] ; then            

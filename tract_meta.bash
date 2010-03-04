@@ -24,7 +24,8 @@ declare -i Gb_mailLog=0
 declare -i Gb_runCluster=0
 
 declare -i Gb_useDICOMFile=0
-declare -i Gb_useFA=0
+declare -i Gb_useThreshold=0
+declare -i Gb_useMask=0
 
 declare -i Gi_bValue=1000
 declare -i Gb_bValueOverride=0
@@ -49,7 +50,8 @@ G_GRADIENTFILE="-x"
 
 G_IMAGEMODEL="DTI"
 G_RECONALG="fact"
-G_FALOWERTHRESHOLD="-x"
+G_LOWERTHRESHOLD="-x"
+G_MASKIMAGE="-x"
 
 G_CLUSTERNAME=seychelles
 G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
@@ -87,6 +89,7 @@ G_SYNOPSIS="
                                 [-B <b0vols>]                           \\
                                 [-A <reconAlg>] [-I <imageModel>]       \\
                                 [-F <lth>]                              \\
+                                [-i <maskImage>]                        \\
                                 [-L <logDir>]                           \\
                                 [-v <verbosity>]                        \\
                                 [-O <outputDir>] [-o <suffix>]          \\
@@ -159,11 +162,17 @@ G_SYNOPSIS="
         Specifies the reconstruction algorithm and model to use. The default
         algorithm is 'fact', and the default model is DTI.
         
-        [-F <lth>] (Optional)
-        If specified, use the FA volume as a mask. Moreover, use the <lth> as
-        a lower cutoff threshold on the mask. To use the entire FA volume, use
-        '-F 0.0'.
-
+        [-i <maskImage>] (Optional: Default 'dwi')
+        Selects which volume to use as a mask.  Acceptable values are 'dwi',
+        'fa', and 'adc'.  If specified, the lower threshold for the mask is
+        given by the '-F' option.
+                
+        [-F <lth>] (Optional: Default '0.0')
+        Use the <lth> as a lower cutoff threshold on the mask. To use the entire 
+        volume, use '-F 0.0'.  The mask image that is used depends on what is
+        specified for the '-i' option.  This option only has an effect if the
+        mask is not 'dwi'.
+        
         -g <gradientTableFile> (Optional)
         By default, 'tract_meta.bash' will attempt to determine the correct
         gradient file for the tract reconstruction step. Occassionally, this
@@ -597,7 +606,7 @@ function matlabFile_create
 # Process command options
 ###///
 
-while getopts v:D:d:B:A:F:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:n:M:m: option ; do 
+while getopts v:D:d:B:A:F:i:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:n:M:m: option ; do 
         case "$option"
         in
             v)      Gi_verbose=$OPTARG              ;;
@@ -618,8 +627,10 @@ while getopts v:D:d:B:A:F:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:n:M:m: option ; do
                     Gi_b0vols=$OPTARG               ;;
             I)      G_IMAGEMODEL=$OPTARG            ;;
             A)      G_RECONALG=$OPTARG              ;;
-            F)      Gb_useFA=1
-                    G_FALOWERTHRESHOLD=$OPTARG      ;;
+            F)      Gb_useThreshold=1
+                    G_LOWERTHRESHOLD=$OPTARG        ;;
+            i)      Gb_useMask=1
+                    G_MASKIMAGE=$OPTARG             ;;
             G)      Gb_GEGradientInlineFix=0        ;;
             S)      G_DICOMSERIESLIST=$OPTARG       ;;
             f)      Gb_forceStage=1                 ;;
@@ -930,9 +941,11 @@ if (( ${barr_stage[2]} )) ; then
     statusPrint "Checking stage output root directory"
     dirExist_check $STAGE2DIR "created" || mkdir $STAGE2DIR
     STAGESTEPS="12345"
-    FA=""
+    THRESHOLD=""
+    MASK=""
     if (( Gb_skipEddyCurrentCorrection )) ; then STAGESTEPS="1345" ; fi
-    if (( Gb_useFA )) ; then FA="-F $G_FALOWERTHRESHOLD" ; fi
+    if (( Gb_useThreshold )) ; then THRESHOLD="-F $G_LOWERTHRESHOLD" ; fi
+    if (( Gb_useMask )) ; then MASK="-i $G_MASKIMAGE" ; fi
     EXOPTS=$(eval expertOpts_parse $STAGE2PROC)
     SKIPDIFFUNPACK=""
     if (( !Gb_useDiffUnpack )) ; then SKIPDIFFUNPACK="-U"; fi
@@ -952,7 +965,8 @@ if (( ${barr_stage[2]} )) ; then
                 -v 10 -d $DIFFUSIONINPUT                \
                 $SKIPDIFFUNPACK                         \
                 -A $G_RECONALG -I $G_IMAGEMODEL         \
-                $FA                                     \
+                $THRESHOLD                              \
+                $MASK                                   \
                 -g $G_GRADIENTFILE                      \
                 -O $STAGE2DIR                           \
                 -o ${MRID}${G_OUTSUFFIX}                \
