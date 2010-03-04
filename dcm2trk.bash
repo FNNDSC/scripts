@@ -30,6 +30,7 @@ G_IMAGEMODEL="DTI"
 G_RECONALG="fact"
 G_MASKIMAGE="dwi"
 G_LOWERTHRESHOLD="0.0"
+G_UPPERTHRESHOLD="1.0"
 
 G_EXP_eddy_recon=""
 G_EXP_dti_recon=""
@@ -55,6 +56,7 @@ G_SYNOPSIS="
                                 [-A <reconAlg>] [-I <imageModel>]       \\
                                 [-i <maskImage>]                        \\
                                 [-F <lth>]                              \\
+                                [-u <uth>]                              \\
                                 [-v <verbosity>]                        \\
                                 [-o <outputPrefix>]                     \\
                                 [-O <outputDirectory>]                  \\
@@ -123,7 +125,13 @@ G_SYNOPSIS="
         volume, use '-F 0.0'.  The mask image that is used depends on what is
         specified for the '-i' option.  This option only has an effect if the
         mask is not 'dwi'.
-
+        
+        [-u <uth>] (Optional: Default '1.0')
+        Use the <uth> as an upper cutoff threshold on the mask. To use the entire 
+        volume, use '-u 1.0'.  The mask image that is used depends on what is
+        specified for the '-i' option.  This option only has an effect if the
+        mask is not 'dwi'.
+        
         -v <level> (Optional)
         Verbosity level.
 
@@ -350,7 +358,7 @@ function stage2_niiConvert
 ###///
 
 
-while getopts v:fg:d:D:b:B:I:A:F:i:o:O:XYZt:hEU option ; do 
+while getopts v:fg:d:D:b:B:I:A:F:u:i:o:O:XYZt:hEU option ; do 
         case "$option"
         in
                 v) Gi_verbose=$OPTARG                                   ;;
@@ -363,6 +371,7 @@ while getopts v:fg:d:D:b:B:I:A:F:i:o:O:XYZt:hEU option ; do
                 I) G_IMAGEMODEL=$OPTARG                                 ;;
                 A) G_RECONALG=$OPTARG                                   ;;
                 F) G_LOWERTHRESHOLD=$OPTARG                             ;;
+                u) G_UPPERTHRESHOLD=$OPTARG                             ;;
                 i) G_MASKIMAGE=$OPTARG                                  ;;
                 o) G_OUTPUTPREFIX=$OPTARG                               ;;
                 O) G_OUTDIR=$OPTARG                                     ;;
@@ -663,7 +672,6 @@ if (( ${barr_stage[3]} )) ; then
     STAGE=3-$STAGE3PROC
     dirExist_check      $NIIDIR3 >/dev/null || mkdir $NIIDIR3
     EXOPTS=$(eval expertOpts_parse dti_recon)
-    echo "EXOPTS: ${EXOPTS}"
     cd $NIIDIR3
     if (( ! Gb_b0VolOverride )) ; then
       b0Volumes_findNumber
@@ -753,9 +761,10 @@ if (( ${barr_stage[4]} )) ; then
         MASKminTH=$(vol_thFind.py -v $MASK -t $G_LOWERTHRESHOLD 2>/dev/null)
         ret_check $? || fatal faRun
         cprint "Lower threshold spec"           " [ $G_LOWERTHRESHOLD ]"
+        cprint "Upper threshold spec"           " [ $G_UPPERTHRESHOLD ]"
         cprint "Lower threshold intensity"      " [ $MASKminTH ]"
         lprint "Analzying for upper intensity"
-        MASKmaxTH=$(vol_thFind.py -v $MASK -t 1.0 2>/dev/null)
+        MASKmaxTH=$(vol_thFind.py -v $MASK -t $G_UPPERTHRESHOLD 2>/dev/null)
         ret_check $? || fatal faRun
         cprint "Upper threshold intensity"      " [ $MASKmaxTH ]"
         MASK="$MASK $MASKminTH $MASKmaxTH"
