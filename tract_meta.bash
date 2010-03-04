@@ -24,7 +24,8 @@ declare -i Gb_mailLog=0
 declare -i Gb_runCluster=0
 
 declare -i Gb_useDICOMFile=0
-declare -i Gb_useThreshold=0
+declare -i Gb_useLowerThreshold=0
+declare -i Gb_useUpperThreshold=0
 declare -i Gb_useMask=0
 
 declare -i Gi_bValue=1000
@@ -51,6 +52,7 @@ G_GRADIENTFILE="-x"
 G_IMAGEMODEL="DTI"
 G_RECONALG="fact"
 G_LOWERTHRESHOLD="-x"
+G_UPPERTHRESHOLD="-x"
 G_MASKIMAGE="-x"
 
 G_CLUSTERNAME=seychelles
@@ -89,6 +91,7 @@ G_SYNOPSIS="
                                 [-B <b0vols>]                           \\
                                 [-A <reconAlg>] [-I <imageModel>]       \\
                                 [-F <lth>]                              \\
+                                [-u <uth>]                              \\
                                 [-i <maskImage>]                        \\
                                 [-L <logDir>]                           \\
                                 [-v <verbosity>]                        \\
@@ -170,6 +173,12 @@ G_SYNOPSIS="
         [-F <lth>] (Optional: Default '0.0')
         Use the <lth> as a lower cutoff threshold on the mask. To use the entire 
         volume, use '-F 0.0'.  The mask image that is used depends on what is
+        specified for the '-i' option.  This option only has an effect if the
+        mask is not 'dwi'.
+        
+        [-u <uth>] (Optional: Default '1.0')
+        Use the <uth> as an upper cutoff threshold on the mask. To use the entire 
+        volume, use '-u 1.0'.  The mask image that is used depends on what is
         specified for the '-i' option.  This option only has an effect if the
         mask is not 'dwi'.
         
@@ -606,7 +615,7 @@ function matlabFile_create
 # Process command options
 ###///
 
-while getopts v:D:d:B:A:F:i:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:n:M:m: option ; do 
+while getopts v:D:d:B:A:F:u:i:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:n:M:m: option ; do 
         case "$option"
         in
             v)      Gi_verbose=$OPTARG              ;;
@@ -627,8 +636,10 @@ while getopts v:D:d:B:A:F:i:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:n:M:m: option ; do
                     Gi_b0vols=$OPTARG               ;;
             I)      G_IMAGEMODEL=$OPTARG            ;;
             A)      G_RECONALG=$OPTARG              ;;
-            F)      Gb_useThreshold=1
+            F)      Gb_useLowerThreshold=1
                     G_LOWERTHRESHOLD=$OPTARG        ;;
+            u)      Gb_useUpperThreshold=1
+                    G_UPPERTHRESHOLD=$OPTARG        ;;
             i)      Gb_useMask=1
                     G_MASKIMAGE=$OPTARG             ;;
             G)      Gb_GEGradientInlineFix=0        ;;
@@ -941,10 +952,12 @@ if (( ${barr_stage[2]} )) ; then
     statusPrint "Checking stage output root directory"
     dirExist_check $STAGE2DIR "created" || mkdir $STAGE2DIR
     STAGESTEPS="12345"
-    THRESHOLD=""
+    LOWERTHRESHOLD=""
+    UPPERTHRESHOLD=""
     MASK=""
     if (( Gb_skipEddyCurrentCorrection )) ; then STAGESTEPS="1345" ; fi
-    if (( Gb_useThreshold )) ; then THRESHOLD="-F $G_LOWERTHRESHOLD" ; fi
+    if (( Gb_useLowerThreshold )) ; then LOWERTHRESHOLD="-F $G_LOWERTHRESHOLD" ; fi
+    if (( Gb_useUpperThreshold )) ; then UPPERTHRESHOLD="-u $G_UPPERTHRESHOLD" ; fi
     if (( Gb_useMask )) ; then MASK="-i $G_MASKIMAGE" ; fi
     EXOPTS=$(eval expertOpts_parse $STAGE2PROC)
     SKIPDIFFUNPACK=""
@@ -965,7 +978,8 @@ if (( ${barr_stage[2]} )) ; then
                 -v 10 -d $DIFFUSIONINPUT                \
                 $SKIPDIFFUNPACK                         \
                 -A $G_RECONALG -I $G_IMAGEMODEL         \
-                $THRESHOLD                              \
+                $LOWERTHRESHOLD                         \
+                $UPPERTHRESHOLD                         \
                 $MASK                                   \
                 -g $G_GRADIENTFILE                      \
                 -O $STAGE2DIR                           \
