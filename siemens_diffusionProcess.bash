@@ -399,7 +399,7 @@ if (( ${barr_stage[2]} )) ; then
     	#          be necessary, although the reason it is necessary is not clear. !!
     	GRADIENT=$($STAGE2PROC -C $DIFFUSIONDICOM | grep DiffusionGradientDirection | grep -o "Data.*" | tr -d "Data '" | awk -F '\\' '{print -1*$1 " " $2 " " $3 }')
     	BVAL=$($STAGE2PROC -C $DIFFUSIONDICOM | grep alBValue | awk -F '= ' '{print $2}') 
-    	if [ "$GRADIENT" != "-0  " ] ; then    		
+    	if [[ "$GRADIENT" != "0  " && "$GRADIENT" != "-0  " ]] ; then    		
     		echo $GRADIENT >> ${STAGE2FILEBASE}.bvec
     		echo $BVAL >> ${STAGE2FILEBASE}.bval
     	else
