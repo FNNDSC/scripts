@@ -23,7 +23,7 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-        cluster_genXML.bash           -f <clusterScheduleLog> \
+        cluster_genXML.bash           -f <clusterScheduleLog> \\
                                       -l <lineNumber>
 
  DESCRIPTION
@@ -125,6 +125,7 @@ do
 		SUBMITUSER=$(echo $line | awk '{print $8}')
 		TOCFILEPATH=$(dirname $(dirname $CLUSTERCMD))"/toc.txt"
 		METASCRIPT=$(cat $CLUSTERCMD | grep '_meta.bash' | awk '{ print $1 }')
+		CMDARGUMENTS=$(cat $CLUSTERCMD | grep '_meta.bash' | awk -F '>' '{print $1}' | awk '{for(f=2;f<=NF;f++) printf("%s ",$f) }')
 			
 	    if [ -f $TOCFILEPATH ] ; then
 			TOCFILE=$(cat -E $TOCFILEPATH | sed 's/\$/\\n/g')
@@ -141,6 +142,7 @@ do
 								
 			echo "<ClusterJob>"
 			echo "    <Command>$CLUSTERCMD</Command>"
+			echo "    <Arguments>$CMDARGUMENTS</Arguments>"
 			echo "    <MetaScript>$METASCRIPT</MetaScript>"
 			echo "    <Date>$DATE</Date>"
 			echo "    <User>$SUBMITUSER</User>"
