@@ -9,7 +9,7 @@
 #
 
 
-source ~/arch/scripts/common.bash
+source common.bash
 
 while read line ; do
     DIR=$(echo $line | awk '{print $1}')
