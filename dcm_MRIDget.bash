@@ -143,7 +143,7 @@ for DIR in * ; do
 			b_hit=$(echo "$DCMLIST" | grep $ID | wc -l)
 		fi
 		if (( b_hit )) ; then
-			printf "%-55\ts" "$DIR"; 
+			printf "%-55s\t" "$DIR"; 
 			printf "%25s\n" "$ID"; 
 			let "hitCount += 1"
 			if (( b_DCMLIST )) ; then
