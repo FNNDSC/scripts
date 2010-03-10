@@ -10,6 +10,7 @@
 
 # "include" the set of common script functions
 source common.bash
+source getoptx.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=1
@@ -24,10 +25,12 @@ declare -i Gb_mailLog=0
 declare -i Gb_runCluster=0
 
 declare -i Gb_useDICOMFile=0
-declare -i Gb_useLowerThreshold=0
-declare -i Gb_useUpperThreshold=0
-declare -i Gb_useMask=0
-
+declare -i Gb_useLowerThreshold1=0
+declare -i Gb_useUpperThreshold1=0
+declare -i Gb_useLowerThreshold2=0
+declare -i Gb_useUpperThreshold2=0
+declare -i Gb_useMask1=0
+declare -i Gb_useMask2=0
 declare -i Gi_bValue=1000
 declare -i Gb_bValueOverride=0
 declare -i Gb_b0override=0
@@ -51,9 +54,13 @@ G_GRADIENTFILE="-x"
 
 G_IMAGEMODEL="DTI"
 G_RECONALG="fact"
-G_LOWERTHRESHOLD="-x"
-G_UPPERTHRESHOLD="-x"
-G_MASKIMAGE="-x"
+G_LOWERTHRESHOLD1="-x"
+G_UPPERTHRESHOLD1="-x"
+G_MASKIMAGE1="-x"
+G_LOWERTHRESHOLD2="-x"
+G_UPPERTHRESHOLD2="-x"
+G_MASKIMAGE2="-x"
+
 
 G_CLUSTERNAME=seychelles
 G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
@@ -90,9 +97,13 @@ G_SYNOPSIS="
                                 [-g <gradientTableFile>] [-G]           \\
                                 [-B <b0vols>]                           \\
                                 [-A <reconAlg>] [-I <imageModel>]       \\
-                                [-F <lth>]                              \\
+                                [-m1 <maskImage1>]                      \\
+                                [-m2 <maskImage2>]                      \\
+                                [-m1-lower-threshold <lth>]             \\
+                                [-m2-lower-threshold <lth>]             \\
+                                [-m1-upper-threshold <uth>]             \\
+                                [-m2-upper-threshold <uth>]             \\
                                 [-u <uth>]                              \\
-                                [-i <maskImage>]                        \\
                                 [-L <logDir>]                           \\
                                 [-v <verbosity>]                        \\
                                 [-O <outputDir>] [-o <suffix>]          \\
@@ -165,21 +176,24 @@ G_SYNOPSIS="
         Specifies the reconstruction algorithm and model to use. The default
         algorithm is 'fact', and the default model is DTI.
         
-        [-i <maskImage>] (Optional: Default 'dwi')
-        Selects which volume to use as a mask.  Acceptable values are 'dwi',
+        [-m1 <maskImage1>] (Optional: Default 'dwi')
+        [-m2 <maskImage2>] (Optional: Default 'none')
+        Selects which volume to use as a mask image 1 or 2.  Acceptable values are 'dwi',
         'fa', and 'adc'.  If specified, the lower threshold for the mask is
-        given by the '-F' option.
+        given by the '-mN-lower-threshold' option.
                 
-        [-F <lth>] (Optional: Default '0.0')
-        Use the <lth> as a lower cutoff threshold on the mask. To use the entire 
-        volume, use '-F 0.0'.  The mask image that is used depends on what is
-        specified for the '-i' option.  This option only has an effect if the
+        [-m1-lower-threshold <lth>] (Optional: Default '0.0')
+        [-m2-lower-threshold <lth>] (Optional: Default '0.0')
+        Use the <lth> as a lower cutoff threshold on mask image 1 or 2. To use the entire 
+        volume, use '0.0'.  The mask image that is used depends on what is
+        specified for the '-mN' option.  This option only has an effect if the
         mask is not 'dwi'.
-        
-        [-u <uth>] (Optional: Default '1.0')
-        Use the <uth> as an upper cutoff threshold on the mask. To use the entire 
-        volume, use '-u 1.0'.  The mask image that is used depends on what is
-        specified for the '-i' option.  This option only has an effect if the
+
+        [-m1-upper-threshold <uth>] (Optional: Default '1.0')
+        [-m2-upper-threshold <uth>] (Optional: Default '1.0')      
+        Use the <uth> as an upper cutoff threshold on the mask image 1 or 2. To use 
+        the entire volume, use '1.0'.  The mask image that is used depends on what is
+        specified for the '-mN' option.  This option only has an effect if the
         mask is not 'dwi'.
         
         -g <gradientTableFile> (Optional)
@@ -615,8 +629,14 @@ function matlabFile_create
 # Process command options
 ###///
 
-while getopts v:D:d:B:A:F:u:i:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:n:M:m: option ; do 
-        case "$option"
+while getoptex "v: D: d: B: A: I: k E L: O: R: o: f \
+                S: X Y Z t: c C: g: G U b: n: M: m: \
+                m1: m2: \
+                m1-lower-threshold: \
+                m2-lower-threshold: \
+                m1-upper-threshold: \
+                m2-upper-threshold: " "$@" ; do
+        case "$OPTOPT"
         in
             v)      Gi_verbose=$OPTARG              ;;
             D)      G_DICOMINPUTDIR=$OPTARG         ;;
@@ -640,8 +660,22 @@ while getopts v:D:d:B:A:F:u:i:I:kEL:O:R:o:fS::XYZt:cC:g:GUb:n:M:m: option ; do
                     G_LOWERTHRESHOLD=$OPTARG        ;;
             u)      Gb_useUpperThreshold=1
                     G_UPPERTHRESHOLD=$OPTARG        ;;
-            i)      Gb_useMask=1
-                    G_MASKIMAGE=$OPTARG             ;;
+            m1)     Gb_useMask1=1
+                    G_MASKIMAGE1=$OPTARG            ;;
+            m1-lower-threshold)
+                    Gb_useLowerThreshold1=1
+                    G_LOWERTHRESHOLD1=$OPTARG       ;;        
+            m1-upper-threshold)
+                    Gb_useUpperThreshold1=1                            
+                    G_UPPERTHRESHOLD1=$OPTARG       ;;                                       
+            m2)     Gb_useMask2=1
+                    G_MASKIMAGE2=$OPTARG            ;;           
+            m2-lower-threshold)
+                    Gb_useLowerThreshold2=1                            
+                    G_LOWERTHRESHOLD2=$OPTARG       ;;                    
+            m2-upper-threshold)
+                    Gb_useUpperThreshold2=1                            
+                    G_UPPERTHRESHOLD2=$OPTARG       ;;        
             G)      Gb_GEGradientInlineFix=0        ;;
             S)      G_DICOMSERIESLIST=$OPTARG       ;;
             f)      Gb_forceStage=1                 ;;
@@ -952,13 +986,19 @@ if (( ${barr_stage[2]} )) ; then
     statusPrint "Checking stage output root directory"
     dirExist_check $STAGE2DIR "created" || mkdir $STAGE2DIR
     STAGESTEPS="12345"
-    LOWERTHRESHOLD=""
-    UPPERTHRESHOLD=""
-    MASK=""
+    LOWERTHRESHOLD1=""
+    UPPERTHRESHOLD1=""
+    LOWERTHRESHOLD2=""
+    UPPERTHRESHOLD2=""
+    MASK1=""
+    MASK2=""
     if (( Gb_skipEddyCurrentCorrection )) ; then STAGESTEPS="1345" ; fi
-    if (( Gb_useLowerThreshold )) ; then LOWERTHRESHOLD="-F $G_LOWERTHRESHOLD" ; fi
-    if (( Gb_useUpperThreshold )) ; then UPPERTHRESHOLD="-u $G_UPPERTHRESHOLD" ; fi
-    if (( Gb_useMask )) ; then MASK="-i $G_MASKIMAGE" ; fi
+    if (( Gb_useLowerThreshold1 )) ; then LOWERTHRESHOLD1="--m1-lower-threshold $G_LOWERTHRESHOLD1" ; fi
+    if (( Gb_useUpperThreshold1 )) ; then UPPERTHRESHOLD1="--m1-upper-threshold $G_UPPERTHRESHOLD1" ; fi
+    if (( Gb_useMask1 )) ; then MASK1="--m1 $G_MASKIMAGE1" ; fi
+    if (( Gb_useLowerThreshold2 )) ; then LOWERTHRESHOLD2="--m2-lower-threshold $G_LOWERTHRESHOLD2" ; fi
+    if (( Gb_useUpperThreshold2 )) ; then UPPERTHRESHOLD2="--m2-upper-threshold $G_UPPERTHRESHOLD2" ; fi
+    if (( Gb_useMask2 )) ; then MASK2="--m2 $G_MASKIMAGE2" ; fi    
     EXOPTS=$(eval expertOpts_parse $STAGE2PROC)
     SKIPDIFFUNPACK=""
     if (( !Gb_useDiffUnpack )) ; then SKIPDIFFUNPACK="-U"; fi
@@ -978,9 +1018,12 @@ if (( ${barr_stage[2]} )) ; then
                 -v 10 -d $DIFFUSIONINPUT                \
                 $SKIPDIFFUNPACK                         \
                 -A $G_RECONALG -I $G_IMAGEMODEL         \
-                $LOWERTHRESHOLD                         \
-                $UPPERTHRESHOLD                         \
-                $MASK                                   \
+                $LOWERTHRESHOLD1                        \
+                $UPPERTHRESHOLD1                        \
+                $MASK1                                  \
+                $LOWERTHRESHOLD2                        \
+                $UPPERTHRESHOLD2                        \
+                $MASK2                                  \
                 -g $G_GRADIENTFILE                      \
                 -O $STAGE2DIR                           \
                 -o ${MRID}${G_OUTSUFFIX}                \
