@@ -146,7 +146,7 @@ for DIR in * ; do
             done < toc.txt
         fi
 
-        ID=$(echo -e $DCMMKINDX 2>/dev/null | grep ID | awk '{print $3}'); 
+        ID=$(echo -e $DCMMKINDX 2>/dev/null | grep "Patient ID" | awk '{print $3}'); 
         b_MRID=$(echo "$ID" | wc -w)
         if (( b_MRID )) ; then
                 b_hit=1
