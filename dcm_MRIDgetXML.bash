@@ -21,7 +21,7 @@ G_SYNOPSIS="
         dcm_MRIDget.bash        [-v <verbosity>]                \\
                                 [-d <dicomDir>]                 \\
                                 [-a]                            \\
-                                [<MRID1> <MRID2> ... <MRIDn>]
+                                [<DICOMDIR1> <DICOMDIR2> ... <DICOMDIRn>]
 
  DESCRIPTION
 
@@ -42,9 +42,9 @@ G_SYNOPSIS="
         only flag the first directory containing the MRID. For multiple
         scans of the same MRID, the *entire* directory needs to be scanned.
 
-        <MRID1> <MRID2> ... <MRIDn>
-        A list of target MRIDs. If specified, dcm_MRIDget will only search
-        for these MRIDs, otherwise all MRIDs in <dicomDir> will be shown.
+        <DICOMDIR1> <DICOMDIR2> ... <DICOMDIRn>
+        A list of target DICOM dirs. If specified, dcm_MRIDget will only search
+        for these DICOM dirs, otherwise all MRIDs in <dicomDir> will be shown.
 
  PRECONDITIONS
         
@@ -130,17 +130,28 @@ cd $DICOMDIR
 let hitCount=0
 let b_hit=0
 exec 1>&6 6>&-
+if (( !b_DCMLIST )) ; then
+    echo "<?xml version=\"1.0\"?>"
+fi
+
 for DIR in * ; do
     dirExist_check $DIR >/dev/null
     if (( !$? )) ; then 
         cd "$DIR" >/dev/null 2>/dev/null; 
-        DCMMKINDX=$(cat -E toc.txt 2>/dev/null | sed 's/\$/\\n/g')
+        DCMMKINDX=""
+        if [ -f toc.txt ] ; then    
+            while read line  
+            do  
+                DCMMKINDX="$DCMMKINDX$line\n"
+            done < toc.txt
+        fi
+
         ID=$(echo -e $DCMMKINDX 2>/dev/null | grep ID | awk '{print $3}'); 
         b_MRID=$(echo "$ID" | wc -w)
         if (( b_MRID )) ; then
                 b_hit=1
                 if (( b_DCMLIST )) ; then
-                        b_hit=$(echo "$DCMLIST" | grep $ID | wc -l)
+                        b_hit=$(echo "$DCMLIST" | grep $DIR | wc -l)
                 fi
                 if (( b_hit )) ; then
                 	    PATIENT_NAME=$(echo -e $DCMMKINDX | grep "Patient Name" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')			
@@ -163,9 +174,8 @@ for DIR in * ; do
 						echo "    <ScannerManufacturer>$SCANNER_MANUFACTURER</ScannerManufacturer>"
 						echo "    <ScannerModel>$SCANNER_MODEL</ScannerModel>"
 						echo "    <SoftwareVer>$SOFTWARE_VER</SoftwareVer>"
-						echo "    <Scans>"
-						echo -e $DCMMKINDX | grep "Scan " | awk '{ printf "        <Scan>"; for(i=3;i<=NF;i++) printf "%s ",$i; printf "</Scan>\n"} '						
-						echo "    </Scans>"
+						echo -e $DCMMKINDX | grep "Scan " | sed -e 's/\&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/\"/\&quot;/g' -e 's/\x27/\&#39;/g' \
+                                           | awk '{ printf "    <Scan>"; for(i=3;i<=NF;i++) printf "%s ",$i; printf "</Scan>\n"} '						
 						echo "</PatientRecord>"
                         let "hitCount += 1"
                         if (( b_DCMLIST )) ; then

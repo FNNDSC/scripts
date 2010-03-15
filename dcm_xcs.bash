@@ -285,6 +285,9 @@ if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE ]] ; then
 	MRID=$(grep ID  ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt | awk '{print $3}')
 	printf "%-55s\t%25s\n" "$G_OUTPUTDICOMDIR" "$MRID" >> ${G_DICOMROOT}/dcm_MRID.log
 	
+	# Next add it to the dcm_MRID.xml
+	dcm_MRIDgetXML.bash -d ${G_DICOMROOT} ${G_OUTPUTDICOMDIR} >> ${G_DICOMROOT}/dcm_MRID.xml
+	
 	# Now get the Age to add to dcm_MRID_age.log
 	AGE=$(dcm_bdayAgeGet.bash | grep Age | awk '{print $5}' | tr '\n' ' ')
 	printf "%55s\t%50s\t%10s\n" "$G_OUTPUTDICOMDIR" "$MRID" "$AGE" >> ${G_DICOMROOT}/dcm_MRID_age.log
@@ -295,13 +298,13 @@ if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE ]] ; then
 	# Also, run mri_info
 	STAGE1PROC=mri_info_batch.bash
 	statusPrint "$(date) | Processing STAGE - mri_info_batch.bash | START" "\n"
-    STAGE=1-$STAGE1PROC
-    STAGECMD="$STAGE1PROC	\
+	STAGE=1-$STAGE1PROC
+	STAGECMD="$STAGE1PROC	\
               -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}"
-    stage_run "$STAGE" "$STAGECMD" 					\
-			  "${G_LOGDIR}/${STAGE1PROC}.std"		\
-              "${G_LOGDIR}/${STAGE1PROC}.err"
-    statusPrint "$(date) | Processing STAGE -  mri_info_batch.bash | END" "\n"
+	stage_run "$STAGE" "$STAGECMD" 					\
+		  "${G_LOGDIR}/${STAGE1PROC}.std"		\
+      "${G_LOGDIR}/${STAGE1PROC}.err"
+	statusPrint "$(date) | Processing STAGE -  mri_info_batch.bash | END" "\n"
 	
 	echo "Appened to dcm_MRID*.log: $MRID $AGE $G_OUTPUTDICOMDIR" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE
 fi
