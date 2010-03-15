@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # "include" the set of common script functions
-source common.bash
+source ~/arch/scripts/common.bash
 
 declare -i Gb_customStorescu=0
 declare -i Gi_verbose=0
+declare -i Gb_anonymize=0
 
 G_STORESCU="storescu"
-
+G_FILEEXT=""
 G_HOST=heisenberg.nmr.mgh.harvard.edu
 G_AETITLE="DCM4CHEE"
 G_LISTENPORT=11112
@@ -25,6 +26,8 @@ G_SYNOPSIS="
 				[-h <dicomHost>]			\\
 				[-p <listenPort>]			\\
 				[-s <storescu>]				\\
+                                [-A]                                    \\
+                                [-E <fileExt>]                          \\
 				<dicomDir1> <dicomDir2> ... <dicomDirN>
 
  DESCRIPTION
@@ -41,6 +44,15 @@ G_SYNOPSIS="
 
         -v <level> (Optional)
         Verbosity level. A value of '10' is a good choice here.
+        
+        -A (Optional)
+        If specified, anonymize data before transmission.
+        
+        -E <fileExt> (Optional)
+        If specified, only transmit files ending in *.<fileExt>, otherwise
+        transmit all files in the target directory. Specifying the 
+        <fileExt> is useful, since the transmission program will
+        fail if attempting to transmit non-dicom files.
 
 	-a <aetitle> (optional, default = $G_AETITLE)
 	The aetitle of the PACS process to receive the data.
@@ -103,10 +115,12 @@ EC_dirAccess="50"
 # Process command options
 ###///
 
-while getopts v:a:h:p:s: option ; do
+while getopts v:a:h:p:s:AE: option ; do
         case "$option"
         in
                 v) Gi_verbose=$OPTARG					;;
+                A) Gb_anonymize=1                                       ;;
+                E) G_FILEEXT=".${OPTARG}"                               ;;
 		a) G_AETITLE=$OPTARG					;;
 		h) G_HOST=$OPTARG					;;
 		p) G_LISTENPORT=$OPTARG					;;
@@ -145,15 +159,34 @@ if (( !b_DCMLIST )) ; then
 	fatal dirlistCheck
 fi
 
+if (( ${#G_FILEEXT} )) ; then
+    cprint "DICOM file extension"       "[ $G_FILEEXT ]"
+fi
+
 topDir=$(pwd)
 for DIR in $DCMLIST ; do
-	statusPrint	"Checking access to $DIR" ""
+	statusPrint	"Checking access to $DIR" "\n"
+        lprint          "Access check"
 	dirExist_check "$DIR" || fatal dirCheck
-	statusPrint	"Transmitting all files in $DIR"
+        if (( Gb_anonymize )) ; then
+            statusPrint "Anonymizing $DIR..." "\n"
+            INPUTDIR=$DIR
+            OUTPUTDIR=${DIR}-anon
+            dcmanon_meta.bash -v 10 -D $INPUTDIR -O $OUTPUTDIR
+            DIR=$OUTPUTDIR
+            cprint      "Anonymization" "[ ok ]"
+        fi
+	statusPrint	"Transmitting *$G_FILEEXT files in $DIR..." "\n"
 	cd "$DIR" >/dev/null
-	$G_STORESCU -aet "$G_SELF" -aec $G_AETITLE $G_HOST $G_LISTENPORT *
+        lprint          "Transmission"
+	$G_STORESCU -aet "$G_SELF" -aec $G_AETITLE $G_HOST $G_LISTENPORT *${G_FILEEXT}
 	ret_check $? || fatal storescu
-	cd ../
+        cd ../
+        if (( Gb_anonymize )) ; then
+            lprint      "Removing temp directory"
+            rm -fr "$DIR"
+            rprint      "[ ok ]"
+        fi
 done
 
 shut_down 0
