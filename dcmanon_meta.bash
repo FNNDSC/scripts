@@ -244,7 +244,10 @@ rprint "[ $OUTDIR ]"
 cd $topDir
 
 lprint	"Are we on ubuntu?"
-let b_ubuntu=$(grep Ubuntu /etc/issue | wc -l)
+let b_ubuntu=0
+if [[ -f /etc/issue ]] ; then
+    let b_ubuntu=$(grep Ubuntu /etc/issue | wc -l)
+fi
 if (( b_ubuntu )) ; then
     G_UBUNTUJAVA="MATLAB_JAVA=/usr/lib/jvm/java-6-sun/jre"
 fi
