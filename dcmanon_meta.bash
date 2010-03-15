@@ -9,7 +9,7 @@
 #
 
 # "include" the set of common script functions
-source /homes/9/rudolph/arch/scripts/common.bash
+source common.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=0
@@ -17,13 +17,13 @@ declare -i Gb_useOverrideOut=0
 declare -i Gb_forceStage=1
 
 G_LOGDIR="-x"
-G_OUTDIR="/space/kaos/5/users/dicom/postproc"
+G_OUTDIR="/dicom/postproc"
 G_OUTPREFIX="-x"
 G_DIRSUFFIX=""
 G_OUTPREFIX="anon-"
 G_DICOMINPUTDIR="-x"
 G_UBUNTUJAVA=""
-G_MATLAB="/usr/pubsw/packages/matlab/new/bin/matlab"
+G_MATLAB="/usr/bin/matlab"
 G_STAGES="1"
 
 G_SYNOPSIS="
