@@ -74,7 +74,7 @@ G_MATLAB64="/space/lyon/9/pubsw/Linux2-2.3-x86_64/bin/matlab.new -nosplash -node
 G_MATLABDARWIN="/space/lyon/9/pubsw/MacOS10.5-i686/bin/matlab -nosplash -nodesktop -nojvm -nodisplay "
 G_MATLAB="$G_MATLAB32"
 
-G_XVFBDISPLAY="2"
+G_XVFBDISPLAY="1"
 
 G_CLUSTERUSER=""
 
