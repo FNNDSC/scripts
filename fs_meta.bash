@@ -608,11 +608,12 @@ fi
 
 STAGE="Normal termination -- collecting log files"
 statusPrint	"Checking final log dir"
-dirExist_check	${G_OUTDIR}/log "created" || mkdir ${G_OUTDIR}/log
+FINALLOG=${G_OUTDIR}/log${G_DIRSUFFIX}
+dirExist_check  ${G_OUTDIR}/log "created" || mkdir $FINALLOG
 for EXT in "log" "err" "std" ; do
-    find ${G_OUTDIR} -iname "*.$EXT" -exec cp {} ${G_OUTDIR}/log \;	2>/dev/null
+    find ${G_OUTDIR} -iname "*.$EXT" -exec cp {} $FINALLOG 2>/dev/null
 done
-cp ${G_DICOMINPUTDIR}/log/* ${G_OUTDIR}/log
+cp ${G_LOGDIR}/* $FINALLOG
 stage_stamp "$STAGE" $STAMPLOG
 
 printf "%40s" "Cleaning up"
