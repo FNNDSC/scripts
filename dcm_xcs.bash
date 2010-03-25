@@ -20,6 +20,7 @@ let b_alreadyProcessed=0
 MAILMSG="mail.msg"
 LOGGENFILE="loggenfile.txt"
 G_LOGDIR="/tmp"
+G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
 G_DICOMROOT=/local_mount/space/osx1927/1/users/dicom/files
 G_OUTPUTDICOMDIR="-x"
 G_OUTPUTDICOMFILE="-x"
@@ -45,6 +46,7 @@ G_SYNOPSIS="
 				[-d <dicomRootDir>]			\\
 				[-l <logDir>]				\\
 				[-v <verbosity>]			\\
+				[-m <mailReportsTo>]			\\
 
  DESCRIPTION
 
@@ -85,6 +87,9 @@ G_SYNOPSIS="
 
 	-v <level> (Optional)
 	Verbosity level.
+
+	-m <mailReportsTo> (Optional. Default: $G_MAILTO)
+	Specify e-mail address(es) to send new DICOM arrival notification to.
 
  OUTPUT
 
@@ -174,7 +179,7 @@ function expertOpts_parse
 ###///
 
 
-while getopts v:p:f:a:c:l:d: option ; do 
+while getopts v:p:f:a:c:l:d:m: option ; do 
 	case "$option"
 	in
 		v) Gi_verbose=$OPTARG 					;;
@@ -183,7 +188,8 @@ while getopts v:p:f:a:c:l:d: option ; do
 		a) G_CALLINGENTITY=$OPTARG				;;
 		c) G_CALLEDENTITY=$OPTARG				;;
 		d) G_DICOMROOT=$OPTARG					;;
-		l) G_LOGDIR=$OPTARG					;;
+		l) G_LOGDIR=$OPTARG					;;	    
+		m) G_MAILTO=$OPTARG					;;
 		*) synopsis_show 
 		    exit 0;;
 	esac
@@ -212,6 +218,11 @@ statusPrint 	"Checking -c <calledEntity>"
 if [[ "$G_CALLEDENTITY" == "-x" ]] ; then fatal noCalledEntityArg ; fi
 ret_check $?
 
+# Find the script directory so that we can find the pay to 
+# dayAge_calc.awk
+SCRIPT_DIR=$(which common.bash)
+G_DAYAGECALC_AWK="$(dirname $SCRIPT_DIR)/dayAge_calc.awk"
+
 # statusPrint     "Checking if <outputDirectory> is accessible"
 # dirExist_check "$G_OUTPUTDICOMDIR" || fatal noDicomDir
 # cd $G_OUTPUTDICOMDIR
@@ -237,15 +248,13 @@ if (( ${#DCM_FILE} )) ; then
 	INDEX2=$(eval $G_DCM_BDAGE $DCM_FILE 2>/dev/null)
 fi
 
-#TO="rudolph@nmr.mgh.harvard.edu,ellen@nmr.mgh.harvard.edu,neel@nmr.mgh.harvard.edu,hagmann@nmr.mgh.harvard.edu,orapalino@partners.org"
-TO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
-#TO="rudolph@nmr.mgh.harvard.edu"
+TO=$G_MAILTO
 SUBJ="New DICOM Series Received"
 
 b_alreadyProcessed=$(echo "$INDEX1" | grep Track | wc -l)
 
 if (( b_alreadyProcessed )) ; then
-    TO="rudolph@nmr.mgh.harvard.edu"
+    TO=$G_MAILTO
     SUBJ="DICOM Series Processed"
 fi
 
@@ -293,7 +302,7 @@ if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE ]] ; then
 	printf "%55s\t%50s\t%10s\n" "$G_OUTPUTDICOMDIR" "$MRID" "$AGE" >> ${G_DICOMROOT}/dcm_MRID_age.log
 	
 	# Finally regenerate dcm_MRID_ageDays.log
-	cat ${G_DICOMROOT}/dcm_MRID_age.log | awk -f /local_mount/space/osx1927/1/users/dicom/repo/trunk/scripts/dayAge_calc.awk  | sort -n -k 3 > ${G_DICOMROOT}/dcm_MRID_ageDays.log
+	cat ${G_DICOMROOT}/dcm_MRID_age.log | awk -f ${G_DAYAGECALC_AWK} | sort -n -k 3 > ${G_DICOMROOT}/dcm_MRID_ageDays.log
 
 	# Also, run mri_info
 	STAGE1PROC=mri_info_batch.bash
