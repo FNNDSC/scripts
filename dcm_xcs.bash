@@ -281,6 +281,20 @@ else
 	rm -f /tmp/storescp*
 fi
 
+# Create a permissions.txt file with the user being the application-entity title.
+# If the file already exists, then add this user only if is not already in the file
+PERMISSION_USER=$(echo $G_CALLINGENTITY | tr '[A-Z]' '[a-z]')
+if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt ]] ; then
+        echo "User $PERMISSION_USER" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt
+        chmod 644 ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt
+else
+        # Check to see if user is already in permissions.txt file
+        b_found=$(cat ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt | grep "User" | awk '{print $2}' | grep $PERMISSION_USER | wc -w)
+        if ((!b_found)) ; then
+                echo "User $PERMISSION_USER" >> ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt                       
+        fi
+fi
+
 echo "$INDEX1" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt
 if (( ${#INDEX2} )) ; then
   echo "$INDEX2" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt
@@ -309,10 +323,10 @@ if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE ]] ; then
 	statusPrint "$(date) | Processing STAGE - mri_info_batch.bash | START" "\n"
 	STAGE=1-$STAGE1PROC
 	STAGECMD="$STAGE1PROC	\
-              -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}"
-	stage_run "$STAGE" "$STAGECMD" 					\
-		  "${G_LOGDIR}/${STAGE1PROC}.std"		\
-      "${G_LOGDIR}/${STAGE1PROC}.err"
+                 -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}"
+	stage_run "$STAGE" "$STAGECMD"                          \
+                  "${G_LOGDIR}/${STAGE1PROC}.std"               \
+                  "${G_LOGDIR}/${STAGE1PROC}.err"
 	statusPrint "$(date) | Processing STAGE -  mri_info_batch.bash | END" "\n"
 	
 	echo "Appened to dcm_MRID*.log: $MRID $AGE $G_OUTPUTDICOMDIR" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE

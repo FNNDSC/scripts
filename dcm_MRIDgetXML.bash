@@ -145,7 +145,15 @@ for DIR in * ; do
                 DCMMKINDX="$DCMMKINDX$line\n"
             done < toc.txt
         fi
-
+        
+        PERMISSIONS=""
+        if [ -f permissions.txt ] ; then
+            while read line
+            do
+                PERMISSIONS="$PERMISSIONS$line\n"
+            done < permissions.txt
+        fi
+        
         ID=$(echo -e $DCMMKINDX 2>/dev/null | grep "Patient ID" | awk '{print $3}'); 
         b_MRID=$(echo "$ID" | wc -w)
         if (( b_MRID )) ; then
@@ -154,29 +162,31 @@ for DIR in * ; do
                         b_hit=$(echo "$DCMLIST" | grep $DIR | wc -l)
                 fi
                 if (( b_hit )) ; then
-                	    PATIENT_NAME=$(echo -e $DCMMKINDX | grep "Patient Name" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')			
-						PATIENT_AGE=$(echo -e $DCMMKINDX | grep "Patient Age" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-						PATIENT_SEX=$(echo -e $DCMMKINDX | grep "Patient Sex" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-						PATIENT_BIRTHDAY=$(echo -e $DCMMKINDX | grep "Patient Birthday" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-						IMAGE_SCAN_DATE=$(echo -e $DCMMKINDX | grep "Image Scan-Date" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-						SCANNER_MANUFACTURER=$(echo -e $DCMMKINDX | grep "Scanner Manufacturer" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-						SCANNER_MODEL=$(echo -e $DCMMKINDX | grep "Scanner Model" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-						SOFTWARE_VER=$(echo -e $DCMMKINDX | grep "Software Ver" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
+                        PATIENT_NAME=$(echo -e $DCMMKINDX | grep "Patient Name" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')			
+                        PATIENT_AGE=$(echo -e $DCMMKINDX | grep "Patient Age" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
+                        PATIENT_SEX=$(echo -e $DCMMKINDX | grep "Patient Sex" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
+                        PATIENT_BIRTHDAY=$(echo -e $DCMMKINDX | grep "Patient Birthday" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
+                        IMAGE_SCAN_DATE=$(echo -e $DCMMKINDX | grep "Image Scan-Date" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
+                        SCANNER_MANUFACTURER=$(echo -e $DCMMKINDX | grep "Scanner Manufacturer" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
+                        SCANNER_MODEL=$(echo -e $DCMMKINDX | grep "Scanner Model" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
+                        SOFTWARE_VER=$(echo -e $DCMMKINDX | grep "Software Ver" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
 						                        
                         echo "<PatientRecord>"						
-						echo "    <PatientID>$ID</PatientID>"
+                        echo "    <PatientID>$ID</PatientID>"
                         echo "    <Directory>$DIR</Directory>"
-						echo "    <PatientName>$PATIENT_NAME</PatientName>"
-						echo "    <PatientAge>$PATIENT_AGE</PatientAge>"
-						echo "    <PatientSex>$PATIENT_SEX</PatientSex>"
-						echo "    <PatientBirthday>$PATIENT_BIRTHDAY</PatientBirthday>"
-						echo "    <ImageScanDate>$IMAGE_SCAN_DATE</ImageScanDate>"
-						echo "    <ScannerManufacturer>$SCANNER_MANUFACTURER</ScannerManufacturer>"
-						echo "    <ScannerModel>$SCANNER_MODEL</ScannerModel>"
-						echo "    <SoftwareVer>$SOFTWARE_VER</SoftwareVer>"
-						echo -e $DCMMKINDX | grep "Scan " | sed -e 's/\&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/\"/\&quot;/g' -e 's/\x27/\&#39;/g' \
+                        echo "    <PatientName>$PATIENT_NAME</PatientName>"
+                        echo "    <PatientAge>$PATIENT_AGE</PatientAge>"
+                        echo "    <PatientSex>$PATIENT_SEX</PatientSex>"
+                        echo "    <PatientBirthday>$PATIENT_BIRTHDAY</PatientBirthday>"
+                        echo "    <ImageScanDate>$IMAGE_SCAN_DATE</ImageScanDate>"
+                        echo "    <ScannerManufacturer>$SCANNER_MANUFACTURER</ScannerManufacturer>"
+                        echo "    <ScannerModel>$SCANNER_MODEL</ScannerModel>"
+                        echo "    <SoftwareVer>$SOFTWARE_VER</SoftwareVer>"
+                        echo -e $DCMMKINDX | grep "Scan " | sed -e 's/\&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/\"/\&quot;/g' -e 's/\x27/\&#39;/g' \
                                            | awk '{ printf "    <Scan>"; for(i=3;i<=NF;i++) printf "%s ",$i; printf "</Scan>\n"} '						
-						echo "</PatientRecord>"
+                        echo -e $PERMISSIONS | grep "User "  | awk '{ printf "    <User>%s</User>\n", $2} '
+                        echo -e $PERMISSIONS | grep "Group " | awk '{ printf "    <Group>%s</Group>\n", $2} '
+                        echo "</PatientRecord>"
                         let "hitCount += 1"
                         if (( b_DCMLIST )) ; then
                             if (( hitCount >= b_DCMLIST && !Gb_scanAll )) ; then
