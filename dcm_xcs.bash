@@ -283,7 +283,7 @@ fi
 
 # Create a permissions.txt file with the user being the application-entity title.
 # If the file already exists, then add this user only if is not already in the file
-PERMISSION_USER=$(echo $G_CALLINGENTITY | tr '[A-Z]' '[a-z]')
+PERMISSION_USER=$(echo $G_CALLEDENTITY | tr '[A-Z]' '[a-z]')
 if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt ]] ; then
         echo "User $PERMISSION_USER" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt
         chmod 644 ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt

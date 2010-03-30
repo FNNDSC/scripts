@@ -179,7 +179,7 @@ for DIR in $DCMLIST ; do
 	statusPrint	"Transmitting *$G_FILEEXT files in $DIR..." "\n"
 	cd "$DIR" >/dev/null
         lprint          "Transmission"
-	$G_STORESCU -aec "$G_SELF" -aet $G_AETITLE $G_HOST $G_LISTENPORT *${G_FILEEXT}
+	$G_STORESCU -aet "$G_SELF" -aec $G_AETITLE $G_HOST $G_LISTENPORT *${G_FILEEXT}
 	ret_check $? || fatal storescu
         cd ../
         if (( Gb_anonymize )) ; then
