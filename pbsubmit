@@ -1,2 +1,11 @@
 #!/bin/bash
-$2 &
+# For now, invoke MOSIX with the following options:
+# -b = best node
+# -E = non-migratable Linux
+# -e = unsupported system calls fail
+# -q = add to the queue
+#
+# Other options to consider:
+# -m<mb> = we might want to use this to request a large number of MB be available for a freesurfer job
+# -P<#> = we can also specify the number of parallel threads that might be spawned to influence queuing.
+mosrun -b -E -e -q $2 &
