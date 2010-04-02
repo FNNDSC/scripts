@@ -1,0 +1,8 @@
+HOST=$(uname -a | awk '{print $1}')
+
+if [[ $HOST == "Darwin" ]]  ; then
+	ps -A -O user | grep $1 
+else
+	ps -Af | grep $1 
+fi
+
