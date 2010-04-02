@@ -19,6 +19,8 @@ let b_alreadyProcessed=0
 
 MAILMSG="mail.msg"
 LOGGENFILE="loggenfile.txt"
+G_MAILALIAS="aliases.mail"
+G_USRETC=/usr/etc
 G_LOGDIR="/tmp"
 G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
 G_DICOMROOT=/local_mount/space/osx1927/1/users/dicom/files
@@ -114,6 +116,10 @@ G_SYNOPSIS="
 	13 August 2009
 	o Added block-check for email -- stops the repetitive emails if a 
 	  message has already been sent.
+
+	2 April 2010
+	o Added MAILALIAS processing -- allows AETitle matchining to user
+	  email.
 "
 
 G_LC=50
@@ -148,31 +154,6 @@ EC_noDicomDirArg=12
 EC_noDicomDir=13
 EC_noCallingEntityArg=14
 EC_noCalledEntityArg=15
-
-function expertOpts_parse
-{
-    # ARGS
-    # $1                        process name
-    #
-    # DESC
-    # Checks for <processName>.opt in $G_LOGDIR.
-    # If exists, read contents and return, else
-    # return empty string.
-    #
-
-    local processName=$1
-    local optsFile=""
-    OPTS=""
-
-    optsFile=${G_LOGDIR}/${processName}.opt
-    if (( $Gb_useExpertOptions )) ; then
-        if [[ -f  $optsFile ]] ; then
-            OPTS=$(cat $optsFile)
-        fi
-    fi
-    OPTS=$(printf " %s " $OPTS)
-    echo "$OPTS"
-}
 
 ###\\\
 # Process command options
@@ -274,13 +255,6 @@ $INDEX1
 $INDEX2
 " > /tmp/$MAILMSG
 
-if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG ]] ; then
-	cp /tmp/$MAILMSG ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
-	/usr/bin/mail -s "$SUBJ" "$TO" <${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
-else
-	rm -f /tmp/storescp*
-fi
-
 # Create a permissions.txt file with the user being the application-entity title.
 # If the file already exists, then add this user only if is not already in the file
 PERMISSION_USER=$(echo $G_CALLEDENTITY | tr '[A-Z]' '[a-z]')
@@ -293,6 +267,23 @@ else
         if ((!b_found)) ; then
                 echo "User $PERMISSION_USER" >> ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt                       
         fi
+fi
+
+# Parse the mail alias file for PERMISSION_USER, and if found, append to TO
+# string
+MAILALIAS=${G_USRETC}/${G_MAILALIAS}
+if [[ -f $MAILALIAS ]] ; then
+    RETURNMAIL=$(grep $PERMISSION_USER $MAILALIAS | awk '{print $2}')
+    if (( ${#RETURNMAIL} )) ; then
+	TO="$TO,$RETURNMAIL"
+    fi
+fi
+
+if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG ]] ; then
+	cp /tmp/$MAILMSG ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
+	/usr/bin/mail -s "$SUBJ" "$TO" <${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
+else
+	rm -f /tmp/storescp*
 fi
 
 echo "$INDEX1" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt
