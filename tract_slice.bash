@@ -29,6 +29,7 @@ G_trackVolume="-x"
 G_trackVolumeBase="-x"
 
 G_XVFB="Xvfb"
+G_XVFB_SERVERNUM=99
 G_plane="SAG"
 G_fontDir="/usr/share/fonts/truetype/"
 declare -a GA_planeSliceArg=( "-nx" "-ny" "-nz")
@@ -150,14 +151,14 @@ G_SYNOPSIS="
 	Keep temporary images. Useful mainly for debugging purposes. If 
 	specified, keeps all intermediary images that were generated.
 
-	-B <XvfbScreenDisplay> 	(optional, default $Gb_XBuffer)
-	-b <XvfbBin>		(optional, default $G_XVFB)
+	-d <XvfbScreenDisplay> 	(optional, default $Gb_XBuffer)
 	If specified, draw images to the <XvfbScreenDisplay> display of a 
 	spawned Xvfb server. This removes the need for an active X Server 
 	and allows 'track_slice.bash' to run on a headless display (or from
 	a web server).
 
-	The '-b <XvfbBin>' allows the specification of the actual Xvfb process
+	-B <XvfbBin>		(optional, default $G_XVFB)	
+	The '-B <XvfbBin>' allows the specification of the actual Xvfb process
 	to run. Useful is Xvfb is not installed on the standard PATH.
 
 	-D <dropThroughArgs> (optional, default $G_dropThrough)
@@ -403,10 +404,18 @@ if (( Gb_XBuffer )) ; then
 	statusPrint	"Checking on passed Xvfb binary"
 	fileExist_check	$G_XVFB || noXvfb
     fi
-    export DISPLAY=:${G_XDisplay}
-    cprint "Setting Xvfb display"	"[ $G_XDisplay ]"
+    
+    # Find a free server, this code came from the standard xvfb-run script
+    i=$G_XVFB_SERVERNUM
+    while [ -f /tmp/.X$i-lock ]; do
+        i=$(($i + 1))
+    done
+    G_XVFB_SERVERNUM=$i
+    
+    export DISPLAY=:${G_XVFB_SERVERNUM}
+    cprint "Setting Xvfb display"	"[ $G_XVFB_SERVERNUM ]"
     STAGE="Xvfb"
-    STAGECMD="$G_XVFB :${G_XDisplay} -screen 1 1600x1200x24 2>/dev/null"
+    STAGECMD="$G_XVFB :${G_XVFB_SERVERNUM} -screen 1 1600x1200x24 2>/dev/null"
 #     stage_run "$STAGE" "$STAGECMD" ./${STAGE}.std" "./${STAGE}.err || fatal noXvfb
     echo "$STAGECMD &" | sh
 fi
@@ -557,7 +566,7 @@ done
 
 if (( Gb_XBuffer )) ; then
 	statusPrint	"Shutting down Xvfb"
-	ps -Af  | grep Xvfb | grep -v $G_SELF | grep -v grep | awk '{print "kill -9 " $2}' | sh 2>/dev/null >/dev/null
+	ps -Af  | grep "Xvfb :${G_XVFB_SERVERNUM}" | grep -v $G_SELF | grep -v grep | awk '{print "kill -9 " $2}' | sh 2>/dev/null >/dev/null
 	ret_check $?
 fi
 
