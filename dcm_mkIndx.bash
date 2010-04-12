@@ -42,9 +42,9 @@ G_SYNOPSIS="
 	If specified, use the passed <dcmFile> to run the index against.
 	Otherwise, use the first file in the current directory.
 
-        -t <translateSpaceChar> (Optional space translator)
-        If specified, replace any spaces in series names with the 
-        <translateSpaceChar>.
+	-t <translateSpaceChar> (Optional space translator)
+	If specified, replace any spaces in series names with the 
+	<translateSpaceChar>.
 
  PRECONDITIONS
 
@@ -82,9 +82,9 @@ while getopts hai:t: option ; do
 		a)	let Gi_showAll=1	;;
 		i)	TOPSET=$OPTARG 
 			b_FORCESET=1		;;
-                t)      Gb_translateSpace=1
-                        G_SPACECHAR=$OPTARG     ;;
-                \?) 	synopsis_show
+		t)	Gb_translateSpace=1
+			G_SPACECHAR=$OPTARG     ;;
+		\?) 	synopsis_show
                     	exit 0;;
         esac
 done
@@ -94,29 +94,21 @@ PATIENTID=$(mri_probedicom --i $TOPSET --t 10 20)
 
 printf "%40s\t%-20s\n" "Patient ID" $PATIENTID
 if (( Gi_showAll )) ; then
-	DCM_DUMP_FILE=/usr/pubsw/bin/dcm_dump_file
-	DCM_META=$($DCM_DUMP_FILE $TOPSET 2>/dev/null)
 	PATIENTNAME=$(mri_probedicom --i $TOPSET --t 10 10)
-        PATIENTAGE=$(mri_probedicom --i $TOPSET --t 10 1010)
-        PATIENTSEX=$(mri_probedicom --i $TOPSET --t 10 40)
-        PATIENTBDAY=$(mri_probedicom --i $TOPSET --t 10 30)
-        PATIENTSCANDATE=$(mri_probedicom --i $TOPSET --t 08 23)
-# 	PATIENTAGE=$(echo "$DCM_META"				|\
-#                                  grep -i "Patient Age"          |\
-#                                  awk '{print $7}'               |\
-#                                  awk -F "//" '{print $2}')
-# 	PATIENTSEX=$(echo "$DCM_META"				|\
-#                                  grep -i "Patient Sex"          |\
-#                                  awk '{print $7}'               |\
-#                                  awk -F "//" '{print $2}')
-# 	PATIENTBDAY=$(echo "$DCM_META"				|\
-#                                  grep -i "Patient Birthdate"    |\
-#                                  awk '{print $7}'               |\
-#                                  awk -F "//" '{print $2}')
-# 	PATIENTSCANDATE=$(echo "$DCM_META"			|\
-#                                  grep -i "Image date"    	|\
-#                                  awk '{print $7}'               |\
-#                                  awk -F "//" '{print $2}')
+	PATIENTSEX=$(mri_probedicom --i $TOPSET --t 10 40)
+	PATIENTBDAY=$(mri_probedicom --i $TOPSET --t 10 30)
+	PATIENTSCANDATE=$(mri_probedicom --i $TOPSET --t 08 23)
+	
+	PATIENTAGE=$(mri_probedicom --i $TOPSET --t 10 1010)
+	# The PatientAge tag (0010, 1010) is an optional tag and may
+	# not be present in the DICOM data.  However, the StudyDate and
+	# PatientBirthDay may still be present so attempt to compute the
+	# age from these fields.
+	if (( $? )) ; then
+		PATIENTAGE=$(age_calc.py $PATIENTBDAY $PATIENTSCANDATE)
+	fi
+	
+	
 	printf "%40s\t%-20s\n" "Patient Name" 		    $PATIENTNAME
 	printf "%40s\t%-20s\n" "Patient Age" 		    $PATIENTAGE
 	printf "%40s\t%-20s\n" "Patient Sex" 		    $PATIENTSEX
