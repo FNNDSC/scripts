@@ -130,7 +130,7 @@ if Gstr_ageInput == "-x": fatal('ageSpec')
 if len(Gstr_ageInput) != 4:
     if Gb_showErr:
         print >>sys.stderr, "Invalid length of <ageString>. Must be of form 'XXXM' where"
-        print >>sys.stderr, "'X' is a number and 'A' is either 'D', 'M', or 'Y'."
+        print >>sys.stderr, "'X' is a number and 'A' is either 'D', 'W', 'M', or 'Y'."
         print >>sys.stderr, "\n"
         print >>sys.stderr, "Examples of valid <ageStrings>: 034D, 002W, 007Y, etc."
         print >>sys.stderr, "\n"
@@ -139,7 +139,7 @@ if len(Gstr_ageInput) != 4:
 Gstr_ageString  = Gstr_ageInput[0:3]
 
 Gstr_ageFact    = Gstr_ageInput[3]
-if Gstr_ageFact != 'D' and Gstr_ageFact != 'M' and Gstr_ageFact != 'Y':
+if Gstr_ageFact != 'D' and Gstr_ageFact != 'M' and Gstr_ageFact != 'Y' and Gstr_ageFact != 'W':
     fatal('ageStringF')
 
 Gf_ageInput     = string.atof(Gstr_ageString)
@@ -147,6 +147,7 @@ Gf              = Gf_ageInput
 Gf_ageInDays    = {
 
     'D' : lambda Gf:    Gf * 1.0,
+    'W' : lambda Gf:    Gf * 7.0,
     'M' : lambda Gf:    Gf * 30.42,
     'Y' : lambda Gf:    Gf * 365.25
 
