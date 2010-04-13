@@ -99,30 +99,22 @@ else
     DCMFILE=$(ls -1 *1.dcm | head -n 1)
 fi
 
-if (( 0 == 1 )) ; then
-    DCM_DUMP_FILE=/usr/pubsw/bin/dcm_dump_file
 
-    BDAY=$($DCM_DUMP_FILE $DCMFILE 2>/dev/null			|\
-				 grep -i "Patient Birthdate" 	|\
-				 awk '{print $7}' 		|\
-				 awk -F "//" '{print $2}')
-
-    AGE=$($DCM_DUMP_FILE $DCMFILE 2>/dev/null			|\
-				 grep -i "Patient Age" 		|\
-				 awk '{print $7}' 		|\
-				 awk -F "//" '{print $2}')
-
-    IMAGEDATE=$($DCM_DUMP_FILE $DCMFILE 2>/dev/null		|\
-				 grep -i "Image Date" 		|\
-				 awk '{print $7}' 		|\
-				 awk -F "//" '{print $2}')
-else
-        NAME=$(mri_probedicom --i $DCMFILE --t 10 10)
-        AGE=$(mri_probedicom --i $DCMFILE --t 10 1010)
-        SEX=$(mri_probedicom --i $DCMFILE --t 10 40)
-        BDAY=$(mri_probedicom --i $DCMFILE --t 10 30)
-        IMAGEDATE=$(mri_probedicom --i $DCMFILE --t 08 23)
+NAME=$(mri_probedicom --i $DCMFILE --t 10 10)
+SEX=$(mri_probedicom --i $DCMFILE --t 10 40)
+BDAY=$(mri_probedicom --i $DCMFILE --t 10 30)
+IMAGEDATE=$(mri_probedicom --i $DCMFILE --t 08 23)
+AGE=$(mri_probedicom --i $DCMFILE --t 10 1010)
+# The PatientAge tag (0010, 1010) is an optional tag and may
+# not be present in the DICOM data.  However, the StudyDate and
+# PatientBirthDay may still be present so attempt to compute the
+# age from these fields.
+if (( $? )) ; then
+    AGE=$(age_calc.py $BDAY $IMAGEDATE)
 fi
+
+
+
 exec 1>&6 6>&-
 
 printf "%40s\t%-20s\n" "Patient Age at scan" 	"$AGE"
