@@ -1,4 +1,7 @@
 #!/bin/bash
+# pbsubmit is executed from pbsubdiff.sh as follows:
+#   pbsubmit -c "<cmd>" where command would typically be the complete path to tract-cluster.sh/fs-cluster.sh
+#
 # For now, invoke MOSIX with the following options:
 # -b = best node
 # -E = non-migratable Linux
