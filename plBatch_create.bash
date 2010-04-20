@@ -18,6 +18,8 @@ declare	-i Gb_printNullEntries=0
 declare -i Gb_fuzzySearch=0
 declare -i Gb_userSeries=0
 declare -i Gb_userCom=0
+declare -i Gb_allSeries=0
+declare -i Gb_firstSeriesOnly=0
 
 G_LOGDIR=$(pwd)
 G_TABLEFILE="-x"
@@ -28,10 +30,13 @@ G_DEFAULTCOM_TRACT="-v 10 -t 12"
 G_SERIESLIST_TRACT="ISODIFFUSION,ISODIFFUSIONTRUEAXIAL,DIFFUSION"
 
 G_DEFAULTCOM_FS="-v 10 -t 123"
-G_SERIESLIST_FS="MPRAGE,SPGR"
+G_SERIESLIST_FS="MPRAGE,SPGR,T1"
 
 G_DEFAULTCOM_FETAL="-v 10 -t 123"
 G_SERIESLIST_FETAL=""
+
+G_DEFAULTCOM_DCMANON="-v 10 -t 1"
+G_SERIESLIST_DCMANON="*"
 
 G_OUTPUTSUFFIX=""
 G_DIRSUFFIX=""
@@ -45,15 +50,15 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-	plBatch_create.bash     -t <batchTableFile>                   	\\
+	plBatch_create.bash     -t <batchTableFile>			\\
                                 -T <pipelineType>                       \\
-                                [-C <DEFAULTCOM>] 			\\
+                                [-C <DEFAULTCOM>]                       \\
                                 [-D <DEFAULTDIR>]                       \\
                                 [-S <SERIESLIST>]                       \\
                                 [-o <outputSuffix>]                     \\
                                 [-R <DIRSUFFIX>]                        \\
-				[-A]					\\
-                                [-z]                                    \\
+                                [-A]                                    \\
+                                [-z] [-a] [-n]                          \\
                                 [-v <verbosity>]                        \\
                                 <MRID1>... <MRIDn>
 
@@ -104,12 +109,9 @@ G_SYNOPSIS="
 
         -T <pipelineType>
         The pipeline batch to create. Currently 'FS' (for FreeSurfer),  'Tract'
-        (for tractography) and 'Fetal' (for Fetal) are understood.
+        (for tractography), 'Fetal' (for Fetal) are understood, and 'dcmanon' for
+        anonymization and transmit are understood.
     
-        -z (Optional)
-        If specified, use a 'fuzzy' search as opposed to an exact match.
-        The fuzzy search is essentially a 'grep -i' substring search.
-	
 	-A
 	If specified, turn ON printing null entries to the table. Null entries
 	are directories that contain the passed MRID, but do not contain any
@@ -135,11 +137,25 @@ G_SYNOPSIS="
         The output dir suffix to add to each processed directory. Note that the
         subject age is appended automatically.
 
+        -z (Optional)
+        If specified, use a 'fuzzy' search as opposed to an exact match.
+        The fuzzy search is essentially a 'grep -i' substring search.
+
+        -a (Optional)
+        If specified, return a match for every series in the toc.txt. This
+        selects the entire set of data, and overrides '-z'.
+        
+        -n (Optional)
+        If specified, break out of the series matching loop on the first
+        hit. Useful if only *one* match per series specification is
+        required.
+
  PRECONDITIONS
 	
 	o A FreeSurfer 'std' or 'dev' environment.
 
-        o 'tract_meta.bash', 'fs_meta.bash', 'fetal_meta.bash' and related.
+        o 'tract_meta.bash', 'fs_meta.bash', 'fetal_meta.bash', 'dcmanon_meta.bash' 
+          and related.
 
  POSTCONDITIONS
 
@@ -153,6 +169,9 @@ G_SYNOPSIS="
 
         28 July 2009
         o Expansion to FS/Tract.
+
+        23 December 2009
+        o Expanded to dcmanon, with addition of '-a' and -n'.
 
 "
 
@@ -203,7 +222,7 @@ D_whatever=
 # Process command options
 ###///
 
-while getopts v:t:T:C:D:S:o:R:Az option ; do
+while getopts v:t:T:C:D:S:o:R:Azan option ; do
 	case "$option"
 	in
 		v) 	Gi_verbose=$OPTARG		;;
@@ -212,13 +231,15 @@ while getopts v:t:T:C:D:S:o:R:Az option ; do
                 C)      G_DEFAULTCOM=$OPTARG
                         Gb_userCom=1                    ;;
                 D)      G_DEFAULTDIR=$OPTARG            
-                		G_DCMMRIDTABLE=$OPTARG/dcm_MRID_age.log	;;
+			G_DCMMRIDTABLE=$OPTARG/dcm_MRID_age.log	;;
                 S)      G_SERIESLIST=$OPTARG            
                         Gb_userSeries=1                 ;;
                 o)      G_OUTPUTSUFFIX=$OPTARG          ;;
                 R)      G_DIRSUFFIX=$OPTARG             ;;
                 A)	Gb_printNullEntries=1		;;
                 z)      Gb_fuzzySearch=1                ;;
+                a)      Gb_allSeries=1                  ;;
+                n)      Gb_firstSeriesOnly=1            ;;
 		\?) synopsis_show
 		    exit 0;;
 	esac
@@ -261,6 +282,7 @@ if (( !Gb_userCom )) ; then
         "fs")           G_DEFAULTCOM=$G_DEFAULTCOM_FS           ;;
         "tract")        G_DEFAULTCOM=$G_DEFAULTCOM_TRACT        ;;
         "fetal")        G_DEFAULTCOM=$G_DEFAULTCOM_FETAL        ;;
+        "dcmanon")      G_DEFAULTCOM=$G_DEFAULTCOM_DCMANON      ;;
     esac
 fi
 
@@ -270,6 +292,7 @@ if (( !Gb_userSeries )) ; then
         "fs")           G_SERIESLIST=$G_SERIESLIST_FS           ;;
         "tract")        G_SERIESLIST=$G_SERIESLIST_TRACT        ;;
         "fetal")        G_SERIESLIST=$G_SERIESLIST_FETAL        ;;
+        "dcmanon")      G_SERIESLIST=$G_SERIESLIST_DCMANON      ;;
     esac
 fi
 
@@ -365,6 +388,7 @@ for MRID in $MRIDLIST ; do
 		if (( b_hit )) ; then break ; fi
             fi
           done
+          if (( Gb_allSeries )) ; then b_hit=1; fi
           if (( b_hit == 1 )) ; then
             b_tocHit=1
             SCANFILE=$(echo $tocLine | awk '{print $2}')
@@ -372,6 +396,7 @@ for MRID in $MRIDLIST ; do
             echo $ENTRY >> $G_TABLEFILE
             rprint "[ ($seriesCount) $SCANFILE ]"
             seriesCount=$(expr $seriesCount + 1)
+            if (( Gb_firstSeriesOnly )) ; then break; fi
           else
             rprint "[ Not tagged ]"
           fi
