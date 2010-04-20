@@ -75,7 +75,8 @@ G_SYNOPSIS="
 
         -T <pipelineType>
         The pipeline batch to create. Currently 'FS' (for FreeSurfer),  'Tract'
-        (for tractography) and 'Fetal' (for Fetal) are understood.
+        (for tractography), 'Fetal' (for Fetal), and 'dcmanon' (which anonymizes
+	whole directories) are understood.
 	
 	-t <batchTableFile>
         The table file to process.
@@ -98,6 +99,9 @@ G_SYNOPSIS="
 
         28 July 2009
         o Consolidation of separate fs_meta and tract_meta pipelines.
+
+	23 December 2009
+	o Added 'dcmanon' as meta pipeline.
 
 "
 
@@ -185,6 +189,7 @@ case "$(echo $G_PIPELINETYPE | tr '[A-Z]' '[a-z]')"
         "fs")           PIPELINE="fs"           ;;
         "tract")        PIPELINE="tract"        ;;
         "fetal")        PIPELINE="fetal"        ;;
+	"dcmanon")	PIPELINE="dcmanon"	;;
 esac
 
 topDir=$(pwd)
