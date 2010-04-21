@@ -317,33 +317,6 @@ D_whatever=
 #     echo "$OPTS"
 # }
 
-function mail_reports
-{
-    # ARGS
-    #
-    # DESC
-    # Depending on the Gb_mail set of "class" variables,
-    # email reports to specified user(s).
-    #
-
-    if (( Gb_mailStd )) ; then
-    	if [[ -f ${G_LOGDIR}/${G_SELF}.std ]] ; then
-      	    cp ${G_LOGDIR}/${G_SELF}.std ${G_LOGDIR}/${G_SELF}.std.mail
-      	    mail -s "stdout: ${G_SELF}" $G_MAILTO < ${G_LOGDIR}/${G_SELF}.std.mail
-    	fi
-#	for LOG in ${G_OUTDIR}/*.log ; do
-#	    cp $LOG ${LOG}.mail
-#	    mail -s "$LOG: ${G_SELF}" $G_MAILTO < ${LOG}.std.mail
-#	done
-    fi
-    if (( Gb_mailErr )) ; then
-  	if [[ -f ${G_LOGDIR}/${G_SELF}.err ]] ; then
-    	    cp ${G_LOGDIR}/${G_SELF}.err ${G_LOGDIR}/${G_SELF}.err.mail
-    	    mail -s "stderr: ${G_SELF}" $G_MAILTO < ${G_LOGDIR}/${G_SELF}.err.mail
-  	fi
-    fi
-}
-
 function MRID_find
 {
     # ARGS
@@ -363,43 +336,6 @@ function MRID_find
     echo $MRID
 }
 
-function cluster_schedule
-{
-    # ARGS
-    # $1                        original script command line args
-    #
-    # DESC
-    # Creates a custom script in the G_LOGDIR that is essentially
-    # the original command line. Once scheduled, termination of this
-    # script ceases, and it is "re-spawned" on the cluster.
-    # 
-
-        # Setup the command line args (stripping the -c)
-        COMARGS=$(echo $1 | sed 's|-c||')
-        # Create mini-script to run on cluster and add to schedule.log
-        STAGE="0-cluster_schedule"
-        STAGECMD="$G_SELF $COMARGS -f                    >\
-                  ${G_LOGDIR}/${G_SELF}.std             2>\
-                  ${G_LOGDIR}/${G_SELF}.err"
-        STAGECMD=$(echo $STAGECMD | sed 's|/local_mount||g')
-        CLUSTERSH=${G_LOGDIR}/fs-cluster.sh
-        echo "#!/bin/bash"                                      > $CLUSTERSH
-        echo "export PATH=$PATH"                                >> $CLUSTERSH   
-        echo "source $FREESURFER_HOME/SetUpFreeSurfer.sh" >>$CLUSTERSH
-        echo "source $FSL_DIR/etc/fslconf/fsl.sh" >> $CLUSTERSH
-        echo "export SUBJECTS_DIR=$SUBJECTS_DIR"                >> $CLUSTERSH   
-        echo "$STAGECMD"                                        >> $CLUSTERSH
-        chmod 755 $CLUSTERSH
-        STAGECMD="${G_LOGDIR}/fs-cluster.sh"
-        STAGECMD=$(echo $STAGECMD | sed 's|/local_mount||g')
-        stage_stamp "$STAGECMD" ${G_CLUSTERDIR}/$G_SCHEDULELOG "$G_CLUSTERUSER"
-        stage_stamp "$STAGE Schedule for cluster" $STAMPLOG
-        stage_stamp "$STAGE" $STAMPLOG
-        
-        # Also append to output of XML file used by web front end
-        LINENUMBER=$(wc -l "${G_CLUSTERDIR}/$G_SCHEDULELOG")
-        cluster_genXML.bash -f ${G_CLUSTERDIR}/$G_SCHEDULELOG -l ${LINENUMBER} >> "${G_CLUSTERDIR}/$G_SCHEDULELOG.xml"
-}
 
 ###\\\
 # Process command options
@@ -498,7 +434,7 @@ stage_stamp "Init | ($topDir) $G_SELF $*" $STAMPLOG
 if (( Gb_runCluster )) ; then
   statusPrint   "Checking on <clusterDir>"
   dirExist_check $G_CLUSTERDIR || mkdir $G_CLUSTERDIR || fatal badClusterDir
-  cluster_schedule "$*"
+  cluster_schedule "$*" "fs"
   G_STAGES=0
   STAGE="Cluster re-spawn termination"
   stage_stamp "$STAGE" $STAMPLOG
@@ -617,6 +553,6 @@ cp ${G_LOGDIR}/* $FINALLOG
 stage_stamp "$STAGE" $STAMPLOG
 
 printf "%40s" "Cleaning up"
-mail_reports
+mail_reports "$G_MAILTO" "$Gb_mailStd" "$Gb_mailErr"
 shut_down 0
 

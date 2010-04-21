@@ -562,6 +562,77 @@ function process_kill
  	return 0
 }
 
+function mail_reports
+{
+    # ARGS
+    #  $1 - Mailto address(es)
+    #  $2 - Whether to mail stdout ("1" = true, "0" = false)
+    #  $3 - Whether to mail stderr ("1" = true, "0" = false)
+    #
+    # DESC
+    # Email reports to specified user(s).
+    #
+    local mailTo=$1
+    local mailStdOut=$2
+    local mailStdErr=$3
+
+    if (( "$mailStdOut" == "1" )) ; then
+        if [[ -f ${G_LOGDIR}/${G_SELF}.std ]] ; then
+            cp ${G_LOGDIR}/${G_SELF}.std ${G_LOGDIR}/${G_SELF}.std.mail
+            mail -s "stdout: ${G_SELF}" $mailTo < ${G_LOGDIR}/${G_SELF}.std.mail
+        fi
+    fi
+    
+    if (( "$mailStdErr" == "1" )) ; then
+        if [[ -f ${G_LOGDIR}/${G_SELF}.err ]] ; then
+            cp ${G_LOGDIR}/${G_SELF}.err ${G_LOGDIR}/${G_SELF}.err.mail
+            mail -s "stderr: ${G_SELF}" $mailTo < ${G_LOGDIR}/${G_SELF}.err.mail
+        fi
+    fi
+}
+
+function cluster_schedule
+{
+    # ARGS
+    # $1                        original script command line args
+    # $2                        name of pipeline (e.g., tract, fs, dcmanon, etc.)
+    # 
+    # DESC
+    # Creates a custom script in the G_LOGDIR that is essentially
+    # the original command line. Once scheduled, termination of this
+    # script ceases, and it is "re-spawned" on the cluster.
+    # 
+    local cmdArgs=$1
+    local pipelineName=$2
+
+    # Setup the command line args (stripping the -c)
+    COMARGS=$(echo $cmdArgs | sed 's|-c||')
+    # Create mini-script to run on cluster and add to schedule.log
+    STAGE="0-cluster_schedule"
+    STAGECMD="$G_SELF $COMARGS -f                    >\
+                ${G_LOGDIR}/${G_SELF}.std           2>\
+                ${G_LOGDIR}/${G_SELF}.err"
+    STAGECMD=$(echo $STAGECMD | sed 's|/local_mount||g')
+    CLUSTERSH=${G_LOGDIR}/$pipelineName-cluster.sh
+    echo "#!/bin/bash"                                      > $CLUSTERSH
+    echo "export PATH=$PATH"                                >> $CLUSTERSH   
+    echo "source $FREESURFER_HOME/SetUpFreeSurfer.sh"       >> $CLUSTERSH
+    echo "source $FSL_DIR/etc/fslconf/fsl.sh"               >> $CLUSTERSH
+    echo "export SUBJECTS_DIR=$SUBJECTS_DIR"                >> $CLUSTERSH
+    echo "export DSI_PATH=$(echo $PATH | tr ":" "\n" | grep dtk)/matrices" >> $CLUSTERSH    
+    echo "$STAGECMD"                                        >> $CLUSTERSH
+    chmod 755 $CLUSTERSH
+    STAGECMD="${G_LOGDIR}/$pipelineName-cluster.sh"
+    STAGECMD=$(echo $STAGECMD | sed 's|/local_mount||g')
+    stage_stamp "$STAGECMD" ${G_CLUSTERDIR}/$G_SCHEDULELOG "$G_CLUSTERUSER"
+    stage_stamp "$STAGE Schedule for cluster" $STAMPLOG
+    stage_stamp "$STAGE" $STAMPLOG
+    
+    # Also append to output of XML file used by web front end
+    LINENUMBER=$(wc -l "${G_CLUSTERDIR}/$G_SCHEDULELOG")
+    cluster_genXML.bash -f ${G_CLUSTERDIR}/$G_SCHEDULELOG -l ${LINENUMBER} >> "${G_CLUSTERDIR}/$G_SCHEDULELOG.xml"
+}
+
 #
 # Typical getops loop:
 #
