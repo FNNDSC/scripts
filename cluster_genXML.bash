@@ -86,6 +86,17 @@ D_whatever=
 ###\\\
 # Function definitions
 ###///
+function echo_stripped
+{
+    # ARGS
+    # $1                        string to print
+    #
+    # DESC
+    # Strip out any non-UTF8 characters before echoing
+    #
+
+    echo -e "$1" | iconv -f UTF-8 -t UTF-8 -c
+}
 
 ###\\\
 # Process command options
@@ -140,23 +151,23 @@ do
 			SOFTWARE_VER=$(echo -e $TOCFILE | grep "Software Ver" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
 			SCANNAME=$(echo -e $TOCFILE | grep $SCANFILE | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' | tr -d "<>")
 								
-			echo "<ClusterJob>"
-			echo "    <Command>$CLUSTERCMD</Command>"
-			echo "    <Arguments>$CMDARGUMENTS</Arguments>"
-			echo "    <MetaScript>$METASCRIPT</MetaScript>"
-			echo "    <Date>$DATE</Date>"
-			echo "    <User>$SUBMITUSER</User>"
-			echo "    <PatientID>$PATIENT_ID</PatientID>"
-			echo "    <PatientName>$PATIENT_NAME</PatientName>"
-			echo "    <PatientAge>$PATIENT_AGE</PatientAge>"
-			echo "    <PatientSex>$PATIENT_SEX</PatientSex>"
-			echo "    <PatientBirthday>$PATIENT_BIRTHDAY</PatientBirthday>"
-			echo "    <ImageScanDate>$IMAGE_SCAN_DATE</ImageScanDate>"
-			echo "    <ScannerManufacturer>$SCANNER_MANUFACTURER</ScannerManufacturer>"
-			echo "    <ScannerModel>$SCANNER_MODEL</ScannerModel>"
-			echo "    <SoftwareVer>$SOFTWARE_VER</SoftwareVer>"
-			echo "    <ScanName>$SCANNAME</ScanName>"
-			echo "</ClusterJob>"
+			echo_stripped "<ClusterJob>"
+			echo_stripped "    <Command>$CLUSTERCMD</Command>"
+			echo_stripped "    <Arguments>$CMDARGUMENTS</Arguments>"
+			echo_stripped "    <MetaScript>$METASCRIPT</MetaScript>"
+			echo_stripped "    <Date>$DATE</Date>"
+			echo_stripped "    <User>$SUBMITUSER</User>"
+			echo_stripped "    <PatientID>$PATIENT_ID</PatientID>"
+			echo_stripped "    <PatientName>$PATIENT_NAME</PatientName>"
+			echo_stripped "    <PatientAge>$PATIENT_AGE</PatientAge>"
+			echo_stripped "    <PatientSex>$PATIENT_SEX</PatientSex>"
+			echo_stripped "    <PatientBirthday>$PATIENT_BIRTHDAY</PatientBirthday>"
+			echo_stripped "    <ImageScanDate>$IMAGE_SCAN_DATE</ImageScanDate>"
+			echo_stripped "    <ScannerManufacturer>$SCANNER_MANUFACTURER</ScannerManufacturer>"
+			echo_stripped "    <ScannerModel>$SCANNER_MODEL</ScannerModel>"
+			echo_stripped "    <SoftwareVer>$SOFTWARE_VER</SoftwareVer>"
+			echo_stripped "    <ScanName>$SCANNAME</ScanName>"
+			echo_stripped "</ClusterJob>"
 		fi
 	fi
 done

@@ -91,6 +91,17 @@ D_whatever=
 ###\\\
 # Function definitions
 ###///
+function echo_stripped
+{
+    # ARGS
+    # $1                        string to print
+    #
+    # DESC
+    # Strip out any non-UTF8 characters before echoing
+    #
+
+    echo -e "$1" | iconv -f UTF-8 -t UTF-8 -c
+}
 
 
 ###\\\
@@ -171,22 +182,22 @@ for DIR in * ; do
                         SCANNER_MODEL=$(echo -e $DCMMKINDX | grep "Scanner Model" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
                         SOFTWARE_VER=$(echo -e $DCMMKINDX | grep "Software Ver" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
 						                        
-                        echo "<PatientRecord>"						
-                        echo "    <PatientID>$ID</PatientID>"
-                        echo "    <Directory>$DIR</Directory>"
-                        echo "    <PatientName>$PATIENT_NAME</PatientName>"
-                        echo "    <PatientAge>$PATIENT_AGE</PatientAge>"
-                        echo "    <PatientSex>$PATIENT_SEX</PatientSex>"
-                        echo "    <PatientBirthday>$PATIENT_BIRTHDAY</PatientBirthday>"
-                        echo "    <ImageScanDate>$IMAGE_SCAN_DATE</ImageScanDate>"
-                        echo "    <ScannerManufacturer>$SCANNER_MANUFACTURER</ScannerManufacturer>"
-                        echo "    <ScannerModel>$SCANNER_MODEL</ScannerModel>"
-                        echo "    <SoftwareVer>$SOFTWARE_VER</SoftwareVer>"
-                        echo -e $DCMMKINDX | grep "Scan " | sed -e 's/\&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/\"/\&quot;/g' -e 's/\x27/\&#39;/g' \
+                        echo_stripped "<PatientRecord>"						
+                        echo_stripped "    <PatientID>$ID</PatientID>"
+                        echo_stripped "    <Directory>$DIR</Directory>"
+                        echo_stripped "    <PatientName>$PATIENT_NAME</PatientName>"
+                        echo_stripped "    <PatientAge>$PATIENT_AGE</PatientAge>"
+                        echo_stripped "    <PatientSex>$PATIENT_SEX</PatientSex>"
+                        echo_stripped "    <PatientBirthday>$PATIENT_BIRTHDAY</PatientBirthday>"
+                        echo_stripped "    <ImageScanDate>$IMAGE_SCAN_DATE</ImageScanDate>"
+                        echo_stripped "    <ScannerManufacturer>$SCANNER_MANUFACTURER</ScannerManufacturer>"
+                        echo_stripped "    <ScannerModel>$SCANNER_MODEL</ScannerModel>"
+                        echo_stripped "    <SoftwareVer>$SOFTWARE_VER</SoftwareVer>"
+                        echo_stripped "$DCMMKINDX" | grep "Scan " | sed -e 's/\&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/\"/\&quot;/g' -e 's/\x27/\&#39;/g' \
                                            | awk '{ printf "    <Scan>"; for(i=3;i<=NF;i++) printf "%s ",$i; printf "</Scan>\n"} '						
-                        echo -e $PERMISSIONS | grep "User "  | awk '{ printf "    <User>%s</User>\n", $2} '
-                        echo -e $PERMISSIONS | grep "Group " | awk '{ printf "    <Group>%s</Group>\n", $2} '
-                        echo "</PatientRecord>"
+                        echo_stripped "$PERMISSIONS" | grep "User "  | awk '{ printf "    <User>%s</User>\n", $2} '
+                        echo_stripped "$PERMISSIONS" | grep "Group " | awk '{ printf "    <Group>%s</Group>\n", $2} '
+                        echo_stripped "</PatientRecord>"
                         let "hitCount += 1"
                         if (( b_DCMLIST )) ; then
                             if (( hitCount >= b_DCMLIST && !Gb_scanAll )) ; then
