@@ -255,19 +255,27 @@ $INDEX1
 $INDEX2
 " > /tmp/$MAILMSG
 
-# Create a permissions.txt file with the user being the application-entity title.
-# If the file already exists, then add this user only if is not already in the file
+# Create a permissions.txt file with the user being the application-entity 
+# title.
+# If the file already exists, then add this user only if is not already in 
+# the file. 
+# Multiple users can be spec'd in the AETitle with commas.
 PERMISSION_USER=$(echo $G_CALLEDENTITY | tr '[A-Z]' '[a-z]')
-if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt ]] ; then
-        echo "User $PERMISSION_USER" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt
+for USER in $(echo $PERMISSION_USER | tr ',' ' '); do
+    if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt ]] ; then
+        echo "User $USER" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt
         chmod 644 ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt
-else
+    else
         # Check to see if user is already in permissions.txt file
-        b_found=$(cat ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt | grep "User" | awk '{print $2}' | grep $PERMISSION_USER | wc -w)
+        b_found=$(cat ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt|\
+		   grep "User" | awk '{print $2}' 			|\
+		   grep $USER | wc -w)
         if ((!b_found)) ; then
-                echo "User $PERMISSION_USER" >> ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt                       
+                echo "User $USER" >> \
+		${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/permissions.txt                       
         fi
-fi
+    fi
+done
 
 # Parse the mail alias file for PERMISSION_USER, and if found, append to TO
 # string. Multiple users in the PERMISSION_USER are separated by commas
