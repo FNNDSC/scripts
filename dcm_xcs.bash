@@ -270,13 +270,15 @@ else
 fi
 
 # Parse the mail alias file for PERMISSION_USER, and if found, append to TO
-# string
+# string. Multiple users in the PERMISSION_USER are separated by commas
 MAILALIAS=${G_USRETC}/${G_MAILALIAS}
 if [[ -f $MAILALIAS ]] ; then
-    RETURNMAIL=$(grep $PERMISSION_USER $MAILALIAS | awk '{print $2}')
-    if (( ${#RETURNMAIL} )) ; then
-	TO="$TO,$RETURNMAIL"
-    fi
+    for USER in $(echo $PERMISSION_USER | tr ',' ' '); do
+        RETURNMAIL=$(grep $USER $MAILALIAS | awk '{print $2}')
+        if (( ${#RETURNMAIL} )) ; then
+	    TO="$TO,$RETURNMAIL"
+        fi
+    done
 fi
 
 if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG ]] ; then
