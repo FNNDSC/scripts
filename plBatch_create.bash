@@ -38,6 +38,9 @@ G_SERIESLIST_FETAL=""
 G_DEFAULTCOM_DCMANON="-v 10 -t 1"
 G_SERIESLIST_DCMANON="*"
 
+G_DEFAULTCOM_DCMSEND="-v 10 -t 12"
+G_SERIESLIST_DCMSEND="*"
+
 G_OUTPUTSUFFIX=""
 G_DIRSUFFIX=""
 G_DCMMRIDTABLE=${G_DEFAULTDIR}/dcm_MRID_age.log
@@ -109,8 +112,8 @@ G_SYNOPSIS="
 
         -T <pipelineType>
         The pipeline batch to create. Currently 'FS' (for FreeSurfer),  'Tract'
-        (for tractography), 'Fetal' (for Fetal) are understood, and 'dcmanon' for
-        anonymization and transmit are understood.
+        (for tractography), 'Fetal' (for Fetal) are understood, 'dcmanon' (for
+        anonymization) and 'dcmsend' (for transmit) are understood.
     
 	-A
 	If specified, turn ON printing null entries to the table. Null entries
@@ -154,8 +157,8 @@ G_SYNOPSIS="
 	
 	o A FreeSurfer 'std' or 'dev' environment.
 
-        o 'tract_meta.bash', 'fs_meta.bash', 'fetal_meta.bash', 'dcmanon_meta.bash' 
-          and related.
+        o 'tract_meta.bash', 'fs_meta.bash', 'fetal_meta.bash', 'dcmanon_meta.bash'
+          'dcmsend_meta.bash', and related.
 
  POSTCONDITIONS
 
@@ -283,6 +286,7 @@ if (( !Gb_userCom )) ; then
         "tract")        G_DEFAULTCOM=$G_DEFAULTCOM_TRACT        ;;
         "fetal")        G_DEFAULTCOM=$G_DEFAULTCOM_FETAL        ;;
         "dcmanon")      G_DEFAULTCOM=$G_DEFAULTCOM_DCMANON      ;;
+        "dcmsend")      G_DEFAULTCOM=$G_DEFAULTCOM_DCMSEND      ;;
     esac
 fi
 
@@ -293,6 +297,7 @@ if (( !Gb_userSeries )) ; then
         "tract")        G_SERIESLIST=$G_SERIESLIST_TRACT        ;;
         "fetal")        G_SERIESLIST=$G_SERIESLIST_FETAL        ;;
         "dcmanon")      G_SERIESLIST=$G_SERIESLIST_DCMANON      ;;
+        "dcmsend")      G_SERIESLIST=$G_SERIESLIST_DCMSEND      ;;
     esac
 fi
 

@@ -1,17 +1,19 @@
 #!/bin/bash
 
 # "include" the set of common script functions
-source ~/arch/scripts/common.bash
+source common.bash
 
 declare -i Gb_customStorescu=0
 declare -i Gi_verbose=0
 declare -i Gb_anonymize=0
+declare -i Gb_partialAnonymize=0
 
 G_STORESCU="storescu"
 G_FILEEXT=""
 G_HOST=heisenberg.nmr.mgh.harvard.edu
 G_AETITLE="DCM4CHEE"
 G_LISTENPORT=11112
+G_SSLCERTIFICATE="/chb/osx1927/1/users/dicom/anonymize_key/CA_cert.pem"
 
 G_SYNOPSIS="
 
@@ -21,13 +23,15 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-        dicom_dirSend.bash	[-v <verbosity>]                        \\
-				[-a <aetitle>]				\\
-				[-h <dicomHost>]			\\
-				[-p <listenPort>]			\\
-				[-s <storescu>]				\\
-                                [-A]                                    \\
-                                [-E <fileExt>]                          \\
+        dicom_dirSend.bash	[-v <verbosity>]                \\
+                                [-a <aetitle>]				\\
+                                [-h <dicomHost>]			\\
+                                [-p <listenPort>]			\\
+                                [-s <storescu>]				\\
+                                [-A]                        \\
+                                [-P]                        \\
+                                [-K <SSLCertificate>        \\
+                                [-E <fileExt>]              \\
 				<dicomDir1> <dicomDir2> ... <dicomDirN>
 
  DESCRIPTION
@@ -48,29 +52,39 @@ G_SYNOPSIS="
         -A (Optional)
         If specified, anonymize data before transmission.
         
+        -P (Optional)
+        If specified, do a partial anonymization of the data (similar to -A,
+        but rather than doing a full DICOM-compliant anonymize, only anonymizes
+        some of the fields).
+                
         -E <fileExt> (Optional)
         If specified, only transmit files ending in *.<fileExt>, otherwise
         transmit all files in the target directory. Specifying the 
         <fileExt> is useful, since the transmission program will
         fail if attempting to transmit non-dicom files.
 
-	-a <aetitle> (optional, default = $G_AETITLE)
-	The aetitle of the PACS process to receive the data.
+        -a <aetitle> (optional, default = $G_AETITLE)
+        The aetitle of the PACS process to receive the data.
 
-	-h <remoteNMRhost> (optional, default = $G_HOST)
-	The host running the PACS process, i.e. the hostname of the DICOM
-	peer.
+        -h <remoteNMRhost> (optional, default = $G_HOST)
+        The host running the PACS process, i.e. the hostname of the DICOM
+        peer.
 
-	-p <listenPort> (optional, default = $G_LISTENPORT)
-	The port number on which the PACS process is listening.
+        -p <listenPort> (optional, default = $G_LISTENPORT)
+        The port number on which the PACS process is listening.
 
-	-s <storescu> (optional, default = $G_STORESCU)
-	Use this option to specify a <storescu> binary, typically used
-	if <storescu> is not on the standard PATH. The basename of
-	<storescu> is assumed to also contain any necessary libraries.
+        -K <SSLCertificate> (optional, default = $G_SSLCERTIFICATE)
+        The anonymization process ('gdcmanon') requires an SSL certificate.  
+        If requesting anonymization, the process to generate an SSL certificate 
+        is described at: http://gdcm.sourceforge.net/html/gdcmanon.html
 
-	<dicomDir1> <dicomDir2> ... <dicomDirN>
-	The list of DICOM directories to transmit to the PACS process.
+        -s <storescu> (optional, default = $G_STORESCU)
+        Use this option to specify a <storescu> binary, typically used
+        if <storescu> is not on the standard PATH. The basename of
+        <storescu> is assumed to also contain any necessary libraries.
+
+        <dicomDir1> <dicomDir2> ... <dicomDirN>
+        The list of DICOM directories to transmit to the PACS process.
 
  EXAMPLES
 
@@ -115,17 +129,19 @@ EC_dirAccess="50"
 # Process command options
 ###///
 
-while getopts v:a:h:p:s:AE: option ; do
+while getopts v:a:h:p:s:APE:K: option ; do
         case "$option"
         in
                 v) Gi_verbose=$OPTARG					;;
-                A) Gb_anonymize=1                                       ;;
-                E) G_FILEEXT=".${OPTARG}"                               ;;
-		a) G_AETITLE=$OPTARG					;;
-		h) G_HOST=$OPTARG					;;
-		p) G_LISTENPORT=$OPTARG					;;
-		s) G_STORESCU=$OPTARG					
-		   Gb_customStorescu=1					;;
+                A) Gb_anonymize=1                       ;;
+                P) Gb_partialAnonymize=1                ;;
+                K) G_SSLCERTIFICATE=$OPTARG             ;;
+                E) G_FILEEXT=".${OPTARG}"               ;;
+                a) G_AETITLE=$OPTARG                    ;;
+                h) G_HOST=$OPTARG                       ;;
+                p) G_LISTENPORT=$OPTARG                 ;;
+                s) G_STORESCU=$OPTARG					
+                   Gb_customStorescu=1                  ;;
                 \?) synopsis_show
                     exit 0;;
         esac
@@ -165,24 +181,28 @@ fi
 
 topDir=$(pwd)
 for DIR in $DCMLIST ; do
-	statusPrint	"Checking access to $DIR" "\n"
+	    statusPrint	"Checking access to $DIR" "\n"
         lprint          "Access check"
-	dirExist_check "$DIR" || fatal dirCheck
-        if (( Gb_anonymize )) ; then
+	    dirExist_check "$DIR" || fatal dirCheck
+        if (( Gb_anonymize  || Gb_partialAnonymize)) ; then
             statusPrint "Anonymizing $DIR..." "\n"
             INPUTDIR=$DIR
             OUTPUTDIR=${DIR}-anon
-            dcmanon_meta.bash -v 10 -D $INPUTDIR -O $OUTPUTDIR
+            ANONARG=""
+            if ((Gb_partialAnonymize)) ; then
+            	ANONARG=" -P "
+            fi
+            dcmanon_meta.bash -v 10 -K $G_SSLCERTIFICATE -D $INPUTDIR -O $OUTPUTDIR $ANONARG
             DIR=$OUTPUTDIR
             cprint      "Anonymization" "[ ok ]"
         fi
-	statusPrint	"Transmitting *$G_FILEEXT files in $DIR..." "\n"
-	cd "$DIR" >/dev/null
+        statusPrint	"Transmitting *$G_FILEEXT files in $DIR..." "\n"
+        cd "$DIR" >/dev/null
         lprint          "Transmission"
-	$G_STORESCU -aet "$G_SELF" -aec $G_AETITLE $G_HOST $G_LISTENPORT *${G_FILEEXT}
-	ret_check $? || fatal storescu
+        $G_STORESCU -aet "$G_SELF" -aec $G_AETITLE $G_HOST $G_LISTENPORT *${G_FILEEXT}
+        ret_check $? || fatal storescu
         cd ../
-        if (( Gb_anonymize )) ; then
+        if (( Gb_anonymize || Gb_partialAnonymize)) ; then
             lprint      "Removing temp directory"
             rm -fr "$DIR"
             rprint      "[ ok ]"

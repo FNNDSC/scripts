@@ -15,15 +15,15 @@ declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=0
 declare -i Gb_useOverrideOut=0
 declare -i Gb_forceStage=1
+declare -i Gb_partialAnonymize=0
 
 G_LOGDIR="-x"
 G_OUTDIR="/dicom/postproc"
+G_SSLCERTIFICATE="/chb/osx1927/1/users/dicom/anonymize_key/CA_cert.pem"
 G_OUTPREFIX="-x"
 G_DIRSUFFIX=""
 G_OUTPREFIX="anon-"
 G_DICOMINPUTDIR="-x"
-G_UBUNTUJAVA=""
-G_MATLAB="/usr/bin/matlab"
 G_STAGES="1"
 
 G_SYNOPSIS="
@@ -34,14 +34,14 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-	dcmanon_meta.bash	-D <dicomInputDir>                      \\
+	dcmanon_meta.bash	-D <dicomInputDir>                              \\
                                 [-d <dicomSeriesFile>]                  \\
-                                [-v <verbosity>]  			\\
-				[-O <experimentTopDir>]			\\
-				[-R <DIRsuffix>				\\
+                                [-v <verbosity>]                        \\
+                                [-O <experimentTopDir>]                 \\
                                 [-o <outputSuffix>]                     \\
-                                [-p <outputPrefix>]
-
+                                [-p <outputPrefix>]                     \\
+                                [-K <SSLCertificate>]                   \\
+                                [-P]
  DESCRIPTION
 
 	'dcmanon_meta.bash' accepts an input directory containing DICOM
@@ -52,8 +52,8 @@ G_SYNOPSIS="
 
  ARGUMENTS
 
-	-v <level> (optional)
-	Verbosity level.
+        -v <level> (optional)
+        Verbosity level.
 
         -D <dicomInputDir>
         The directory containing DICOM files for a particular study.
@@ -65,13 +65,18 @@ G_SYNOPSIS="
         The root directory node that contains the outputs of a particular
         anonymization run. Each run is stored in its own directory.
 	
-	If this is specified on the command line, then output from the 
-	anonymization will be written to this directory.
+        If this is specified on the command line, then output from the 
+        anonymization will be written to this directory.
 
         -o <suffix> (Optional) 
         (Ignored in dcmanon_meta.bash and used for compatability with pl_batch)
-
-       -R <DIRsuffix> (Optional)
+        
+        -K <SSLCertificate> (optional, default = $G_SSLCERTIFICATE)
+        The anonymization process ('gdcmanon') requires an SSL certificate.  
+        If requesting anonymization, the process to generate an SSL certificate 
+        is described at: http://gdcm.sourceforge.net/html/gdcmanon.html
+        
+        -R <DIRsuffix> (Optional)
         Appends <DIRsuffix> to the postproc/<MRID> as well as <logDir>. Since
         multiple studies on the same patient can in principle have the same
         MRID, interference can result in some of the log files and source
@@ -80,6 +85,11 @@ G_SYNOPSIS="
 
         -p <outputPrefix> (Optional)
         If specified, prefix all generated output files with <outputPrefix>.
+        
+        -P (Optional)
+        If specified, do a partial anonymization of the data (rather than 
+        doing a full DICOM-compliant anonymize, only anonymizes some of the 
+        fields).
 
  PRECONDITIONS
 	
@@ -143,33 +153,6 @@ EC_metaLog=80
 # Defaults
 D_whatever=
 
-function matlab_scriptCreate
-{
-    local SCRIPT=$1
-    
-    cat > $SCRIPT <<-end-of-script
-    function [c] 	= dcm_anonymize_drive()
-        c	= dcm_anonymize();
-        str_in	= '$G_DICOMINPUTDIR';
-        str_out	= '$OUTDIR';
-        c	= set(c, 'dicomInputDir',	str_in);
-        c	= set(c, 'dicomOutputDir',	str_out);
-        c	= set(c, 'verbosity',		10);
-        c	= set(c, 'b_newSeries',		0);
-        c	= set(c, 'anonPrefix',		'$G_OUTPREFIX');
-        c	= set(c, 'keep', 		'reset');
-        c	= set(c, 'keep', 		'PatientAge');
-        c	= set(c, 'keep', 		'PatientSex');       
-        c	= set(c, 'keep', 		'StudyDescription');
-        c	= set(c, 'keep', 		'SeriesDescription');
-        c	= set(c, 'keep', 		'ProtocolName');
-	
-        c	= run(c);
-    end
-end-of-script
-
-}
-
 ###\\\
 # Function definitions
 ###///
@@ -179,18 +162,20 @@ end-of-script
 # Process command options
 ###///
 
-while getopts D:Ev:O:o:p:t:R:d option ; do 
+while getopts D:Ev:O:o:p:t:R:d:K:P option ; do 
 	case "$option"
 	in
                 D)      G_DICOMINPUTDIR=$OPTARG         ;;
                 E)      Gb_useExpertOptions=1           ;;
                 v)      let Gi_verbose=$OPTARG          ;;
-		O)      Gb_useOverrideOut=1
-			G_OUTDIR=$OPTARG                ;;
-		o)      G_OUTSUFFIX="$OPTARG"           ;;
+                O)      Gb_useOverrideOut=1
+			            G_OUTDIR=$OPTARG                ;;
+                o)      G_OUTSUFFIX="$OPTARG"           ;;
                 p)      G_OUTPREFIX="$OPTARG"           ;;
-                R)	G_DIRSUFFIX=$OPTARG		;;
+                R)      G_DIRSUFFIX=$OPTARG             ;;
+                K)      G_SSLCERTIFICATE=$OPTARG        ;;
                 t)      G_STAGES="$OPTARG"              ;;
+                P)      Gb_partialAnonymize=1           ;;
                 d)      NOP                             ;;
 		\?)     synopsis_show 
                         exit 0;;
@@ -203,7 +188,7 @@ topDir=$(pwd)
 cprint  "hostname"      "[ $(hostname) ]"
 
 ## Check on script preconditions
-REQUIREDFILES="matlab"
+REQUIREDFILES="gdcmanon mri_probedicom"
 for file in $REQUIREDFILES ; do
         printf "%40s"   "Checking for $file"
         file_checkOnPath $file || fatal fileCheck
@@ -243,16 +228,6 @@ lprint "Anonymized directory"
 rprint "[ $OUTDIR ]"
 cd $topDir
 
-lprint	"Are we on ubuntu?"
-let b_ubuntu=0
-if [[ -f /etc/issue ]] ; then
-    let b_ubuntu=$(grep Ubuntu /etc/issue | wc -l)
-fi
-if (( b_ubuntu )) ; then
-    G_UBUNTUJAVA="MATLAB_JAVA=/usr/lib/jvm/java-6-sun/jre"
-fi
-rprint	"[ $b_ubuntu ]"
-
 ## Check which stages to process
 statusPrint     "Checking which stages to process"
 barr_stage=([0]=0 [1]=0 [2]=0 [3]=0 [4]=0 [5]=0)
@@ -268,7 +243,7 @@ STAMPLOG=${G_LOGDIR}/${G_SELF}.log
 stage_stamp "Init | ($(pwd)) $G_SELF $*" $STAMPLOG
 
 STAGENUM="1"
-STAGEPROC=matlab
+STAGEPROC=gdcmanon
 STAGE=${STAGENUM}-${STAGEPROC}
 STAGE1RELDIR=${G_OUTRUNDIR}
 STAGE1FULLDIR=${OUTDIR}
@@ -279,19 +254,40 @@ dirExist_check ${STAGE1FULLDIR} "not found - creating"        \
 if (( ${barr_stage[1]} )) ; then
     cd $STAGE1FULLDIR
     statusPrint "$(date) | Processing STAGE 1 - anonymizing DICOM dir | START" "\n"
-    statusPrint         "creating MatLAB script file..." "\n"
-    MATLABSCRIPT=dcm_anonymize_drive.m
-    matlab_scriptCreate $MATLABSCRIPT
-    statusPrint         "running MatLAB script file..." "\n"
-    
-    STAGECMD="eval \"$G_MATLAB -nodesktop -nosplash \
-              -r \\\"c = $(basename $MATLABSCRIPT .m)(); exit\\\"\""                                      
-    stage_run "$STAGE"  "$STAGECMD"                             \
-              "${STAGE1FULLDIR}/${STAGEPROC}.std"               \
-              "${STAGE1FULLDIR}/${STAGEPROC}.err"               \
-              "SILENT"                                          \
-              || fatal stageRun
 
+    # If partial anonymize was requested, just substitute some essential tags
+    # such as PatientsName, birthday, etc.
+    if ((Gb_partialAnonymize)) ; then
+        for FILE in $G_DICOMINPUTDIR/*.dcm ; do
+        	FILEBASE=$(basename $FILE)
+            STAGECMD="mri_probedicom --i $FILE --t 0010 0020 | openssl md5 |  \
+                      xargs -i% $STAGEPROC                                    \
+                            --dumb                                            \
+                            --replace 0010,0010,anonymized                    \
+                            --replace 0010,0020,%                             \
+                            --replace 0010,0030,19000101					  \
+                            --replace 0008,1030,anonymized                    \
+                            --replace 0032,1030,anonymized                    \
+                            --replace 0032,1060,anonymized                    \
+                            -i $FILE -o $STAGE1FULLDIR/$FILEBASE"
+            stage_run "$STAGE-$FILEBASE"  "$STAGECMD"               \
+                  "${STAGE1FULLDIR}/${STAGEPROC}.std"               \
+                  "${STAGE1FULLDIR}/${STAGEPROC}.err"               \
+                  "SILENT"                                          \
+                  || fatal stageRun
+    	done    
+    # Do a full DICOM-compliant anonymize
+    else
+        STAGECMD="$STAGEPROC -c $G_SSLCERTIFICATE -i $G_DICOMINPUTDIR -o $STAGE1FULLDIR"
+        stage_run "$STAGE"  "$STAGECMD"                             \
+                  "${STAGE1FULLDIR}/${STAGEPROC}.std"               \
+                  "${STAGE1FULLDIR}/${STAGEPROC}.err"               \
+                  "SILENT"                                          \
+                  || fatal stageRun
+	    
+    fi
+        	
+    
     statusPrint "$(date) | Processing STAGE 1 - anonymizing DICOM dir | END" "\n"
 fi
 

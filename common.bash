@@ -596,7 +596,13 @@ function cluster_schedule
     # ARGS
     # $1                        original script command line args
     # $2                        name of pipeline (e.g., tract, fs, dcmanon, etc.)
-    # 
+    #
+    # DEPENDENCIES 
+    # G_CLUSTERDIR              cluster directory where schedule log is found
+    # G_SCHEDULELOG             schedule log file name (e.g., schedule.log)
+    # G_CLUSTERUSER             name of user submitting to cluster
+    # G_LOGDIR                  log directory path
+    #
     # DESC
     # Creates a custom script in the G_LOGDIR that is essentially
     # the original command line. Once scheduled, termination of this

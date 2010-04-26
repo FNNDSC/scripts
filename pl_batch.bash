@@ -75,8 +75,8 @@ G_SYNOPSIS="
 
         -T <pipelineType>
         The pipeline batch to create. Currently 'FS' (for FreeSurfer),  'Tract'
-        (for tractography), 'Fetal' (for Fetal), and 'dcmanon' (which anonymizes
-	whole directories) are understood.
+        (for tractography), 'Fetal' (for Fetal), 'dcmanon' (which anonymizes
+	whole directories), and 'dcmsend' (which sends directories) are understood.
 	
 	-t <batchTableFile>
         The table file to process.
@@ -189,7 +189,8 @@ case "$(echo $G_PIPELINETYPE | tr '[A-Z]' '[a-z]')"
         "fs")           PIPELINE="fs"           ;;
         "tract")        PIPELINE="tract"        ;;
         "fetal")        PIPELINE="fetal"        ;;
-	"dcmanon")	PIPELINE="dcmanon"	;;
+        "dcmanon")      PIPELINE="dcmanon"      ;;
+        "dcmsend")      PIPELINE="dcmsend"      ;;
 esac
 
 topDir=$(pwd)
