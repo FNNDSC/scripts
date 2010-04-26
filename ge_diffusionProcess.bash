@@ -452,7 +452,20 @@ if (( ${barr_stage[2]} )) ; then
     DCM2NIINAME=$(basename $NIFTI .nii.gz)
     BVAL=$(ls -1 ${DCM2NIINAME}.bval | head -n 1)
     BVEC=$(ls -1 ${DCM2NIINAME}.bvec | head -n 1)
-    if (( ! ${#BVAL}  || ! ${#BVEC} )) ; then fatal bvConvert; fi
+    if (( ! ${#BVAL}  || ! ${#BVEC} )) ; then 
+        # Sometimes dcm2nii can't figure out how to name the bval/bvec
+        # files and just calls them .bval and .bvec.  If that's the case,
+        # rename them
+        BVAL=$(ls -1 .bval | head -n 1)
+        BVEC=$(ls -1 .bvec | head -n 1)
+        
+        if (( ! ${#BVAL}  || ! ${#BVEC} )) ; then 
+            fatal bvConvert; 
+        else
+            mv .bval ${DCM2NIINAME}.bval
+            mv .bvec ${DCM2NIINAME}.bvec
+        fi
+    fi
     mv ${DCM2NIINAME}.nii.gz 	${STAGE2FILEBASE}.nii.gz
     mv ${DCM2NIINAME}.bval	${STAGE2FILEBASE}.bval
     mv ${DCM2NIINAME}.bvec	${STAGE2FILEBASE}.bvec
