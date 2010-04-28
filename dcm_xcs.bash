@@ -204,6 +204,14 @@ ret_check $?
 SCRIPT_DIR=$(which common.bash)
 G_DAYAGECALC_AWK="$(dirname $SCRIPT_DIR)/dayAge_calc.awk"
 
+# Generate a lock file to prevent multiple instances of dcm_xcs.bash
+# from running simulatenously.  This is problematic because if multiple
+# instances are spawned at the same time because they could each be
+# writing to the same set of files in the same directories.  This will
+# cause the script to wait until a lock file is released.
+trap "rm -f /tmp/dcm_xcs.bash.lock" 0 1 2 9 15
+lockfile -1 -r 3600 /tmp/dcm_xcs.bash.lock
+
 # statusPrint     "Checking if <outputDirectory> is accessible"
 # dirExist_check "$G_OUTPUTDICOMDIR" || fatal noDicomDir
 # cd $G_OUTPUTDICOMDIR
@@ -289,10 +297,16 @@ if [[ -f $MAILALIAS ]] ; then
     done
 fi
 
-if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG ]] ; then
+# Check to see if the file has changed and only send it if so (or
+# if it does not exist yet).  Only look at the "Scan"'s because the
+# date and LastSeriesFile will always be different.
+grep "Scan" /tmp/$MAILMSG > /tmp/$MAILMSG.cmp1
+grep "Scan" ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG > /tmp/$MAILMSG.cmp2
+cmp -s /tmp/$MAILMSG.cmp1 /tmp/$MAILMSG.cmp2 > /dev/null
+if [ $? -ne 0 ] ; then
 	cp /tmp/$MAILMSG ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
 	/usr/bin/mail -s "$SUBJ" "$TO" <${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
-else
+else	
 	rm -f /tmp/storescp*
 fi
 
@@ -302,6 +316,22 @@ if (( ${#INDEX2} )) ; then
 fi
 chmod 2775 ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}
 
+# Next add it to the dcm_MRID.xml
+dcm_MRIDgetXML.bash -d ${G_DICOMROOT} -a > ${G_DICOMROOT}/dcm_MRID.xml.build
+cp ${G_DICOMROOT}/dcm_MRID.xml.build ${G_DICOMROOT}/dcm_MRID.xml
+rm -rf ${G_DICOMROOT}/dcm_MRID.xml.build
+	
+# Also, run mri_info
+STAGE1PROC=mri_info_batch.bash
+statusPrint "$(date) | Processing STAGE - mri_info_batch.bash | START" "\n"
+STAGE=1-$STAGE1PROC
+STAGECMD="$STAGE1PROC	\
+                 -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}"
+stage_run "$STAGE" "$STAGECMD"                          \
+          "${G_LOGDIR}/${STAGE1PROC}.std"               \
+          "${G_LOGDIR}/${STAGE1PROC}.err"
+statusPrint "$(date) | Processing STAGE -  mri_info_batch.bash | END" "\n"
+
 # Append the new entry to the dcm_MRID*.log if it has not yet been done
 if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE ]] ; then
 	
@@ -309,27 +339,13 @@ if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE ]] ; then
 	MRID=$(grep ID  ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt | awk '{print $3}')
 	printf "%-55s\t%25s\n" "$G_OUTPUTDICOMDIR" "$MRID" >> ${G_DICOMROOT}/dcm_MRID.log
 	
-	# Next add it to the dcm_MRID.xml
-	dcm_MRIDgetXML.bash -d ${G_DICOMROOT} ${G_OUTPUTDICOMDIR} >> ${G_DICOMROOT}/dcm_MRID.xml
-	
 	# Now get the Age to add to dcm_MRID_age.log
 	AGE=$(dcm_bdayAgeGet.bash | grep Age | awk '{print $5}' | tr '\n' ' ')
 	printf "%55s\t%50s\t%10s\n" "$G_OUTPUTDICOMDIR" "$MRID" "$AGE" >> ${G_DICOMROOT}/dcm_MRID_age.log
 	
 	# Finally regenerate dcm_MRID_ageDays.log
-	cat ${G_DICOMROOT}/dcm_MRID_age.log | awk -f ${G_DAYAGECALC_AWK} | sort -n -k 3 > ${G_DICOMROOT}/dcm_MRID_ageDays.log
+	cat ${G_DICOMROOT}/dcm_MRID_age.log | awk -f ${G_DAYAGECALC_AWK} | sort -n -k 3 > ${G_DICOMROOT}/dcm_MRID_ageDays.log	
 
-	# Also, run mri_info
-	STAGE1PROC=mri_info_batch.bash
-	statusPrint "$(date) | Processing STAGE - mri_info_batch.bash | START" "\n"
-	STAGE=1-$STAGE1PROC
-	STAGECMD="$STAGE1PROC	\
-                 -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}"
-	stage_run "$STAGE" "$STAGECMD"                          \
-                  "${G_LOGDIR}/${STAGE1PROC}.std"               \
-                  "${G_LOGDIR}/${STAGE1PROC}.err"
-	statusPrint "$(date) | Processing STAGE -  mri_info_batch.bash | END" "\n"
-	
 	echo "Appened to dcm_MRID*.log: $MRID $AGE $G_OUTPUTDICOMDIR" > ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE
 fi
 
