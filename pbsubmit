@@ -11,4 +11,22 @@
 # Other options to consider:
 # -m<mb> = we might want to use this to request a large number of MB be available for a freesurfer job
 # -P<#> = we can also specify the number of parallel threads that might be spawned to influence queuing.
-mosrun -b -E -e -q $2 &
+
+# Because of problems with Xvfb, only run tract runs on node 2 which is ipmi
+TRACT_NODE="-2"
+FS_MB_REQ="4000"
+CLUSTER_SCRIPT=$(basename $2)
+MOSIX_ARGS="-E -e -q"
+case "$CLUSTER_SCRIPT" in
+    tract-cluster.sh)
+        MOSIX_ARGS="$MOSIX_ARGS $TRACT_NODE"
+    ;;
+    fs-cluster.sh)
+        MOSIX_ARGS="$MOSIX_ARGS -b -m$FS_MB_REQ"
+    ;;
+    *)
+        MOSIX_ARGS="$MOSIX_ARGS -b"
+    ;;
+esac
+
+mosrun $MOSIX_ARGS $2 &
