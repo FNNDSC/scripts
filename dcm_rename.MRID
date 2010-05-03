@@ -34,6 +34,10 @@ my $calledApplication = shift;
 print LOG "DEBUG: callingApplication = $callingApplication\n";
 print LOG "DEBUG: calledApplication  = $calledApplication\n";
 
+my $outScanLog = shift;
+open(SCANLOG, ">>$outScanLog");
+
+print LOG "DEBUG: outScanLog = $outScanLog\n";
 my %dcmhead;
 
 print LOG "DEBUG: opening file for dcmdump\n";
@@ -100,3 +104,6 @@ my $host 	= trim(`hostname`);
 
 print LOG "$date $host | $outdir | $newdir | $fname | $callingApplication | $calledApplication\n";
 close(LOG);
+
+print SCANLOG "$date $host | $outdir | $newdir | $fname | $callingApplication | $calledApplication\n";
+close(SCANLOG);
