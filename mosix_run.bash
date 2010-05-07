@@ -126,10 +126,9 @@ case "$CLUSTER_SCRIPT" in
     ;;
 esac
 
-if [[ "$G_CMD" != "-x" ]] ; then
+if [[ "$G_JOBID" != "-x" ]] ; then
 	MOSIX_ARGS="$MOSIX_ARGS -J${G_JOBID}"
 fi
-
 CMD="mosrun $MOSIX_ARGS ${G_CMD} &"
 eval $CMD
 shut_down $?
