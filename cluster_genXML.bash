@@ -167,6 +167,7 @@ do
 			echo_stripped "    <ScannerModel>$SCANNER_MODEL</ScannerModel>"
 			echo_stripped "    <SoftwareVer>$SOFTWARE_VER</SoftwareVer>"
 			echo_stripped "    <ScanName>$SCANNAME</ScanName>"
+			echo_stripped "    <JobId>$curLine</JobId>"
 			echo_stripped "</ClusterJob>"
 		fi
 	fi
