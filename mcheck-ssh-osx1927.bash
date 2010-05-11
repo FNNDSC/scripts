@@ -74,21 +74,21 @@ EC_badRestart=10
 
 targetList=8
 
-TARGETCHECK[0]="psa 7777  | grep $(whoami) | grep -v grep | grep -v $G_SELF | wc -l"
+TARGETCHECK[0]="psa 7777  | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[0]="(exec ~/arch/scripts/sshTunnel_restart.sh -R 7777 -L 22)"
-TARGETCHECK[1]="psa 9900  | grep $(whoami) | grep -v grep | grep -v $G_SELF | wc -l"
+TARGETCHECK[1]="psa 9900  | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[1]="(exec ~/arch/scripts/sshTunnel_restart.sh -R 9900 -L 5900)"
-TARGETCHECK[2]="psa 10402 | grep $(whoami) | grep -v grep | grep -v $G_SELF | wc -l"
+TARGETCHECK[2]="psa 10402 | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[2]="(~/arch/scripts/sshTunnel_restart.sh -R 10402 -L 10401)"
-TARGETCHECK[3]="psa 4900 | grep $(whoami) | grep -v grep | grep -v $G_SELF | wc -l"
+TARGETCHECK[3]="psa 4900 | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[3]="(~/arch/scripts/sshTunnel_restart.sh -F -H tesla -h gate -u rudolph -L 4900 -R 5900)"
-TARGETCHECK[4]="psa 10301 | grep $(whoami) | grep -v grep | grep -v $G_SELF | wc -l"
+TARGETCHECK[4]="psa 10301 | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[4]="(~/arch/scripts/sshTunnel_restart.sh -F -H kaos -h gate -u rudolph -L 10301 -R 10401)"
-TARGETCHECK[5]="psa 40960 | grep $(whoami) | grep -v grep | grep -v $G_SELF | wc -l"
+TARGETCHECK[5]="psa 40960 | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[5]="(~/arch/scripts/sshTunnel_restart.sh -F -H tesla -h gate -u rudolph -L 40960 -R 4096)"
-TARGETCHECK[6]="psa 11112 | grep $(whoami) | grep -v grep | grep -v $G_SELF | wc -l"
+TARGETCHECK[6]="psa 11112 | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[6]="(~/arch/scripts/sshTunnel_restart.sh -R 11112 -L 11112)"
-TARGETCHECK[7]="psa 8000 | grep $(whoami) | grep -v grep | grep -v $G_SELF | wc -l"
+TARGETCHECK[7]="psa 8000 | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[7]="(exec ~/arch/scripts/sshTunnel_restart.sh -R 8000 -L 80)"
 
 # Process command line options
