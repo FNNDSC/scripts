@@ -16,6 +16,7 @@ let G_REMOTEPORT=8888
 let G_LOCALPORT=22
 
 let Gb_direction=0
+let Gb_remoteConnect=0
 
 G_HOST=osx1927.tch.harvard.edu
 G_REMOTEHOST=dreev.tch.harvard.edu
@@ -35,8 +36,9 @@ G_SYNOPSIS="
 				[-u <remoteUser>]		\\
 				[-h <remoteHost>]		\\
 				[-F] | [-B]			\\
-				[-v <verbosity>]	
-
+				[-v <verbosity>]		\\
+				[-g]
+	
  DESCRIPTION
 
 	'sshTunnel_restart.sh' is a rather blunt tool that when called 
@@ -74,6 +76,11 @@ G_SYNOPSIS="
 
 	-v <verbosity> (Optional: default $G_verbose)
 
+	-g (Optional)
+	If specified, the '-g' option will be passed to ssh 
+	which allows remote hosts to connect to local
+	forwarded ports.
+
  HISTORY
  26 May 2009
  o Initial design and coding.
@@ -102,7 +109,7 @@ EC_comargs=1
 # Process command options --->
 ###/// 
 
-while getopts v:R:H:L:h:u:FB option ; do
+while getopts v:R:H:L:h:u:FBg option ; do
 	case "$option" 
 	in
 		v)	let Gi_verbose=$OPTARG	;;
@@ -113,6 +120,7 @@ while getopts v:R:H:L:h:u:FB option ; do
 		h)	G_REMOTEHOST=$OPTARG	;;
 		F)	let Gb_direction=1	;;
 		B)	let Gb_direction=0	;;
+		g)	let Gb_remoteConnect=1	;;
 		\?) 	synopsis_show
 			exit 0			;;
 	esac
@@ -148,10 +156,15 @@ else
 fi
 lprint	"Starting monitor..."
 
+SSH_ARGS=""
+if (( Gb_remoteConnect )) ; then
+	SSH_ARGS="-g"
+fi
+
 if (( Gb_direction )) ; then
-  ssh -f -N -X -L ${G_LOCALPORT}:${G_HOST}:${G_REMOTEPORT} ${G_REMOTEUSER}@${G_REMOTEHOST} 
+  ssh ${SSH_ARGS} -f -N -X -L ${G_LOCALPORT}:${G_HOST}:${G_REMOTEPORT} ${G_REMOTEUSER}@${G_REMOTEHOST} 
 else
-  ssh -f -N -X -R ${G_REMOTEPORT}:${G_HOST}:${G_LOCALPORT} ${G_REMOTEUSER}@${G_REMOTEHOST} 
+  ssh ${SSH_ARGS} -f -N -X -R ${G_REMOTEPORT}:${G_HOST}:${G_LOCALPORT} ${G_REMOTEUSER}@${G_REMOTEHOST} 
 fi
 shut_down 0
 
