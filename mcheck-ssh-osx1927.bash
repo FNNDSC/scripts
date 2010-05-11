@@ -1,18 +1,18 @@
 #!/bin/bash
 #
-# mcheck-fs_meta.bash
+# mcheck-ssh-osx1927.bash
 #
-# Copyright 2008 Rudolph Pienaar
-# Massachusetts General Hospital
+# Copyright 2010 Rudolph Pienaar
+# Children's Hospital Boston
 #
 # GPL v2
 #
 
 # "include" the set of common script functions
-source ~/arch/scripts/common.bash
+source common.bash
 
 G_REPORTLOG=/tmp/${SELF}.reportLog.$G_PID
-G_ADMINUSERS=rudolph@nmr.mgh.harvard.edu
+G_ADMINUSERS=rudolph.pineaar@childrens.harvard.edu
 
 declare -i targetList
 
@@ -23,21 +23,21 @@ G_SYNOPSIS="
 
  NAME
 
-       mcheck-ssh.bash
+       mcheck-ssh-osx1927.bash
 
  SYNOPSIS
 
-       mcheck-ssh.bash
+       mcheck-ssh-osx1927.bash
 
  DESCRIPTION
  
-        'mcheck-ssh.bash' is used to check that certain script-defined
+        'mcheck-ssh-osx1927.bash' is used to check that certain script-defined
 	conditions are true. If any of these conditions are false, it executes 
 	a set of corrective actions.
 	
 	It should typically be called from a cron process, and this particular
-	version of 'mcheck' is tailored to monitoring 'fs_meta.bash' pipeline
-	outputs.
+	version of 'mcheck' is tailored to monitoring ssh tunnels between this
+	host and remote hosts.
 	
  PRECONDITIONS
 
@@ -108,7 +108,7 @@ b_logGenerate=0
 for i in $(seq 0 $(expr $targetList - 1)) ; do
         result=$(eval ${TARGETCHECK[$i]})
 	if (( result == 0 )) ; then
-	        #echo "${TARGETACTION[$i]} &"
+	        #echo "${TARGETACTION[$i]}"
 		lprintn "Restarting target action..."
 	        eval "${TARGETACTION[$i]} "
 		ret_check $? || fatal badRestart
@@ -137,8 +137,8 @@ $(cat $G_REPORTLOG)
         "
 	messageFile=/tmp/$SELF.message.$PID
 	echo "$message" > $messageFile
-#	mail -s "Failed conditions restarted" $G_ADMINUSERS < $messageFile
-#	rm -f $messageFile 2>/dev/null
+	mail -s "Failed conditions restarted" $G_ADMINUSERS < $messageFile
+	rm -f $messageFile 2>/dev/null
 fi
 
 # This is commented out otherwise cron noise becomes unbearable
