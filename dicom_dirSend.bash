@@ -23,15 +23,15 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-        dicom_dirSend.bash	[-v <verbosity>]                \\
+        dicom_dirSend.bash	[-v <verbosity>]                	\\
                                 [-a <aetitle>]				\\
                                 [-h <dicomHost>]			\\
                                 [-p <listenPort>]			\\
                                 [-s <storescu>]				\\
-                                [-A]                        \\
-                                [-P]                        \\
-                                [-K <SSLCertificate>        \\
-                                [-E <fileExt>]              \\
+                                [-A]                        		\\
+                                [-P]                        		\\
+                                [-K <SSLCertificate>        		\\
+                                [-E <fileExt>]              		\\
 				<dicomDir1> <dicomDir2> ... <dicomDirN>
 
  DESCRIPTION

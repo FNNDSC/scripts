@@ -75,9 +75,9 @@ EC_badRestart=10
 targetList=2
 
 TARGETCHECK[0]="psa 7777  | grep $(whoami) | grep -v grep | wc -l"
-TARGETACTION[0]="(exec ~/arch/scripts/sshTunnel_restart.sh -F -L 7777 -H localhost -R 7777 -u ch137123 -h dreev.tch.harvard.edu)"
+TARGETACTION[0]="(exec ~/arch/scripts/sshTunnel_restart.sh  -g -F -L 7777 -H localhost -R 7777 -u ch137123 -h dreev.tch.harvard.edu)"
 TARGETCHECK[1]="psa 10402  | grep $(whoami) | grep -v grep | wc -l"
-TARGETACTION[1]="(exec ~/arch/scripts/sshTunnel_restart.sh -F -L 10402 -H localhost -R 10402 -u ch137123 -h dreev.tch.harvard.edu)"
+TARGETACTION[1]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -F -L 10402 -H localhost -R 10402 -u ch137123 -h dreev.tch.harvard.edu)"
 
 # Process command line options
 while getopts h option ; do
