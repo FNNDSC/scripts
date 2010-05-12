@@ -639,6 +639,46 @@ function cluster_schedule
     cluster_genXML.bash -f ${G_CLUSTERDIR}/$G_SCHEDULELOG -l ${LINENUMBER} >> "${G_CLUSTERDIR}/$G_SCHEDULELOG.xml"
 }
 
+function wait_for_lockfile
+{
+    # ARGS
+    # $1                        lock file name
+    # $2                        timeout in seconds
+    #
+    # DEPENDENCIES 
+    #
+    # DESC
+    # Wait for a lockfile to be available for use.  This
+    # essentially provides process/thread level protection on
+    # operations that should not occur synchronously
+    # 
+
+    local lockFile=$1
+    TIMEOUT_SEC=3600
+    if (( ${#2} )) ; then TIMEOUT_SEC=$2      ; fi
+    
+    # Make sure the file gets deleted if the process
+    # exits before deleting the file.
+    trap "rm -f $lockFile" 0 1 2 9 15
+    
+    lockfile -1 -r ${TIMEOUT_SEC} $lockFile   
+}
+
+function release_lockfile
+{
+    # ARGS
+    # $1                        lock file name
+    #
+    # DEPENDENCIES 
+    # 
+    #
+    # DESC
+    # Deletes a lockfile if it exists.
+    # 
+    local lockFileName=$1
+    rm -f $lockFileName
+}
+
 #
 # Typical getops loop:
 #
