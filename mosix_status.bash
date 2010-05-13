@@ -102,7 +102,7 @@ QUEUELIST=""
 if [[ "$G_REMOTESERVERNAME" == "-x" ]] ; then
     QUEUELIST=$(mosq -j listall)
 else
-    QUEUELIST=$(ssh ${G_REMOTESERVERNAME} "mosq -j listall")    
+    QUEUELIST=$(ssh -n ${G_REMOTESERVERNAME} "mosq -j listall")    
 fi
 RESULT=$(echo -e $QUEUELIST | awk 'NR > 1 {print $5" "$6}') # | grep ${G_JOBID} | awk '{print $1}')
 IFS="$(echo -e "\n\r")"

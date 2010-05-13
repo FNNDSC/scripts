@@ -103,7 +103,7 @@ QUEUELIST=""
 if [[ "$G_REMOTESERVERNAME" == "-x" ]] ; then
     QUEUELIST=$(qstat)
 else
-    QUEUELIST=$(ssh ${G_REMOTESERVERNAME} "qstat")    
+    QUEUELIST=$(ssh -n ${G_REMOTESERVERNAME} "qstat")    
 fi
 RESULT=$(echo -e $QUEUELIST | awk 'NR > 2 {print $1" "$2" "$5}') 
 IFS="$(echo -e "\n\r")"

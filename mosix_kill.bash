@@ -104,7 +104,7 @@ RESULT=""
 if [[ "$G_REMOTESERVERNAME" == "-x" ]] ; then
     RESULT=$(moskillall -J${G_JOBID})
 else
-    RESULT=$(ssh ${G_REMOTESERVERNAME} "moskillall -J${G_JOBID}")    
+    RESULT=$(ssh -n ${G_REMOTESERVERNAME} "moskillall -J${G_JOBID}")    
 fi
 
 shut_down $?

@@ -104,7 +104,7 @@ QUEUELIST=""
 if [[ "$G_REMOTESERVERNAME" == "-x" ]] ; then
     QUEUELIST=$(qstat)
 else
-    QUEUELIST=$(ssh ${G_REMOTESERVERNAME} "qstat")
+    QUEUELIST=$(ssh -n ${G_REMOTESERVERNAME} "qstat")
 fi
 JOBNAME=$(echo -e $QUEUELIST | awk 'NR > 2 {print $1" "$2}' | grep ${G_JOBID} | awk '{print $1'})
 if [[ "$JOBNAME" != "" ]] ; then
