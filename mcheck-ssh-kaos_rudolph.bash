@@ -9,9 +9,9 @@
 #
 
 # "include" the set of common script functions
-source ~/arch/scripts/common.bash
+source common.bash
 
-G_REPORTLOG=/tmp/${SELF}.reportLog.$G_PID
+G_REPORTLOG=/tmp/${G_SELF}.reportLog.$G_PID
 G_ADMINUSERS=rudolph@nmr.mgh.harvard.edu
 
 declare -i targetList
