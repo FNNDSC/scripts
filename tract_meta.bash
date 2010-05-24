@@ -839,7 +839,7 @@ if (( ${barr_stage[2]} )) ; then
         if (( !Gb_forceGradientFile )) ; then
                 G_GRADIENTFILE=$(echo "$DIFFUSIONINFO"                          |\
                                  grep GradFile | awk '{print $2}')
-                if [[ "$G_GRADIENTFILE" == "" ]] ; then
+                if [[ "$G_GRADIENTFILE" == "" || ! -e $G_GRADIENTFILE ]] ; then
                         statusPrint "Extracting meta data: siemens_diffusionProcess.bash"
                         TARGETSPEC=""
                         if (( Gb_useDICOMFile )) ; then
