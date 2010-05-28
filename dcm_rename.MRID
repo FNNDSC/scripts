@@ -79,10 +79,12 @@ if ($AGE !~ /\S/) {
   my $SCANDATE = $dcmhead{'0008,0023'};
   print LOG "SCANDATE = $SCANDATE\n";
   $AGE = `age_calc.py $BDAY $SCANDATE`;
+  $AGE =~ s/\s+//g;
   print LOG "CALCAGE = $AGE\n";
 }
 $AGE = '999Y' if ($AGE !~ /\S/);
 $AGE =~ s/\s+/-/g;
+print LOG "AGE = $AGE\n";
 
 my $newdir = $MRID . "-" . $AGE . "-" . $scanner . "-" . $serial . "-"
     . $dcmhead{'0008,0020'} . "-" . $dcmhead{'0008,0030'};
