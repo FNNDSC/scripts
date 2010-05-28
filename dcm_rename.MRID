@@ -43,7 +43,7 @@ my %dcmhead;
 print LOG "DEBUG: opening file for dcmdump\n";
 my $DCMDICTPATH=$ENV{'DCMDICTPATH'};
 print LOG "DEBUG: DCMDICTPATH = $DCMDICTPATH\n";
-open(DUMP,"dcmdump +P 0010,0020 +P 0010,1010 +P 0008,1090 +P 0018,1000 +P 0008,0020 +P 0008,0030 +P 0020,0011 +P 0020,0013 +p $dir/$dcmfile |") or die "$!\n";
+open(DUMP,"dcmdump +P 0010,0020 +P 0010,1010 +P 0008,1090 +P 0018,1000 +P 0008,0020 +P 0008,0030 +P 0020,0011 +P 0020,0013 +P 0010,0030 +P 0008,0023 +p $dir/$dcmfile |") or die "$!\n";
 while (<DUMP>) {
   print LOG "DEBUG: processing dcmdump loop...\n";
   if (/^\((\d+,\d+)\) \S+ \[(.+)\]\s+\#/) {
@@ -69,6 +69,18 @@ my $MRID = $dcmhead{'0010,0020'};
 $MRID = '000000000' if ($MRID !~ /\S/);
 $MRID =~ s/\s+/-/g;
 my $AGE = $dcmhead{'0010,1010'};
+
+# Modified by Dan G. - if age tag is not
+# found, calculate it based on the bday and
+# scandate
+if ($AGE !~ /\S/) {
+  my $BDAY = $dcmhead{'0010,0030'};
+  print LOG "BDAY = $BDAY\n";
+  my $SCANDATE = $dcmhead{'0008,0023'};
+  print LOG "SCANDATE = $SCANDATE\n";
+  $AGE = `age_calc.py $BDAY $SCANDATE`;
+  print LOG "CALCAGE = $AGE\n";
+}
 $AGE = '999Y' if ($AGE !~ /\S/);
 $AGE =~ s/\s+/-/g;
 
