@@ -123,9 +123,9 @@ if (( !b_FORCESET )) ; then
 	# DRG - The above test does not work when the series does not start with InstanceID 1.  To workaround this, the below
 	#       code users mri_probedicom to find the SeriesInstanceID (0020,000e) and then gets the first unique filename
 	#       from each series 
-	SERIESNUMS=$(find . -maxdepth 1 -name "*.dcm" -print 2>/dev/null | awk -F "-" '{print $2}' | sort | uniq)
+	SERIESNUMS=$(find . -maxdepth 1 -name "*.dcm" -print 2>/dev/null | tr -d './' | awk -F "-" '{print $1"-"$2}' | sort | uniq)
 	for SERIES in $SERIESNUMS ; do
-	    DCMFILE=$(find . -maxdepth 1 -name "*-$SERIES-*.dcm" -print | grep -m 1 $SERIES | sed 's/^.\///')
+	    DCMFILE=$(find . -maxdepth 1 -name "$SERIES-*.dcm" -print | grep -m 1 $SERIES | sed 's/^.\///')
 	    SETNEW="$SETNEW $DCMFILE" 
 	done
 	
