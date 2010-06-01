@@ -92,24 +92,26 @@ verbosity_check
 
 statusPrint     "Checking base dir"
 dirExist_check  $G_ANALYSISDIR || fatal dirAccess
-cd $G_ANALYSISDIR 
+cd $G_ANALYSISDIR >/dev/null
 G_ANALYSISDIR=$(pwd)
 
 STATS=$(find . -iname "${G_LOBE}-centroids-analyze-${G_HEMI}.${G_CURV}.*txt" \
         -exec cat {} \;                                                      |\
         grep "           $G_GROUP"                                           |\
-        awk '{printf("%12.5f %12.5f\n", $6, $7)}'                            |\
+        awk '{printf("%17.5f %17.5f\n", $6, $7)}'                            |\
         stats_print.awk)
 MEANstd=$(echo "$STATS" | grep Mean | awk '{print $2}')
 MEANrms=$(echo "$STATS" | grep Mean | awk '{print $3}')
 STDstd=$(echo "$STATS" | grep Std | awk '{print $2}')
 STDrms=$(echo "$STATS" | grep Std | awk '{print $3}')
 
-printf "%12s"	"$G_CURV-$G_GROUP"
-printf "%12.5f"	$MEANstd
-printf "%12.5f"	$STDstd
-printf "%12.5f"	$MEANrms
-printf "%12.5f"	$STDrms
+printf "%17s%17s%17s%17s%17s\n" "Curv-Group" "mean(std_length)" "std(std_length)" "mean(rms)" "std(rms)"
+
+printf "%17s"	"$G_CURV-$G_GROUP"
+printf "%17.5f"	$MEANstd
+printf "%17.5f"	$STDstd
+printf "%17.5f"	$MEANrms
+printf "%17.5f"	$STDrms
 
 printf "\n"
 

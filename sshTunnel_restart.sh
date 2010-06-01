@@ -162,9 +162,13 @@ if (( Gb_remoteConnect )) ; then
 fi
 
 if (( Gb_direction )) ; then
-  ssh ${SSH_ARGS} -f -N -X -L ${G_LOCALPORT}:${G_HOST}:${G_REMOTEPORT} ${G_REMOTEUSER}@${G_REMOTEHOST} 
+  SSH="ssh ${SSH_ARGS} -f -N -X -L ${G_LOCALPORT}:${G_HOST}:${G_REMOTEPORT} ${G_REMOTEUSER}@${G_REMOTEHOST}"
 else
-  ssh ${SSH_ARGS} -f -N -X -R ${G_REMOTEPORT}:${G_HOST}:${G_LOCALPORT} ${G_REMOTEUSER}@${G_REMOTEHOST} 
+  SSH="ssh ${SSH_ARGS} -f -N -X -R ${G_REMOTEPORT}:${G_HOST}:${G_LOCALPORT} ${G_REMOTEUSER}@${G_REMOTEHOST}"
 fi
+
+echo "$SSH"
+exec $SSH
+
 shut_down 0
 
