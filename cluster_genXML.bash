@@ -95,7 +95,7 @@ function echo_stripped
     # Strip out any non-UTF8 characters before echoing
     #
 
-    echo -e "$1" | iconv -f UTF-8 -t UTF-8 -c
+    echo -e "$@" | iconv -f UTF-8 -t UTF-8 -c | sed -e 's/\&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/\"/\&quot;/g' -e 's/\x27/\&#39;/g' 
 }
 
 ###\\\
@@ -151,24 +151,24 @@ do
 			SOFTWARE_VER=$(echo -e $TOCFILE | grep "Software Ver" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
 			SCANNAME=$(echo -e $TOCFILE | grep $SCANFILE | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' | tr -d "<>")
 								
-			echo_stripped "<ClusterJob>"
-			echo_stripped "    <Command>$CLUSTERCMD</Command>"
-			echo_stripped "    <Arguments>$CMDARGUMENTS</Arguments>"
-			echo_stripped "    <MetaScript>$METASCRIPT</MetaScript>"
-			echo_stripped "    <Date>$DATE</Date>"
-			echo_stripped "    <User>$SUBMITUSER</User>"
-			echo_stripped "    <PatientID>$PATIENT_ID</PatientID>"
-			echo_stripped "    <PatientName>$PATIENT_NAME</PatientName>"
-			echo_stripped "    <PatientAge>$PATIENT_AGE</PatientAge>"
-			echo_stripped "    <PatientSex>$PATIENT_SEX</PatientSex>"
-			echo_stripped "    <PatientBirthday>$PATIENT_BIRTHDAY</PatientBirthday>"
-			echo_stripped "    <ImageScanDate>$IMAGE_SCAN_DATE</ImageScanDate>"
-			echo_stripped "    <ScannerManufacturer>$SCANNER_MANUFACTURER</ScannerManufacturer>"
-			echo_stripped "    <ScannerModel>$SCANNER_MODEL</ScannerModel>"
-			echo_stripped "    <SoftwareVer>$SOFTWARE_VER</SoftwareVer>"
-			echo_stripped "    <ScanName>$SCANNAME</ScanName>"
-			echo_stripped "    <JobId>$curLine</JobId>"
-			echo_stripped "</ClusterJob>"
+			echo -e "<ClusterJob>"
+			echo -e "    <Command>$(echo_stripped $CLUSTERCMD)</Command>"
+			echo -e "    <Arguments>$(echo_stripped $CMDARGUMENTS)</Arguments>"
+			echo -e "    <MetaScript>$(echo_stripped $METASCRIPT)</MetaScript>"
+			echo -e "    <Date>$(echo_stripped $DATE)</Date>"
+			echo -e "    <User>$(echo_stripped $SUBMITUSER)</User>"
+			echo -e "    <PatientID>$(echo_stripped $PATIENT_ID)</PatientID>"
+			echo -e "    <PatientName>$(echo_stripped $PATIENT_NAME)</PatientName>"
+			echo -e "    <PatientAge>$(echo_stripped $PATIENT_AGE)</PatientAge>"
+			echo -e "    <PatientSex>$(echo_stripped $PATIENT_SEX)</PatientSex>"
+			echo -e "    <PatientBirthday>$(echo_stripped $PATIENT_BIRTHDAY)</PatientBirthday>"
+			echo -e "    <ImageScanDate>$(echo_stripped $IMAGE_SCAN_DATE)</ImageScanDate>"
+			echo -e "    <ScannerManufacturer>$(echo_stripped $SCANNER_MANUFACTURER)</ScannerManufacturer>"
+			echo -e "    <ScannerModel>$(echo_stripped $SCANNER_MODEL)</ScannerModel>"
+			echo -e "    <SoftwareVer>$(echo_stripped $SOFTWARE_VER)</SoftwareVer>"
+			echo -e "    <ScanName>$(echo_stripped $SCANNAME)</ScanName>"
+			echo -e "    <JobId>$curLine</JobId>"
+			echo -e "</ClusterJob>"
 		fi
 	fi
 done
