@@ -115,7 +115,7 @@ G_SYNOPSIS="
 	-c (optional) (Default: '$CONTINUOUSFORM')
 	If specified, toggle the '--continuous' flag on the underlying
 	'mris_curvature_stats' process. This selects the continuous Second
-        Order Fundamental form for calculating the prinicple curvatures.
+        Order Fundamental form for calculating the principal curvatures.
 
         -S <surface> (Default: '$SURFACE')
         The surface to process.
