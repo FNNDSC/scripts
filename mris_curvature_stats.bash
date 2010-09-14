@@ -1,8 +1,16 @@
 #!/bin/bash
 #
 
-let VERBOSE=0
-let b_FORCE=0
+# GPL v2
+#
+
+# "include" the set of common script functions
+source common.bash
+
+declare -i Gi_verbose=0
+declare -i Gb_forceStage=1
+
+
 let b_BOUND=0
 WRITECURVATUREFILES=""
 CONTINUOUSFORM=""
@@ -15,12 +23,11 @@ FRAC=""
 
 MRIS_CURVATURE_STATS="mris_curvature_stats"
 EXPDIR="./"
-# List of target subject dirs
-SUBJECTS="31.1 34 36.7 38.1 38.4 39.72 801"
-PRINCIPLEMAPLIST="K,H,K1,K2,S,C,BE"
+PrincipalMAPLIST="K,H,K1,K2,S,C,BE"
 WAVELETPOWERS="0 1 2 3 4 5 6 7"
 BOUND=0
-STAGES="12345678"
+SURFACE="smoothwm"
+STAGES="1234"
 G_SYNOPSIS="
 
  NAME
@@ -29,43 +36,44 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-	mris_curvature_stats.bash				\\
-				[-e <experimentTopDir>]		\\
-				[-t <stages>] [-f]		\\
-				[-v <verbosity>]		\\
-				[-w <powerList>]		\\
-				[-i <bound>]			\\
-				[-p <principleMapList>]		\\
-				[-s]				\\
-				[-c]				\\
-				[-N] [-W] [-F]			\\	
-				[-m <mris_curvature_stats>]	\\	
-				<SUBJECT1> [<SUBJECT2> ... <SUBJECTn>]
-		
+	mris_curvature_stats.bash                               \\
+                                [-e <experimentTopDir>]         \\
+                                [-t <stages>] [-f]              \\
+                                [-v <verbosity>]                \\
+                                [-w <powerList>]                \\
+                                [-i <bound>]                    \\
+                                [-p <principalMapList>]         \\
+                                [-s]                            \\
+                                [-c]                            \\
+                                [-S <surface>]                  \\
+                                [-N] [-W] [-F]                  \\
+                                [-m <mris_curvature_stats>]     \\
+                                <SUBJECT1> [<SUBJECT2> ... <SUBJECTn>]
+
  DESCRIPTION
 
 	'mris_curvature_stats.bash' is a wrapper script about an underlying
 	'mris_curvature_stats' process. For practical purposes, it is an
 	updated version of 'mris_waveletsProcess_doBatch.bash', with a slightly
-	expanded and improved functionality. 
+	expanded and improved functionality.
 
-	It can be seen as the 'setup' step in a curvature analysis stream. 
-	Essentially, this script creates and analyzes FreeSurfer curvature 
-	files containing various principle curvature mappings, and then groups
+	It can be seen as the 'setup' step in a curvature analysis stream.
+	Essentially, this script creates and analyzes FreeSurfer curvature
+	files containing various principal curvature mappings, and then groups
 	these specific curvature files together in sub directories.
 
-	By default, this script will, for each subject, run the curvature 
-	analysis 'mris_curvature_stats', capturing the output in a series of 
+	By default, this script will, for each subject, run the curvature
+	analysis 'mris_curvature_stats', capturing the output in a series of
 	text files. It will also combine, per subject, information in a
-	spread-sheet like table of results as a function of wavelet 
-	spectral powers. These tables are grouped according to the curvature	
+	spread-sheet like table of results as a function of wavelet
+	spectral powers. These tables are grouped according to the curvature
 	maps performed.
 
 	Additionally, it can also group curvature files together for simplified
 	analysis through the 'lzg_summary.m' and 'curvs_plot.m' scripts.
 
 	The particulars of its behaviour are controlled by the <stages>
-	command line argument. 
+	command line argument.
 
  ARGUMENTS
 
@@ -90,11 +98,11 @@ G_SYNOPSIS="
 	Bound the histogram analysis between the absolute constraint <bound>.
 	This means that the histogram is calculated between -<bound>... <bound>.
 
-	-p <principleMapList> (optional) (Default: $PRINCIPLEMAPLIST)
-	A comma separated list of principle map functions to process.
+	-p <principalMapList> (optional) (Default: $PrincipalMAPLIST)
+	A comma separated list of principal map functions to process.
 
 	-m <mris_curvature_stats> (optional) (Default: $MRIS_CURVATURE_STATS)
-	The name of the 'backend' process to analyze the curvatures. This 
+	The name of the 'backend' process to analyze the curvatures. This
 	should probably never be set, unless you want to use an appropriate
 	substitute - particularly if the version of 'mris_curvature_stats'
 	in the FreeSurfer tree is possibly outdated and you have a newer
@@ -106,12 +114,15 @@ G_SYNOPSIS="
 
 	-c (optional) (Default: '$CONTINUOUSFORM')
 	If specified, toggle the '--continuous' flag on the underlying
-	'mris_curvature_stats' process. This selects the continuous Second 
+	'mris_curvature_stats' process. This selects the continuous Second
         Order Fundamental form for calculating the prinicple curvatures.
+
+        -S <surface> (Default: '$SURFACE')
+        The surface to process.
 
         -N -W -F (optional)
         If specified, pass a --vertexAreaNormalize (-N) or a --vertexAreaWeigh
-        (-W) to the underlying 'mris_curvature_stats' process. If these are 
+        (-W) to the underlying 'mris_curvature_stats' process. If these are
         specified, the <9abc> stages are superfluous.
 
 	The '-F' flag toggles the N and W to use fractional vertex area
@@ -127,7 +138,7 @@ G_SYNOPSIS="
 	o SUBJECTS_DIR must be set.
 
 	o The SUBJECT[1..n] arguments *must* have the
-	  same names as specific subject IDs in SUBJECTS_DIR.	
+	  same names as specific subject IDs in SUBJECTS_DIR.
 
  POSTCONDITIONS
 
@@ -141,19 +152,19 @@ G_SYNOPSIS="
 	  that denotes the specific actions to perform (note: rh implies
 	  'right hemisphere', lh implies 'left hemisphere').
 
-		1 - Process the SUBJECT for right-hemisphere 
-		    K, H, k1, and k2 principle curvatures. Also process
-		    the principle curvature functions S, C, and BE. Optionally
+		1 - Process the SUBJECT for right-hemisphere
+		    K, H, k1, and k2 principal curvatures. Also process
+		    the principal curvature functions S, C, and BE. Optionally
 		    create FreeSurfer curvature files of all curvature maps.
-		2 - Process the SUBJECT for left-hemisphere 
-		    K, H, k1, and k2 principle curvatures. Also process
-		    the principle curvature functions S, C, and BE. Optionally
+		2 - Process the SUBJECT for left-hemisphere
+		    K, H, k1, and k2 principal curvatures. Also process
+		    the principal curvature functions S, C, and BE. Optionally
 		    create FreeSurfer curvature files of all curvature maps.
 		3 - Summarize the rh data in spreadsheet form.
 		4 - Summarize the lh data in spreadsheet form.
-		5 - Group all the rh principle surfaces together in each
+		5 - Group all the rh principal surfaces together in each
 		    SUBJECT working directory.
-		6 - Group all the lh principle surfaces together in each
+		6 - Group all the lh principal surfaces together in each
 		    SUBJECT working directory.
 		7 - Create a rh.inflated.recon? for each ?h.smoothwm.recon?
 		8 - Create a lh.inflated.recon? for each ?h.smoothwm.recon?
@@ -161,7 +172,7 @@ G_SYNOPSIS="
 		9 - Multiply the rh curvature files with rh.area
 		a - Multiply the lh curvature files with lh.area
 		b - Divide   the rh curvature files with rh.area
-		c - Divide   the lh curavture files with lh.area 
+		c - Divide   the lh curavture files with lh.area
 
 	  Stages <9abc> change the actual curvature files, modifying each
 	  curvature value according to the stage meaning. It is only
@@ -169,28 +180,28 @@ G_SYNOPSIS="
 	  the 'mris_calc' executable to change the curvature values and
 	  also copy the relevant ?h.area files to each subject directory.
 
-	  Note that by default these stages are postprocessing states and 
+	  Note that by default these stages are postprocessing states and
 	  will not affect the summary data prepared by earlier stages. In
 	  order to update earlier stages it will be necessary to rerun stages
-	  34 again. 
+	  34 again.
 
 	  Alternatively either the -W or -N flags can be used -- in which case
-	  the underlying 'mris_curvature_stats' will normalize/weigh the 
+	  the underlying 'mris_curvature_stats' will normalize/weigh the
 	  curvatures.
 
 	o Resultant log/spreadsheet files are stored in each subjects' working
 	  directory and are recorded in several files:
 
-		 K-<subj>-<hemi>-WSP<powerLevel>.log
-		 H-<subj>-<hemi>-WSP<powerLevel>.log
-		k1-<subj>-<hemi>-WSP<powerLevel>.log
-		k2-<subj>-<hemi>-WSP<powerLevel>.log
-		 S-<subj>-<hemi>-WSP<powerLevel>.log
-		 C-<subj>-<hemi>-WSP<powerLevel>.log
-		BE-<subj>-<hemi>-WSP<powerLevel>.log
+		 K-<subj>-<hemi>-<surface>-WSP<powerLevel>.log
+		 H-<subj>-<hemi>-<surface>-WSP<powerLevel>.log
+		k1-<subj>-<hemi>-<surface>-WSP<powerLevel>.log
+		k2-<subj>-<hemi>-<surface>-WSP<powerLevel>.log
+		 S-<subj>-<hemi>-<surface>-WSP<powerLevel>.log
+		 C-<subj>-<hemi>-<surface>-WSP<powerLevel>.log
+		BE-<subj>-<hemi>-<surface>-WSP<powerLevel>.log
 
-	  For each of the above, stages 7 and 8 will create a 
-	  <principle>-<subj>-<hemi>-WSPall.log summary file that consists of 
+	  For each of the above, stages 7 and 8 will create a
+	  <principal>-<subj>-<hemi>-WSPall.log summary file that consists of
 	  the following five columns:
 
 		<power level> <min> <max> <mean> <std> <bounded>
@@ -204,30 +215,29 @@ G_SYNOPSIS="
 
  07 September 2007
  o Expanded from 'mris_waveletsProcess_doBatch'.
-	
+
  30 January 2008
  o Added stages for vertex area normalization / weighting.
 
  14 February 2008
  o Added 'Frac' handling.
  o Improved output logging.
+
+ 14 September 2010
+ o Updates to handle 'pial' curvature file output.
 "
 
 ###\\\
 # Globals are in capital letters. Immutable globals are prefixed by 'G'.
 ###///
-G_SELF=`basename $0`
-G_PID=$$
-G_LC=50
-G_RC=20
 
 # Actions
 A_noSubjectsDirVar="checking environment"
 A_noSubjectsDir="checking environment"
 A_noSubjectBase="checking base subject dir"
 A_noSubjectExp="checking experiment subject dir"
-A_comargs="checking command line arguments" 
-A_comargsE="checking command line argument '-e'" 
+A_comargs="checking command line arguments"
+A_comargsE="checking command line argument '-e'"
 A_noComSpec="checking for command spec"
 A_noExpDir="checking on the passed directory"
 A_noHemisphere="checking the '-h' parameter"
@@ -284,225 +294,6 @@ D_whatever=
 # Function definitions
 ###///
 
-function verbosity_check
-{
-	#
-	# DESC
-	# If verbosity level is non-zero, set output to stdout, else
-	# set to /dev/null
-	#
-
-	exec 6>&1 
-	if (( VERBOSE )) 
-	then
-		exec >&1
-	else
-		exec > "/dev/null"
-	fi
-}
-
-function shut_down
-# $1: Exit code
-{
-        rm -f $HEADER
-        echo -e "\n$G_SELF:\n\tShutting down with code $1.\n"
-        exit $1
-}
-
-function synopsis_show
-{
-	echo "USAGE:"
-	echo "$G_SYNOPSIS"
-}
-                   
-function error
-# $1: Action
-# $2: Error string
-# $3: Exit code
-{
-	echo -e "\n$G_SELF:\n\tSorry, but there seems to be an error." >&2
-	echo -e "\tWhile $1,"                                      >&2
-	echo -e "\t$2\n"                                           >&2
-	shut_down $3
-}                
-
-function fatal
-# $1: variable name - used to construct action/error string/exit code
-{
-	local stem=$1
-	eval action=\$A_$stem
-	eval errorString=\$EM_$stem
-	eval exitCode=\$EC_$stem
-	error "$action" "$errorString" "$exitCode"
-}
-
-function warn
-# $1: Action
-# $2: Warn string
-# $3: Default value
-{
-	echo -e "\n$G_SELF: WARNING\n" 			>&2
-	echo -e "\tWhile $1,"                           >&2
-	echo -e "\t$2\n"                                >&2
-	echo -e "\tSetting default to '$3'\n"		>&2
-}                
-
-function NOP
-{
-    	#
-    	# DESC
-    	#	Do nothing!
-    
-    return 0
-}
-
-function NOP_ret
-{
-   	#
-	# ARGS
-	# $1		in/out		a variable that is directly
-	#					returned
-	#
-	# DESC
-	# Does nothing other than "reflect" a passed variable back to
-	# the caller.
-	#
-
-	return $1
-
-}
-
-function ret_check
-{
-	# ARGS
-	# $1 		in		return value to check
-	#
-	# DESC
-	# Checks for the passed return value, and echoes a
-	# conditional to stdout. Returns this value back to
-	# the main program.
-	#
-	
-	local ret=$1
-		
-	if [[ $ret != "0" ]] ; then
-		printf "%20s\n" "[ failure ]"
-	else
-		printf "%20s\n" "[ ok ]"
-	fi
-	return $ret
-}
-
-function statusPrint
-{
-	# ARGS
-	# $1		in		message to print
-	# $2		in		possible trailing character or string
-	#
-	# DESC
-	# Prints a status message on the left of the console.
-	#
-
-	local status=$1
-	local ctrlN=$2
-
-	printf "%*s$ctrlN" $G_LC "$status"
-}
-
-function resultPrint
-{
-	# ARGS
-	# $1		in		message to print
-	#
-	# DESC
-	# Prints a message on the right of the console in square
-	# brackets.
-	#
-
-	local msg=$1
-
-	printf "%*s\n" $G_RC "[ $msg ]"
-}
-
-function fileExist_check
-{
-	#
-	# ARGS
-	# $1 		in		file to check
-	#
-	# DESC
-	# Checks for the existence of a file, and echoes a
-	# conditional to stdout. Returns this value back to
-	# the main program:
-	#	0: no error (file does exist)
-	#	1: some error (file does not exist)
-	#
-	
-	local file=$1
-	
-	if [[ ! -f $file ]] ; then
-		printf "%20s\n" "[ failure ]"
-		return 1
-	else
-		printf "%20s\n" "[ ok ]"
-		return 0
-	fi
-}
-
-function dirExist_check
-{
-	#
-	# ARGS
-	# $1 		in		dir to check
-	#
-	# DESC
-	# Checks for the existence of a dir, and echoes a
-	# conditional to stdout. Returns this value back to
-	# the main program:
-	#	0: no error (file does exist)
-	#	1: some error (file does not exist)
-	#
-	
-	local dir=$1
-	
-	if [[ ! -d $dir ]] ; then
-		printf "%20s\n" "[ failure ]"
-		return 1
-	else
-		printf "%20s\n" "[ ok ]"
-		return 0
-	fi
-}
-
-function stage_alreadyRun
-{
-	local stage=$1
-	local logFile=$2
-
-	echo $(cat $logFile | awk -F \| '{print $3'} | grep $stage | wc -l)
-}
-
-function stage_check
-{
-	local stage=$1
-	local logFile=$2
-
-	if [[ -f $logFile ]] ; then
-		if (( !b_FORCE && $(stage_alreadyRun $stage $logFile) )) ; then
-			fatal metaLog
-		fi
-	fi
-}
-
-function stage_stamp
-{
-	local stage=$1
-	local logFile=$2
-
-        echo -e "$(date) $(hostname) | $G_SELF | Stage "$stage" | ok" >>\
-		"$logFile"
-}
-
 function fileWrite
 {
 	#
@@ -525,7 +316,7 @@ function fileWrite
 	local	mean=$4
 	local	std=$5
 	local	bounded=$6
-	
+
 	printf "%12s"	"$min"		 > $fileName
 	printf "%12s"	"$max"		>> $fileName
 	printf "%12s"	"$mean"		>> $fileName
@@ -533,7 +324,7 @@ function fileWrite
 	printf "%12s\n"	"$bounded"	>> $fileName
 }
 
-function principleMaps_process
+function principalMaps_process
 {
 	#
 	# ARGS
@@ -554,15 +345,14 @@ function principleMaps_process
 	for SUBJ in $SUBJECTS ; do
 	    cd ${EXPDIR}/$SUBJ
 	    for spectralPower in $WAVELETPOWERS ; do
-		stage_check "$STAGE-$SUBJ-$hemi-$spectralPower" ${G_SELF}.log
+		stage_check "$STAGE-$SUBJ-$hemi-$SURFACE-$spectralPower" ${G_SELF}.log
 		if (( $spectralPower == 0 )) ; then
 		    statusPrint						\
-		    "Generating principle maps based on '$SUBJ/surf/$hemi.smoothwm'"
-		    SURFACE="smoothwm"
+		    "Generating principal maps based on '$SUBJ/surf/$hemi.$SURFACE'"
 		else
 		    statusPrint						\
-		    "Calculating principle maps for wavelet power $spectralPower"
-		    SURFACE="smoothwm.recon$spectralPower"
+		    "Calculating principal maps for wavelet power $spectralPower"
+		    SURFACE="${SURFACE}}.recon$spectralPower"
 		fi
 		VERTEXAREA=""
 		if (( Gb_vertexAreaNormalize )) ; then
@@ -579,7 +369,7 @@ function principleMaps_process
 			-m -h 11 -G -F $SURFACE			\
 			$SUBJ $hemi 		        	\
 			2>error.log"
-                stage_stamp "RUN $(echo $CMD | tr '\n' ' ')" ${G_SELF}.log 
+                stage_stamp "RUN $(echo $CMD | tr '\n' ' ')" ${G_SELF}.log
                 stats=$(eval $CMD) || fatal mrisStatsprocess
 		ret_check $?
                 echo "$stats" > ${G_SELF}.stage1.log
@@ -587,45 +377,38 @@ function principleMaps_process
 		if (( $(echo $WRITECURVATUREFILES | wc -l)  )) ; then
 		    statusPrint "FreeSurfer curvature files saved"
 		    ret_check $?
-                    statusPrint "Copying to local directory" "\n"
-                    for principle in $PRINCIPLEMAPLIST ; do
-                        statusPrint     $principle
-			SURF=$SUBJECTS_DIR/$SUBJ/surf/${hemi}.${SURFACE}.${principle}.crv
-                        cp $SURF .
-                        ret_check $?
-                    done
 		fi
 
-		for principle in $PRINCIPLEMAPLIST; do
-		    printf "%50s\n" "Analyzing for $principle..."
-		    min=$(echo "$stats" | grep -i "$principle Min" |	\
+		for principal in $PrincipalMAPLIST; do
+		    printf "%50s\n" "Analyzing for $principal..."
+		    min=$(echo "$stats" | grep -i "$principal Min" |	\
 				 awk '{print $3}' )
-		    max=$(echo "$stats" | grep -i "$principle Max" |	\
+		    max=$(echo "$stats" | grep -i "$principal Max" |	\
 				 awk '{print $3}' )
-		    mean=$(echo "$stats" | grep -i "$principle <mean>" |	\
+		    mean=$(echo "$stats" | grep -i "$principal <mean>" |	\
 				 awk '{print $7}' )
-		    std=$(echo "$stats" | grep -i "$principle <mean>" |	\
+		    std=$(echo "$stats" | grep -i "$principal <mean>" |	\
 				 awk '{print $9}' )
-		    bounded=$(echo "$stats" | grep -i "$principle ratio" |	\
+		    bounded=$(echo "$stats" | grep -i "$principal ratio" |	\
 				 awk '{print $4}' )
-		    statusPrint "Min" ; 	resultPrint $min
-		    statusPrint "Max" ; 	resultPrint $max
-		    statusPrint "Mean" ; 	resultPrint $mean
-		    statusPrint "Std" ; 	resultPrint $std
+		    statusPrint "Min"   ; 	resultPrint $min
+		    statusPrint "Max"   ; 	resultPrint $max
+		    statusPrint "Mean"  ; 	resultPrint $mean
+		    statusPrint "Std"   ; 	resultPrint $std
 		    statusPrint "Bounded" ; 	resultPrint $bounded
-		    fileName="${principle}-$SUBJ-$hemi-WSP${spectralPower}.log"
+		    fileName="${principal}-$SUBJ-$hemi-$SURFACE-WSP${spectralPower}.log"
 		    statusPrint "Writing $fileName"
 		    fileWrite 	$fileName				\
 				$min $max $mean $std $bounded
 		    ret_check $?
 		done
-		stage_stamp "$STAGE-$SUBJ-$hemi-$spectralPower" ${G_SELF}.log
+		stage_stamp "$STAGE-$SUBJ-$hemi-$SURFACE-$spectralPower" ${G_SELF}.log
 	    done
 	    cd $EXPDIR
 	done
 }
 
-function principleMaps_summarise
+function principalMaps_summarise
 {
     #
     # ARGS
@@ -637,7 +420,7 @@ function principleMaps_summarise
     # friendly format.
     #
     # Summaries are organised in increasing wavelet order, and
-    # per principle maps across subjects.
+    # per principal maps across subjects.
     #
 
     local hemi=$1
@@ -645,24 +428,24 @@ function principleMaps_summarise
 
     cd $EXPDIR
     for spectralPower in $WAVELETPOWERS ; do
-	for principle in $PRINCIPLEMAPLIST ; do
+	for principal in $PrincipalMAPLIST ; do
 	    let count=0
 	    for SUBJ in $SUBJECTS ; do
 		cd $EXPDIR/$SUBJ
-		stage_check "$STAGE-$SUBJ-$hemi-$spectralPower-$principle" ${G_SELF}.log
-		inFile="${principle}-$SUBJ-$hemi-WSP${spectralPower}.log"
-		outFile="${principle}-all-$hemi-WSP${spectralPower}.log"
-		outWFile="${principle}-$SUBJ-$hemi-WSPall.log"
+		stage_check "$STAGE-$SUBJ-$hemi-$SURFACE-$spectralPower-$principal" ${G_SELF}.log
+		inFile="${principal}-$SUBJ-$hemi-$SURFACE-WSP${spectralPower}.log"
+		outFile="${principal}-all-$hemi-$SURFACE-WSP${spectralPower}.log"
+		outWFile="${principal}-$SUBJ-$hemi-WSPall.log"
 		if (( !count )) ; then echo "" > $outFile ; fi
-		statusPrint "($spectralPower: $SUBJ, $principle)"
-		printf "%s\t" 	"$spectralPower" 	>> $outFile 
-		printf "%s\t" 	"$spectralPower" 	>> $outWFile 
+		statusPrint "($spectralPower: $SUBJ, $principal)"
+		printf "%s\t" 	"$spectralPower" 	>> $outFile
+		printf "%s\t" 	"$spectralPower" 	>> $outWFile
 		stats=$(cat "$inFile")
-		printf "%s\n"	"$stats"		>> $outFile	
-		printf "%s\n"	"$stats"		>> $outWFile	
+		printf "%s\n"	"$stats"		>> $outFile
+		printf "%s\n"	"$stats"		>> $outWFile
 		ret_check $?
 		count=$(expr $count + 1)
-		stage_stamp "$STAGE-$SUBJ-$hemi-$spectralPower-$principle" ${G_SELF}.log
+		stage_stamp "$STAGE-$SUBJ-$hemi-$SURFACE-$spectralPower-$principal" ${G_SELF}.log
 	    done
 	done
     done
@@ -675,7 +458,7 @@ function inflated_create
 	# $1		in		hemisphere
 	#
 	# DESCRIPTION
-	# For each spectral power in $WAVELETPOWERS, create 
+	# For each spectral power in $WAVELETPOWERS, create
 	# an 'inflated' surface from the 'smoothwm' surface.
 	#
 
@@ -685,7 +468,7 @@ function inflated_create
 	cd $EXPDIR
 	for SUBJ in $SUBJECTS ; do
 	    for spectralPower in $WAVELETPOWERS ; do
-		stage_check "$STAGE-$SUBJ-$hemi-$spectralPower" 	\
+		stage_check "$STAGE-$SUBJ-$hemi-$SURFACE-$spectralPower" 	\
 				$EXPDIR/$SUBJ/${G_SELF}.log
 		cd $EXPDIR/$SUBJ >/dev/null
 		printf "%50s" "Inflating power $spectralPower..."
@@ -695,7 +478,7 @@ function inflated_create
 				2>./mris_inflate-$STAGE-$SUBJ-$hemi-$spectralPower.log
 				)
 		ret_check $?
-		stage_stamp "$STAGE-$SUBJ-$hemi-$spectralPower" 	\
+		stage_stamp "$STAGE-$SUBJ-$hemi-$SURFACE-$spectralPower" 	\
 				$EXPDIR/$SUBJ/${G_SELF}.log
 	    done
 	    cd $EXPDIR
@@ -719,10 +502,10 @@ function surfaces_modify
 
 	cd $EXPDIR
 	for SUBJ in $SUBJECTS ; do
-		stage_check "$STAGE-$SUBJ-$hemi-$spectralPower" 	\
+		stage_check "$STAGE-$SUBJ-$hemi-$SURFACE-$spectralPower" 	\
 				$EXPDIR/$SUBJ/${G_SELF}.log
 		cd $EXPDIR/$SUBJ >/dev/null
-		
+
 	        printf "%50s\n"	"Subject: $SUBJ"
 		printf "%50s" 	"Copying $1.area"
 		cp $SUBJECTS_DIR/$SUBJ/surf/$1.area .
@@ -742,13 +525,13 @@ function surfaces_modify
  				${hemi}.area 2>/dev/null)
 		    ret_check $?
 		done
-		stage_stamp "$STAGE-$SUBJ-$hemi-$spectralPower" 	\
+		stage_stamp "$STAGE-$SUBJ-$hemi-$SURFACE-$spectralPower" 	\
 				$EXPDIR/$SUBJ/${G_SELF}.log
 		cd $EXPDIR
 	done
 }
 
-function principleMapFiles_group
+function principalMapFiles_group
 {
 	#
 	# ARGS
@@ -756,7 +539,7 @@ function principleMapFiles_group
 	#
 	# DESCRIPTION
 	# For each spectral power in $WAVELETPOWERS, copy the relevant
-	# curvature files to $SUBJ working dirs, and also link to 
+	# curvature files to $SUBJ working dirs, and also link to
 	# a more traditional FreeSurfer-ish name.
 	#
 
@@ -766,25 +549,25 @@ function principleMapFiles_group
 	cd $EXPDIR
 	for SUBJ in $SUBJECTS ; do
 	    for spectralPower in $WAVELETPOWERS ; do
-		stage_check "$STAGE-$SUBJ-$hemi-$spectralPower" 	\
+		stage_check "$STAGE-$SUBJ-$hemi-$SURFACE-$spectralPower" 	\
 				$EXPDIR/$SUBJ/${G_SELF}.log
 		cd $EXPDIR/$SUBJ 2>/dev/null
 		statusPrint "Grouping from power $spectralPower..." "\n"
-		for principle in $PRINCIPLEMAPLIST ; do
-		    statusPrint "$principle"
+		for principal in $PrincipalMAPLIST ; do
+		    statusPrint "$principal"
 		    if (( spectralPower == "0" )) ; then
 			RECON=""
 		    else
 			RECON=".recon${spectralPower}"
 		    fi
 		    # Copy the curvature files to subject directory
-		    cp $SUBJECTS_DIR/$SUBJ/surf/${hemi}.smoothwm${RECON}.${principle}.crv .
+		    cp $SUBJECTS_DIR/$SUBJ/surf/${hemi}.${SURFACE}${RECON}.${principal}.crv .
 		    # Give then a more traditional FreeSurfer-ish name
-		    ln -s ${hemi}.smoothwm${RECON}.${principle}.crv \
-			  ${hemi}.smoothwm${RECON}.${principle}
+		    ln -s ${hemi}.${SURFACE}${RECON}.${principal}.crv \
+			  ${hemi}.${SURFACE}${RECON}.${principal}
 		    ret_check $?
 		done
-		stage_stamp "$STAGE-$SUBJ-$hemi-$spectralPower" 	\
+		stage_stamp "$STAGE-$SUBJ-$hemi-$SURFACE-$spectralPower" 	\
 				$EXPDIR/$SUBJ/${G_SELF}.log
 	    done
 	    cd $EXPDIR
@@ -795,26 +578,27 @@ function principleMapFiles_group
 # Process command options
 ###///
 
-while getopts e:v:t:fm:w:i:scp:WNF option ; do 
+while getopts e:v:t:fm:w:i:scS:p:WNF option ; do
 	case "$option"
 	in
-		e) EXPDIR=$OPTARG 				;;
-		v) let VERBOSE=$OPTARG 				;;
-		t) STAGES=$OPTARG 				;;
-		f) b_FORCE=1 					;;
-		w) WAVELETPOWERS=$OPTARG			;;
-		s) WRITECURVATUREFILES="--writeCurvatureFiles"	;;
-		c) CONTINUOUSFORM="--continuous"		;;
-		i) BOUND=$OPTARG			
-		   let b_BOUND=1				;;
-		p) PRINCIPLEMAPLIST=$OPTARG			;;		
-		m) MRIS_CURVATURE_STATS=$OPTARG			;;
-		W) Gb_vertexAreaWeigh=1
-		   VERTEXAREAWEIGH="--vertexAreaWeigh"		;;
-		N) Gb_vertexAreaNormalize=1
-		   VERTEXAREANORMALIZE="--vertexAreaNormalize"	;;
-		F) FRAC="Frac"					;;
-		\?) synopsis_show 
+                e) EXPDIR=$OPTARG                               ;;
+                v) let Gi_verbose=$OPTARG                       ;;
+                t) STAGES=$OPTARG                               ;;
+                f) let Gb_forceStage=1                          ;;
+                w) WAVELETPOWERS=$OPTARG                        ;;
+                s) WRITECURVATUREFILES="--writeCurvatureFiles"  ;;
+                c) CONTINUOUSFORM="--continuous"                ;;
+                S) SURFACE=$OPTARG                              ;;
+                i) BOUND=$OPTARG
+                   let b_BOUND=1                                ;;
+                p) PrincipalMAPLIST=$OPTARG                     ;;
+                m) MRIS_CURVATURE_STATS=$OPTARG                 ;;
+                W) Gb_vertexAreaWeigh=1
+		   VERTEXAREAWEIGH="--vertexAreaWeigh"          ;;
+                N) Gb_vertexAreaNormalize=1
+		   VERTEXAREANORMALIZE="--vertexAreaNormalize"  ;;
+                F) FRAC="Frac"                                  ;;
+                \?) synopsis_show
 		    exit 0;;
 	esac
 done
@@ -874,8 +658,8 @@ for i in a b c; do
 done
 ret_check $?
 
-PRINCIPLEMAPLIST=$(echo $PRINCIPLEMAPLIST | tr ',' ' ')
-statusPrint 	"principle map list: $PRINCIPLEMAPLIST"
+PrincipalMAPLIST=$(echo $PrincipalMAPLIST | tr ',' ' ')
+statusPrint 	"principal map list: $PrincipalMAPLIST"
 ret_check $?
 
 statusPrint	"Checking for 'mris_curvature_stats' binary"
@@ -891,37 +675,37 @@ done
 if (( ${barr_stage[1]} )) ; then
 	STAGE=1
 	echo "$(date) | Stage 1 - rh curvature processing"
-	principleMaps_process rh
+	principalMaps_process rh
 fi
 
 if (( ${barr_stage[2]} )) ; then
 	STAGE=2
 	echo "$(date) | Stage 2 - lh curvature processing"
-	principleMaps_process lh
+	principalMaps_process lh
 fi
 
 if (( ${barr_stage[3]} )) ; then
 	STAGE=3
 	echo "$(date) | Stage 3 - rh curvature summarizing"
-	principleMaps_summarise rh
+	principalMaps_summarise rh
 fi
 
 if (( ${barr_stage[4]} )) ; then
 	STAGE=4
 	echo "$(date) | Stage 4 - lh curvature summarizing"
-	principleMaps_summarise lh
+	principalMaps_summarise lh
 fi
 
 if (( ${barr_stage[5]} )) ; then
 	STAGE=5
-	echo "$(date) | Stage 5 - grouping all rh principle map files"
-	principleMapFiles_group rh
+	echo "$(date) | Stage 5 - grouping all rh principal map files"
+	principalMapFiles_group rh
 fi
 
 if (( ${barr_stage[6]} )) ; then
 	STAGE=6
-	echo "$(date) | Stage 6 - grouping all lh principle map files"
-	principleMapFiles_group lh
+	echo "$(date) | Stage 6 - grouping all lh principal map files"
+	principalMapFiles_group lh
 fi
 
 if (( ${barr_stage[7]} )) ; then
