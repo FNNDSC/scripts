@@ -282,7 +282,7 @@ STAGES
                 Collect T1 DICOM series from a given directory.
         3 - tract_meta.bash
                 Compute tractography using the Diffusion Toolkit.
-        4 - register_images.bash
+        4 - dcm_coreg.bash
                 Register T1 -> B0 diffusion volume                        
         5 - fs_meta.bash
                 Run freesurfer on registered volume
@@ -493,7 +493,8 @@ echo ""
 cprint  "hostname"      "[ $(hostname) ]"
 
 ## Check on script preconditions
-REQUIREDFILES="common.bash tract_meta.bash fs_meta.bash"
+REQUIREDFILES="common.bash tract_meta.bash fs_meta.bash dcm_coreg.bash \
+               dicom_seriesCollect.bash Slicer3"
 for file in $REQUIREDFILES ; do
         printf "%40s"   "Checking for $file"
         file_checkOnPath $file || fatal fileCheck
@@ -604,8 +605,6 @@ STAGE1DIR=$(cat $LOGFILE | grep Collection | tail -n 1  |\
         sed 's/^[ \t]*//;s/[ \t]*$//')
 
 if (( ! ${#STAGE1DIR} )) ; then fatal dependencyStage; fi
-
-G_OUTDIR=$(dirname $STAGE1DIR)
 STAGE1OUT=$STAGE1DIR
 
 # Stage 2
@@ -643,7 +642,7 @@ STAGE2DIR=$(cat $LOGFILE | grep Collection | tail -n 1  |\
         sed 's/^[ \t]*//;s/[ \t]*$//')
 
 if (( ! ${#STAGE2DIR} )) ; then fatal dependencyStage; fi
-
+STAGE2OUT=$STAGE2DIR
 
 # Stage 3
 STAGE3PROC=tract_meta.bash
@@ -665,7 +664,7 @@ if (( ${barr_stage[3]} )) ; then
                -I $G_IMAGEMODEL                     \
                -A $G_RECONALG                       \
                $G_iX $G_iY $G_iZ                    \
-               -f
+               -f                                   \
                -t 12"
 
     if [[ "$G_OUTSUFFIX" != "" ]] ; then
@@ -748,6 +747,136 @@ if (( ${barr_stage[3]} )) ; then
     
     statusPrint "$(date) | Processing STAGE 3 - Tractography | END" "\n"
 fi
+
+# Find the B0 volume from the tractography processing
+DCM2TRKLOG=$(find $G_OUTDIR -name dcm2trk.bash.log)
+DIFFRECONBASE=$(cat $DCM2TRKLOG | grep _recon | tail -1 | awk -F \| '{print $3}' | awk '{print $4}')
+DIFFB0VOLUME=${DIFFRECONBASE}_b0.nii
+printf "%40s"   "Checking for $DIFFB0VOLUME"
+fileExist_check $DIFFB0VOLUME || fatal dependencyStage
+
+# Stage 4
+STAGE4PROC=register
+if (( ${barr_stage[4]} )) ; then
+    statusPrint "$(date) | Processing STAGE 4 - Registration | START" "\n"
+    STAGE=4-$STAGE4PROC
+    EXOPTS=$(eval expertOpts_parse $STAGE4PROC)
+        
+    statusPrint "Checking on stage 4 output directory"
+    dirExist_check $G_OUTDIR/$STAGE || mkdir "$G_OUTDIR/$STAGE" || fatal badOutDir
+    
+    # First convert input T1 to NII format
+    STAGECMD="mri_convert -it dicom -ot nii $STAGE2OUT/$G_DICOMT1INPUTFILE $G_OUTDIR/$STAGE/T1.nii"
+    STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+    stage_run "$STAGE" "$STAGECMD"                      \
+                "${G_LOGDIR}/${STAGE4PROC}.std"         \
+                "${G_LOGDIR}/${STAGE4PROC}.err"         \
+          || fatal stageRun
+          
+    # Now use Slicer3 RegisterImage module to compute registration matrix
+    STAGECMD="Slicer3 --launch RegisterImages                                   \
+                            --registration Rigid                                \
+                            --saveTransform $G_OUTDIR/$STAGE/T1_B0.tfm          \
+                            $DIFFB0VOLUME                                       \
+                            $G_OUTDIR/$STAGE/T1.nii"
+    STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+    stage_run "$STAGE" "$STAGECMD"                      \
+                "${G_LOGDIR}/${STAGE4PROC}.std"         \
+                "${G_LOGDIR}/${STAGE4PROC}.err"         \
+          || fatal stageRun
+    
+    # Finally use Slice3 ResampleVolume2 to apply the transform, keeping
+    # the voxel size/spacing the same
+    STAGECMD="Slicer3 --launch                                                  \
+                 ResampleVolume2 -f $G_OUTDIR/$STAGE/T1_B0.tfm                  \
+                            $G_OUTDIR/$STAGE/T1.nii                             \
+                            $G_OUTDIR/$STAGE/T1_to_B0.nii"
+    STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+    stage_run "$STAGE" "$STAGECMD"                      \
+                "${G_LOGDIR}/${STAGE4PROC}.std"         \
+                "${G_LOGDIR}/${STAGE4PROC}.err"         \
+          || fatal stageRun
+        
+
+    # The below did not always produce good registrations         
+    # First convert input T1 to NII format
+    # STAGECMD="mri_convert -it dicom -ot nii $STAGE2OUT/$G_DICOMT1INPUTFILE $G_OUTDIR/$STAGE/T1.nii"
+    # STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+    # stage_run "$STAGE" "$STAGECMD"                      \
+                # "${G_LOGDIR}/${STAGE4PROC}.std"         \
+                # "${G_LOGDIR}/${STAGE4PROC}.err"         \
+         # || fatal stageRun   
+
+    # Use fsl_rigid_register to generate the transformation matrix
+    # STAGECMD="fsl_rigid_register -r $DIFFB0VOLUME           \
+                   # -i $G_OUTDIR/$STAGE/T1.nii               \
+                   # -o $G_OUTDIR/$STAGE/temp.nii             \
+                   # -cost normmi                             \
+                   # -xfmmat $G_OUTDIR/$STAGE/T1_B0.xfm"
+    # STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+    # stage_run "$STAGE" "$STAGECMD"                      \
+                # "${G_LOGDIR}/${STAGE4PROC}.std"         \
+                # "${G_LOGDIR}/${STAGE4PROC}.err"         \
+         # || fatal stageRun
+             # 
+    # # Apply the transformation matrix to the T1 scan          
+    # STAGECMD="mri_convert -it nii -ot nii               \
+                    # -at $G_OUTDIR/$STAGE/T1_B0.xfm      \
+                    # $G_OUTDIR/$STAGE/T1.nii             \
+                    # $G_OUTDIR/$STAGE/T1_to_B0.nii"                                        
+    # STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+    # stage_run "$STAGE" "$STAGECMD"                      \
+                # "${G_LOGDIR}/${STAGE4PROC}.std"         \
+                # "${G_LOGDIR}/${STAGE4PROC}.err"         \
+         # || fatal stageRun
+    
+    
+    # First compute the registration matrix.  This will also compute
+    # a new volume resampled to the resolution of the B0.  We do not
+    # want this, we want to keep the T1 volume at its original volume
+    # otherwise there is a large information loss since it is usually
+    # higher resolution than the diffusion.  So we will use the matrix
+    # output from this in the next step of this stage.
+    # DCMREGARGS="-v $Gi_verbose                       \
+                # -D $G_DICOMINPUTDIR                  \
+                # -d $G_DICOMT1INPUTFILE               \
+                # -r $G_DICOMDTIINPUTFILE              \
+                # -p register_T1_to_B0                 \
+                # -o register_T1_to_B0"          
+# 
+    # if (( Gb_useOverrideOut )) ; then
+        # DCMREGARGS="$DCMREGARGS -O $G_OUTDIR"
+    # fi
+                      # 
+    # STAGECMD="dcm_coreg.bash $DCMREGARGS $EXOPTS"
+    # STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+    # #stage_run "$STAGE" "$STAGECMD"                      \
+    # #            "${G_LOGDIR}/${STAGE4PROC}.std"         \
+    # #            "${G_LOGDIR}/${STAGE4PROC}.err"         \
+    # #     || fatal stageRun
+         # 
+    # # Now run again, this time applying the previously generated matrix
+    # # to the volume, but don't resample the size.
+    # STAGECMD="flirt -applyxfm                                                            \
+                    # -init $G_OUTDIR/register_T1_to_B0/register_T1_to_B0-registered.mat   \
+                    # -usesqform                                                           \
+                    # -noresample                                                          \
+                    # -in   $G_OUTDIR/register_T1_to_B0/register_T1_to_B0-input.nii        \
+                    # -ref  $G_OUTDIR/register_T1_to_B0/register_T1_to_B0-ref.nii          \
+                    # -out  $G_OUTDIR/register_T1_to_B0/register_T1_to_B0-registered.nii.gz"                                           
+    # STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+    # stage_run "$STAGE" "$STAGECMD"                      \
+                # "${G_LOGDIR}/${STAGE4PROC}.std"         \
+                # "${G_LOGDIR}/${STAGE4PROC}.err"         \
+         # || fatal stageRun   
+    
+    statusPrint "$(date) | Processing STAGE 4 - Registration | END" "\n"
+fi
+STAGE4OUT="$G_OUTDIR/4-$STAGE4PROC/T1_to_B0.nii"
+printf "%40s"   "Checking for $STAGE4OUT"
+fileExist_check  $STAGE4OUT || fatal dependencyStage
+
+# Stage 5
 
 STAGE="Normal termination -- collecting log files"
 statusPrint     "Checking final log dir"
