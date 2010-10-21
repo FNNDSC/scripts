@@ -212,7 +212,6 @@ function shut_down
         cd $origDir
     fi
     
-    rm -f $HEADER
     echo -e "\n$G_SELF:\n\tShutting down with code $1 at $(date).\n"
     exit $1
 }

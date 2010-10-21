@@ -17,6 +17,7 @@ CONTINUOUSFORM=""
 
 declare -i Gb_vertexAreaNormalize=0
 declare -i Gb_vertexAreaWeigh=0
+declare -i Gb_analyze=0
 VERTEXAREAWEIGH=""
 VERTEXAREANORMALIZE=""
 FRAC=""
@@ -82,6 +83,9 @@ G_SYNOPSIS="
 
 	-t <stages>
 	The stages to perform. See the POSTCONDITIONS.
+
+        -a (optional)
+        If specified, analyze curvature files for min/max/mean/std.
 
 	-f (optional) (Default: $b_FORCE)
 	Force <stages>. By default, the script will not execute a stage if
@@ -379,7 +383,8 @@ function principalMaps_process
 		    ret_check $?
 		fi
 
-		for principal in $PrincipalMAPLIST; do
+                if (( Gb_analyze )) ; then
+		  for principal in $PrincipalMAPLIST; do
 		    printf "%50s\n" "Analyzing for $principal..."
 		    min=$(echo "$stats" | grep -i "$principal Min" |	\
 				 awk '{print $3}' )
@@ -391,17 +396,18 @@ function principalMaps_process
 				 awk '{print $9}' )
 		    bounded=$(echo "$stats" | grep -i "$principal ratio" |	\
 				 awk '{print $4}' )
-		    statusPrint "Min"   ; 	resultPrint $min
-		    statusPrint "Max"   ; 	resultPrint $max
-		    statusPrint "Mean"  ; 	resultPrint $mean
-		    statusPrint "Std"   ; 	resultPrint $std
-		    statusPrint "Bounded" ; 	resultPrint $bounded
+		    statusPrint "Min"   ; 	rprint $min
+		    statusPrint "Max"   ; 	rprint $max
+		    statusPrint "Mean"  ; 	rprint $mean
+		    statusPrint "Std"   ; 	rprint $std
+		    statusPrint "Bounded" ; 	rprint $bounded
 		    fileName="${principal}-$SUBJ-$hemi-$SURFACE-WSP${spectralPower}.log"
 		    statusPrint "Writing $fileName"
 		    fileWrite 	$fileName				\
 				$min $max $mean $std $bounded
 		    ret_check $?
-		done
+		  done
+                fi
 		stage_stamp "$STAGE-$SUBJ-$hemi-$SURFACE-$spectralPower" ${G_SELF}.log
 	    done
 	    cd $EXPDIR
@@ -582,6 +588,7 @@ while getopts e:v:t:fm:w:i:scS:p:WNF option ; do
 	case "$option"
 	in
                 e) EXPDIR=$OPTARG                               ;;
+                a) Gb_analyze=1                                 ;;
                 v) let Gi_verbose=$OPTARG                       ;;
                 t) STAGES=$OPTARG                               ;;
                 f) let Gb_forceStage=1                          ;;

@@ -8,6 +8,10 @@ let Gi_verbose=0
 let Gb_forceStage=0
 let Gb_labelsSave=0
 
+let Gb_labelRegion=0
+let Gb_regionalPercentages=0
+
+LABELREGION=""
 TABLEFILESUFFIX=""
 PROCESS=Gaussian
 EXPDIR="./"
@@ -41,6 +45,8 @@ G_SYNOPSIS="
 					[-l <lowPassFilter>]		\\
 					[-i <integralType>]		\\
                                         [-I <integralDomain>]           \\
+                                        [-r <labelRegion>]              \\
+                                        [-R]                            \\
 					[-m <mris_curvature_stats>]	\\
 					[<SUBJ1> <SUBJ2> ... <SUBJn>]
 
@@ -104,11 +110,20 @@ G_SYNOPSIS="
 	This defaults to the 'Mean' integral. Can also be  the 'Norm' integral.
 	The 'Mean' averages the integral by the number of vertices counted,
 	the 'Norm' averages the integral by the area of the vertices counted.
+        Case insensitive.
+
+	-I <integralDomain> (optional) (Default: $INTEGRALDOMAIN)
+        Specifies the intergral domain to filter. One of 'negative', 
+        'positive', or 'rectified'. Case insensitive.
 
 	-c (optional) (Default: '$CONTINUOUSFORM')
 	If specified, toggle the '--continuous' flag on the underlying
-	'mris_curvature_stats' process. This selects the continuous Second Order
-	Fundamental form for calculating the prinicple curvatures.
+	'mris_curvature_stats' process. This selects the continuous Second 
+        Order Fundamental form for calculating the prinicple curvatures.
+
+        -r <labelRegion> (optional)
+        If specified, constrain curvature analysis to the region defined in the
+        label file <hemi>.<labelRegion>.label.
 
 	[<SUBJ1> <SUBJ2> ... <SUBJn>]
  	List of subject IDs to process. These comprise the *rows* of each
@@ -212,7 +227,7 @@ D_whatever=
 # Process command options
 ###///
 
-while getopts e:v:T:K:m:hcH:i:I:l:Lt: option ; do 
+while getopts e:v:T:K:m:hcH:i:I:l:Lt:r:R option ; do 
 	case "$option"
 	in
 		e) EXPDIR=$OPTARG 			;;
@@ -221,13 +236,16 @@ while getopts e:v:T:K:m:hcH:i:I:l:Lt: option ; do
 		c) CONTINUOUSFORM="--continuous"	;;
 		l) LOWPASSFILTER=$OPTARG		;;
                 L) let Gb_labelsSave=1                  ;;
-		i) INTEGRALTYPE=$OPTARG			;;
-                I) INTEGRALDOMAIN=$OPTARG               ;;
+		i) INTEGRALTYPELIST=$OPTARG		;;
+                I) INTEGRALDOMAINLIST=$OPTARG           ;;
 		T) TEXTURELIST=$OPTARG			;;
                 t) TABLEFILESUFFIX=$OPTARG              ;;
 		K) GAUSSIANLIST=$OPTARG			;;
-		H) HEMI=$OPTARG				;;
+		H) HEMILIST=$OPTARG                     ;;
 		m) MRISCURVATURESTATS=$OPTARG		;;
+                r) let Gb_labelRegion=1
+                   LABELREGION=$OPTARG                  ;;
+                R) let Gb_regionalPercentages=1         ;;
 		\?) synopsis_show 
 		    exit 0;;
 	esac
@@ -265,7 +283,7 @@ if (( b_SUBJECTLIST )) ; then
 	SUBJECTS="$CLISUBJECTS"
 fi
 
-SUBJECTS=$(echo $SUBJECTS | tr ' ' '\n' | sort -n)
+SUBJECTS=$(echo $SUBJECTS | tr ' ' '\n' )
 
 statusPrint	"Checking <subjectList> in SUBJECTS_DIR" "\n"
 for SUBJ in $SUBJECTS ; do
@@ -286,42 +304,56 @@ DATE=$(date)
 
 l_PRINCIPAL=$(echo $TEXTURELIST| tr ',' ' ')
 l_CUTOFF=$(echo $GAUSSIANLIST | tr ',' ' ')
+l_HEMI=$(echo $HEMILIST | tr ',' ' ')
+l_INTEGRALTYPE=$(echo $INTEGRALTYPELIST | tr ',' ' ')
+l_INTEGRALDOMAIN=$(echo $INTEGRALDOMAINLIST | tr ',' ' ')
 let rowCount=1
 let colCount=1
 FIELD="20"
-for PRINCIPAL in $l_PRINCIPAL ; do
-    OUT=$HEMI-$PRINCIPAL-$INTEGRALDOMAIN-$INTEGRALTYPE-$FILTER-${LOWPASSFILTER}.tab$TABLEFILESUFFIX
-    OUTVAL=$HEMI-$PRINCIPAL-$INTEGRALDOMAIN-$INTEGRALTYPE-$FILTER-${LOWPASSFILTER}.tab$TABLEFILESUFFIX-val
-    OUTPERC=$HEMI-$PRINCIPAL-$INTEGRALDOMAIN-$INTEGRALTYPE-$FILTER-${LOWPASSFILTER}.tab$TABLEFILESUFFIX-perc
-    printf "\nGenerating $OUT table\n"
-    printf "%-25s" "SUBJECT"				| tee --append $OUT $OUTVAL $OUTPERC
-    for COL in $l_CUTOFF ; do
-	printf "%-${FIELD}s" "$COL"			| tee --append $OUT $OUTVAL $OUTPERC
-    done
-    printf "\n"						| tee --append $OUT $OUTVAL $OUTPERC
-    for ROW in $SUBJECTS ; do
-	printf "%-25s" "$ROW"				| tee --append $OUT $OUTVAL $OUTPERC
-        # The scaleFactor is a historical artifact, and allows a post-scale of
-        # mris_curvature_stats values. For now, the scaleFactor is essentially
-        # meaningless and set to 1.0.
-        scaleFactor=1
-	if [[ "$PRINCIPAL" == "K" || "$PRINCIPAL" == "BE" || "$PRINCIPAL" == "S" ]] ; then
+for HEMI in $l_HEMI ; do
+  for PRINCIPAL in $l_PRINCIPAL ; do
+    for INTEGRALDOMAIN in $l_INTEGRALDOMAIN ; do
+      for INTEGRALTYPE in $l_INTEGRALTYPE ; do
+        OUT=$HEMI-$PRINCIPAL-$INTEGRALDOMAIN-$INTEGRALTYPE-$FILTER-${LOWPASSFILTER}.tab$TABLEFILESUFFIX
+        OUTVAL=$HEMI-$PRINCIPAL-$INTEGRALDOMAIN-$INTEGRALTYPE-$FILTER-${LOWPASSFILTER}.tab$TABLEFILESUFFIX-val
+        OUTPERC=$HEMI-$PRINCIPAL-$INTEGRALDOMAIN-$INTEGRALTYPE-$FILTER-${LOWPASSFILTER}.tab$TABLEFILESUFFIX-perc
+        printf "\nGenerating $OUT table\n"
+        printf "%-25s" "SUBJECT"                        | tee --append $OUT $OUTVAL $OUTPERC
+        for COL in $l_CUTOFF ; do
+	  printf "%-${FIELD}s" "$COL"			| tee --append $OUT $OUTVAL $OUTPERC
+        done
+        printf "\n"                                     | tee --append $OUT $OUTVAL $OUTPERC
+        for ROW in $SUBJECTS ; do
+	  printf "%-25s" "$ROW"				| tee --append $OUT $OUTVAL $OUTPERC
+          # The scaleFactor is a historical artifact, and allows a post-scale of
+          # mris_curvature_stats values. For now, the scaleFactor is essentially
+          # meaningless and set to 1.0.
+          scaleFactor=1
+	  if [[ "$PRINCIPAL" == "K" || "$PRINCIPAL" == "BE" || "$PRINCIPAL" == "S" ]] ; then
 	    scaleFactor=$(echo -e "scale=5\n$scaleFactor * $scaleFactor\nquit" | bc)
-	fi
-        FILTERLABEL=""
-        if (( Gb_labelsSave )) ; then
+	  fi
+          FILTERLABEL=""
+          if (( Gb_labelsSave )) ; then
             FILTERLABEL="filterLabel ROI-$HEMI-$ROW-${COL}-${LOWPASSFILTER}.label"
-        fi
-	for COL in $l_CUTOFF ; do
+          fi
+          LABELARG=""
+          if (( Gb_labelRegion )) ; then
+            LABELARG="-l ${HEMI}.${LABELREGION}"
+          fi
+          if (( Gb_regionalPercentages )) ; then
+            REGIONALPERC="--regionalPercentages"
+          fi
+	  for COL in $l_CUTOFF ; do
 	    CMD="$MRISCURVATURESTATS --$FILTER $COL 		  	          \
 			--lowPassFilterGaussian ${LOWPASSFILTER}	          \
                         $FILTERLABEL                                              \
 			$CONTINUOUSFORM					          \
 			--postScale $scaleFactor			          \
+                        $LABELARG $REGIONALPERC                                   \
 			-G -F smoothwm $ROW $HEMI 2>/dev/null                    |\
 			grep \"$PRINCIPAL \" 				 	 |\
-			grep $INTEGRALTYPE 				         |\
-			grep $INTEGRALDOMAIN                                     |\
+			grep -i $INTEGRALTYPE 				         |\
+			grep -i $INTEGRALDOMAIN                                  |\
 			awk '{print \$6 \" \" \$9}' 2>/dev/null"
 	    stage_stamp "$PRINCIPAL-$ROW-$COL RUN $(echo $CMD | tr '\n' ' ')" $STAMPLOG
 	    valperc=$(eval $CMD)
@@ -332,9 +364,12 @@ for PRINCIPAL in $l_PRINCIPAL ; do
             printf "%-${FIELD}s" "$perc"                >> $OUTPERC
 
 	    stage_stamp "${PRINCIPAL}-${ROW}-${COL}" $STAMPLOG
-	done
-	printf "\n"				| tee --append $OUT $OUTVAL $OUTPERC
+	  done
+	  printf "\n"				| tee --append $OUT $OUTVAL $OUTPERC
+        done
+      done
     done
+  done
 done
 
 shut_down 0
