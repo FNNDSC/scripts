@@ -36,6 +36,10 @@
 G_SELF=`basename $0`
 G_PID=$$
 
+G_COMMON_MIGRATEANALYSISDIR="-x"
+G_COMMON_MIGRATEORIGDIR="-x"
+
+
 # Column formatting
 declare -i	G_LC=40
 declare -i	G_RC=40
@@ -189,9 +193,28 @@ function verbosity_check
 function shut_down
 # $1: Exit code
 {
-        rm -f $HEADER
-        echo -e "\n$G_SELF:\n\tShutting down with code $1 at $(date).\n"
-        exit $1
+    # If the migrate analysis was turned on, then at the end we want
+    # to move the results from the analysis directory to their final
+    # resting place
+    if [[ "$G_COMMON_MIGRATEANALYSISDIR" != "-x" ]] ; then
+        origDir=$(pwd)
+        
+        # First remove the symbolic link between original directory
+        # and analysis directory
+        cd $(dirname $G_COMMON_MIGRATEORIGDIR)
+        rm $(basename $G_COMMON_MIGRATEORIGDIR)
+        
+        # Move the results from the temporary analysis directory
+        # into their final resting place
+        mv $G_COMMON_MIGRATEANALYSISDIR .
+        
+        # Go back to where we were
+        cd $origDir
+    fi
+    
+    rm -f $HEADER
+    echo -e "\n$G_SELF:\n\tShutting down with code $1 at $(date).\n"
+    exit $1
 }
 
 function synopsis_show
@@ -677,6 +700,31 @@ function release_lockfile
     # 
     local lockFileName=$1
     rm -f $lockFileName
+}
+
+function migrateAnalysis_enable
+{
+    # ARGS
+    # $1                        Directory to use for migrated analysis
+    # $2                        Final directory to store results in
+    # DEPENDENCIES 
+    # 
+    #
+    # DESC
+    # This function is used for having an alternate directory to use
+    # for processing the data.  It is useful for example where the data
+    # needs to be moved to a cluster storage space for processing and
+    # then moved back afterwards.
+    #
+    G_COMMON_MIGRATEANALYSISDIR=$1
+    G_COMMON_MIGRATEORIGDIR=$2
+    
+    # Create a symbolic link between the original directory and the
+    # analysis directory that will be used
+    origDir=$(pwd)
+    cd $(dirname $G_COMMON_MIGRATEORIGDIR)
+    ln -s $G_COMMON_MIGRATEANALYSISDIR $(basename $G_COMMON_MIGRATEORIGDIR)
+    cd $origDir
 }
 
 #

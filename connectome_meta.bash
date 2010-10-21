@@ -50,6 +50,7 @@ G_DICOMINPUTDIR="-x"
 G_DICOMDTIINPUTFILE="-x"
 G_DICOMT1INPUTFILE="-x"
 G_GRADIENTFILE="-x"
+G_MIGRATEANALYSISDIR="-x"
 
 G_IMAGEMODEL="DTI"
 G_RECONALG="fact"
@@ -68,6 +69,7 @@ G_SCHEDULELOG="schedule.log"
 G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
 
 G_STAGES="123456"
+G_TRACT_META_STAGES="12"
 
 G_CLUSTERUSER=""
 
@@ -86,16 +88,16 @@ G_SYNOPSIS="
 
         connectome_meta.bash    -D <dicomInputDir>                      \\
                                 -d <diffusionDicomSeriesFile>]          \\
-                                -t1 <t1DicomSeriesFile>]                \\
+                                -1 <t1DicomSeriesFile>]                \\
                                 [-g <gradientTableFile>] [-G]           \\
                                 [-B <b0vols>]                           \\
                                 [-A <reconAlg>] [-I <imageModel>]       \\
-                                [-m1 <maskImage1>]                      \\
-                                [-m2 <maskImage2>]                      \\
-                                [-m1-lower-threshold <lth>]             \\
-                                [-m2-lower-threshold <lth>]             \\
-                                [-m1-upper-threshold <uth>]             \\
-                                [-m2-upper-threshold <uth>]             \\
+                                [--m1 <maskImage1>]                     \\
+                                [--m2 <maskImage2>]                     \\
+                                [--m1-lower-threshold <lth>]            \\
+                                [--m2-lower-threshold <lth>]            \\
+                                [--m1-upper-threshold <uth>]            \\
+                                [--m2-upper-threshold <uth>]            \\
                                 [-u <uth>]                              \\
                                 [-L <logDir>]                           \\
                                 [-v <verbosity>]                        \\
@@ -107,7 +109,9 @@ G_SYNOPSIS="
                                 [-c] [-C <clusterDir>]                  \\
                                 [-X] [-Y] [-Z]                          \\
                                 [-M | -m <mailReportsTo>]               \\
-                                [-n <clusterUserName>]
+                                [-n <clusterUserName>]                  \\
+                                [--tract-meta-stages <stages>]          \\
+                                [--migrate-analysis <migrateDir>]       \\
 
  DESCRIPTION
 
@@ -151,21 +155,21 @@ G_SYNOPSIS="
         Specifies the reconstruction algorithm and model to use. The default
         algorithm is 'fact', and the default model is DTI.
         
-        [-m1 <maskImage1>] (Optional: Default 'dwi')
-        [-m2 <maskImage2>] (Optional: Default 'none')
+        [--m1 <maskImage1>] (Optional: Default 'dwi')
+        [--m2 <maskImage2>] (Optional: Default 'none')
         Selects which volume to use as a mask image 1 or 2.  Acceptable values are 'dwi',
         'fa', and 'adc'.  If specified, the lower threshold for the mask is
         given by the '-mN-lower-threshold' option.
                 
-        [-m1-lower-threshold <lth>] (Optional: Default '0.0')
-        [-m2-lower-threshold <lth>] (Optional: Default '0.0')
+        [--m1-lower-threshold <lth>] (Optional: Default '0.0')
+        [--m2-lower-threshold <lth>] (Optional: Default '0.0')
         Use the <lth> as a lower cutoff threshold on mask image 1 or 2. To use the entire 
         volume, use '0.0'.  The mask image that is used depends on what is
         specified for the '-mN' option.  This option only has an effect if the
         mask is not 'dwi'.
 
-        [-m1-upper-threshold <uth>] (Optional: Default '1.0')
-        [-m2-upper-threshold <uth>] (Optional: Default '1.0')      
+        [--m1-upper-threshold <uth>] (Optional: Default '1.0')
+        [--m2-upper-threshold <uth>] (Optional: Default '1.0')      
         Use the <uth> as an upper cutoff threshold on the mask image 1 or 2. To use 
         the entire volume, use '1.0'.  The mask image that is used depends on what is
         specified for the '-mN' option.  This option only has an effect if the
@@ -277,6 +281,20 @@ G_SYNOPSIS="
         If specified, insert <recon-all-args> directly into the command
         line string for the recon-all process call. Useful to more directly
         control the recon-all process.
+        
+        [--tract-meta-stages <stages>] (Optional)
+        If specified, these stages of the tract_meta.bash pipeline will
+        be run.  By default, stages 1 and 2 run.  Please consult the 
+        tract_meta.bash '-t' documentation for a list of stages in
+        tract_meta.bash.
+        
+        [--migrate-analysis <migrateDir>] (Optional)
+        This option allows the specification of an alternative directory
+        to <outputDir> where the processing occurs.  Basically what will
+        happen is the input scans are copied to <migrateDir>, processing
+        is done, and the files are then moved over back to the <outDir>
+        when finished.  The purpose of this is to allow for use of
+        cluster storage for doing processing automatically.        
 
 STAGES
 
@@ -360,6 +378,7 @@ A_imageModel="checking on the image model"
 A_fa="checking on the FA argument "
 A_noDtiDicomFileArg="checking on input DTI DICOM file"
 A_noT1DicomFileArg="checking on input DTI DICOM file"
+A_badMigrateDir="checking on --migrate-analysis <migrateDir>"
 
 
 # Error messages
@@ -383,6 +402,8 @@ EM_imageModel="must be either 'hardi' or 'dti'."
 EM_fa="No <lth> has been specified."
 EM_noDtiDicomFileArg="it seems as though you didn't specify a -d <dicomDTIInputFile>"
 EM_noT1DicomFileArg="it seems as though you didn't specify a -t1 <dicomT1InputFile>"
+EM_badMigrateDir="I couldn't access <migrateDir>"
+
 
 
 # Error codes
@@ -406,6 +427,7 @@ EC_imageModel=71
 EC_fa=80
 EC_noDtiDicomFileArg=81
 EC_noT1DicomFileArg=82
+EC_badMigrateDir=83
 
 
 # Defaults
@@ -414,6 +436,26 @@ D_whatever=
 ###\\\
 # Function definitions
 ###///
+
+function MRID_find
+{
+    # ARGS
+    # $1                        DICOM dir
+    #
+    # DESC
+    # Returns the MRID associated with the DICOM
+    # images in the passed DICOM directory
+    #
+
+    local dicomDir=$1
+
+    here=$(pwd)
+    cd $dicomDir >/dev/null
+    MRID=$(echo $G_DCM_MKINDX | grep Patient | awk '{print $3}')
+    cd $here >/dev/null
+    echo $MRID
+}
+
 
 
 ###\\\
@@ -426,7 +468,9 @@ while getoptex "v: D: d: B: A: I: k E F: L: O: R: o: f \
                 m1-lower-threshold: \
                 m2-lower-threshold: \
                 m1-upper-threshold: \
-                m2-upper-threshold: 1: h" "$@" ; do
+                m2-upper-threshold: 1: h \
+                tract-meta-stages: \
+                migrate-analysis:" "$@" ; do
         case "$OPTOPT"
         in
             v)      Gi_verbose=$OPTARG              ;;
@@ -448,8 +492,6 @@ while getoptex "v: D: d: B: A: I: k E F: L: O: R: o: f \
                     Gi_b0vols=$OPTARG               ;;
             I)      G_IMAGEMODEL=$OPTARG            ;;
             A)      G_RECONALG=$OPTARG              ;;
-            F)      Gb_useLowerThreshold=1
-                    G_LOWERTHRESHOLD=$OPTARG        ;;
             u)      Gb_useUpperThreshold=1
                     G_UPPERTHRESHOLD=$OPTARG        ;;
             m1)     Gb_useMask1=1
@@ -487,6 +529,10 @@ while getoptex "v: D: d: B: A: I: k E F: L: O: R: o: f \
                     Gb_mailErr=0
                     G_MAILTO=$OPTARG                ;;
             n)      G_CLUSTERUSER=$OPTARG           ;;
+            tract-meta-stages)
+                    G_TRACT_META_STAGES=$OPTARG     ;;
+            migrate-analysis)
+                    G_MIGRATEANALYSISDIR=$OPTARG    ;;
             h)      synopsis_show 
                     exit 0;;
         esac
@@ -499,7 +545,7 @@ cprint  "hostname"      "[ $(hostname) ]"
 
 ## Check on script preconditions
 REQUIREDFILES="common.bash tract_meta.bash fs_meta.bash dcm_coreg.bash \
-               dicom_seriesCollect.bash Slicer3"
+               dicom_seriesCollect.bash Slicer3 dcm_mkIndx.bash"
 for file in $REQUIREDFILES ; do
         printf "%40s"   "Checking for $file"
         file_checkOnPath $file || fatal fileCheck
@@ -528,6 +574,14 @@ statusPrint     "Checking on <dicomInputDir>/<dcm> file"
 DICOMTOPFILE=$(ls -1 ${G_DICOMINPUTDIR}/*1.dcm 2>/dev/null | head -n 1)
 fileExist_check $DICOMTOPFILE || fatal noDicomFile
 
+## Check on DICOM meta data
+statusPrint     "Querying <dicomInputDir> for sequences"
+G_DCM_MKINDX=$(dcm_mkIndx.bash -i $DICOMTOPFILE)
+ret_check $?
+
+MRID=$(MRID_find $G_DICOMINPUTDIR)
+cprint          "MRID"          "[ $MRID ]"
+
 ## Log directory
 statusPrint     "Checking on <logDir>"
 if [[ "$G_LOGDIR" == "-x" ]] ; then
@@ -544,6 +598,23 @@ if (( Gb_useOverrideOut )) ; then
     cd $G_OUTDIR >/dev/null
     G_OUTDIR=$(pwd)
 fi
+
+# If --migrate-analysis is set, then do the processing in an intermediate
+# directory
+if [[ "$G_MIGRATEANALYSISDIR" != "-x" ]] ; then
+    statusPrint "Checking on <migrateDir>"
+    G_MIGRATEANALYSISDIR=$(echo "$G_MIGRATEANALYSISDIR" | tr ' ' '-' | tr -d '"')
+    dirExist_check $G_MIGRATEANALYSISDIR || mkdir "$G_MIGRATEANALYSISDIR" \
+                    || fatal badMigrateDir
+    cd $G_MIGRATEANALYSISDIR >/dev/null
+    G_MIGRATEANALYSISDIR=$(pwd)
+    migrateAnalysis_enable ${G_MIGRATEANALYSISDIR}/${MRID}${G_OUTSUFFIX} \
+                           ${G_OUTDIR}/${MRID}${G_OUTSUFFIX} 
+                   
+    # Now, map the output directory to the migrate analysis directory
+    G_OUTDIR=$G_MIGRATEANALYSISDIR
+fi
+
 topDir=$G_OUTDIR
 cd $topDir
 
@@ -556,7 +627,7 @@ stage_stamp "Init | ($topDir) $G_SELF $*" $STAMPLOG
 if (( Gb_runCluster )) ; then
   statusPrint   "Checking on <clusterDir>"
   dirExist_check $G_CLUSTERDIR || mkdir $G_CLUSTERDIR || fatal badClusterDir
-  cluster_schedule "$*" "tract"
+  cluster_schedule "$*" "connectome"
   G_STAGES=0
   STAGE="Cluster re-spawn termination"
   stage_stamp "$STAGE" $STAMPLOG
@@ -582,16 +653,21 @@ if (( ${barr_stage[1]} )) ; then
     STAGE=1-$STAGE1PROC
     EXOPTS=$(eval expertOpts_parse $STAGE1PROC)
     if (( Gb_useOverrideOut )) ;  then
-                EXOPTS="$EXOPTS -O \"$G_OUTDIR/$STAGE\""
+                EXOPTS="$EXOPTS -R \"$G_OUTDIR\""
     fi
     
+    
     TARGETSPEC="-d $G_DICOMT1INPUTFILE"
-                
+    if [[ "$G_MIGRATEANALYSISDIR" == "-x" ]] ; then
+        TARGETSPEC="$TARGETSPEC -l"
+    fi
+    
+    
     STAGECMD="dicom_seriesCollect.bash                  \
-                -v $Gi_verbose -D "$G_DICOMINPUTDIR"             \
+                -v $Gi_verbose -D "$G_DICOMINPUTDIR"    \
                 $TARGETSPEC                             \
                 -m $G_DIRSUFFIX                         \
-                -L $G_LOGDIR -A -l                      \
+                -L $G_LOGDIR -A                         \
                 $EXOPTS"                                
     STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
     stage_run "$STAGE" "$STAGECMD"                      \
@@ -620,10 +696,6 @@ if (( ${barr_stage[2]} )) ; then
     EXOPTS=$(eval expertOpts_parse $STAGE2PROC)
     
     # Add the trivial-to-parse arguments
-    #  NOTE: At the moment I am just forcing stage 1/2, if we
-    #        want we can customize that further so that this
-    #        meta script takes an argument to specify which
-    #        tract stages to run.  We'll see if it's needed...
     TRACTARGS="-v $Gi_verbose                       \
                -D $G_DICOMINPUTDIR                  \
                -d $G_DICOMDTIINPUTFILE              \
@@ -633,7 +705,7 @@ if (( ${barr_stage[2]} )) ; then
                -A $G_RECONALG                       \
                $G_iX $G_iY $G_iZ                    \
                -f                                   \
-               -t 12"
+               -t $G_TRACT_META_STAGES"
 
     if [[ "$G_OUTSUFFIX" != "" ]] ; then
         TRACTARGS="$TRACTARGS -o $G_OUTSUFFIX"
@@ -649,7 +721,7 @@ if (( ${barr_stage[2]} )) ; then
     fi
     
     if (( Gb_useOverrideOut )) ; then
-        TRACTARGS="$TRACTARGS -O $G_OUTDIR/$STAGE"
+        TRACTARGS="$TRACTARGS -O $G_OUTDIR"
     fi
     
     if (( Gb_forceGradientFile )) ; then
@@ -659,15 +731,7 @@ if (( ${barr_stage[2]} )) ; then
     if (( Gb_b0override )) ; then
         TRACTARGS="$TRACTARGS -b $Gi_b0vols"
     fi
-    
-    if (( Gb_useLowerThreshold )) ; then
-        TRACTARGS="$TRACTARGS -F $G_LOWERTHRESHOLD"
-    fi
-    
-    if (( Gb_useUpperThreshold )) ; then
-        TRACTARGS="$TRACTARGS -u $G_UPPERTHRESHOLD"
-    fi
-    
+        
     if (( Gb_useMask1 )) ; then
         TRACTARGS="$TRACTARGS --m1 $G_MASKIMAGE1"
     fi
@@ -716,12 +780,19 @@ if (( ${barr_stage[2]} )) ; then
     statusPrint "$(date) | Processing STAGE 2 - Tractography | END" "\n"
 fi
 
+# Set the output directory to the same place that tract_meta.bash is going to
+# for the remaining stages
+G_OUTDIR=${G_OUTDIR}/${MRID}${G_OUTSUFFIX}
+
 # Find the B0 volume from the tractography processing
 DCM2TRKLOG=$(find $G_OUTDIR -name dcm2trk.bash.log)
+fileExist_check $DCM2TRKLOG || fatal badLogFile
+
 DIFFRECONBASE=$(cat $DCM2TRKLOG | grep _recon | tail -1 | awk -F \| '{print $3}' | awk '{print $4}')
 DIFFB0VOLUME=${DIFFRECONBASE}_b0.nii
 printf "%40s"   "Checking for $DIFFB0VOLUME"
 fileExist_check $DIFFB0VOLUME || fatal dependencyStage
+
 
 # Stage 3
 STAGE3PROC=register
@@ -750,7 +821,7 @@ if (( ${barr_stage[3]} )) ; then
     STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
     stage_run "$STAGE" "$STAGECMD"                                      \
                 "${G_LOGDIR}/${STAGE3PROC}-RigidRegistration.std"       \
-                "${G_LOGDIR}/${STAGE3PROC}.RigidRegistration.err"       \
+                "${G_LOGDIR}/${STAGE3PROC}-RigidRegistration.err"       \
           || fatal stageRun
     
     # Finally use Slice3 ResampleVolume2 to apply the transform, keeping

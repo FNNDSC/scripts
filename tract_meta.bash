@@ -51,6 +51,8 @@ G_DICOMINPUTDIR="-x"
 G_DICOMINPUTFILE="-x"
 G_DICOMSERIESLIST="DIFFUSION_HighRes;ISO DIFFUSION TRUE AXIAL"
 G_GRADIENTFILE="-x"
+G_MIGRATEANALYSISDIR="-x"
+
 
 G_IMAGEMODEL="DTI"
 G_RECONALG="fact"
@@ -97,13 +99,12 @@ G_SYNOPSIS="
                                 [-g <gradientTableFile>] [-G]           \\
                                 [-B <b0vols>]                           \\
                                 [-A <reconAlg>] [-I <imageModel>]       \\
-                                [-m1 <maskImage1>]                      \\
-                                [-m2 <maskImage2>]                      \\
-                                [-m1-lower-threshold <lth>]             \\
-                                [-m2-lower-threshold <lth>]             \\
-                                [-m1-upper-threshold <uth>]             \\
-                                [-m2-upper-threshold <uth>]             \\
-                                [-u <uth>]                              \\
+                                [--m1 <maskImage1>]                      \\
+                                [--m2 <maskImage2>]                      \\
+                                [--m1-lower-threshold <lth>]             \\
+                                [--m2-lower-threshold <lth>]             \\
+                                [--m1-upper-threshold <uth>]             \\
+                                [--m2-upper-threshold <uth>]             \\
                                 [-L <logDir>]                           \\
                                 [-v <verbosity>]                        \\
                                 [-O <outputDir>] [-o <suffix>]          \\
@@ -114,7 +115,8 @@ G_SYNOPSIS="
                                 [-c] [-C <clusterDir>]                  \\
                                 [-X] [-Y] [-Z]                          \\
                                 [-M | -m <mailReportsTo>]               \\
-                                [-n <clusterUserName>]
+                                [-n <clusterUserName>]                  \\
+                                [--migrate-analysis <migrateDir>]       \\
 
  DESCRIPTION
 
@@ -176,21 +178,21 @@ G_SYNOPSIS="
         Specifies the reconstruction algorithm and model to use. The default
         algorithm is 'fact', and the default model is DTI.
         
-        [-m1 <maskImage1>] (Optional: Default 'dwi')
-        [-m2 <maskImage2>] (Optional: Default 'none')
+        [--m1 <maskImage1>] (Optional: Default 'dwi')
+        [--m2 <maskImage2>] (Optional: Default 'none')
         Selects which volume to use as a mask image 1 or 2.  Acceptable values are 'dwi',
         'fa', and 'adc'.  If specified, the lower threshold for the mask is
         given by the '-mN-lower-threshold' option.
                 
-        [-m1-lower-threshold <lth>] (Optional: Default '0.0')
-        [-m2-lower-threshold <lth>] (Optional: Default '0.0')
+        [--m1-lower-threshold <lth>] (Optional: Default '0.0')
+        [--m2-lower-threshold <lth>] (Optional: Default '0.0')
         Use the <lth> as a lower cutoff threshold on mask image 1 or 2. To use the entire 
         volume, use '0.0'.  The mask image that is used depends on what is
         specified for the '-mN' option.  This option only has an effect if the
         mask is not 'dwi'.
 
-        [-m1-upper-threshold <uth>] (Optional: Default '1.0')
-        [-m2-upper-threshold <uth>] (Optional: Default '1.0')      
+        [--m1-upper-threshold <uth>] (Optional: Default '1.0')
+        [--m2-upper-threshold <uth>] (Optional: Default '1.0')      
         Use the <uth> as an upper cutoff threshold on the mask image 1 or 2. To use 
         the entire volume, use '1.0'.  The mask image that is used depends on what is
         specified for the '-mN' option.  This option only has an effect if the
@@ -305,6 +307,15 @@ G_SYNOPSIS="
         submitted the job to the cluster.  This name is added to the
         schedule.log file output for the cluster.  If not specified,
         it will be left blank.
+        
+        [--migrate-analysis <migrateDir>] (Optional)
+        This option allows the specification of an alternative directory
+        to <outputDir> where the processing occurs.  Basically what will
+        happen is the input scans are copied to <migrateDir>, processing
+        is done, and the files are then moved over back to the <outDir>
+        when finished.  The purpose of this is to allow for use of
+        cluster storage for doing processing automatically.        
+        
 
 STAGES
 
@@ -395,6 +406,7 @@ A_siemens_diffusionProcess="running siemens_diffusionProcess.bash"
 A_reconAlg="checking on the reconstruction algorithm"
 A_imageModel="checking on the image model"
 A_fa="checking on the FA argument "
+A_badMigrateDir="checking on --migrate-analysis <migrateDir>"
 
 # Error messages
 EM_fileCheck="it seems that a dependency is missing."
@@ -415,6 +427,7 @@ EM_siemens_diffusionProcess="some internal error occurred."
 EM_reconAlg="must be either 'fact' or 'rk2'."
 EM_imageModel="must be either 'hardi' or 'dti'."
 EM_fa="No <lth> has been specified."
+EM_badMigrateDir="I couldn't access <migrateDir>"
 
 # Error codes
 EC_fileCheck=1
@@ -435,6 +448,7 @@ EC_siemens_diffusionProcess=62
 EC_reconAlg=70
 EC_imageModel=71
 EC_fa=80
+EC_badMigrateDir=83
 
 
 # Defaults
@@ -570,7 +584,8 @@ while getoptex "v: D: d: B: A: I: k E L: O: R: o: f \
                 m1-lower-threshold: \
                 m2-lower-threshold: \
                 m1-upper-threshold: \
-                m2-upper-threshold: " "$@" ; do
+                m2-upper-threshold: \
+                migrate-analysis:" "$@" ; do
         case "$OPTOPT"
         in
             v)      Gi_verbose=$OPTARG              ;;
@@ -591,10 +606,6 @@ while getoptex "v: D: d: B: A: I: k E L: O: R: o: f \
                     Gi_b0vols=$OPTARG               ;;
             I)      G_IMAGEMODEL=$OPTARG            ;;
             A)      G_RECONALG=$OPTARG              ;;
-            F)      Gb_useLowerThreshold=1
-                    G_LOWERTHRESHOLD=$OPTARG        ;;
-            u)      Gb_useUpperThreshold=1
-                    G_UPPERTHRESHOLD=$OPTARG        ;;
             m1)     Gb_useMask1=1
                     G_MASKIMAGE1=$OPTARG            ;;
             m1-lower-threshold)
@@ -631,6 +642,9 @@ while getoptex "v: D: d: B: A: I: k E L: O: R: o: f \
                     Gb_mailErr=0
                     G_MAILTO=$OPTARG                ;;
             n)      G_CLUSTERUSER=$OPTARG           ;;
+            migrate-analysis)
+                    G_MIGRATEANALYSISDIR=$OPTARG    ;;
+
             \?)     synopsis_show 
                     exit 0;;
         esac
@@ -721,6 +735,23 @@ if (( Gb_useOverrideOut )) ; then
     cd $G_OUTDIR >/dev/null
     G_OUTDIR=$(pwd)
 fi
+
+# If --migrate-analysis is set, then do the processing in an intermediate
+# directory
+if [[ "$G_MIGRATEANALYSISDIR" != "-x" ]] ; then
+    statusPrint "Checking on <migrateDir>"
+    G_MIGRATEANALYSISDIR=$(echo "$G_MIGRATEANALYSISDIR" | tr ' ' '-' | tr -d '"')
+    dirExist_check $G_MIGRATEANALYSISDIR || mkdir "$G_MIGRATEANALYSISDIR" \
+                    || fatal badMigrateDir
+    cd $G_MIGRATEANALYSISDIR >/dev/null
+    G_MIGRATEANALYSISDIR=$(pwd)
+    migrateAnalysis_enable ${G_MIGRATEANALYSISDIR}/${MRID}${G_OUTSUFFIX} \
+                           ${G_OUTDIR}/${MRID}${G_OUTSUFFIX} 
+                   
+    # Now, map the output directory to the migrate analysis directory
+    G_OUTDIR=$G_MIGRATEANALYSISDIR
+fi
+
 topDir=$G_OUTDIR
 cd $topDir
 

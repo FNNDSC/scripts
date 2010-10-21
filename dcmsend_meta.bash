@@ -10,6 +10,7 @@
 
 # "include" the set of common script functions
 source common.bash
+source getoptx.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=1
@@ -36,6 +37,7 @@ G_DICOMINPUTDIR="-x"
 G_DICOMINPUTFILE="-x"
 G_DICOMSERIESLIST="*"
 G_SSLCERTIFICATE="/chb/osx1927/1/users/dicom/anonymize_key/CA_cert.pem"
+G_MIGRATEANALYSISDIR="-x"
 
 G_STORESCU="storescu"
 G_FILEEXT=""
@@ -47,6 +49,8 @@ G_CLUSTERNAME=launchpad
 G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
 G_SCHEDULELOG="schedule.log"
 G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
+G_DCM_MKINDX="dcm_mkIndx.bash"
+
 
 G_STAGES="12"
 
@@ -77,7 +81,8 @@ G_SYNOPSIS="
                                 [-t <stage>] [-f]                       \\
                                 [-c] [-C <clusterDir>]                  \\
                                 [-M | -m <mailReportsTo>]               \\
-                                [-n <clusterUserName>]
+                                [-n <clusterUserName>]                  \\
+                                [--migrate-analysis <migrateDir>]       \\
 
  DESCRIPTION
 
@@ -196,6 +201,14 @@ PRECONDITIONS
         submitted the job to the cluster.  This name is added to the
         schedule.log file output for the cluster.  If not specified,
         it will be left blank.
+        
+        [--migrate-analysis <migrateDir>] (Optional)
+        This option allows the specification of an alternative directory
+        to <outputDir> where the processing occurs.  Basically what will
+        happen is the input scans are copied to <migrateDir>, processing
+        is done, and the files are then moved over back to the <outDir>
+        when finished.  The purpose of this is to allow for use of
+        cluster storage for doing processing automatically.        
 
 STAGES
 
@@ -226,6 +239,7 @@ A_stageRun="running a stage in the processing pipeline"
 A_noDicomDir="checking on input DICOM directory"
 A_noDicomFile="checking on input DICOM directory / file"
 A_noDicomDirArg="checking on -d <dicomInputDir> argument"
+A_badMigrateDir="checking on --migrate-analysis <migrateDir>"
 
 # Error messages
 EM_fileCheck="it seems that a dependency is missing."
@@ -237,6 +251,7 @@ EM_stageRun="I encountered an error processing this stage."
 EM_noDicomDir="I couldn't access the input DICOM dir. Does it exist?"
 EM_noDicomFile="I couldn't find any DICOM *dcm files. Do any exist?"
 EM_noDicomDirArg="it seems as though you didn't specify a -D <dicomInputDir>."
+EM_badMigrateDir="I couldn't access <migrateDir>"
 
 # Error codes
 EC_fileCheck=1
@@ -248,6 +263,7 @@ EC_stageRun=30
 EC_noDicomDir=50
 EC_noDicomDirArg=51
 EC_noDicomFile=52
+EC_badMigrateDir=83
 
 
 # Defaults
@@ -273,7 +289,7 @@ function MRID_find
 
     here=$(pwd)
     cd $dicomDir >/dev/null
-    MRID=$(echo $G_DCM_MKINDX | grep Patient | awk '{print $3}')
+    MRID=$(eval $G_DCM_MKINDX | grep "Patient ID" | awk '{print $3}')
     cd $here >/dev/null
     echo $MRID
 }
@@ -283,8 +299,10 @@ function MRID_find
 # Process command options
 ###///
 
-while getopts v:D:d:APL:O:R:o:fS:t:cC:n:M:m:a:h:p:K: option ; do
-        case "$option"
+while getoptex "v: D: d: A P L: O: R: o: f S: t: c C: \
+                n: M: m: a: h: p: K:                  \
+                migrate-analysis:" "$@" ; do
+        case "$OPTOPT"
         in
             v)      Gi_verbose=$OPTARG              ;;
             a)      G_AETITLE=$OPTARG               ;;
@@ -315,6 +333,8 @@ while getopts v:D:d:APL:O:R:o:fS:t:cC:n:M:m:a:h:p:K: option ; do
                     Gb_mailErr=0
                     G_MAILTO=$OPTARG                ;;
             n)      G_CLUSTERUSER=$OPTARG           ;;
+            migrate-analysis)
+                    G_MIGRATEANALYSISDIR=$OPTARG    ;;                    
             \?)     synopsis_show 
                     exit 0;;
         esac
@@ -342,6 +362,8 @@ cd $G_DICOMINPUTDIR >/dev/null
 G_DICOMINPUTDIR=$(pwd)
 cd $topDir
 lprintn "<dicomInputDir>: $G_DICOMINPUTDIR"
+MRID=$(MRID_find $G_DICOMINPUTDIR)
+cprint "MRID" "[ $MRID ]"
 statusPrint     "Checking on <dicomInputDir>/<dcm> file"
 DICOMTOPFILE=$(ls -1 ${G_DICOMINPUTDIR}/*1.dcm 2>/dev/null | head -n 1)
 fileExist_check $DICOMTOPFILE || fatal noDicomFile
@@ -362,6 +384,23 @@ if (( Gb_useOverrideOut )) ; then
     cd $G_OUTDIR >/dev/null
     G_OUTDIR=$(pwd)
 fi
+
+# If --migrate-analysis is set, then do the processing in an intermediate
+# directory
+if [[ "$G_MIGRATEANALYSISDIR" != "-x" ]] ; then
+    statusPrint "Checking on <migrateDir>"
+    G_MIGRATEANALYSISDIR=$(echo "$G_MIGRATEANALYSISDIR" | tr ' ' '-' | tr -d '"')
+    dirExist_check $G_MIGRATEANALYSISDIR || mkdir "$G_MIGRATEANALYSISDIR" \
+                    || fatal badMigrateDir
+    cd $G_MIGRATEANALYSISDIR >/dev/null
+    G_MIGRATEANALYSISDIR=$(pwd)
+    migrateAnalysis_enable ${G_MIGRATEANALYSISDIR}/${MRID}${G_OUTSUFFIX} \
+                           ${G_OUTDIR}/${MRID}${G_OUTSUFFIX} 
+                   
+    # Now, map the output directory to the migrate analysis directory
+    G_OUTDIR=$G_MIGRATEANALYSISDIR
+fi
+
 topDir=$G_OUTDIR
 cd $topDir
 

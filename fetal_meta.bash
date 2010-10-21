@@ -10,6 +10,7 @@
 
 # "include" the set of common script functions
 source common.bash
+source getoptx.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=1
@@ -36,6 +37,7 @@ G_DICOMINPUTFILE="-x"
 G_DICOMSERIESLIST="DIFFUSION_HighRes;ISO DIFFUSION TRUE AXIAL"
 G_GRADIENTFILE="-x"
 G_MATLABSERVER="-x"
+G_MIGRATEANALYSISDIR="-x"
 
 G_CLUSTERNAME=launchpad
 G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
@@ -74,7 +76,8 @@ G_SYNOPSIS="
                                 [-r <matlabServerName>]                 \\
                                 [-s <sliceNum>]                         \\
                                 [-H <headCircumference>]                \\
-                                [-g <margin>]
+                                [-g <margin>]                           \\
+                                [--migrate-analysis <migrateDir>]       \\
 
  DESCRIPTION
 
@@ -226,6 +229,15 @@ G_SYNOPSIS="
         If specified, this option provides the margin in voxels around the
         extracted region (default: 5).
         
+        [--migrate-analysis <migrateDir>] (Optional)
+        This option allows the specification of an alternative directory
+        to <outputDir> where the processing occurs.  Basically what will
+        happen is the input scans are copied to <migrateDir>, processing
+        is done, and the files are then moved over back to the <outDir>
+        when finished.  The purpose of this is to allow for use of
+        cluster storage for doing processing automatically.        
+        
+        
 STAGES
 
         'fetal_meta.bash' offers the following stages:
@@ -293,6 +305,7 @@ A_noMatlab="checking for MatLAB"
 A_noDicomDir="checking on input DICOM directory"
 A_noDicomFile="checking on input DICOM directory / file"
 A_noDicomDirArg="checking on -d <dicomInputDir> argument"
+A_badMigrateDir="checking on --migrate-analysis <migrateDir>"
 
 # Error messages
 EM_fileCheck="it seems that a dependency is missing."
@@ -307,6 +320,7 @@ EM_noMatlab="I couldn't find MatLAB. Only Linux and intel Macs are supported. Yo
 EM_noDicomDir="I couldn't access the input DICOM dir. Does it exist?"
 EM_noDicomFile="I couldn't find any DICOM *dcm files. Do any exist?"
 EM_noDicomDirArg="it seems as though you didn't specify a -D <dicomInputDir>."
+EM_badMigrateDir="I couldn't access <migrateDir>"
 
 # Error codes
 EC_fileCheck=1
@@ -321,6 +335,7 @@ EC_noMatlab=42
 EC_noDicomDir=50
 EC_noDicomDirArg=51
 EC_noDicomFile=52
+EC_badMigrateDir=83
 
 # Defaults
 D_whatever=
@@ -352,8 +367,10 @@ function MRID_find
 # Process command options
 ###///
 
-while getopts v:D:d:EL:O:R:o:S:ft:cC:M:m:n:r:s:H:g: option ; do
-    case "$option"
+while getoptex "v: D: d: E L: O: R: o: S: f t: c C:  \
+               M: m: n: r: s: H: g:                  \
+               migrate-analysis:" "$@" ; do
+    case "$OPTOPT"
         in
         v)      Gi_verbose=$OPTARG              ;;
         D)      G_DICOMINPUTDIR=$OPTARG         ;;
@@ -383,7 +400,9 @@ while getopts v:D:d:EL:O:R:o:S:ft:cC:M:m:n:r:s:H:g: option ; do
                 G_MATLABSERVER=$OPTARG          ;;
         s)      G_SLICE_SELECTION=$OPTARG       ;;
         g)      G_MARGIN=$OPTARG                ;;
-        H)      G_HEAD_CIRCUMFERENCE=$OPTARG    ;;                
+        H)      G_HEAD_CIRCUMFERENCE=$OPTARG    ;;
+        migrate-analysis)
+                G_MIGRATEANALYSISDIR=$OPTARG    ;;        
         \?)     synopsis_show
                 exit 0;;
     esac
@@ -442,6 +461,23 @@ if (( Gb_useOverrideOut )) ; then
     cd $G_OUTDIR >/dev/null
     G_OUTDIR=$(pwd)
 fi
+
+# If --migrate-analysis is set, then do the processing in an intermediate
+# directory
+if [[ "$G_MIGRATEANALYSISDIR" != "-x" ]] ; then
+    statusPrint "Checking on <migrateDir>"
+    G_MIGRATEANALYSISDIR=$(echo "$G_MIGRATEANALYSISDIR" | tr ' ' '-' | tr -d '"')
+    dirExist_check $G_MIGRATEANALYSISDIR || mkdir "$G_MIGRATEANALYSISDIR" \
+                    || fatal badMigrateDir
+    cd $G_MIGRATEANALYSISDIR >/dev/null
+    G_MIGRATEANALYSISDIR=$(pwd)
+    migrateAnalysis_enable ${G_MIGRATEANALYSISDIR}/${MRID}${G_OUTSUFFIX} \
+                           ${G_OUTDIR}/${MRID}${G_OUTSUFFIX} 
+                   
+    # Now, map the output directory to the migrate analysis directory
+    G_OUTDIR=$G_MIGRATEANALYSISDIR
+fi
+
 topDir=$G_OUTDIR
 cd $topDir
 

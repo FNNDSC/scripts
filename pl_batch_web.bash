@@ -16,7 +16,7 @@
 # Set freesurfer home
 . $2/chb-fsdev
 PKGDIR=$1
-PATH=$PATH:$PKGDIR/mricron:$PKGDIR/dtk:$PKGDIR/gdcm/bin
+PATH=$PATH:$PKGDIR/mricron:$PKGDIR/dtk:$PKGDIR/gdcm/bin:$PKGDIR/Slicer/current
 PATH=$PATH:$2
 export PATH
 echo $PATH

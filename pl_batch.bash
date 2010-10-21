@@ -53,13 +53,17 @@ G_SYNOPSIS="
         The table itself comprises a semi-colon delimted set of four 
         columns:
 
-              <DICOMDIR>;<dcmSeriesFile>;<outputSuffix>;<DIRsuffix>
+              <DICOMDIR>;<dcmSeriesFile>;<outputSuffix>;<DIRsuffix>;<AdditionalArgs>
 
         where <DICOMDIR> is the directory within DEFAULTDIR to process,
         <dcmSeriesFile> is a file in the series to process, and <outputSuffix>
         a descriptive text for the run (this should NOT contain any spaces).
         The <DIRsuffix> denotes a descriptive suffix for the acutal directory
         housing the final post-processing run, typically <MRID><DIRsuffix>.
+        <AdditionalArgs> is an optional way to specify any additional arguments
+        to the script.  Note that <AdditionalArgs> need to have the character
+        ':' in place of spaces which will get substituted at runtime with
+        ' '.
 
  ARGUMENTS
 
@@ -76,7 +80,8 @@ G_SYNOPSIS="
         -T <pipelineType>
         The pipeline batch to create. Currently 'FS' (for FreeSurfer),  'Tract'
         (for tractography), 'Fetal' (for Fetal), 'dcmanon' (which anonymizes
-	whole directories), and 'dcmsend' (which sends directories) are understood.
+        whole directories), 'dcmsend' (which sends directories), and
+        'conectome' (for connectivity matrices) are understood.
 	
 	-t <batchTableFile>
         The table file to process.
@@ -191,6 +196,7 @@ case "$(echo $G_PIPELINETYPE | tr '[A-Z]' '[a-z]')"
         "fetal")        PIPELINE="fetal"        ;;
         "dcmanon")      PIPELINE="dcmanon"      ;;
         "dcmsend")      PIPELINE="dcmsend"      ;;
+        "connectome")   PIPELINE="connectome"   ;;
 esac
 
 topDir=$(pwd)
@@ -236,6 +242,7 @@ for LINE in $TABLE ; do
   G_DICOMINPUTFILE=$(echo $LINE | awk -F \; '{print $2}')
   SUFFIX=$(echo $LINE | awk -F \; '{print $3}')
   DIRSUFFIX=$(echo $LINE | awk -F \; '{print $4}')
+  ADDITIONALARGS=$(echo $LINE | awk -F \; '{print $5}' | sed 's/:/ /g')
   statusPrint     "Checking on <dicomInputDir>"
   dirExist_check $G_DICOMINPUTDIR || b_OKDIR=0
   statusPrint     "Checking on <dicomFile>"
@@ -247,7 +254,8 @@ for LINE in $TABLE ; do
               -o $SUFFIX                                \
               -R $DIRSUFFIX                             \
               -D $G_DICOMINPUTDIR                       \
-              -d $G_DICOMINPUTFILE"
+              -d $G_DICOMINPUTFILE                      \
+              $ADDITIONALARGS"
 #     echo $STAGECMD
     echo ""
     stage_run "$STAGE" "$STAGECMD"                      \

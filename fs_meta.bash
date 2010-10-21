@@ -10,6 +10,7 @@
 
 # "include" the set of common script functions
 source common.bash
+source getoptx.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=0
@@ -38,6 +39,7 @@ G_CLUSTERUSER=""
 G_CLUSTERNAME=seychelles
 G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
 G_SCHEDULELOG="schedule.log"
+G_MIGRATEANALYSISDIR="-x"
 G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
 
 G_STAGES="123"
@@ -62,8 +64,9 @@ G_SYNOPSIS="
                                 [-E] [-F <recon-all-args>]              \\
 				[-t <stage>] [-f]			\\
 				[-c] [-C <clusterName>		        \\
-                                [-M | -m <mailReportsTo>]              \\
-                                [-n <clusterUserName>]
+                                [-M | -m <mailReportsTo>]               \\
+                                [-n <clusterUserName>]                  \\
+                                [--migrate-analysis <migrateDir>]       \\
 
  DESCRIPTION
 
@@ -193,11 +196,20 @@ G_SYNOPSIS="
         Use the small '-m' to only email the output from stdout logs; use
         capital '-M' to email stdout, stderr, and log file.
         
-	    -n <clusterUserName> (Optional)
+        -n <clusterUserName> (Optional)
         If specified, this option specified the name of the user that
         submitted the job to the cluster.  This name is added to the
         schedule.log file output for the cluster.  If not specified,
         it will be left blank.
+        
+        [--migrate-analysis <migrateDir>] (Optional)
+        This option allows the specification of an alternative directory
+        to <outputDir> where the processing occurs.  Basically what will
+        happen is the input scans are copied to <migrateDir>, processing
+        is done, and the files are then moved over back to the <outDir>
+        when finished.  The purpose of this is to allow for use of
+        cluster storage for doing processing automatically.        
+        
 
  STAGES
 
@@ -257,6 +269,7 @@ A_noSubjectsDir="checking environment"
 A_noSubjectBase="checking base subject dir"
 A_noDicomDir="checking on input DICOM directory"
 A_noDicomDirArg="checking on -d <dicomInputDir> argument"
+A_badMigrateDir="checking on --migrate-analysis <migrateDir>"
 
 # Error messages
 EM_fileCheck="it seems that a dependency is missing."
@@ -271,6 +284,7 @@ EM_noSubjectsDir="it seems that the SUBJECTS_DIR refers to an invalid directory.
 EM_noSubjectBase="I couldn't find a subject base directory."
 EM_noDicomDir="I couldn't access the input DICOM dir. Does it exist?"
 EM_noDicomDirArg="it seems as though you didn't specify a -D <dicomInputDir>."
+EM_badMigrateDir="I couldn't access <migrateDir>"
 
 # Error codes
 EC_fileCheck=1
@@ -285,6 +299,8 @@ EC_noSubjectsDir=101
 EC_noSubjectBase=102
 EC_noDicomDir=50
 EC_noDicomDirArg=51
+EC_badMigrateDir=83
+
 # Defaults
 D_whatever=
 
@@ -341,8 +357,9 @@ function MRID_find
 # Process command options
 ###///
 
-while getopts v:D:d:EF:L:O:R:o:ft:S:cC:n:M:m: option ; do 
-	case "$option"
+while getoptex "v: D: d: E F: L: O: R: o: f t: S: c C:  \
+                n: M: m: migrate-analysis:" "$@" ; do 
+	case "$OPTOPT"
 	in
 		v) 	Gi_verbose=$OPTARG		        ;;
 		D)	G_DICOMINPUTDIR=$OPTARG		        ;;
@@ -351,10 +368,10 @@ while getopts v:D:d:EF:L:O:R:o:ft:S:cC:n:M:m: option ; do
 		E) 	Gb_useExpertOptions=1		        ;;
                 F)      G_RECONALLARGS=$OPTARG                  ;;
 		L)	G_LOGDIR=$OPTARG		        ;;
-        O) 	Gb_useOverrideOut=1	
-            G_OUTDIR=$OPTARG  
+		O) 	Gb_useOverrideOut=1	
+		        G_OUTDIR=$OPTARG  
 			G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}        ;;
-        R)  G_DIRSUFFIX=$OPTARG                     ;;
+		R)      G_DIRSUFFIX=$OPTARG                     ;;
 		o)	G_OUTSUFFIX=$OPTARG		        ;;
 		S)	Gb_useDICOMSeries=1
 			G_DICOMSERIESLIST=$OPTARG	        ;;
@@ -363,13 +380,15 @@ while getopts v:D:d:EF:L:O:R:o:ft:S:cC:n:M:m: option ; do
 		c)	Gb_runCluster=1			        ;;
 		C)	G_CLUSTERNAME=$OPTARG
 			G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}       ;;
-        M)  Gb_mailStd=1
-            Gb_mailErr=1
-            G_MAILTO=$OPTARG                        ;;
-        m)  Gb_mailStd=1
-            Gb_mailErr=0
-            G_MAILTO=$OPTARG                        ;;
-        n)  G_CLUSTERUSER=$OPTARG					;;
+                M)      Gb_mailStd=1
+                        Gb_mailErr=1
+                        G_MAILTO=$OPTARG                        ;;
+                m)      Gb_mailStd=1
+                        Gb_mailErr=0
+                        G_MAILTO=$OPTARG                        ;;
+                n)      G_CLUSTERUSER=$OPTARG			;;
+                migrate-analysis)
+                        G_MIGRATEANALYSISDIR=$OPTARG            ;;
 		\?) synopsis_show 
 		    exit 0;;
 	esac
@@ -411,6 +430,23 @@ if (( Gb_useOverrideOut )) ; then
     cd $G_OUTDIR >/dev/null
     G_OUTDIR=$(pwd)
     cd $topDir
+fi
+
+
+# If --migrate-analysis is set, then do the processing in an intermediate
+# directory
+if [[ "$G_MIGRATEANALYSISDIR" != "-x" ]] ; then
+    statusPrint "Checking on <migrateDir>"
+    G_MIGRATEANALYSISDIR=$(echo "$G_MIGRATEANALYSISDIR" | tr ' ' '-' | tr -d '"')
+    dirExist_check $G_MIGRATEANALYSISDIR || mkdir "$G_MIGRATEANALYSISDIR" \
+                    || fatal badMigrateDir
+    cd $G_MIGRATEANALYSISDIR >/dev/null
+    G_MIGRATEANALYSISDIR=$(pwd)
+    migrateAnalysis_enable ${G_MIGRATEANALYSISDIR}/${MRID}${G_OUTSUFFIX} \
+                           ${G_OUTDIR}/${MRID}${G_OUTSUFFIX} 
+                   
+    # Now, map the output directory to the migrate analysis directory
+    G_OUTDIR=$G_MIGRATEANALYSISDIR
 fi
 
 statusPrint	"Checking for SUBJECTS_DIR env variable"
