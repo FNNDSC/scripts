@@ -115,7 +115,7 @@ CLUSTER_SCRIPT=$(echo ${G_CMD} | awk '{print $1}' | xargs basename)
 MOSIX_ARGS="-E -e -q"
 case "$CLUSTER_SCRIPT" in
     tract-cluster.sh)
-        MOSIX_ARGS="$MOSIX_ARGS -b -P4"
+        MOSIX_ARGS="$MOSIX_ARGS -b"
     ;;
     fs-cluster.sh)
         MOSIX_ARGS="$MOSIX_ARGS -b -m$FS_MB_REQ"
