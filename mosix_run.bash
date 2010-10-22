@@ -22,26 +22,26 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-        mosix_run.bash      -c      <cmd>                  \\                            
+        mosix_run.bash      -c      <cmd>                  \\
                             [-J     <jobID>]               \\
-                            
+
 
  DESCRIPTION
 
         'mosix_run.bash' is a scheduling script designed to initiate
         running commands on the cluster using MOSIX.  It is invoked
         by 'cluster_run.bash'.
-        
+
 
  ARGUMENTS
 
         -c <cmd>
-        The command to run on the cluster.       
+        The command to run on the cluster.
 
         [-J <jobId>]
         Specify a job ID for the cluster job.  This job ID must be supported
         by the underlying clustering software.
-               
+
 
  PRECONDITIONS
 
@@ -68,19 +68,19 @@ EM_noCmdArg="it seems as though you didn't specify a -c <cmd>."
 # Error codes
 EC_noCmdArge=10
 
-###\\\ 
+###\\\
 # function definitions --->
-###/// 
+###///
 
 
-###\\\ 
+###\\\
 # Process command options --->
-###/// 
+###///
 
 while getopts c:J: option ; do
-        case "$option" 
+        case "$option"
         in
-                c)      G_CMD=$OPTARG;;                
+                c)      G_CMD=$OPTARG;;
                 J)      G_JOBID=$OPTARG;;
                 \?)     synopsis_show;;
         esac
@@ -110,15 +110,17 @@ ret_check $?
 # -P<#> = we can also specify the number of parallel threads that might be spawned to influence queuing.
 
 # Because of problems with Xvfb, only run tract runs on node 2 which is ipmi
-TRACT_NODE="-2"
 FS_MB_REQ="2500"
 CLUSTER_SCRIPT=$(echo ${G_CMD} | awk '{print $1}' | xargs basename)
 MOSIX_ARGS="-E -e -q"
 case "$CLUSTER_SCRIPT" in
     tract-cluster.sh)
-        MOSIX_ARGS="$MOSIX_ARGS $TRACT_NODE"
+        MOSIX_ARGS="$MOSIX_ARGS -b -P4"
     ;;
     fs-cluster.sh)
+        MOSIX_ARGS="$MOSIX_ARGS -b -m$FS_MB_REQ"
+    ;;
+    connectome-cluster.sh)
         MOSIX_ARGS="$MOSIX_ARGS -b -m$FS_MB_REQ"
     ;;
     *)
