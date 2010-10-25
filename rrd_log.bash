@@ -17,8 +17,8 @@ fi
 # This sipmle script uses the specified RRD (generated with ganglia) to
 # output the CPU utilization % to a file.
 while [ 1 ] ; do
-    IDLEPCNT=$(rrdtool fetch $G_RRDFILE AVERAGE -s -30s | tail -2 | head -1 | awk '{print $2}')
-    COUNT=$(rrdtool fetch $G_RRDFILE AVERAGE -s -30s | tail -2 | head -1 | awk '{print $3}')
+    IDLEPCNT=$(rrdtool fetch $G_RRDFILE AVERAGE -s -180s | tail -13 | head -1 | awk '{print $2}')
+    COUNT=$(rrdtool fetch $G_RRDFILE AVERAGE -s -180s | tail -13 | head -1 | awk '{print $3}')
     if [ "$IDLEPCNT" != "nan" ] ; then
 	USEPCNT=$(echo "${IDLEPCNT} ${COUNT}" | awk '{print 100.0-($1/$2)}')
 		echo $USEPCNT > $G_OUTFILE
