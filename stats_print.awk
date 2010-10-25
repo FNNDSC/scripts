@@ -9,8 +9,13 @@ function synopsis_show() {
      printf("SYNOPSIS\n");
      printf("\n");
      printf("\tawk -f stats_print.awk\t\t\t\t\\\n");
-     printf("\t\t\t [-v <var2>=<val2>\t\t\\\n");
-     printf("\t\t\t  -v <varN>=<valN>]\t\t\\\n");
+     printf("\t\t\t [-v <all>=1\t\t\\\n");
+     printf("\t\t\t [-v <sum>=1\t\t\\\n");
+     printf("\t\t\t [-v <prod>=1\t\t\\\n");
+     printf("\t\t\t [-v <mean>=1\t\t\\\n");
+     printf("\t\t\t [-v <std>=1\t\t\\\n");
+     printf("\t\t\t [-v <min>=1\t\t\\\n");
+     printf("\t\t\t [-v <max>=1\t\t\\\n");
      printf("\t\t\t <fileToProcess>\n");
      printf("\n");
      printf("DESCRIPTION\n");
@@ -25,16 +30,22 @@ function synopsis_show() {
      printf("\tThe following variables passed with --assign <var>=<val>\n");
      printf("\tprogram behaviour:\n");
      printf("\n");
+     printf("\tall=1\n");
+     printf("\tIf specified, shows all stats.\n");
+     printf("\n");
+     printf("\tsum=1, prod=1, ... max=1\n");
+     printf("\tShow only specific stats.\n");
+     printf("\n");
      printf("EXAMPLES\n");
      printf("\n");
      printf("\tTo process a file, say 'lh_calc.log' that contains a 'matrix'\n");
      printf("\tsimply do a\n");
      printf("\n");
-     printf("\t\t$>stats_print.awk lh_calc.log\n");
+     printf("\t\t$>stats_print.awk -v all=1 lh_calc.log\n");
      printf("\n");
      printf("\tor even\n");
      printf("\n");
-     printf("\t\t$>cat lh_calc.log | stats_print.awk\n");
+     printf("\t\t$>cat lh_calc.log | stats_print.awk -v all=1\n");
      printf("\n");
      printf("\tThe following statistics are available:\n");
      printf("\n");
@@ -50,7 +61,15 @@ function synopsis_show() {
 BEGIN {
     if(help) {
 	synopsis_show();
-	exit(0);
+	exit(1);
+    }
+    if(all) {
+      sum=1;
+      prod=1;
+      mean=1;
+      std=1;
+      min=1;
+      max=1;
     }
     # Zero each column array
     for(col=0; col<100; col++) {
@@ -121,26 +140,27 @@ function std_find(a) {
 }
 
 END {
-    max 	= -1;
+    f_max 	= -1;
     i 		= 1;
-    printf("%10s ", "Sum:");
-    farray_print(a_sum);
-    printf("%10s ", "Prod:");
-    earray_print(a_prod);
-    rows = NR;
-    for(i=0; i<NF; i++)
-    	a_mean[i] = a_sum[i] / rows;
-    printf("%10s ", "Mean:");
-    farray_print(a_mean);
-    for(i=0; i<NF; i++)
-    	a_std[i] = sqrt(a_std[i]/(NR-1));
-    printf("%10s ", "Std:");
-    farray_print(a_std);
-    printf("%10s ", "Min:");
-    farray_print(a_min);
-    printf("%10s ", "Max:");
-    farray_print(a_max);
-   
+    if(!help) {
+      if(sum)  {printf("%10s ", "Sum:");  farray_print(a_sum);}
+      if(prod) {printf("%10s ", "Prod:"); earray_print(a_prod);}
+      if(mean) {
+        rows = NR;
+        for(i=0; i<NF; i++)
+            a_mean[i] = a_sum[i] / rows;
+        printf("%10s ", "Mean:");
+        farray_print(a_mean);
+      }
+      if(std) {
+        for(i=0; i<NF; i++)
+            a_std[i] = sqrt(a_std[i]/(NR-1));
+        printf("%10s ", "Std:");
+        farray_print(a_std);
+      }
+      if(min){printf("%10s ", "Min:"); farray_print(a_min);}
+      if(max){printf("%10s ", "Max:"); farray_print(a_max);}
+    }
 }
 
 
