@@ -482,8 +482,7 @@ while getoptex "v: D: d: B: A: I: k E F: L: O: R: o: f \
             k)      Gb_skipEddyCurrentCorrection=1  ;;
             L)      G_LOGDIR=$OPTARG                ;;
             O)      Gb_useOverrideOut=1     
-                    G_OUTDIR=$OPTARG  
-                    G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}        ;;
+                    G_OUTDIR=$OPTARG                ;;
             R)      G_DIRSUFFIX=$OPTARG             ;;
             o)      G_OUTSUFFIX=$OPTARG             ;;
             g)      Gb_forceGradientFile=1  
@@ -514,8 +513,7 @@ while getoptex "v: D: d: B: A: I: k E F: L: O: R: o: f \
             f)      Gb_forceStage=1                 ;;
             t)      G_STAGES=$OPTARG                ;;
             c)      Gb_runCluster=1                 ;;
-            C)      G_CLUSTERNAME=$OPTARG
-                    G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}       ;;
+            C)      G_CLUSTERDIR=$OPTARG            ;;
             U)      Gb_useDiffUnpack=0              ;;
             b)      Gb_bValueOverride=1
                     Gi_bValue=$OPTARG               ;;

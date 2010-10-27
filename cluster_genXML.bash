@@ -129,6 +129,28 @@ do
 	fi
 	# Determine the cluster script name
 	CLUSTERCMD=$(echo $line | awk -F \| 'NF > 1  {print $3}'| sed 's/ Stage //' | sed 's/^[ \t]*//;s/[ \t]*$//')
+
+	# Determine the project name from the schedule.log.  Unfortunately, some early projects did not have names
+	# so we go through some hoops to call those ones "unnamed" 
+	PROJECT=$(echo $line | awk -F'|' '{print $3}' | awk '{print $2}' | xargs -i% dirname % | xargs -i% basename % | awk -F'-' '{
+                   if(NF<=4)
+                   {
+                       printf "unnamed\n"
+                   }
+                   else
+                   { 
+                       for(i=5; i<NF;i++) 
+                           printf "%s-",$i; 
+                       if(NF==5 && $NF == "")
+                       {
+                           printf "unnamed\n"
+                       }
+                       else
+                       {
+                           printf "%s\n",$NF 
+                       }
+                   }}')
+
 	if [ -f $CLUSTERCMD ] ; then
 		DATE=$(echo $line | awk '{print $1,$2,$3,$4,$5,$6}' | xargs -i$ date --date='$' +"%D %R:%S %a")
 		CLUSTERSH=$(cat $CLUSTERCMD)
@@ -138,7 +160,7 @@ do
 		METASCRIPT=$(cat $CLUSTERCMD | grep '_meta.bash' | awk '{ print $1 }')
 		CMDARGUMENTS=$(cat $CLUSTERCMD | grep '_meta.bash' | awk -F '>' '{print $1}' | awk '{for(f=2;f<=NF;f++) printf("%s ",$f) }')
 			
-	    if [ -f $TOCFILEPATH ] ; then
+		if [ -f $TOCFILEPATH ] ; then
 			TOCFILE=$(cat -E $TOCFILEPATH | sed 's/\$/\\n/g')
 			PATIENT_ID=$(echo $TOCFILE | grep "Patient ID" | awk '{print $3}')
 			PATIENT_NAME=$(echo -e $TOCFILE | grep "Patient Name" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')			
@@ -157,6 +179,7 @@ do
 			echo -e "    <MetaScript>$(echo_stripped $METASCRIPT)</MetaScript>"
 			echo -e "    <Date>$(echo_stripped $DATE)</Date>"
 			echo -e "    <User>$(echo_stripped $SUBMITUSER)</User>"
+			echo -e "    <Project>$(echo_stripped $PROJECT)</Project>"
 			echo -e "    <PatientID>$(echo_stripped $PATIENT_ID)</PatientID>"
 			echo -e "    <PatientName>$(echo_stripped $PATIENT_NAME)</PatientName>"
 			echo -e "    <PatientAge>$(echo_stripped $PATIENT_AGE)</PatientAge>"

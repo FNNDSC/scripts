@@ -245,11 +245,11 @@ fi
 
 statusPrint     "Checking on <outputRunDir>"
 if (( !Gb_useOverrideOut )) ; then
-  MRID=$(echo "$SCANTABLE" | grep ID | awk '{print $3}')
+  MRID=$(echo "$SCANTABLE" | cd  | awk '{print $3}')
   G_OUTRUNDIR=${MRID}-$G_OUTPREFIX
 fi
 dirExist_check ${G_OUTDIR}/$G_OUTRUNDIR "not found - creating"  \
-              || mkdir ${G_OUTDIR}/$G_OUTRUNDIR                 \
+              || mkdir -p ${G_OUTDIR}/$G_OUTRUNDIR              \
               || fatal noOutRunDir
 cd ${G_OUTDIR}/$G_OUTRUNDIR >/dev/null
 OUTDIR=$(pwd)
@@ -276,16 +276,16 @@ stage_stamp "Init | ($(pwd)) $G_SELF $*" $STAMPLOG
 
 STAGENUM=1
 STAGEPROC="mri_convert"
-ANALYZEIN="${OUTDIR}/${G_OUTPREFIX}-input.img"
-ANALYZEREF="${OUTDIR}/${G_OUTPREFIX}-ref.img"
+NIFTIIN="${OUTDIR}/${G_OUTPREFIX}-input.nii"
+NIFTIREF="${OUTDIR}/${G_OUTPREFIX}-ref.nii"
 if (( ${barr_stage[1]} )) ; then
     statusPrint \
-        "$(date) | Processing STAGE 1 - Converting to Analyze... | START" "\n"
+        "$(date) | Processing STAGE 1 - Converting to NIFTI... | START" "\n"
     STAGE=${STAGENUM}-${STAGEPROC}
     statusPrint "Converting input volume"       "\n"
     STAGECMD="$STAGEPROC                                                \
               $DICOMINPUT                                               \
-              $ANALYZEIN"
+              $NIFTIIN"
     stage_run   "$STAGE" "$STAGECMD"                                    \
                 "${OUTDIR}/${STAGEPROC}.std"                            \
                 "${OUTDIR}/${STAGEPROC}.err"                            \
@@ -294,16 +294,16 @@ if (( ${barr_stage[1]} )) ; then
     statusPrint "Converting reference volume"   "\n"
     STAGECMD="$STAGEPROC                                                \
               $DICOMREFFILE                                             \
-              $ANALYZEREF"
+              $NIFTIREF"
     stage_run   "$STAGE" "$STAGECMD"                                    \
                 "${OUTDIR}/${STAGEPROC}.std"                            \
                 "${OUTDIR}/${STAGEPROC}.err"                            \
                 "SILENT"                                                \
                 || fatal stageRun
     statusPrint \
-        "$(date) | Processing STAGE 1 - Converting to Analyze... | END" "\n"
+        "$(date) | Processing STAGE 1 - Converting to NIFTI... | END" "\n"
 fi
-STAGE1OUT=$ANALYZEIN
+STAGE1OUT=$NIFTIIN
 
 STAGE2IN=$STAGE1OUT
 STAGENUM=2
@@ -313,8 +313,8 @@ STAGE2OUTBASE="${G_OUTDIR}/${G_OUTRUNDIR}/${G_OUTPREFIX}-registered"
 if (( ${barr_stage[2]} )) ; then
     statusPrint "$(date) | Processing STAGE 2 - coregistration | START" "\n"
     statusPrint "Checking previous stage dependencies"
-    fileExist_check     $ANALYZEIN      || fatal dependencyStage
-    fileExist_check     $ANALYZEREF     || fatal dependencyStage
+    fileExist_check     $NIFTIIN      || fatal dependencyStage
+    fileExist_check     $NIFTIREF     || fatal dependencyStage
     INMATRIX=""
     OUTMATRIX="-omat $STAGE2OUTBASE.mat"
     if (( Gb_useMatrix )) ; then
@@ -324,9 +324,12 @@ if (( ${barr_stage[2]} )) ; then
     EXOPTS=$(eval expertOpts_parse $STAGEPROC)
     STAGE=${STAGENUM}-${STAGEPROC}
     STAGECMD="$STAGEPROC                                        \
-                -in     $ANALYZEIN                              \
-                -ref    $ANALYZEREF                             \
-                -out    $STAGE2OUTBASE.img                      \
+                -dof    6                                       \
+                -cost   mutualinfo                              \
+                -usesqform                                      \
+                -in     $NIFTIIN                                \
+                -ref    $NIFTIREF                               \
+                -out    $STAGE2OUTBASE.nii                      \
                 $INMATRIX                                       \
                 $OUTMATRIX                                      \
                 $EXOPTS"

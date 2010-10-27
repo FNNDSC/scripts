@@ -314,8 +314,7 @@ while getoptex "v: D: d: A P L: O: R: o: f S: t: c C: \
                     G_DICOMINPUTFILE=$OPTARG        ;;
             L)      G_LOGDIR=$OPTARG                ;;
             O)      Gb_useOverrideOut=1     
-                    G_OUTDIR=$OPTARG  
-                    G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}        ;;
+                    G_OUTDIR=$OPTARG                ;;
             R)      G_DIRSUFFIX=$OPTARG             ;;
             o)      G_OUTSUFFIX=$OPTARG             ;;
             A)      Gb_anonymize=1                  ;;
@@ -324,8 +323,7 @@ while getoptex "v: D: d: A P L: O: R: o: f S: t: c C: \
             f)      Gb_forceStage=1                 ;;
             t)      G_STAGES=$OPTARG                ;;
             c)      Gb_runCluster=1                 ;;
-            C)      G_CLUSTERNAME=$OPTARG
-                    G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}       ;;
+            C)      G_CLUSTERDIR=$OPTARG            ;;
             M)      Gb_mailStd=1
                     Gb_mailErr=1
                     G_MAILTO=$OPTARG                ;;
