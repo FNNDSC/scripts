@@ -63,6 +63,9 @@ BEGIN {
 	synopsis_show();
 	exit(1);
     }
+    if(!sum && !prod && !mean && !std && !min && !max)
+      all=1;
+
     if(all) {
       sum=1;
       prod=1;

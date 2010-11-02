@@ -1,0 +1,70 @@
+#!/bin/bash
+
+G_SYNOPSIS="
+
+  NAME
+  
+        lmv - move target of a symbolic to new location and restore the link.
+        
+  SYNOPSIS
+  
+        lmv <linkName> <newLocationDir> [<originalPhysicalTargetDir>]
+        
+  DESCRIPTION
+  
+        'lmv' allows for safe moving of symbolic link targets. A <linkName>
+        is examined for its current link end point. The end point is then moved 
+        to the <newLocationDir> and the end point is restored.
+        
+        The [<originalPhysicalTargetDir>] is an optional extra argument 
+        that defines the actual physical target directory containing the
+        <linkName>, and is used to avoid moving between cross-linked 
+        directories. It should be used if <linkName> originally points to
+        a location that itself is a symbolic link somewhere else.
+        
+"
+
+if (( ! ${#1} )) ; then
+    echo "$G_SYNOPSIS"
+    exit 1
+fi
+
+
+SYMNAME=$1
+TARGETDIR=$2
+ACTUALDIR=$3
+
+if [[ -h $SYMNAME ]] ; then
+  SYMTARGETDIR=$(/bin/ls -l $SYMNAME | awk {'print $10'})
+  SYMTARGET=$(basename $SYMTARGETDIR)
+  if (( ${#ACTUALDIR} )) ; then
+      SYMTARGETDIR=$ACTUALDIR/$SYMTARGET
+  fi
+  if [[ -d $TARGETDIR ]] ; then
+    rm $SYMNAME
+    if [[ -f $SYMNAME ]] ; then 
+        echo -e "\nCould not delete $SYMNAME. Aborting.\n" ; 
+        exit 1
+    fi 
+    mv $SYMTARGETDIR $TARGETDIR
+    if [[ -f $SYMTARGETDIR ]] ; then 
+        echo -e "\n'mv' failed. Restoring original link and aborting.\n" ; 
+        ln -s $SYMTARGETDIR $SYMNAME
+        exit 1; 
+    fi
+    ln -s ${TARGETDIR}/${SYMTARGET} $SYMNAME
+  else
+    echo 
+    echo -e "\t'$TARGETDIR' does not exist."
+    echo -e "\tA valid target directory must be specified."
+    echo -e "\tNo action performed."
+    echo
+  fi
+else
+  echo
+  echo -e "\t'$SYMNAME' is not a symbolic link."
+  echo -e "\tNo action performed."
+  echo
+  exit 2
+fi
+
