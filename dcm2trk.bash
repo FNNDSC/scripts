@@ -378,7 +378,7 @@ while getoptex "v: f g: d: D: b: B: I: A: o: O: X Y Z t: h E U \
                 m2-lower-threshold: \
                 m1-upper-threshold: \
                 m2-upper-threshold: \
-                angle-threshold" "$@" ; do
+                angle-threshold:" "$@" ; do
         case "$OPTOPT"
         in
                 v) Gi_verbose=$OPTARG                                   ;;

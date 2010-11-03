@@ -720,7 +720,7 @@ G_IMAGEMODEL=$(echo $G_IMAGEMODEL | tr '[A-Z]' '[a-z]')
 cprint          "Algorithm"     "[ $G_RECONALG ]"
 cprint          "Image Model"   "[ $G_IMAGEMODEL ]"
 
-if [[ $G_RECONALG != "fact" && $G_RECONALG != "rk2" && $G_RECONALG != "sl" $G_RECONALG != "tl" ]] ; then
+if [[ $G_RECONALG != "fact" && $G_RECONALG != "rk2" && $G_RECONALG != "sl" && $G_RECONALG != "tl" ]] ; then
     fatal reconAlg
 fi
 if [[ $G_IMAGEMODEL != "dti" && $G_IMAGEMODEL != "hardi" ]] ; then
