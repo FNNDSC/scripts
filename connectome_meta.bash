@@ -30,6 +30,7 @@ declare -i Gb_useLowerThreshold2=0
 declare -i Gb_useUpperThreshold2=0
 declare -i Gb_useMask1=0
 declare -i Gb_useMask2=0
+declare -i Gb_useAngleThreshold=0
 declare -i Gi_bValue=1000
 declare -i Gb_bValueOverride=0
 declare -i Gb_b0override=0
@@ -60,6 +61,7 @@ G_MASKIMAGE1="-x"
 G_LOWERTHRESHOLD2="-x"
 G_UPPERTHRESHOLD2="-x"
 G_MASKIMAGE2="-x"
+G_ANGLETHRESHOLD="-x"
 G_RECONALLARGS=""
 
 
@@ -98,6 +100,7 @@ G_SYNOPSIS="
                                 [--m2-lower-threshold <lth>]            \\
                                 [--m1-upper-threshold <uth>]            \\
                                 [--m2-upper-threshold <uth>]            \\
+                                [--angle-threshold <angle>]             \\                               
                                 [-u <uth>]                              \\
                                 [-L <logDir>]                           \\
                                 [-v <verbosity>]                        \\
@@ -174,6 +177,9 @@ G_SYNOPSIS="
         the entire volume, use '1.0'.  The mask image that is used depends on what is
         specified for the '-mN' option.  This option only has an effect if the
         mask is not 'dwi'.
+        
+        [--angle-threshold <angle>] (Optional: Default $G_ANGLETHRESHOLD)
+        Use the <angle> as the threshold angle for tracking.
         
         -g <gradientTableFile> (Optional)
         By default, 'tract_meta.bash' will attempt to determine the correct
@@ -470,7 +476,8 @@ while getoptex "v: D: d: B: A: I: k E F: L: O: R: o: f \
                 m1-upper-threshold: \
                 m2-upper-threshold: 1: h \
                 tract-meta-stages: \
-                migrate-analysis:" "$@" ; do
+                migrate-analysis: \
+                angle-threshold: " "$@" ; do
         case "$OPTOPT"
         in
             v)      Gi_verbose=$OPTARG              ;;
@@ -508,7 +515,10 @@ while getoptex "v: D: d: B: A: I: k E F: L: O: R: o: f \
                     G_LOWERTHRESHOLD2=$OPTARG       ;;                    
             m2-upper-threshold)
                     Gb_useUpperThreshold2=1                            
-                    G_UPPERTHRESHOLD2=$OPTARG       ;;        
+                    G_UPPERTHRESHOLD2=$OPTARG       ;;
+            angle-threshold) 
+                    Gb_useAngleThreshold=1
+                    G_ANGLETHRESHOLD=$OPTARG        ;;                    
             G)      Gb_GEGradientInlineFix=0        ;;
             f)      Gb_forceStage=1                 ;;
             t)      G_STAGES=$OPTARG                ;;
@@ -740,7 +750,7 @@ if (( ${barr_stage[2]} )) ; then
     
     if (( Gb_useUpperThreshold1 )) ; then
         TRACTARGS="$TRACTARGS --m1-upper-threshold $G_LOWERTHRESHOLD1"
-    fi
+    fi    
         
     if (( Gb_useMask2 )) ; then
         TRACTARGS="$TRACTARGS --m2 $G_MASKIMAGE2"
@@ -754,6 +764,10 @@ if (( ${barr_stage[2]} )) ; then
         TRACTARGS="$TRACTARGS --m2-upper-threshold $G_LOWERTHRESHOLD2"
     fi
     
+    if (( Gb_useAngleThreshold )) ; then
+        TRACTARGS="$TRACTARGS --angle-threshold $G_ANGLETHRESHOLD"
+    fi
+        
     if (( !Gb_GEGradientInlineFix )) ; then
        TRACTARGS="$TRACTARGS -G"
     fi

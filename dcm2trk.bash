@@ -35,6 +35,7 @@ G_UPPERTHRESHOLD1="1.0"
 G_MASKIMAGE2="-x"
 G_LOWERTHRESHOLD2="0.0"
 G_UPPERTHRESHOLD2="1.0"
+G_ANGLETHRESHOLD="35"
 
 G_EXP_eddy_recon=""
 G_EXP_dti_recon=""
@@ -58,12 +59,13 @@ G_SYNOPSIS="
                                 -g <gradientTableFile>                  \\
                                 [-b <bFieldValue>] [-B <b0override>]    \\
                                 [-A <reconAlg>] [-I <imageModel>]       \\
-                                [-m1 <maskImage1>]                      \\
-                                [-m2 <maskImage2>]                      \\
-                                [-m1-lower-threshold <lth1>]            \\
-                                [-m2-lower-threshold <lth2>]            \\
-                                [-m1-upper-threshold <uth1>]            \\
-                                [-m2-upper-threshold <uth2>]            \\
+                                [--m1 <maskImage1>]                     \\
+                                [--m2 <maskImage2>]                     \\
+                                [--m1-lower-threshold <lth1>]           \\
+                                [--m2-lower-threshold <lth2>]           \\
+                                [--m1-upper-threshold <uth1>]           \\
+                                [--m2-upper-threshold <uth2>]           \\
+                                [--angle-threshold <angle>]             \\
                                 [-v <verbosity>]                        \\
                                 [-o <outputPrefix>]                     \\
                                 [-O <outputDirectory>]                  \\
@@ -120,7 +122,7 @@ G_SYNOPSIS="
 
         [-A <reconAlg>] [-I <imageModel>] (Optional: Default 'fact'/'DTI')
         Specifies the reconstruction algorithm and model to use. The default
-        algorithm is 'fact', and the default model is DTI.
+        algorithm is 'fact', and the default model is DTI. 
         
         [-m1 <maskImage1>] (Optional: Default 'dwi')
         [-m2 <maskImage2>] (Optional: Default 'none')
@@ -141,6 +143,9 @@ G_SYNOPSIS="
         the entire volume, use '1.0'.  The mask image that is used depends on what is
         specified for the '-mN' option.  This option only has an effect if the
         mask is not 'dwi'.
+        
+        [--angle-threshold <angle>] (Optional: Default $G_ANGLETHRESHOLD)
+        Use the <angle> as the threshold angle for tracking.
        
         -v <level> (Optional)
         Verbosity level.
@@ -295,7 +300,7 @@ EM_mriconvert="conversion failed. Please check source DICOM file."
 EM_stage2nii="some error occured while running 'mri_convert'."
 EM_tableRows="the 'wc' command returned an error."
 EM_stageRun="I encountered an error processing this stage."
-EM_reconAlg="must be either 'fact' or 'rk2'."
+EM_reconAlg="must be either 'fact', 'rk2', 'sl' or 'tl'."
 EM_imageModel="must be either 'hardi' or 'dti'."
 EM_maskImage="must be either 'dwi', 'fa', or 'adc'."
 EM_fa="No <lth> has been specified."
@@ -372,7 +377,8 @@ while getoptex "v: f g: d: D: b: B: I: A: o: O: X Y Z t: h E U \
                 m1-lower-threshold: \
                 m2-lower-threshold: \
                 m1-upper-threshold: \
-                m2-upper-threshold:" "$@" ; do
+                m2-upper-threshold: \
+                angle-threshold" "$@" ; do
         case "$OPTOPT"
         in
                 v) Gi_verbose=$OPTARG                                   ;;
@@ -394,6 +400,8 @@ while getoptex "v: f g: d: D: b: B: I: A: o: O: X Y Z t: h E U \
                 m2-upper-threshold) 
                    G_UPPERTHRESHOLD2=$OPTARG                            ;;
                 m2) G_MASKIMAGE2=$OPTARG                                ;;
+                angle-threshold) 
+                   G_ANGLETHRESHOLD=$OPTARG                             ;;
                 o) G_OUTPUTPREFIX=$OPTARG                               ;;
                 O) G_OUTDIR=$OPTARG                                     ;;
                 X) G_iX="-ix"                                           ;;
@@ -455,7 +463,7 @@ cprint          "Mask Image 1"  "[ $G_MASKIMAGE1 ]"
 cprint          "Mask Image 2"  "[ $G_MASKIMAGE2 ]"
 
 
-if [[ $G_RECONALG != "fact" && $G_RECONALG != "rk2" ]] ; then
+if [[ $G_RECONALG != "fact" && $G_RECONALG != "rk2" && $G_RECONALG != "tl" && $G_RECONALG != "sl" ]] ; then
     fatal reconAlg
 fi
 if [[ $G_IMAGEMODEL != "dti" && $G_IMAGEMODEL != "hardi" ]] ; then
@@ -826,7 +834,7 @@ if (( ${barr_stage[4]} )) ; then
                 ${NIIOUT4}.trk                          \
                 $EXOPTS                                 \
                 -$G_RECONALG                            \
-                -at 35                                  \
+                -at $G_ANGLETHRESHOLD                   \
                 -it nii                                 \
                 -m $MASK1                               \
                 $MASK2                                  \
@@ -838,13 +846,18 @@ if (( ${barr_stage[4]} )) ; then
         RECONALG=""
         if [[ "$G_RECONALG" == "rk2" ]] ; then
             RECONALG="-rk2";
-        fi
+        elif [[ "$G_RECONALG" == "tl" ]] ; then
+            RECONALG="-tl";
+        elif [[ "$G_RECONALG" == "sl" ]] ; then
+            RECONALG="-sl";
+        fi                
+
         STAGECMD="${STAGEEXE}                           \
                 ${NIIOUT3}                              \
                 ${NIIOUT4}.trk                          \
                 $EXOPTS                                 \
                 $RECONALG                               \
-                -at 35                                  \
+                -at G_ANGLETHRESHOLD                    \
                 -it nii                                 \
                 -m $MASK1                               \
                 $MASK2                                  \

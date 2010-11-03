@@ -31,6 +31,7 @@ declare -i Gb_useLowerThreshold2=0
 declare -i Gb_useUpperThreshold2=0
 declare -i Gb_useMask1=0
 declare -i Gb_useMask2=0
+declare -i Gb_useAngleThreshold=0
 declare -i Gi_bValue=1000
 declare -i Gb_bValueOverride=0
 declare -i Gb_b0override=0
@@ -62,6 +63,7 @@ G_MASKIMAGE1="-x"
 G_LOWERTHRESHOLD2="-x"
 G_UPPERTHRESHOLD2="-x"
 G_MASKIMAGE2="-x"
+G_ANGLETHRESHOLD="-x"
 
 
 G_CLUSTERNAME=seychelles
@@ -99,12 +101,13 @@ G_SYNOPSIS="
                                 [-g <gradientTableFile>] [-G]           \\
                                 [-B <b0vols>]                           \\
                                 [-A <reconAlg>] [-I <imageModel>]       \\
-                                [--m1 <maskImage1>]                      \\
-                                [--m2 <maskImage2>]                      \\
-                                [--m1-lower-threshold <lth>]             \\
-                                [--m2-lower-threshold <lth>]             \\
-                                [--m1-upper-threshold <uth>]             \\
-                                [--m2-upper-threshold <uth>]             \\
+                                [--m1 <maskImage1>]                     \\
+                                [--m2 <maskImage2>]                     \\
+                                [--m1-lower-threshold <lth>]            \\
+                                [--m2-lower-threshold <lth>]            \\
+                                [--m1-upper-threshold <uth>]            \\
+                                [--m2-upper-threshold <uth>]            \\
+                                [--angle-threshold <angle>]             \\                                
                                 [-L <logDir>]                           \\
                                 [-v <verbosity>]                        \\
                                 [-O <outputDir>] [-o <suffix>]          \\
@@ -197,6 +200,9 @@ G_SYNOPSIS="
         the entire volume, use '1.0'.  The mask image that is used depends on what is
         specified for the '-mN' option.  This option only has an effect if the
         mask is not 'dwi'.
+        
+        [--angle-threshold <angle>] (Optional: Default $G_ANGLETHRESHOLD)
+        Use the <angle> as the threshold angle for tracking.       
         
         -g <gradientTableFile> (Optional)
         By default, 'tract_meta.bash' will attempt to determine the correct
@@ -424,7 +430,7 @@ EM_noDicomDirArg="it seems as though you didn't specify a -D <dicomInputDir>."
 EM_unknownManufacturer="the manufacturer field for the DICOM data is unknown."
 EM_ge_diffusionProcess="some internal error occurred."
 EM_siemens_diffusionProcess="some internal error occurred."
-EM_reconAlg="must be either 'fact' or 'rk2'."
+EM_reconAlg="must be either 'fact', 'rk2', 'sl', or 'tl'."
 EM_imageModel="must be either 'hardi' or 'dti'."
 EM_fa="No <lth> has been specified."
 EM_badMigrateDir="I couldn't access <migrateDir>"
@@ -585,6 +591,7 @@ while getoptex "v: D: d: B: A: I: k E L: O: R: o: f \
                 m2-lower-threshold: \
                 m1-upper-threshold: \
                 m2-upper-threshold: \
+                angle-threshold:    \
                 migrate-analysis:" "$@" ; do
         case "$OPTOPT"
         in
@@ -620,7 +627,10 @@ while getoptex "v: D: d: B: A: I: k E L: O: R: o: f \
                     G_LOWERTHRESHOLD2=$OPTARG       ;;                    
             m2-upper-threshold)
                     Gb_useUpperThreshold2=1                            
-                    G_UPPERTHRESHOLD2=$OPTARG       ;;        
+                    G_UPPERTHRESHOLD2=$OPTARG       ;;
+            angle-threshold) 
+                    Gb_useAngleThreshold=1
+                    G_ANGLETHRESHOLD=$OPTARG        ;;                                                               
             G)      Gb_GEGradientInlineFix=0        ;;
             S)      G_DICOMSERIESLIST=$OPTARG       ;;
             f)      Gb_forceStage=1                 ;;
@@ -710,7 +720,7 @@ G_IMAGEMODEL=$(echo $G_IMAGEMODEL | tr '[A-Z]' '[a-z]')
 cprint          "Algorithm"     "[ $G_RECONALG ]"
 cprint          "Image Model"   "[ $G_IMAGEMODEL ]"
 
-if [[ $G_RECONALG != "fact" && $G_RECONALG != "rk2" ]] ; then
+if [[ $G_RECONALG != "fact" && $G_RECONALG != "rk2" && $G_RECONALG != "sl" $G_RECONALG != "tl" ]] ; then
     fatal reconAlg
 fi
 if [[ $G_IMAGEMODEL != "dti" && $G_IMAGEMODEL != "hardi" ]] ; then
@@ -956,6 +966,7 @@ if (( ${barr_stage[2]} )) ; then
     UPPERTHRESHOLD2=""
     MASK1=""
     MASK2=""
+    ANGLETHRESHOLD=""
     if (( Gb_skipEddyCurrentCorrection )) ; then STAGESTEPS="1345" ; fi
     if (( Gb_useLowerThreshold1 )) ; then LOWERTHRESHOLD1="--m1-lower-threshold $G_LOWERTHRESHOLD1" ; fi
     if (( Gb_useUpperThreshold1 )) ; then UPPERTHRESHOLD1="--m1-upper-threshold $G_UPPERTHRESHOLD1" ; fi
@@ -963,6 +974,7 @@ if (( ${barr_stage[2]} )) ; then
     if (( Gb_useLowerThreshold2 )) ; then LOWERTHRESHOLD2="--m2-lower-threshold $G_LOWERTHRESHOLD2" ; fi
     if (( Gb_useUpperThreshold2 )) ; then UPPERTHRESHOLD2="--m2-upper-threshold $G_UPPERTHRESHOLD2" ; fi
     if (( Gb_useMask2 )) ; then MASK2="--m2 $G_MASKIMAGE2" ; fi    
+    if (( Gb_useAngleThreshold )) ; then ANGLETHRESHOLD="--angle-threshold $G_ANGLETHRESHOLD" ; fi
     EXOPTS=$(eval expertOpts_parse $STAGE2PROC)
     SKIPDIFFUNPACK=""
     if (( !Gb_useDiffUnpack )) ; then SKIPDIFFUNPACK="-U"; fi
@@ -988,6 +1000,7 @@ if (( ${barr_stage[2]} )) ; then
                 $LOWERTHRESHOLD2                        \
                 $UPPERTHRESHOLD2                        \
                 $MASK2                                  \
+                $ANGLETHRESHOLD                         \
                 -g $G_GRADIENTFILE                      \
                 -O $STAGE2DIR                           \
                 -o ${MRID}${G_OUTSUFFIX}                \
