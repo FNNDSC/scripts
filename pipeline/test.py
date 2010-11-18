@@ -19,7 +19,7 @@ pipelineStagesDict = {
 
 ps = pipeline_status.PipelineStatus()
 ps.Pipeline.name = 'connectome'
-stage1 = ps.AddStage(1, 'dicom_seriesCollect.bash')
+stage1 = ps.AddStage('dicom_seriesCollect.bash')
 # Exec can run - will be true, no inputs
 # Now you would run stage 1 and check the log file for output filename
 dcmT1Output = ps.AddStageOutput(stage = stage1, 
@@ -27,7 +27,7 @@ dcmT1Output = ps.AddStageOutput(stage = stage1,
                                 outputFilePath = 'dir_from_logfile/file_from_logfile.dcm', 
                                 outputName = 'dcm' )
 
-stage2 = ps.AddStage(2, 'tract')
+stage2 = ps.AddStage('tract')
 # Exec can run - will be true, no inputs
 trkOutput = ps.AddStageOutput(stage = stage2, 
                               rootDir = '/chb/osx1927/1/users/dicom/postproc/projects/ginsburg/Anonymous-20080811_UNKNOWN_AGE-20100528-1275052813128852248-connectome/tract_meta-stage2-dcm2trk.bash/final-trackvis/', 
@@ -42,7 +42,7 @@ b0Output = ps.AddStageOutput(stage = stage2,
                               outputFilePath = '*_b0.nii', 
                               outputName = 'b0' )
 
-stage3 = ps.AddStage(3, 'register')
+stage3 = ps.AddStage('register')
 ps.AddStageInputFromObject(stage3, dcmT1Output)
 ps.AddStageInputFromObject(stage3, b0Output)
 

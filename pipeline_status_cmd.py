@@ -13,29 +13,34 @@
 #
 # EXAMPLES
 #
-#    1. Create a new pipeline in file 
+#    - Create a new pipeline in file 
 #
 #        pipeline_status_cmd --createPipeline <pipelineName> pipeline.status
 #
-#    2. Add a stage to a pipeline
+#    - Add a stage to a pipeline
 #
-#        pipeline_status_cmd --addStage <stageName> -stageNumber <stageNumber> pipeline.status
+#        pipeline_status_cmd --addStage <stageName>  pipeline.status
 #
-#    3. Add an input to a stage
+#    - Add a new type
 #
-#        pipeline_status_cmd --addInput <stageNumber> --rootDir <rootDir> --filePath <filePath> --name <name> pipeline.status
+#        pipeline_status_cmd --addType <typeTag> --typeDesc <typeDesc>
 #
-#    4. Add an output to a stage
+#    - Add an input to a stage
 #
-#        pipeline_status_cmd --addOutput <stageNumber> --rootDir <rootDir> --filePath <filePath> --name <name> pipeline.status
+#        pipeline_status_cmd --addInput <stageName> --rootDir <rootDir> --filePath <filePath> [--name <name>] [--typeTag <typeTag>] pipeline.status
+# 
+#    - Add an output to a stage
 #
-#    5. Query whether a stage can run?
+#        pipeline_status_cmd --addOutput <stageName> --rootDir <rootDir> --filePath <filePath> [--name <name>] [--typeTag <typeTag>] pipeline.status 
+#
+#    - Query whether a stage can run?
 #    
-#        pipeline_status_cmd --queryCanRun <stageNum>
+#        pipeline_status_cmd --queryCanRun <stageName>
 #
-#    6. Query wherea stage ran?
+#    - Query wherea stage ran?
 #
-#        pipeline_status_cmd --queryRanOK <stageNum>
+#        pipeline_status_cmd --queryRanOK <stageName>
+#
 #
 # AUTHORS
 #
@@ -56,24 +61,26 @@ def main():
                       dest="createPipeline",
                       help="Create a new pipeline with the given name")
     parser.add_option("--queryCanRun",
-                      dest="queryCanRun",
-                      type="int",
+                      dest="queryCanRun",                      
                       help="Query whether a stage's inputs have been created")    
     parser.add_option("--queryRanOK",
-                      dest="queryRanOK",
-                      type="int",                      
+                      dest="queryRanOK",                                        
                       help="Query whether a stage ran OK")
+    parser.add_option("--addType",
+                      dest="addType",
+                      help="Create a new type with the given typeTag")
+    parser.add_option("--typeDesc",
+                      dest="typeDesc",
+                      help="Set type description for new type")    
     parser.add_option("--addStage",
                       dest="addStage",
                       help="Create a new stage with the given name")
     parser.add_option("--addInput",                      
-                      dest="addInput",
-                      type="int",                      
+                      dest="addInput",                                        
                       help="Add input to stage number")
     parser.add_option("--addOutput",
                       dest="addOutput",
-                      default=False,
-                      type="int",
+                      default=False,                      
                       help="Add output to stage number")    
     parser.add_option("--rootDir",
                       dest="rootDir",
@@ -84,10 +91,9 @@ def main():
     parser.add_option("--name",
                       dest="name",
                       help="Name of stage input/output")
-    parser.add_option("--stageNumber",
-                      dest="stageNumber",
-                      type="int",
-                      help="Operate on the provided stage number")
+    parser.add_option("--typeTag",
+                      dest="typeTag",
+                      help="Type tag for new input/output")
     parser.add_option("-v", "--verbose",
                       action="store_true", dest="verbose")
     (options, args) = parser.parse_args()
@@ -113,26 +119,36 @@ def main():
         # Check if stage can run
         if options.queryCanRun:
             stage = ps.GetStage(options.queryCanRun)
-            sys.exit(ps.CanRun(stage))
+            exitValue = 1
+            if ps.CanRun(stage):
+                exitValue = 0
+            sys.exit(exitValue)
                             
         # Check if stage ran OK                            
         if options.queryRanOK:
-            stage = ps.GetStage(options.QueryCanRun)
-            sys.exit(ps.RanOK(stage))
+            stage = ps.GetStage(options.queryRanOK)
+            exitValue = 1
+            if ps.RanOK(stage):
+                exitValue = 0
+            sys.exit(exitValue)            
             
         # Add a new stage            
         if options.addStage:
-            ps.AddStage(options.stageNumber, options.addStage)
-
+            ps.AddStage(options.addStage)
+            
+        # Add a new type
+        if options.addType:
+            ps.AddType(options.addType, options.typeDesc)
+        
         # Add a new stage input
-        if options.addInput:
+        if options.addInput:            
             stage = ps.GetStage(options.addInput)
-            ps.AddStageInput(stage, options.rootDir, options.filePath, options.name)
+            ps.AddStageInput(stage, options.rootDir, options.filePath, options.name, options.typeTag)
 
         # Add a new stage output            
         if options.addOutput:
             stage = ps.GetStage(options.addOutput)
-            ps.AddStageOutput(stage, options.rootDir, options.filePath, options.name)
+            ps.AddStageOutput(stage, options.rootDir, options.filePath, options.name, options.typeTag)
             
     if options.verbose:
         print "Saving pipeline file: " + args[0]

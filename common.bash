@@ -726,6 +726,110 @@ function migrateAnalysis_enable
     cd $origDir
 }
 
+function pipelineStatus_create
+{
+    # ARGS
+    # $1                    Pipeline name
+    # $2                    Remaining arguments should be a string
+    #                       with the names of the stages to add.
+    #                       Each stage will be numberered starting at 1.
+    #
+    # DESC
+    #
+    # Create pipeline status with specified stages    
+    local pipelineName=$1
+    local stages=$2
+    
+    # Create the pipeline
+    pipeline_status_cmd.py --createPipeline $pipelineName ${G_LOGDIR}/${G_SELF}.status
+    
+    # Add the stages
+    for STAGE in $stages ; do            
+            pipeline_status_cmd.py --addStage $STAGE ${G_LOGDIR}/${G_SELF}.status                            
+    done        
+}
+
+function pipelineStatus_addInput
+{
+    # ARGS
+    # $1                    Stage name
+    # $2                    Root directory
+    # $3                    File path
+    # $4                    Name [optional, default: File path]
+    # $5                    Type [optional, default: None]
+    #
+    # DESC
+    #
+    # Add input to given stage
+    
+    NAME=""
+    TYPETAG=""
+    if (( ${#4} )) ; then 
+        NAME="--name $4"      
+    fi
+    if (( ${#5} )) ; then
+        TYPETAG="--typeTag $5"
+    fi        
+    
+    (pipeline_status_cmd.py --addInput $1 --rootDir $2 \
+                            --filePath $3 ${NAME} ${TYPETAG} ${G_LOGDIR}/${G_SELF}.status)
+    return $?                                 
+}
+
+function pipelineStatus_addOutput
+{
+    # ARGS
+    # $1                    Stage name
+    # $2                    Root directory
+    # $3                    File path
+    # $4                    Name [optional, default: File path]
+    # $5                    Type [optional, default: None]    
+    #
+    # DESC
+    #
+    # Add output to given stage
+    
+    NAME=""
+    TYPETAG=""
+    if (( ${#4} )) ; then 
+        NAME="--name $4"      
+    fi
+    if (( ${#5} )) ; then
+        TYPETAG="--typeTag $5"
+    fi        
+    
+    (pipeline_status_cmd.py --addOutput $1 --rootDir $2 \
+                            --filePath $3 ${NAME} ${TYPETAG} ${G_LOGDIR}/${G_SELF}.status)
+    return $?                                 
+}
+
+function pipelineStatus_canRun
+{
+    # ARGS
+    # $1                    Stage name
+    #
+    # DESC
+    # Check whether a pipeline can run (e.g., whether its 
+    # dependencies have been satisfied)
+    FAIL="failure"
+	PASS="ok"
+	
+	pipeline_status_cmd.py --queryCanRun $1 ${G_LOGDIR}/${G_SELF}.status
+	ret=$?
+    
+    if (( Gi_verbose )) ; then
+        printf "Checking on stage $1 inputs"
+        if (( $ret )) ; then
+            printf "%*s\n" 	$G_RC	"[ $FAIL ]"
+        else
+            printf "%*s\n" 	$G_RC	"[ $PASS ]"
+        fi
+	fi
+    return $ret
+}
+
+
+
 #
 # Typical getops loop:
 #
