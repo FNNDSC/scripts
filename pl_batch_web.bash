@@ -21,6 +21,6 @@ PATH=$PATH:$2
 export PATH
 echo $PATH
 PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmt
-export $PYTHONPATH
+export PYTHONPATH
 cd $4
 pl_batch.bash $3 > $5.std 2> $5.err
