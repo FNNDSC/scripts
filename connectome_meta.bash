@@ -70,7 +70,7 @@ G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
 G_SCHEDULELOG="schedule.log"
 G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
 
-G_STAGES="123456"
+G_STAGES="123"
 G_TRACT_META_STAGES="12"
 
 G_CLUSTERUSER=""
@@ -310,15 +310,8 @@ STAGES
                 Collect T1 DICOM series from a given directory.
         2 - tract_meta.bash
                 Compute tractography using the Diffusion Toolkit.
-        3 - dcm_coreg.bash
-                Register T1 -> B0 diffusion volume                        
-        4 - freesurfer
-                Run freesurfer on registered volume
-        5 - parcellate.bash
-                Parcellate freesurfer surface using ROI atlases
-        6 - compute_connectivity.bash
-                Generate connectivity matrix for parcellated 
-                surfaces and tratography.
+        3 - cmt
+                Run the LTS Connectome Mapping Toolkit
 
  OUTPUT
         Each processing stage has its own set of inputs and outputs. Typically
@@ -350,10 +343,9 @@ STAGES
         o tract_meta.bash -- functionally similar pipeline geared for
           tractography processing.
 
-        o fs_meta.bash -- functionally similar pipeline geared for
-          FreeSurfer processing.
-
  HISTORY
+        3 December 2010
+        o Connect to the cmt pipeline
 
         27 September 2010
         o Initial design and coding.
@@ -553,7 +545,8 @@ cprint  "hostname"      "[ $(hostname) ]"
 
 ## Check on script preconditions
 REQUIREDFILES="common.bash tract_meta.bash fs_meta.bash dcm_coreg.bash \
-               dicom_seriesCollect.bash Slicer3 dcm_mkIndx.bash"
+               dicom_seriesCollect.bash Slicer3 dcm_mkIndx.bash \
+               pipeline_status_cmd.py"
 for file in $REQUIREDFILES ; do
         printf "%40s"   "Checking for $file"
         file_checkOnPath $file || fatal fileCheck
@@ -653,11 +646,18 @@ done
 ret_check $?
 
 DATE=$(date)
-
+        
+# Create pipeline status file
+pipelineStatus_create "connectome_meta.bash"            \
+                        "dicom_seriesCollect.bash       \
+                        tract_meta.bash                 \
+                        cmt"
+                                                
 # Stage 1
 STAGE1PROC=dicom_seriesCollect.bash
+pipelineStatus_addInput ${STAGE1PROC} ${G_DICOMINPUTDIR} $G_DICOMT1INPUTFILE "dcm"    
 if (( ${barr_stage[1]} )) ; then
-    statusPrint "$(date) | Processing STAGE 1 - Collecting T1 DICOM | START" "\n"
+    statusPrint "$(date) | Processing STAGE 1 - Collecting T1 DICOM | START" "\n"        
     STAGE=1-$STAGE1PROC
     EXOPTS=$(eval expertOpts_parse $STAGE1PROC)
     if (( Gb_useOverrideOut )) ;  then
@@ -695,10 +695,15 @@ STAGE1DIR=$(cat $LOGFILE | grep Collection | tail -n 1  |\
 
 if (( ! ${#STAGE1DIR} )) ; then fatal dependencyStage; fi
 STAGE1OUT=$STAGE1DIR
+pipelineStatus_addOutput ${STAGE1PROC} $STAGE1DIR $G_DICOMT1INPUTFILE "dcm"
 
 # Stage 2
 STAGE2PROC=tract_meta.bash
+pipelineStatus_addInput ${STAGE2PROC} ${G_DICOMINPUTDIR} $G_DICOMDTIINPUTFILE "dti"
 if (( ${barr_stage[2]} )) ; then
+    
+    pipelineStatus_canRun ${STAGE2PROC} || fatal dependencyStage
+    
     statusPrint "$(date) | Processing STAGE 2 - Tractography | START" "\n"
     STAGE=2-$STAGE2PROC
     EXOPTS=$(eval expertOpts_parse $STAGE2PROC)
@@ -800,90 +805,67 @@ G_OUTDIR=${G_OUTDIR}/${MRID}${G_OUTSUFFIX}
 DCM2TRKLOG=$(find $G_OUTDIR -name dcm2trk.bash.log)
 fileExist_check $DCM2TRKLOG || fatal badLogFile
 
-DIFFRECONBASE=$(cat $DCM2TRKLOG | grep _recon | tail -1 | awk -F \| '{print $3}' | awk '{print $4}')
+DIFFRECONBASE=$(cat $DCM2TRKLOG | grep " dti_recon" | tail -1 | awk -F \| '{print $3}' | awk '{print $5}')
+GRADMATRIX=$(cat $DCM2TRKLOG | grep " dti_recon" | tail -1 | awk -F \| '{print $3}' | \
+            grep -oh "\-gm .*" | awk '{print $2}')
+BVALUE=$(cat $DCM2TRKLOG | grep " dti_recon" | tail -1 | awk -F \| '{print $3}' | \
+         grep -oh "\-b .*" | awk '{print $2}')
+B0VOLS=$(cat $DCM2TRKLOG | grep " dti_recon" | tail -1 | awk -F \| '{print $3}' | \
+         grep -oh "\-b0 .*" | awk '{print $2}')                
+DIFFBASEOUTDIR=$(dirname $(dirname $DIFFRECONBASE))
 DIFFB0VOLUME=${DIFFRECONBASE}_b0.nii
+DIFFDCMDIR=$(dirname $(cat $DCM2TRKLOG | grep diff_unpack | tail -2 | head -n 1 | \
+            awk -F \| '{print $3}' | awk '{print $4}'))
 printf "%40s"   "Checking for $DIFFB0VOLUME"
 fileExist_check $DIFFB0VOLUME || fatal dependencyStage
+pipelineStatus_addOutput ${STAGE2PROC} ${DIFFBASEOUTDIR}/final-trackvis "*.trk" "trk"
+pipelineStatus_addOutput ${STAGE2PROC} $(dirname ${DIFFB0VOLUME}) $(basename ${DIFFB0VOLUME}) "b0"
 
 
 # Stage 3
-STAGE3PROC=register
+STAGE3PROC=cmt
+pipelineStatus_addInput ${STAGE3PROC} $(dirname ${DIFFB0VOLUME}) $(basename ${DIFFB0VOLUME}) "b0"
+pipelineStatus_addInput ${STAGE3PROC} $STAGE1OUT $G_DICOMT1INPUTFILE "t1"
+
 if (( ${barr_stage[3]} )) ; then
-    statusPrint "$(date) | Processing STAGE 3 - Registration | START" "\n"
+    
+    pipelineStatus_canRun ${STAGE3PROC} || fatal dependencyStage
+    
+    statusPrint "$(date) | Processing STAGE 3 - cmt | START" "\n"
     STAGE=3-$STAGE3PROC
     EXOPTS=$(eval expertOpts_parse $STAGE3PROC)
         
     statusPrint "Checking on stage 3 output directory"
     dirExist_check $G_OUTDIR/$STAGE || mkdir "$G_OUTDIR/$STAGE" || fatal badOutDir
     
+    CMTARGS="-p ${MRID}${G_OUTSUFFIX}       \
+             -d ${G_OUTDIR}/${STAGE}        \
+             --b0=${B0VOLS}                 \
+             --bValue=${BVALUE}             \
+             --gm=${GRADMATRIX}             \
+             --dtiDir=${DIFFDCMDIR}        \
+             --t1Dir=${STAGE1OUT}"
+             
+             
     # First convert input T1 to NII format
-    STAGECMD="mri_convert -it dicom -ot nii $STAGE1OUT/$G_DICOMT1INPUTFILE $G_OUTDIR/$STAGE/T1.nii"
+    STAGECMD="connectome_web.py $CMTARGS"
     STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
-    stage_run "$STAGE" "$STAGECMD"                                  \
-                "${G_LOGDIR}/${STAGE3PROC}-mri_convert.std"         \
-                "${G_LOGDIR}/${STAGE3PROC}-mri_convert.err"         \
-          || fatal stageRun
-          
-    # Now use Slicer3 RegisterImage module to compute registration matrix
-    STAGECMD="Slicer3 --launch RegisterImages                                   \
-                            --registration Rigid                                \
-                            --saveTransform $G_OUTDIR/$STAGE/T1_B0.tfm          \
-                            $DIFFB0VOLUME                                       \
-                            $G_OUTDIR/$STAGE/T1.nii"
-    STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
-    stage_run "$STAGE" "$STAGECMD"                                      \
-                "${G_LOGDIR}/${STAGE3PROC}-RigidRegistration.std"       \
-                "${G_LOGDIR}/${STAGE3PROC}-RigidRegistration.err"       \
-          || fatal stageRun
-    
-    # Finally use Slice3 ResampleVolume2 to apply the transform, keeping
-    # the voxel size/spacing the same
-    STAGECMD="Slicer3 --launch                                                  \
-                 ResampleVolume2 -f $G_OUTDIR/$STAGE/T1_B0.tfm                  \
-                            $G_OUTDIR/$STAGE/T1.nii                             \
-                            $G_OUTDIR/$STAGE/T1_to_B0.nii"
-    STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
-    stage_run "$STAGE" "$STAGECMD"                                      \
-                "${G_LOGDIR}/${STAGE3PROC}-ResampleVolume2.std"         \
-                "${G_LOGDIR}/${STAGE3PROC}-ResampleVolume2.err"         \
+    stage_run "$STAGE" "$STAGECMD"                      \
+                "${G_LOGDIR}/${STAGE3PROC}.std"         \
+                "${G_LOGDIR}/${STAGE3PROC}.err"         \
           || fatal stageRun
            
-    statusPrint "$(date) | Processing STAGE 3 - Registration | END" "\n"
+    statusPrint "$(date) | Processing STAGE 3 - cmt | END" "\n"
 fi
-STAGE3OUT="$G_OUTDIR/3-$STAGE3PROC/T1_to_B0.nii"
-printf "%40s"   "Checking for $STAGE3OUT"
-fileExist_check  $STAGE3OUT || fatal dependencyStage
 
-# Stage 4
-STAGE4PROC=freesurfer
-if (( ${barr_stage[4]} )) ; then
-    statusPrint "$(date) | Processing STAGE 4 - freesurfer | START" "\n"
-    STAGE=4-$STAGE4PROC
-    EXOPTS=$(eval expertOpts_parse $STAGE4PROC)
-            
-    # Initialize recon-all with the registered T1
-    export SUBJECTS_DIR=$G_OUTDIR
-    STAGECMD="recon-all -i $STAGE3OUT -s $STAGE -force"
-    STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
-    stage_run "$STAGE" "$STAGECMD"                                  \
-                "${G_LOGDIR}/${STAGE4PROC}-recon-all-i.std"         \
-                "${G_LOGDIR}/${STAGE4PROC}-recon-all-i.err"         \
-          || fatal stageRun
-          
-    statusPrint "Checking stage dependencies"
-    fileExist_check $G_OUTDIR/$STAGE/mri/orig/001.mgz || fatal dependencyStage
-          
-    # Now run full recon-all
-    export SUBJECTS_DIR=$G_OUTDIR
-    STAGECMD="recon-all -autorecon-all $G_RECONALLARGS -s $STAGE"    
-    STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
-    stage_run "$STAGE" "$STAGECMD"                              \
-                "${G_LOGDIR}/${STAGE4PROC}-autorecon-all.std"   \
-                "${G_LOGDIR}/${STAGE4PROC}-autorecon-all.err"   \
-          || fatal stageRun
-                         
-    statusPrint "$(date) | Processing STAGE 4 - freesurfer | END" "\n"
-fi
+# TODO: Check for output of cmt pipeline, although its status file
+# already defines all of its outputs so I'm not really sure we need
+# to check here.
+#STAGE3OUT="$G_OUTDIR/3-$STAGE3PROC/T1_to_B0.nii"
+#printf "%40s"   "Checking for $STAGE3OUT"
+#fileExist_check  $STAGE3OUT || fatal dependencyStage
+
+#pipelineStatus_addOutput ${STAGE3PROC} $(dirname ${STAGE3OUT}) $(basename ${STAGE3OUT}) "T1_to_B0"
 
 STAGE="Normal termination -- collecting log files"
 statusPrint     "Checking final log dir"

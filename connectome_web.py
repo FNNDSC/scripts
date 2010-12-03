@@ -133,13 +133,17 @@ def main():
     
     # XXX: These are hardcoded for now until I figure out how they
     #      should be set
-    conf.project_dir = '/chb/users/ginsburg/LTS5-5/cmt'
+    conf.project_dir = '/chb/arch/python/cmt'
     
     # Setup and parse command-line options
     options = parseCommandLine(conf)
             
     # Prepare the directory structure for execution
     prepForExecution(conf, options)
+    
+    # Before running, reset the pipeline status because it will 
+    # get created in mapit()
+    conf.pipeline_status = cmt.pipeline_status.PipelineStatus()
         
     # Execute the 'cmt' pipeline!
     cmt.connectome.mapit(conf)
