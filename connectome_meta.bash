@@ -838,6 +838,25 @@ if (( ${barr_stage[3]} )) ; then
     statusPrint "Checking on stage 3 output directory"
     dirExist_check $G_OUTDIR/$STAGE || mkdir "$G_OUTDIR/$STAGE" || fatal badOutDir
     
+    
+    # Due to an issue with enthought traits, currently the cmt pipeline
+    # requires that there be an X server present to run.  This should
+    # be fixed in enthought traits 3.4+, but for now invoke Xvfb as a
+    # workaround
+    
+    # Find a free server, this code came from the standard xvfb-run script
+    i=99
+    while [ -f /tmp/.X$i-lock ]; do
+        i=$(($i + 1))
+    done
+    G_XVFB_SERVERNUM=$i
+    
+    export DISPLAY=:${G_XVFB_SERVERNUM}
+    cprint "Setting Xvfb display"	"[ $G_XVFB_SERVERNUM ]"
+    XVFBCMD="Xvfb :${G_XVFB_SERVERNUM} -screen 1 1600x1200x24 2>/dev/null"
+    echo "$XVFBCMD &" | sh
+    
+    
     CMTARGS="-p ${MRID}${G_OUTSUFFIX}       \
              -d ${G_OUTDIR}/${STAGE}        \
              --b0=${B0VOLS}                 \
@@ -854,6 +873,10 @@ if (( ${barr_stage[3]} )) ; then
                 "${G_LOGDIR}/${STAGE3PROC}.std"         \
                 "${G_LOGDIR}/${STAGE3PROC}.err"         \
           || fatal stageRun
+          
+    statusPrint	"Shutting down Xvfb"
+	ps -Af  | grep "Xvfb :${G_XVFB_SERVERNUM}" | grep -v $G_SELF | grep -v grep | awk '{print "kill -9 " $2}' | sh 2>/dev/null >/dev/null
+	ret_check $?          
            
     statusPrint "$(date) | Processing STAGE 3 - cmt | END" "\n"
 fi
