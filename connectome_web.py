@@ -52,6 +52,10 @@ def parseCommandLine(conf):
     parser.add_option("--t1Dir",
                       dest="t1Dir",
                       help="T1 DICOM Input directory")
+    parser.add_option("--skipCompletedStages",
+                      dest="skipCompletedStages",
+                      action="store_true",
+                      help="Skip previously completed stages.")
     (options, args) = parser.parse_args()
     if len(args) != 0:
         parser.error("Wrong number of arguments")
@@ -75,6 +79,9 @@ def parseCommandLine(conf):
 
     if options.bValue:
         conf.max_b0_val = options.bValue
+
+    if options.skipCompletedStages:
+        conf.skip_completed_stages = True
         
     return options
     
