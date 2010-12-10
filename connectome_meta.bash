@@ -611,7 +611,7 @@ if [[ "$G_MIGRATEANALYSISDIR" != "-x" ]] ; then
     G_MIGRATEANALYSISDIR=$(pwd)
     migrateAnalysis_enable ${G_MIGRATEANALYSISDIR}/${MRID}${G_OUTSUFFIX} \
                            ${G_OUTDIR}/${MRID}${G_OUTSUFFIX} 
-                   
+    G_ORIG_OUTDIR=${G_OUTDIR}
     # Now, map the output directory to the migrate analysis directory
     G_OUTDIR=$G_MIGRATEANALYSISDIR
 fi
@@ -855,8 +855,7 @@ if (( ${barr_stage[3]} )) ; then
     cprint "Setting Xvfb display"	"[ $G_XVFB_SERVERNUM ]"
     XVFBCMD="Xvfb :${G_XVFB_SERVERNUM} -screen 1 1600x1200x24 2>/dev/null"
     echo "$XVFBCMD &" | sh
-    
-    
+
     CMTARGS="-p ${MRID}${G_OUTSUFFIX}       \
              -d ${G_OUTDIR}/${STAGE}        \
              --b0=${B0VOLS}                 \
@@ -864,7 +863,21 @@ if (( ${barr_stage[3]} )) ; then
              --gm=${GRADMATRIX}             \
              --dtiDir=${DIFFDCMDIR}        \
              --t1Dir=${STAGE1OUT}"
-             
+    CMTPKLARGS="${CMTARGS}"
+    if [[ "$G_MIGRATEANALYSISDIR" != "-x" ]] ; then
+	CMTPKLARGS=$(echo "${CMTPKLARGS}" | sed "s|${G_MIGRATEANALYSISDIR}|${G_ORIG_OUTDIR}|g")
+    fi
+    CMTPKLARGS="${CMTPKLARGS} --writePickle=${G_OUTDIR}/cmp_gui.pkl"
+    
+    # First write out the pickle so that if needed, the user can use
+    # the CMP GUI to pick up working on the data after it is finished
+    # processing automatically
+    STAGECMD="connectome_web.py $CMTPKLARGS"
+    STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+    stage_run "$STAGE" "$STAGECMD"                      \
+                "${G_LOGDIR}/${STAGE3PROC}.std"         \
+                "${G_LOGDIR}/${STAGE3PROC}.err"         \
+          || fatal stageRun
              
     # First convert input T1 to NII format
     STAGECMD="connectome_web.py $CMTARGS"

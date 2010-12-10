@@ -58,7 +58,7 @@ def parseCommandLine(conf):
                       help="Skip previously completed stages.")
     parser.add_option("--writePickle",
                       dest="writePickle",
-                      help="Filename to write pickle for use with CMT GUI.")
+                      help="Filename to write pickle for use with CMT GUI. Exit after writing pickle file.")
     (options, args) = parser.parse_args()
     if len(args) != 0:
         parser.error("Wrong number of arguments")
@@ -89,7 +89,7 @@ def parseCommandLine(conf):
     # This must be the last step, write the configuration object
     # out to a pickle file for use in the CMT GUI
     if options.writePickle:
-        conf.save_state(options.writePickle)
+        conf.save_state(os.path.abspath(options.writePickle))
 
     return options
     
@@ -148,6 +148,19 @@ def main():
     
     conf.diffusion_imaging_model = "DTI"
     conf.streamline_param = ''
+
+    # Enable all stages
+    conf.active_dicomconverter = True
+    conf.active_registration = True
+    conf.active_segmentation = True
+    conf.active_parcellation = True
+    conf.active_reconstruction = True
+    conf.active_tractography = True
+    conf.active_fiberfilter = True
+    conf.active_connectome = True
+    conf.active_statistics = True
+    conf.active_cffconverter = True
+    conf.skip_completed_stages = False
     
     # XXX: These are hardcoded for now until I figure out how they
     #      should be set
@@ -155,7 +168,11 @@ def main():
     
     # Setup and parse command-line options
     options = parseCommandLine(conf)
-            
+    
+    # If writing pickle, return
+    if options.writePickle:
+        return
+
     # Prepare the directory structure for execution
     prepForExecution(conf, options)
     
