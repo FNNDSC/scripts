@@ -17,7 +17,7 @@
 #    Children's Hospital Boston, 2010
 #
 
-import cmp,cmp.connectome,cmp.configuration,cmp.pipeline,cmp.logme
+import cmp,cmp.connectome,cmp.gui,cmp.configuration,cmp.pipeline,cmp.logme
 import sys
 import os
 import shutil, glob
@@ -56,6 +56,9 @@ def parseCommandLine(conf):
                       dest="skipCompletedStages",
                       action="store_true",
                       help="Skip previously completed stages.")
+    parser.add_option("--writePickle",
+                      dest="writePickle",
+                      help="Filename to write pickle for use with CMT GUI.")
     (options, args) = parser.parse_args()
     if len(args) != 0:
         parser.error("Wrong number of arguments")
@@ -82,7 +85,12 @@ def parseCommandLine(conf):
 
     if options.skipCompletedStages:
         conf.skip_completed_stages = True
-        
+
+    # This must be the last step, write the configuration object
+    # out to a pickle file for use in the CMT GUI
+    if options.writePickle:
+        conf.save_state(options.writePickle)
+
     return options
     
 def prepForExecution(conf, options):
@@ -123,8 +131,11 @@ def prepForExecution(conf, options):
 def main():
     """Main entrypoint for program"""
     
-    # Create configuration object
-    conf = cmp.configuration.PipelineConfiguration()
+    # Create configuration object (the GUI object
+    # is subclassed from PipelineConfiguration and
+    # we use this so we can serialize it as a pickle
+    # if we want to)
+    conf = cmp.gui.CMTGUI()
     
     # Default Options
     conf.freesurfer_home = os.environ['FREESURFER_HOME']
