@@ -135,7 +135,7 @@ def main():
     # is subclassed from PipelineConfiguration and
     # we use this so we can serialize it as a pickle
     # if we want to)
-    conf = cmp.gui.CMTGUI()
+    conf = cmp.gui.CMPGUI()
     
     # Default Options
     conf.freesurfer_home = os.environ['FREESURFER_HOME']
