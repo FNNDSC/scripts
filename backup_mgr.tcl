@@ -167,7 +167,7 @@ lappend auto_path       ~/src/devel/tcl_packages.devel
 # a backup, as well as the actual backup tgz files for each config.
 set dataPath            "/chb/users/rudolphpienaar/backup"
 # The <lst_archive> contains the names (filenames) of each backup archive
-set lst_archive                 {fnndsc-etc fnndsc-localUsers fnndsc-chb fnndsc-dicomProj}
+set lst_archive        {fnndsc-etc fnndsc-localUsers fnndsc-chb fnndsc-dicomProj scanner-oc-backup}
 
 ###\\\
 ###|||
