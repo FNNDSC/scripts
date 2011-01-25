@@ -1,0 +1,123 @@
+#!/usr/bin/perl
+
+use strict vars;
+use File::Basename;
+
+sub trim($)
+{
+        my $string = shift;
+        $string =~ s/^\s+//;
+        $string =~ s/\s+$//;
+        return $string;
+}
+
+my $outdir = shift;
+open(LOG, ">$outdir/../log/dcm_rename.log");
+if ( ! -d $outdir ) {
+  die "ERROR: $outdir is not a valid directory\n";
+}
+
+my $dir = shift;
+print LOG "DEBUG: dir = $dir\n";
+if ( ! -d $dir ) { 
+  die "ERROR: $dir is not a valid directory\n";
+}
+
+my $dcmfile = shift;
+print LOG "DEBUG: dcmfile = $dcmfile\n";
+if ( ! -f "$dir/$dcmfile" ) {
+  die "ERROR: $dcmfile does not exist\n";
+}
+
+my $callingApplication = shift;
+my $calledApplication = shift;
+print LOG "DEBUG: callingApplication = $callingApplication\n";
+print LOG "DEBUG: calledApplication  = $calledApplication\n";
+
+my $outScanLog = shift;
+open(SCANLOG, ">>$outScanLog");
+
+print LOG "DEBUG: outScanLog = $outScanLog\n";
+my %dcmhead;
+
+print LOG "DEBUG: opening file for dcmdump\n";
+my $DCMDICTPATH=$ENV{'DCMDICTPATH'};
+print LOG "DEBUG: DCMDICTPATH = $DCMDICTPATH\n";
+open(DUMP,"dcmdump +P 0010,0020 +P 0010,1010 +P 0008,1090 +P 0018,1000 +P 0008,0020 +P 0008,0030 +P 0008,0031 +P 0020,0011 +P 0020,0013 +P 0010,0030 +P 0008,0023 +p $dir/$dcmfile |") or die "$!\n";
+while (<DUMP>) {
+  print LOG "DEBUG: processing dcmdump loop...\n";
+  if (/^\((\d+,\d+)\) \S+ \[(.+)\]\s+\#/) {
+    $dcmhead{$1} = $2;
+    print LOG " \$1 = $1; \$2 = $2\n";
+  }
+  print LOG "\n";
+}
+close(DUMP);
+print LOG "DEBUG: closing DUMP\n";
+
+my @dcmtuple = split(/\./,$dcmhead{'0008,0031'});
+my $dcmmsecs = $dcmtuple[1];
+$dcmhead{'0008,0030'} =~ s/\./-/;
+
+my $scanner = $dcmhead{'0008,1090'};
+$scanner = 'UNKNOWN' if ($scanner !~ /\S/);
+$scanner =~ s/\s+/-/g;
+my $serial = $dcmhead{'0018,1000'};
+$serial = '000000000' if ($serial !~ /\S/);
+$serial =~ s/\s+/-/g;
+my $MRID = $dcmhead{'0010,0020'};
+$MRID = '000000000' if ($MRID !~ /\S/);
+$MRID =~ s/\s+/-/g;
+my $AGE = $dcmhead{'0010,1010'};
+
+# Modified by Dan G. - if age tag is not
+# found, calculate it based on the bday and
+# scandate
+if ($AGE !~ /\S/) {
+  my $BDAY = $dcmhead{'0010,0030'};
+  print LOG "BDAY = $BDAY\n";
+  my $SCANDATE = $dcmhead{'0008,0023'};
+  print LOG "SCANDATE = $SCANDATE\n";
+  $AGE = `age_calc.py $BDAY $SCANDATE`;
+  $AGE =~ s/\s+//g;
+  print LOG "CALCAGE = $AGE\n";
+}
+$AGE = '999Y' if ($AGE !~ /\S/);
+$AGE =~ s/\s+/-/g;
+print LOG "AGE = $AGE\n";
+
+my $newdir = $MRID . "-" . $AGE . "-" . $scanner . "-" . $serial . "-"
+    . $dcmhead{'0008,0020'} . "-" . $dcmhead{'0008,0030'};
+
+print LOG "DICOMDIR = $newdir\n";
+
+if ( ! -d "$outdir/$newdir" ) {
+  mkdir("$outdir/$newdir", 0777);
+}
+
+#if ($dcmfile =~ /(\d\d\d\d\d\d)$/) {
+#  $dcmmsecs = $1;
+#}
+
+my $fname;
+if ($dcmmsecs =~ /[0-9]/) {
+  $fname = sprintf("%d-%06d-%06d.dcm",$dcmmsecs,
+	$dcmhead{'0020,0011'},$dcmhead{'0020,0013'});
+} else {
+  $fname = sprintf("0-%06d-%06d.dcm",
+	$dcmhead{'0020,0011'},$dcmhead{'0020,0013'});
+}
+if ( -f "$outdir/$newdir/$fname" ) {
+  print "WARN: existing $newdir/$fname being overwritten\n";
+  unlink("$outdir/$newdir/$fname") or warn "ERROR: $!\n";
+}
+rename("$dir/$dcmfile","$outdir/$newdir/$fname") or die "ERROR: $fname: $!\n";
+
+my $date 	= trim(`date`);
+my $host 	= trim(`hostname`);
+
+print LOG "$date $host | $outdir | $newdir | $fname | $callingApplication | $calledApplication\n";
+close(LOG);
+
+print SCANLOG "$date $host | $outdir | $newdir | $fname | $callingApplication | $calledApplication\n";
+close(SCANLOG);
