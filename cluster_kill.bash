@@ -15,6 +15,7 @@ G_LOGFILE=${G_SELF}.log
 G_CLUSTERTYPE="-x"
 G_JOBID="-x"
 G_REMOTESERVERNAME="-x"
+G_CMD="-x"
 
 G_SYNOPSIS="
  NAME
@@ -25,6 +26,7 @@ G_SYNOPSIS="
 
         cluster_kill.bash    -C     <clusterType>          \\
                              -J     <jobID>                \\
+                             -c     <cmd>                  \\
                              [-r    <remoteServerName>]
                                                
                             
@@ -50,6 +52,10 @@ G_SYNOPSIS="
         Specify a job ID for the cluster job.  This job ID must be supported
         by the underlying clustering software.
 
+        -c <cmd>
+        The command to check on.  Used if a unique Job ID is not available (e.g.,
+        the local_* scripts).
+
         -r <remoteServerName> (Optional)
         The remote name of the server to run the status command on (for example, the
         head node of the cluster).
@@ -74,14 +80,17 @@ G_SYNOPSIS="
 # Actions
 A_noClusterTypeArg="checking on the -C <clusterType> argument"
 A_noJobIdArg="checking on the -J <JobId> argument"
+A_noCmdArg="check on the -c <cmd> argument"
 
 # Error messages
 EM_noClusterTypeArg="it seems as though you didn't specify a -C <clusterType>."
 EM_noJobIdArg="it seems as though you didn't specify a -J <JobID>."
+EM_noCmdArg="it seems as though you didn't specify a -c <cmd>."
 
 # Error codes
 EC_noClusterTypeArg=10
 EC_noJobIdArg=11
+EC_noCmdArg=12
 
 ###\\\ 
 # function definitions --->
@@ -92,12 +101,13 @@ EC_noJobIdArg=11
 # Process command options --->
 ###/// 
 
-while getopts r:C:J: option ; do
+while getopts r:C:J:c: option ; do
         case "$option" 
         in
                 C)      G_CLUSTERTYPE=$OPTARG;;
                 J)      G_JOBID=$OPTARG;;
                 r)      G_REMOTESERVERNAME=$OPTARG;;
+                c)      G_CMD=$OPTARG;;
                 \?)     synopsis_show;;
         esac
 done
@@ -114,11 +124,14 @@ statusPrint "Checking on <jobId>"
 if [[ "$G_JOBID" == "-x" ]] ; then fatal noJobIdArg ; fi
 ret_check $?
 
+statusPrint "Checking on <cmd>"
+if [[ "$G_CMD" == "-x" ]] ; then fatal noCmdArg; fi
+ret_check $?
 
 ###\\\
 # Main --->
 ###///
-ARGS="-J $G_JOBID"
+ARGS="-J $G_JOBID -c $G_CMD"
 if [[ "$G_REMOTESERVERNAME" != "-x" ]] ; then
 	ARGS="$ARGS -r $G_REMOTESERVERNAME"
 fi

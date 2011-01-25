@@ -79,11 +79,12 @@ EC_noJobIdArg=11
 # Process command options --->
 ###/// 
 
-while getopts r:J: option ; do
+while getopts r:J:c: option ; do
         case "$option" 
         in
                 J)      G_JOBID=$OPTARG;;
                 r)      G_REMOTESERVERNAME=$OPTARG;;
+                c)      ;;
                 \?)     synopsis_show;;
         esac
 done

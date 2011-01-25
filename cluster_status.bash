@@ -13,6 +13,7 @@ source common.bash
 
 G_LOGFILE=${G_SELF}.log
 G_CLUSTERTYPE="-x"
+G_CMD="-x"
 G_JOBID="-x"
 G_REMOTESERVERNAME="-x"
 
@@ -24,6 +25,7 @@ G_SYNOPSIS="
  SYNOPSIS
 
         cluster_status.bash  -C     <clusterType>          \\
+                             -c     <cmd>                  \\
                              [-J     <jobID>]              \\
                              [-r    <remoteServerName>]
                                                
@@ -46,6 +48,10 @@ G_SYNOPSIS="
         'mosix_status.bash'.  If you have your own clustering system, you can
         create new scripts with a new name and pass the <clusterType> argument
         specifying that name.
+
+        -c <cmd>
+        Command that was executed.  On local runs, this will be used rather than
+        the Job ID to identify the process.
 
         -J <jobId> (Optional)
         Specify a job ID to get the status of.  If not specified, returns the status
@@ -91,10 +97,11 @@ EC_noJobIdArg=11
 # Process command options --->
 ###/// 
 
-while getopts r:C:J: option ; do
+while getopts r:C:J:c: option ; do
         case "$option" 
         in
                 C)      G_CLUSTERTYPE=$OPTARG;;
+                c)      G_CMD=$OPTARG;;
                 J)      G_JOBID=$OPTARG;;
                 r)      G_REMOTESERVERNAME=$OPTARG;;
                 \?)     synopsis_show;;
@@ -114,6 +121,9 @@ if [[ "$G_CLUSTERTYPE" == "-x" ]] ; then fatal noClusterTypeArg ; fi
 ARGS=""
 if [[ "$G_JOBID" != "-x" ]] ; then
     ARGS="-J $G_JOBID"
+fi
+if [[ "$G_CMD" != "-x" ]] ; then
+    ARGS="$ARGS -c $G_CMD"
 fi
 if [[ "$G_REMOTESERVERNAME" != "-x" ]] ; then
 	ARGS="$ARGS -r $G_REMOTESERVERNAME"

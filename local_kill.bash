@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# mosix_status.bash
+# mosix_kill.bash
 #
 # Copyright 2010 Dan Ginsburg
 # Children's Hospital Boston
@@ -14,23 +14,24 @@ source common.bash
 G_LOGFILE=${G_SELF}.log
 G_JOBID="-x"
 G_REMOTESERVERNAME="-x"
+G_CMD="-x"
 
 G_SYNOPSIS="
  NAME
 
-        mosix_status.bash
+        local_kill.bash
 
  SYNOPSIS
 
-        mosix_status.bash    -J     <jobID>                \\
+        local_kill.bash      -J     <jobID>                \\
+                             -c     <cmd>                  \\
                              [-r    <remoteServerName>]
                                                
                             
 
  DESCRIPTION
 
-        'mosix_status.bash' is a script for determing the status of the job
-        on a cluster.  
+        'local_kill.bash' is a script for killing a running job on the local machine.
         
 
  ARGUMENTS
@@ -38,6 +39,9 @@ G_SYNOPSIS="
         -J <jobId>
         Specify a job ID for the cluster job.  This job ID must be supported
         by the underlying clustering software.
+
+        -c <cmd>
+        Command that was run.
         
         -r <remoteServerName> (Optional)
         The remote name of the server to run the status command on (for example, the
@@ -47,11 +51,11 @@ G_SYNOPSIS="
 
  PRECONDITIONS
 
-        o The appropriate clustering status script (e.g., mosix_status.bash) must exist.
+        o The appropriate clustering sofrtware must exist.
 
  POSTCONDITIONS
 
-        o The status of the job will be returned.
+        o The job will be killed.
 
  HISTORY
         5 May 20010
@@ -63,12 +67,15 @@ G_SYNOPSIS="
 
 # Actions
 A_noJobIdArg="checking on the -J <JobId> argument"
+A_noCmdArg="checking on the -c <cmd> argument"
 
 # Error messages
 EM_noJobIdArg="it seems as though you didn't specify a -J <JobID>."
+EM_noCmdArg="it seems as though you didn't specify a -c <cmd>."
 
 # Error codes
 EC_noJobIdArg=11
+EC_noCmdArg=12
 
 ###\\\ 
 # function definitions --->
@@ -83,8 +90,8 @@ while getopts r:J:c: option ; do
         case "$option" 
         in
                 J)      G_JOBID=$OPTARG;;
+                c)      G_CMD=$OPTARG;;
                 r)      G_REMOTESERVERNAME=$OPTARG;;
-                c)      ;;
                 \?)     synopsis_show;;
         esac
 done
@@ -94,36 +101,15 @@ done
 ###///
 
 
+statusPrint "Checking on <cmd>"
+if [[ "$G_CMD" == "-x" ]] ; then fatal noCmdArg ; fi
+ret_check $?
+
 ###\\\
 # Main --->
 ###///
-
-IFS=''
-QUEUELIST=""
 if [[ "$G_REMOTESERVERNAME" == "-x" ]] ; then
-    QUEUELIST=$(mosq -j listall)
-else
-    QUEUELIST=$(ssh -n ${G_REMOTESERVERNAME} "mosq -j listall")    
+    mkill "$G_CMD"
 fi
-RESULT=$(echo -e $QUEUELIST | awk 'NR > 1 {print $5" "$6}') # | grep ${G_JOBID} | awk '{print $1}')
-IFS="$(echo -e "\n\r")"
-for line in $RESULT ; do
-    JOBID=$(echo -e $line | awk '{print $2}')
-    STATUS=$(echo -e $line | awk '{print $1}')
-    STATUS_INTERP="UNKNOWN"    
-    echo -e "$STATUS" | grep "RUN" > /dev/null
-    if [ $? -eq 0 ] ; then
-    	STATUS_INTERP="RUNNING"
-    else
-        if [[ "$STATUS" != "" ]] ; then
-            STATUS_INTERP="QUEUED"
-        fi
-    fi
-    if [[ "$G_JOBID" == "-x" || "$G_JOBID" == "$JOBID" ]] ; then
-    	echo -e "$JOBID $STATUS_INTERP"
-    fi    
-done
 
-unset IFS
-
-
+shut_down $?

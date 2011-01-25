@@ -14,23 +14,25 @@ source common.bash
 G_LOGFILE=${G_SELF}.log
 G_JOBID="-x"
 G_REMOTESERVERNAME="-x"
+G_CMD="-x"
 
 G_SYNOPSIS="
  NAME
 
-        mosix_status.bash
+        local_status.bash
 
  SYNOPSIS
 
-        mosix_status.bash    -J     <jobID>                \\
+        local_status.bash    -J     <jobID>                \\
+                             -c     <cmd>                  \\
                              [-r    <remoteServerName>]
                                                
                             
 
  DESCRIPTION
 
-        'mosix_status.bash' is a script for determing the status of the job
-        on a cluster.  
+        'local_status.bash' is a script for determing the status of the job
+        on a local machine.  
         
 
  ARGUMENTS
@@ -38,6 +40,9 @@ G_SYNOPSIS="
         -J <jobId>
         Specify a job ID for the cluster job.  This job ID must be supported
         by the underlying clustering software.
+ 
+        -c <cmd>
+        The command that was executed (Job ID is ignored for local processes).
         
         -r <remoteServerName> (Optional)
         The remote name of the server to run the status command on (for example, the
@@ -84,7 +89,7 @@ while getopts r:J:c: option ; do
         in
                 J)      G_JOBID=$OPTARG;;
                 r)      G_REMOTESERVERNAME=$OPTARG;;
-                c)      ;;
+                c)      G_CMD=$OPTARG;;
                 \?)     synopsis_show;;
         esac
 done
@@ -97,33 +102,10 @@ done
 ###\\\
 # Main --->
 ###///
-
-IFS=''
-QUEUELIST=""
-if [[ "$G_REMOTESERVERNAME" == "-x" ]] ; then
-    QUEUELIST=$(mosq -j listall)
-else
-    QUEUELIST=$(ssh -n ${G_REMOTESERVERNAME} "mosq -j listall")    
+found=$(eval "psa "$G_CMD"  | grep $(whoami) | grep -v grep | grep -v _status.bash |  wc -l")
+if (( found != 0 )) ; then
+    echo -e "$G_JOBID RUNNING"
 fi
-RESULT=$(echo -e $QUEUELIST | awk 'NR > 1 {print $5" "$6}') # | grep ${G_JOBID} | awk '{print $1}')
-IFS="$(echo -e "\n\r")"
-for line in $RESULT ; do
-    JOBID=$(echo -e $line | awk '{print $2}')
-    STATUS=$(echo -e $line | awk '{print $1}')
-    STATUS_INTERP="UNKNOWN"    
-    echo -e "$STATUS" | grep "RUN" > /dev/null
-    if [ $? -eq 0 ] ; then
-    	STATUS_INTERP="RUNNING"
-    else
-        if [[ "$STATUS" != "" ]] ; then
-            STATUS_INTERP="QUEUED"
-        fi
-    fi
-    if [[ "$G_JOBID" == "-x" || "$G_JOBID" == "$JOBID" ]] ; then
-    	echo -e "$JOBID $STATUS_INTERP"
-    fi    
-done
 
-unset IFS
 
 
