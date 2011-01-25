@@ -658,8 +658,13 @@ function cluster_schedule
     stage_stamp "$STAGE" $STAMPLOG
     
     # Also append to output of XML file used by web front end
-    LINENUMBER=$(wc -l "${G_CLUSTERDIR}/$G_SCHEDULELOG")
-    cluster_genXML.bash -f ${G_CLUSTERDIR}/$G_SCHEDULELOG -l ${LINENUMBER} >> "${G_CLUSTERDIR}/$G_SCHEDULELOG.xml"
+    LINENUMBER=$(wc -l "${G_CLUSTERDIR}/$G_SCHEDULELOG" | awk '{print $1}')
+    GENHEADER=""
+    if [[ ! -f "${G_CLUSTERDIR}/$G_SCHEDULELOG.xml" ]] ; then
+        GENHEADER="-h"
+    fi
+    GENXMLCMD="cluster_genXML.bash -f ${G_CLUSTERDIR}/$G_SCHEDULELOG -l ${LINENUMBER} ${GENHEADER}"
+    eval $GENXMLCMD >> "${G_CLUSTERDIR}/$G_SCHEDULELOG.xml"
 }
 
 function wait_for_lockfile

@@ -455,7 +455,7 @@ G_LOGDIR=$(echo $G_LOGDIR | sed 's|/local_mount||g')
 if (( Gb_useOverrideOut )) ; then
     statusPrint "Checking on <outputOverride>"
     G_OUTDIR=$(echo "$G_OUTDIR" | tr ' ' '-' | tr -d '"')
-    dirExist_check $G_OUTDIR || mkdir "$G_OUTDIR" || fatal badOutDir
+    dirExist_check $G_OUTDIR || mkdir -p "$G_OUTDIR" || fatal badOutDir
     cd $G_OUTDIR >/dev/null
     G_OUTDIR=$(pwd)
 fi

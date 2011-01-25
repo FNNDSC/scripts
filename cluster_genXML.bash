@@ -12,6 +12,7 @@ source common.bash
 declare -i Gi_verbose=0
 declare -i Gb_singleLine=0
 declare -i Gi_lineNumber=0
+declare -i Gb_generateXMLHeader=0
 
 G_CLUSTERFILE="-x"
 
@@ -24,7 +25,8 @@ G_SYNOPSIS="
  SYNOPSIS
 
         cluster_genXML.bash           -f <clusterScheduleLog> \\
-                                      -l <lineNumber>
+                                      -l <lineNumber>         \\
+                                      [-h]
 
  DESCRIPTION
 
@@ -46,6 +48,9 @@ G_SYNOPSIS="
         
         -l <lineNumber> (Optional)
         Only output XML for the specified line in the cluster schedule log.
+
+        -h (Optional, Default: off)
+        Generate XML header, regardless of whether the -l option is specified.
 
  PRECONDITIONS
 	
@@ -102,18 +107,19 @@ function echo_stripped
 # Process command options
 ###///
 
-while getopts f:l: option ; do
+while getopts f:l:h option ; do
 	case "$option"
 	in
 		f)	G_CLUSTERFILE=$OPTARG		;;
 		l)	Gb_singleLine=1
 			Gi_lineNumber=$OPTARG		;;
+		h)	Gb_generateXMLHeader=1          ;;
 		\?) synopsis_show
 		    exit 0;;
 	esac
 done
 
-if (( !Gb_singleLine )) ; then
+if (( !Gb_singleLine || Gb_generateXMLHeader )) ; then
 	echo "<?xml version=\"1.0\"?>"
 fi
 # Iterate over each line in the cluster file
