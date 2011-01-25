@@ -1,0 +1,51 @@
+#!/bin/bash
+
+#umask 002
+
+# Execute the script which configure the CHB environment variables
+. ~/chb-env
+
+export PATH=$PATH:${CHB_SCRIPTPATH}
+export DCMDATAPATH=${CHB_DCMDATAPATH}
+
+SESSIONPATH=${CHB_SESSIONPATH}
+LOGDIR=${CHB_LOGDIR}
+LOGWRAP=${LOGDIR}/storescp.wrapper.log
+LOGSCP=${LOGDIR}/storescp.log
+LOGXCS=${LOGDIR}/dcm_xcs.log
+LOGDCM=${LOGDIR}/dcm_rename.log
+SCANLOGFILE=$LOGDIR/scans.$$.log
+
+echo "$(date) $(whoami)@$(hostname) | Starting storescp..." > ${LOGWRAP}
+CMD="/usr/bin/storescp -id +ac -aet $CHB_AETITLE \
+  	-od $DCMDATAPATH 	\
+  	-pm			\
+  	-xcr 'dcm_rename $SESSIONPATH #p #f #a #c $SCANLOGFILE > ${LOGSCP}.std 2>${LOGSCP}.err'
+	-ss RX
+	-tos 120
+" 
+echo "$(date) $(whoami)@$(hostname) | RUN $(echo $CMD | tr '\n' ' ')" > ${LOGWRAP}
+eval $CMD
+
+# Get a list of the unique directories that were written
+SCANLIST=$(awk -F"|" '{print $3}' $SCANLOGFILE | sort| uniq | xargs -i% grep -m 1 % $SCANLOGFILE)
+echo $SCANLIST > $SCANLOGFILE
+while read line
+do  
+    echo "$(date) $(whoami)@$(hostname) | Starting dcm_xcs.bash..." >> ${LOGWRAP}
+
+    P=$(echo $line | awk -F \| '{print $3}') 
+    F=$(echo $line | awk -F \| '{print $4}')                                                                                                                                                                                                                         
+    A=$(echo $line | awk -F \| '{print $5}')    
+    C=$(echo $line | awk -F \| '{print $6}')  
+
+    echo "$(date) $(whoami)@$(hostname) | P = $P" >> ${LOGWRAP}
+    echo "$(date) $(whoami)@$(hostname) | F = $F" >> ${LOGWRAP}
+    echo "$(date) $(whoami)@$(hostname) | A = $A" >> ${LOGWRAP}
+    echo "$(date) $(whoami)@$(hostname) | C = $C" >> ${LOGWRAP}
+    dcm_xcs.bash -v 10 -d $SESSIONPATH -l $LOGDIR -p $P -f $F -a $A -c $C >${LOGXCS}.std 2>${LOGXCS}.err   
+done < $SCANLOGFILE
+
+rm -rf $SCANLOGFILE
+
+echo "$(date) $(whoami)@$(hostname) | Normal Termination." >> ${LOGWRAP}
