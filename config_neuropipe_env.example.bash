@@ -26,4 +26,12 @@ export CHB_AETITLE=neuropipe
 export FREESURFER_HOME=/usr/local/freesurfer
 . ${FREESURFER_HOME}/SetUpFreeSurfer.sh
 
-export PATH=$PATH:${CHB_SCRIPTPATH}
+# Location of DTK matrices
+export DSI_PATH=/neuropackages/dtk/matrices/
+
+# Source FSL
+. /etc/fsl/fsl.sh 
+export FSL_DIR=$FSLDIR
+
+export PATH=$PATH:${CHB_SCRIPTPATH}:${FSLDIR}:${FSLDIR}/bin
+export FSLDIR FSL_DIR PATH DSI_PATH

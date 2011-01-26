@@ -139,7 +139,7 @@ def main():
     
     # Default Options
     conf.freesurfer_home = os.environ['FREESURFER_HOME']
-    conf.fsl_home = os.environ['FSL_DIR']
+    conf.fsl_home = os.environ['FSLDIR']
     conf.dtk_matrices = os.environ['DSI_PATH']
     conf.dtk_home = os.path.dirname(conf.dtk_matrices) # DTK home is one up from the matrices 
     conf.subject_raw_glob_diffusion = '*.dcm'
