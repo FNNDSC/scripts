@@ -14,7 +14,8 @@
 # $5 = basename of log files
 
 # Set freesurfer home
-. $2/chb-fsdev
+#. $2/chb-fsdev
+. ~/chb-env
 PKGDIR=$1
 PATH=$PATH:$PKGDIR/mricron:$PKGDIR/dtk:$PKGDIR/gdcm/bin:$PKGDIR/Slicer/current
 PATH=$PATH:$2
