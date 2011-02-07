@@ -72,6 +72,8 @@ def parseCommandLine(conf):
                 
     if options.projectName:
         conf.project_name = options.projectName
+    else:
+        conf.project_name = 'connectome_web'
         
     if options.gradientMatrix:
         conf.gradient_table_file = options.gradientMatrix
@@ -145,6 +147,7 @@ def main():
     conf.subject_raw_glob_diffusion = '*.dcm'
     conf.subject_raw_glob_T1 = '*.dcm'
     conf.subject_raw_glob_T2 = '*.dcm'
+    conf.do_convert_T2 = False
     
     conf.diffusion_imaging_model = "DTI"
     conf.streamline_param = ''
@@ -165,6 +168,10 @@ def main():
     # XXX: These are hardcoded for now until I figure out how they
     #      should be set
     conf.project_dir = '/chb/arch/python/cmp'
+    conf.creator = 'Neuroimaging Web Pipeline'
+    conf.publisher = 'CHB'
+    conf.legalnotice = 'institution-specific'
+    conf.email = 'default@default.edu'
     
     # Setup and parse command-line options
     options = parseCommandLine(conf)
