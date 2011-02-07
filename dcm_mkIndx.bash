@@ -125,7 +125,7 @@ if (( !b_FORCESET )) ; then
 	#       from each series 
 	SERIESNUMS=$(find . -maxdepth 1 -name "*.dcm" -print 2>/dev/null | tr -d './' | awk -F "-" '{print $1"-"$2}' | sort | uniq)
 	for SERIES in $SERIESNUMS ; do
-	    DCMFILE=$(find . -maxdepth 1 -name "$SERIES-*.dcm" -print | grep -m 1 $SERIES | sed 's/^.\///')
+	    DCMFILE=$(find . -maxdepth 1 -name "$SERIES-*.dcm" -print | sort | grep -m 1 $SERIES | sed 's/^.\///')
 	    SETNEW="$SETNEW $DCMFILE" 
 	done
 	

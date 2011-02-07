@@ -12,9 +12,6 @@
 source common.bash
 declare -i Gb_forceStage=1
 
-#source /opt/arch/Darwin/packages/freesurfer/dev/SetUpFreeSurfer.sh
-#export DCMDICTPATH=/opt/local/lib/dicom.dic
-
 let b_alreadyProcessed=0
 
 MAILMSG="mail.msg"
@@ -226,6 +223,11 @@ stage_stamp "Init | ($startDir) $G_SELF $*" $STAMPLOG
 DATE=$(date)
 cd $G_DICOMROOT/$G_OUTPUTDICOMDIR 2>/dev/null
 
+# Touch a file that indicates the arrival of a new scan, this is
+# used later on to figure out if we need to regenerate the dcm_MRID.xml
+# database
+touch ${G_DICOMROOT}/newscan.txt
+
 # LOCK (GET): {G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt.lock
 wait_for_lockfile ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt.lock
 if [ $? -ne 0 ] ; then fatal lockFileGet ; fi
@@ -320,17 +322,26 @@ if [ $? -ne 0 ] ; then fatal lockFileGet ; fi
 release_lockfile ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt.lock
 
 
-# LOCK (GET): ${G_DICOMROOT}/dcm_MRID.xml.lock
-wait_for_lockfile ${G_DICOMROOT}/dcm_MRID.xml.lock
-if [ $? -ne 0 ] ; then fatal lockFileGet ; fi
-	
-	# Next add it to the dcm_MRID.xml
-	dcm_MRIDgetXML.bash -d ${G_DICOMROOT} -a > ${G_DICOMROOT}/dcm_MRID.xml.build
-	cp ${G_DICOMROOT}/dcm_MRID.xml.build ${G_DICOMROOT}/dcm_MRID.xml
-	rm -rf ${G_DICOMROOT}/dcm_MRID.xml.build
+# If we are not already building the dcm_MRID.xml database, rebuild it.
+if [[ ! -f ${G_DICOMROOT}/dcm_MRID.xml.build ]] ; then
 
-# LOCK (RELEASE): {G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt.lock
-release_lockfile ${G_DICOMROOT}/dcm_MRID.xml.lock
+	# As long as new scans have arrived, keep updating the dcm_MRID.xml
+	# database.  This will keep running until all new scans have been
+	# processed.
+	while [ -f ${G_DICOMROOT}/newscan.txt ]
+	do
+		# Delete the touch file.  If new scans arrive while this
+		# processing was being done, the file will get recreated and
+		# this loop will continue.  This make sure that any new
+		# scans get added to the database
+		rm -rf ${G_DICOMROOT}/newscan.txt
+
+		# Regenerate the dcm_MRID.xml database
+		dcm_MRIDgetXML.bash -d ${G_DICOMROOT} -a > ${G_DICOMROOT}/dcm_MRID.xml.build
+		cp ${G_DICOMROOT}/dcm_MRID.xml.build ${G_DICOMROOT}/dcm_MRID.xml
+	done
+	rm -rf ${G_DICOMROOT}/dcm_MRID.xml.build	
+fi
 	
 # Also, run mri_info
 STAGE1PROC=mri_info_batch.bash
