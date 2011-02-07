@@ -348,7 +348,7 @@ STAGE1PROC=mri_info_batch.bash
 statusPrint "$(date) | Processing STAGE - mri_info_batch.bash | START" "\n"
 STAGE=1-$STAGE1PROC
 STAGECMD="$STAGE1PROC	\
-                 -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}"
+                 -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR} -s"
 stage_run "$STAGE" "$STAGECMD"                          \
           "${G_LOGDIR}/${STAGE1PROC}.std"               \
           "${G_LOGDIR}/${STAGE1PROC}.err"

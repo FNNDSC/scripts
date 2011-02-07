@@ -14,6 +14,7 @@ source common.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_forceStage=1
+declare -i Gb_skipPreviouslyCompleted=0
 
 G_LOGDIR="-x"
 G_OUTSUFFIX=""
@@ -37,7 +38,8 @@ G_SYNOPSIS="
 				[-T <tocFile>]                          \\
 				[-L <logDir>]				\\
 				[-v <verbosity>]			\\
-				[-t <stage>] [-f]			
+				[-t <stage>] [-f]			\\
+				[-s]
 
  DESCRIPTION
 
@@ -76,6 +78,9 @@ G_SYNOPSIS="
 
 	[-f] (Optional: $Gb_forceStage)
 	If true, force re-running a stage that has already been processed.
+
+	[-s] (Optional: $Gb_skipPreviouslyCompleted)
+	If mri_info has already been generated for scan, do not regenerate it.
 
  STAGES
 
@@ -178,7 +183,7 @@ function MRID_find
 # Process command options
 ###///
 
-while getopts v:D:T:L:ft: option ; do
+while getopts v:D:T:L:ft:s option ; do
 	case "$option"
 	in
 		v) 	Gi_verbose=$OPTARG		        ;;
@@ -187,6 +192,7 @@ while getopts v:D:T:L:ft: option ; do
 		L)	G_LOGDIR=$OPTARG		        ;;
 		f) 	Gb_forceStage=1			        ;;
 		t)	G_STAGES=$OPTARG		        ;;
+		s)	Gb_skipPreviouslyCompleted=1		;;
 		\?) synopsis_show 
 		    exit 0;;
 	esac
@@ -252,6 +258,12 @@ if (( ${barr_stage[1]} )) ; then
     STAGE=1-$STAGE1PROC
     LST=$(cat $G_TOCFILE | grep \.dcm | awk '{print $2}')
     for SCAN in $LST ; do
+	if [ -f ${G_LOGDIR}/${SCAN}.std ] ; then
+		if (( Gb_skipPreviouslyCompleted )) ; then
+			# Do not regenerate for previously completed scan
+			continue
+		fi
+	fi
         STAGECMD="$STAGE1PROC $SCAN"
         STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
         statusPrint "Processing $SCAN..." "\n"
