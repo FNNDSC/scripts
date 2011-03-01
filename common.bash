@@ -97,7 +97,7 @@ function expertOpts_parse
     # $1                        process name
     #
     # DESC
-    # Checks for <processName>.opt in $G_LOGDIR.
+    # Checks for <processName> in $G_LOGDIR.
     # If exists, read contents and return, else
     # return empty string.
     #
