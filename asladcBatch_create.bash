@@ -9,7 +9,7 @@
 #
 
 # "include" the set of common script functions
-source /homes/9/rudolph/arch/scripts/common.bash
+source common.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_forceStage=1
@@ -18,7 +18,7 @@ declare	-i Gb_printNullEntries=0
 
 G_LOGDIR=$(pwd)
 G_TABLEFILE="-x"
-G_DEFAULTDIR="/space/kaos/1/users/dicom/files"
+G_DEFAULTDIR="/chb/users/dicom/files"
 G_DEFAULTCOM="-v 10 -t 12"
 G_SERIESLIST="ADC,ASLCBF,ZERO-B"
 G_OUTPUTSUFFIX=""
@@ -248,16 +248,16 @@ DATE=$(date)
 STAMPLOG=${G_LOGDIR}/${G_SELF}.log
 stage_stamp "Init | ($(pwd) $G_SELF $ARGLIST" $STAMPLOG
 
-SPCSUB="-={GR}=-"
+SPCSUB=".={GR}=."
 echo "$INTRO" > $G_TABLEFILE
 for MRID in $MRIDLIST ; do
   cprint "MRID" "[ $MRID ]"
-  DIRTABLE=$(cat $G_DCMMRIDTABLE | grep $MRID | sed 's/ /$SPCSUB/g')
+  DIRTABLE=$(cat $G_DCMMRIDTABLE | grep $MRID | sed 's/^ *//;s/ *$//;s/[ \t] \+/'$SPCSUB'/g')
   let dirCount=1
   for line in $DIRTABLE ; do
-    line=$(echo $line | sed 's/$SPCSUB/ /g')
-    STUDYDIR=$(echo $line | awk '{print $1}')
-    STUDYAGE=$(echo $line | awk '{print $3}')
+    line=$(echo $line | sed 's/'$SPCSUB'/ /g')
+    STUDYDIR=$(echo "$line" | awk '{print $1}')
+    STUDYAGE=$(echo "$line" | awk '{print $3}')
     lprint $STUDYDIR
     WD=${G_DEFAULTDIR}/$STUDYDIR
     echo "" >> $G_TABLEFILE
@@ -271,26 +271,41 @@ for MRID in $MRIDLIST ; do
       SCANDATE=$(cat ${WD}/toc.txt | grep Date | awk '{print $NF}')
       exec <${WD}/toc.txt
       b_tocHit=0
+      b_ADChit=0
+      b_ASLhit=0
+      b_B0hit=0
       while read tocLine ; do
         DCM=$(echo $tocLine | grep "dcm")
         if (( ${#DCM} )) ; then
           SCANDESC=$(echo $tocLine | awk '{for(i=3; i<=NF; i++) printf("%s", $i);}')
           lprint "Testing $SCANDESC"
           b_hit=0
-	  case $SCANDESC
-	  in
-	    "ADC")	SCANFILEADC=$(echo $tocLine | awk '{print $2}')	
-			rprint "[$SCANFILEADC-D$dirCount-S$seriesCount]"
-			b_ADChit=1					;;
-	    "ASLCBF")	SCANFILEASL=$(echo $tocLine | awk '{print $2}')	
-			rprint "[$SCANFILEASL-D$dirCount-S$seriesCount]"
-			b_ASLhit=1					;;
-	    "ZERO-B")	SCANFILEB0=$(echo $tocLine | awk '{print $2}')	
-			rprint "[$SCANFILEB0-D$dirCount-S$seriesCount]"
-			b_B0hit=1					;;
-	    *)		rprint "[ Not tagged ]"
-	  esac
+
+          b_hit=$(echo "$SCANDESC" | grep -i "ADC" | wc -l)
+          if (( b_hit )) ; then
+                SCANFILEADC=$(echo $tocLine | awk '{print $2}')	
+		rprint "[$SCANFILEADC-D$dirCount-S$seriesCount]"
+		b_ADChit=1
+		continue
+          fi 
+          
+          b_hit=$(echo "$SCANDESC" | grep -i "ASLCBF" | wc -l)
+          if (( b_hit )) ; then
+                SCANFILEASL=$(echo $tocLine | awk '{print $2}')	
+		rprint "[$SCANFILEASL-D$dirCount-S$seriesCount]"
+		b_ASLhit=1
+		continue
+          fi          
+
+          b_hit=$(echo "$SCANDESC" | grep -i "ZERO-B" | wc -l)
+          if (( b_hit )) ; then
+                SCANFILEB0=$(echo $tocLine | awk '{print $2}')	
+		rprint "[$SCANFILEB0-D$dirCount-S$seriesCount]"
+		b_B0hit=1
+		continue
+          fi
 	  b_hit=$(( b_ADChit && b_ASLhit && b_B0hit ))
+	  if (( !b_hit )) ; then rprint "[ Not tagged ]"; fi
 	fi
       done
       if (( b_hit == 1 )) ; then

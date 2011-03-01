@@ -9,7 +9,7 @@
 #
 
 # "include" the set of common script functions
-source /homes/9/rudolph/arch/scripts/common.bash
+source common.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=0
@@ -24,7 +24,7 @@ declare -i Gb_mailLog=0
 declare -i Gb_runCluster=0
 
 G_LOGDIR="-x"
-G_OUTDIR="/space/kaos/5/users/dicom/postproc"
+G_OUTDIR="/chb/users/dicom/postproc"
 G_OUTRUNDIR="-x"
 G_OUTPREFIX="-x"
 G_DIRSUFFIX=""
@@ -33,7 +33,7 @@ G_DICOMINPUTASLFILE="-x"
 G_DICOMINPUTADCFILE="-x"
 G_DICOMINPUTB0FILE="-x"
 G_BETOPT="-x"
-G_MATLAB="/usr/pubsw/packages/matlab/new/bin/matlab"
+G_MATLAB="/chb/pices/arch/x86_64-Linux/bin/matlab"
 G_ASLOFFSET="-2.5"
 G_ADCOFFSET="-2.5"
 G_STAGES="12345"
@@ -515,7 +515,7 @@ if (( ${barr_stage[2]} )) ; then
     for ext in hdr img mat ; do
       mv ${STAGE2FULLDIR}/${STAGE1OUTBASE}*${ext} ${STAGE2FULLDIR}/B0.${ext}
     done
-    EXOPTS=$(eval expertOpts_parse $STAGEPROC)
+    EXOPTS=$(eval expertOpts_parse ${STAGEPROC})
     STAGECMD="$STAGEPROC                                        \
                 ${STAGE2FULLDIR}/B0.img                         \
                 ${STAGE2FULLDIR}/B0_brain.img                   \

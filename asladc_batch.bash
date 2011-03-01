@@ -9,7 +9,7 @@
 #
 
 # "include" the set of common script functions
-source /homes/9/rudolph/arch/scripts/common.bash
+source common.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_forceStage=1
