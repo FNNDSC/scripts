@@ -14,11 +14,15 @@ source common.bash
 declare -i Gi_verbose=0
 declare -i Gb_forceStage=1
 declare -i Gb_loopOverride=0
+declare -i Gb_useCluster=0
 
 G_TABLEFILE="-x"
 G_DICOMINPUTDIR="-x"
 G_DICOMINPUTFILE="-x"
 G_LOOPCOUNT="1"
+
+G_CLUSTERSCHED="mosrun -b -q -e -E "
+
 
 G_SYNOPSIS="
 
@@ -29,6 +33,7 @@ G_SYNOPSIS="
  SYNOPSIS
 
 	asladc_batch.bash	-t <batchTableFile>                  	\\
+                                [-C]                                    \\ 
 				[-l <loopOverride>]			\\
                                 [-v <verbosity>]
 
@@ -138,11 +143,12 @@ D_whatever=
 # Process command options
 ###///
 
-while getopts v:t:l: option ; do
+while getopts v:t:l:C option ; do
 	case "$option"
 	in
 		v) 	Gi_verbose=$OPTARG		;;
 		t)	G_TABLEFILE=$OPTARG		;;
+                C)      Gb_useCluster=1                 ;;
 		l)	G_LOOPCOUNT=$OPTARG
 			let Gb_loopOverride=1		;;
 		\?) synopsis_show
@@ -221,8 +227,13 @@ for LINE in $TABLE ; do
   fileExist_check ${G_DICOMINPUTDIR}/${G_ADCINPUTFILE} || b_OKFILE=0
   statusPrint     "Checking on <B0File>"
   fileExist_check ${G_DICOMINPUTDIR}/${G_B0INPUTFILE}  || b_OKFILE=0
+  STAGERUN=stage_run_bg
+  if (( !Gb_useCluster )) ; then
+    STAGERUN=stage_run
+    G_CLUSTERSCHED="" 
+  fi
   if (( b_OKDIR && b_OKFILE )) ; then
-    STAGECMD="asladc_b0_process.bash			\
+    STAGECMD="$G_CLUSTERSCHED asladc_b0_process.bash    \
               $DEFAULTCOM                               \
               $MAILCOM                                  \
               -R $DIRSUFFIX                             \
@@ -232,7 +243,7 @@ for LINE in $TABLE ; do
 	      -B $G_B0INPUTFILE"
 #     echo $STAGECMD
     echo ""
-    stage_run "$STAGE" "$STAGECMD"                      \
+    $STAGERUN "$STAGE" "$STAGECMD"                      \
         "${G_LOGDIR}/${G_SELF}.std"                     \
         "${G_LOGDIR}/${G_SELF}.err"			\
 #       || fatal stageRun

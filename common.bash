@@ -555,11 +555,58 @@ function stage_run
        stage_check "$stageName" $STAMPLOG
        statusPrint "Running $stageName..."
        stage_stamp "RUN  $(echo $stageCMD | tr '\n' ' ')" $STAMPLOG
-       if (( b_TEE )) ; then 
-          ((($stageCMD | tee $STDOUTFILE) 3>&1 1>&2 2>&3      |\
-            tee $STDERRFILE) 3>&1 1>&2 2>&3)
-       else
-          eval $stageCMD >$STDOUTFILE 2>$STDERRFILE
+       if (( b_TEE )) ; then
+            ((( eval $stageCMD | tee $STDOUTFILE) 3>&1 1>&2 2>&3      |\
+                tee $STDERRFILE) 3>&1 1>&2 2>&3)
+        else
+            eval $stageCMD >$STDOUTFILE 2>$STDERRFILE
+       fi
+       ret=$?
+       ret_check $ret
+       if (( !$ret )) ; then stage_stamp "$stageName" $STAMPLOG ; fi
+       return $ret
+}
+
+function stage_run_bg
+{
+       #
+       # ARGS
+       # $1                     name of stage
+       # $2                     command line to execute
+       # $3                     file to log stdout
+       # $4                     file to log stderr
+       # $5                     turn OFF tee
+       #
+       # DESCRIPTION
+       # Run the stage command in the background. If $3 and $4 exist, 
+       # capture output of stdout and stderr respectively.
+       #
+       # If a 5th argument is passed, turn OFF the tee.
+       #
+       # If G_mailLogTo exists, mail stdout and stderr.
+       #
+
+       local stageName=$1
+       local stageCMD=$2
+       local stdout=$3
+       local stderr=$4
+       local noTEE=$5
+       local b_TEE=1
+
+       STDOUTFILE=/dev/null
+       STDERRFILE=/dev/null
+
+       if (( ${#3} )) ; then STDOUTFILE=$3      ; fi
+       if (( ${#4} )) ; then STDERRFILE=$4      ; fi
+       if (( ${#5} )) ; then b_TEE=0            ; fi
+       stage_check "$stageName" $STAMPLOG
+       statusPrint "Running $stageName..."
+       stage_stamp "RUN  $(echo $stageCMD | tr '\n' ' ')" $STAMPLOG
+       if (( b_TEE )) ; then
+            ((( eval $stageCMD | tee $STDOUTFILE) 3>&1 1>&2 2>&3      |\
+                tee $STDERRFILE) 3>&1 1>&2 2>&3) &
+        else
+            eval $stageCMD >$STDOUTFILE 2>$STDERRFILE &
        fi
        ret=$?
        ret_check $ret
