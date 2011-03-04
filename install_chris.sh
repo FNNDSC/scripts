@@ -36,7 +36,7 @@ response=$($DIALOG --list \
                    TRUE 'xinetd - configure' \
                    TRUE 'Wt - build and install' \
                    TRUE 'Build and install web front-end' \
-                   TURE 'Apache - configure' --separator=':')
+                   TRUE 'Apache - configure' --separator=':')
 
 
 if [ -z "$response" ] ; then
@@ -199,7 +199,7 @@ if (( bInstWebFrontEnd )) ; then
     
     # Install dependencies
     cd ${G_SVNTREEROOTDIR}/chb/trunk/www/wt/third-party
-    unzip process-is-0.4.zip
+    unzip -o process-is-0.4.zip
     cd process-is-0.4/boost
     cp -r * /usr/include/boost/
 
@@ -217,20 +217,37 @@ if (( bInstWebFrontEnd )) ; then
     cmake ../ -DCONNECTOR_FCGI=ON -DEXAMPLES_CONNECTOR=wtfcgi
     make
     cd src/pl_gui
-    ./deploy.sh     
+    ./deploy.sh
 
     # If generating the password database
     if (( bSetPassword )) ; then
-	# TODO: htpasswd
+	htpasswd -c ${G_CONFIGDIR}/pl_gui_htpasswd $G_USERNAME $G_PASSWORD
+
+	G_PERMISSIONSXML=${G_CHRISDIR}/files/permissions.xml
+	if [[ ! -f ${G_PERMISSIONSXML ]] ; then
+	    echo "<?xml version=\"1.0\"?>" > $G_PERMISSIONSXML
+	    echo "<Group name=\"admin\">" >> $G_PERMISSIONSXML
+	    echo "  <User name=\"$G_USERNAME\" />" >> $G_PERMISSIONSXML
+	    echo "</Group>" >> $G_PERMISSIONSXML
+	    chown dicom:dicom ${G_PERMISSIONSXML}
+	    chmod 600 ${G_PERMISSIONSXML}
+	fi
     fi
+
+    G_PLGUICONF=${G_SVNTREEROOTDIR}/chb/trunk/www/wt/src/pl_gui/conf/pl_gui.conf
+    #sed -i 's/dicomDir.*=.*/dicomDir = $G_CHRISDIR\/files/g' ${G_PLGUICONF}
+    
 
     # Create symbolic links to the config files
     mkdir -p ${G_CONFIGDIR}
     cd ${G_CONFIGDIR}
-    ln -s ${G_SVNTREEROOTDIR}/chb/trunk/www/wt/src/pl_gui/pl_gui.conf pl_gui.conf
-    ln -s ${G_SVNTREEROOTDIR}/chb/trunk/www/wt/src/pl_gui/text.xml text.xml
-    ln -s ${G_CHRISDIR}/files/permissions.xml permissions.xml
+    ln -s -f ${G_SVNTREEROOTDIR}/chb/trunk/www/wt/src/pl_gui/conf/pl_gui.conf pl_gui.conf
+    ln -s -f ${G_SVNTREEROOTDIR}/chb/trunk/www/wt/src/pl_gui/text.xml text.xml
+    ln -s -f ${G_CHRISDIR}/files/permissions.xml permissions.xml
     chown -R dicom:dicom ${G_CONFIGDIR}
+
+    # Copy the default wt_config.xml
+    cp ${G_SVNTREEROOTDIR}/chb/trunk/www/wt/config/wt_config.xml /etc/wt/wt_config.xml
 fi
 
 ######################################################################
@@ -239,14 +256,43 @@ fi
 if (( bInstApache )) ; then
     # Set fastcgi.conf for pl_gui
     G_FASTCGICONF=/etc/apache2/mods-enabled/fastcgi.conf
-    echo "<IfModule mod_fastcgi.c>" > $G_FASTCGICONF
-    echo "    AddHandler fastcgi-script .wt" >> $G_FASTCGICONF
-    echo "    FastCgiServer /var/www/localhost/htdocs/pl_gui/pl_gui.wt" >> $G_FASTCGICONF
-    echo "</IfModule>" >> $G_FASTCGICONF
+    grep pl_gui $G_FASTCGICONF > /dev/null
+    if [ "$?" != "0" ] ; then
+	echo "<IfModule mod_fastcgi.c>" > $G_FASTCGICONF
+	echo "    AddHandler fastcgi-script .wt" >> $G_FASTCGICONF
+	echo "    FastCgiServer /var/www/localhost/htdocs/pl_gui/pl_gui.wt" >> $G_FASTCGICONF
+	echo "</IfModule>" >> $G_FASTCGICONF
+    fi
 
+    # Set the user to dicom
+    sed -i 's/www-data/dicom/g' /etc/apache2/envvars
+    
+    # Create links for WebGL
+    cd /var/www
+    ln -s ${G_SVNTREEROOTDIR}/chb/trunk/www/webgl webgl
+    ln -s ${G_CHRISDIR}/postproc postproc
+
+    # If it hasn't already been done, add link to postproc folder
+    # for WebGL viewer
+    G_APACHE2CONF=/etc/apache2/apache2.conf
+    grep postproc $G_APACHE2CONF > /dev/null
+    if [ "$?" != "0" ] ; then
+	echo "Alias ${G_CHRISDIR}/postproc /var/www/postproc" >> $G_APACHE2CONF
+	echo "<Directory /var/www/postproc>" >> $G_APACHE2CONF
+	echo "    AddHandler cgi-script .cgi .pl" >> $G_APACHE2CONF
+        echo "    Options +Indexes +ExecCGI +FollowSymLinks" >> $G_APACHE2CONF
+	echo "    DirectoryIndex index.cgi" >> $G_APACHE2CONF
+	echo "    AllowOverride Limit" >> $G_APACHE2CONF
+	echo "</Directory>" >> $G_APACHE2CONF
+    fi
+
+    # Change directory permissions
     chown -R dicom:dicom /var/run/wt/
+    chown -R dicom:dicom /var/www
+    mkdir -p /var/run/apache2/fastcgi
+    chown -R dicom:dicom /var/run/apache2/fastcgi
     
-    
+    /etc/init.d/apache2 restart
 fi
 
 ######################################################################
@@ -257,9 +303,7 @@ fi
 # Install CMP Pipeline
 ######################################################################
 
-######################################################################
-# Create symbolic links in the /home/dicom/config folder
-######################################################################
+
 
 echo "CHRIS: Exiting install."
 
