@@ -260,6 +260,7 @@ function [c]    = $(basename $SCRIPT .m)()
     c = set(c, 'stdOffsetADCCSF',		 1.5);
     c = set(c, 'stdOffsetADC', 			$G_ADCOFFSET);
     c = set(c, 'stdOffsetASL', 			$G_ASLOFFSET);
+    c = set(c, 'filterOnRawROI',                0);
 
     c = set(c, 'binarizeMasks',			1);
     c = set(c, 'registrationPenalize',		1);
