@@ -76,7 +76,7 @@ case "$G_GROUPNUM"
 in 
         1) G_GROUPS="1-1"               ;; # This is actually meaningless
         2) G_GROUPS="1-2"               ;;
-        3) G_GROUPS="1-3 2-3 1-3"       ;;
+        3) G_GROUPS="1-2 2-3 1-3"       ;;
 esac
 
 printf "%15s%s" "curv" "$G_SEPSTRING"

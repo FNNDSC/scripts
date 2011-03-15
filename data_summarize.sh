@@ -87,16 +87,13 @@ fi
 cd $starDir
 cd $G_PROJDIR
 G_PROJDIR=$(pwd)
-SHELLDIR="${G_PROJDIR}/sh"
-cd $SHELLDIR >/dev/null
-SHELLDIR=$(pwd)
 
 case "$G_TYPE"
 in
-        overlap)        TABULATE=${SHELLDIR}/overlap_tabulate.sh        ;;
-        areas)          TABULATE=${SHELLDIR}/areas_tabulate.sh          ;;
-        ordering)       TABULATE=${SHELLDIR}/ordering_tabulate.sh       ;;
-        ordering2)      TABULATE="${SHELLDIR}/ordering_tabulate.sh -T " ;;
+        overlap)        TABULATE="overlap_tabulate.sh"          ;;
+        areas)          TABULATE="areas_tabulate.sh"            ;;
+        ordering)       TABULATE="ordering_tabulate.sh"         ;;
+        ordering2)      TABULATE="ordering_tabulate.sh -T "     ;;
         *)              printf "Invalid <dataType>! Exiting with code '2'.\n\n"
                         exit 2                                          ;;
 esac
