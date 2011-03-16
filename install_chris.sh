@@ -121,7 +121,7 @@ if (( bInstPackages )) ; then
     echo "CHRIS: Installing packages..."
     apt-get install fsl xvfb subversion dcmtk xinetd postfix \
 	cmake libasio-dev libqt4-dev libboost-all-dev libssl-dev \
-	cmake-curses-gui libfcgi-dev libapache2-mod-fastcgi apache2 libfcgi
+	cmake-curses-gui libfcgi-dev libapache2-mod-fastcgi apache2 libfcgi mailutils procmail
 fi
 
 ######################################################################
