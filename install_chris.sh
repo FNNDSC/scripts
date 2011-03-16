@@ -29,6 +29,8 @@ response=$($DIALOG --list \
       	           --checklist \
 	           --column='Enabled' \
                    --column='Stage' \
+                   --width=500 \
+                   --height=400 \
                    TRUE 'Neurodebian - add to Package Manager' \
                    TRUE 'Install Packages' \
                    TRUE 'Checkout CHB subversion tree' \
@@ -190,6 +192,7 @@ if (( bInstWt )) ; then
     cmake ../ -DCONNECTOR_FCGI=ON -DEXAMPLES_CONNECTOR=wtfcgi
     make
     make install
+    ldconfig
 fi
 
 ######################################################################
@@ -221,10 +224,11 @@ if (( bInstWebFrontEnd )) ; then
 
     # If generating the password database
     if (( bSetPassword )) ; then
-	htpasswd -c ${G_CONFIGDIR}/pl_gui_htpasswd $G_USERNAME $G_PASSWORD
+	mkdir -p ${G_CONFIGDIR}
+	htpasswd -c -b ${G_CONFIGDIR}/pl_gui_htpasswd $G_USERNAME $G_PASSWORD
 
 	G_PERMISSIONSXML=${G_CHRISDIR}/files/permissions.xml
-	if [[ ! -f ${G_PERMISSIONSXML ]] ; then
+	if [[ ! -f ${G_PERMISSIONSXML} ]] ; then
 	    echo "<?xml version=\"1.0\"?>" > $G_PERMISSIONSXML
 	    echo "<Group name=\"admin\">" >> $G_PERMISSIONSXML
 	    echo "  <User name=\"$G_USERNAME\" />" >> $G_PERMISSIONSXML
