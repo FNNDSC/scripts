@@ -14,3 +14,4 @@ unset TIX_LIBRARY
 OS=$(uname -a | awk '{print $1}')
 export PROMPTPREFIX="[${HOSTTYPE}-${OS}-chb-fsdev]"
 
+export FSLDIR FSL_DIR

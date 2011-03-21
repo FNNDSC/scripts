@@ -67,8 +67,8 @@ def parseCommandLine(conf):
     if options.workingDir == None:
         parser.error('You must specify --workingDir')
     else:
-        conf.subject_workingdir = options.workingDir
-        conf.subject_name = os.path.basename(conf.subject_workingdir) 
+        conf.project_dir = os.path.dirname(options.workingDir)
+        conf.subject_name = os.path.basename(options.workingDir) 
                 
     if options.projectName:
         conf.project_name = options.projectName
@@ -167,7 +167,6 @@ def main():
     
     # XXX: These are hardcoded for now until I figure out how they
     #      should be set
-    conf.project_dir = '/chb/arch/python/cmp'
     conf.creator = 'Neuroimaging Web Pipeline'
     conf.publisher = 'CHB'
     conf.legalnotice = 'institution-specific'
