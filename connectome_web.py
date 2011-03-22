@@ -157,6 +157,7 @@ def main():
     conf.active_registration = True
     conf.active_segmentation = True
     conf.active_parcellation = True
+    conf.active_applyregistration = True
     conf.active_reconstruction = True
     conf.active_tractography = True
     conf.active_fiberfilter = True
