@@ -11,7 +11,6 @@ G_GROUPNUMOVERRIDE=3
 G_TYPE="-x"
 
 let Gb_expDirSpecified=0
-G_PROJDIR=$(pwd)
 
 declare -i Gb_reportSave=0
 
@@ -19,8 +18,7 @@ G_SYNPOSIS="
 
   NAME
 
-        data_summarize.sh -t <dataType> [-s] [-E <expDir>] [-P <projDir>] \\
-                         [-G <groups>]
+        data_summarize.sh -t <dataType> [-s] [-E <expDir>] [-G <groups>]
 
   SYNOPSIS
   
@@ -42,10 +40,6 @@ G_SYNPOSIS="
         -E <expDir>
         If passed, specifies the top level experiment directory. Also
         turns off the toplevel <hemi>-<region> processing.
-
-        -P <projDir>
-        The project directory. Contains a 'sh' subdir housing the necessary
-        shell scripts.
         
         -G <groups>
         If specified, the number of a priori groups to analyze.
@@ -60,12 +54,11 @@ G_SYNPOSIS="
 
 "
 
-while getopts sE:t:G:P: option ; do
+while getopts sE:t:G: option ; do
     case "$option" 
     in
         t)      G_TYPE=$OPTARG          ;;
         s)      let Gb_reportSave=1     ;;
-        P)      G_PROJDIR=$OPTARG       ;;
         E)      G_EXPDIR=$OPTARG        
                 Gb_expDirSpecified=1    ;;
         G)      G_GROUPNUMOVERRIDE=$OPTARG      
@@ -85,8 +78,6 @@ if [[ $G_TYPE == "-x" ]] ; then
 fi
 
 cd $starDir
-cd $G_PROJDIR
-G_PROJDIR=$(pwd)
 
 case "$G_TYPE"
 in
@@ -110,8 +101,8 @@ for HEMI in $G_HEMI ; do
     for REGION in $G_REGION ; do
         HEMIREGION="$HEMI-$REGION"
         if (( !Gb_expDirSpecified )) ; then
-            G_GROUPNUM=$(cd $G_PROJDIR/$HEMIREGION; ls -1 groupID* | wc -l)
-            cd $G_PROJDIR/$HEMIREGION/groupCurvAnalysis/lobesStrict.annot/$REGION >/dev/null
+            G_GROUPNUM=$(cd $G_EXPDIR/$HEMIREGION; ls -1 groupID* | wc -l)
+            cd $G_EXPDIR/$HEMIREGION/groupCurvAnalysis/lobesStrict.annot/$REGION >/dev/null
         else
             G_GROUPNUM=$(cd $G_EXPDIR; ls -1 groupID* | wc -l)
             cd ${G_EXPDIR}/groupCurvAnalysis/lobesStrict.annot/$REGION

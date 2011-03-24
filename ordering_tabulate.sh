@@ -114,7 +114,7 @@ for CURV in $G_CURVpos ; do
                 a_Y[line]=$(echo "${a_GIDLINE[$line]}" | awk '{print $3}')
             done
             Xorder=$(echo "${a_X[@]}" | tr ' ' '\n' | asort.awk -v width=1 -v b_indexOrder=1)
-            Yorder=$(echo "${a_Y[@]}" | tr ' ' '\n' | asort.awk -v width=1 -v b_indexOrder=1)
+            Yorder=$(echo "${a_Y[@]}" | tr ' ' '\n' | asort.awk -v width=1 -v b_indexOrder=1 -v b_descend=1)
             if [[ "$GROUP" == "X" ]] ; then 
                 ordering=${Xorder//' '/$G_EXTRALINES}
             else
