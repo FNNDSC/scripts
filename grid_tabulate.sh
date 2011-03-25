@@ -19,19 +19,19 @@ G_SYNPOSIS="
 
   NAME
 
-        ordering_tabulate.sh
+        grid_tabulate.sh
 
   SYNOPSIS
   
-        ordering_tabulate.sh -h <hemi> -r <region> -s <surface>         \
+        grid_tabulate.sh -h <hemi> -r <region> -s <surface>             \
                                 [-S <sepString>] [-G <groupNum>]        \
                                 [-T]
 
 
   DESC
 
-        'ordering_tabulate.sh' is rather simple script that creates
-        a table of data suitable for incorporation into papers/presentations.
+        'grid_tabulate.sh' is rather simple script that creates
+        2D grids of group cluster spatial arrangements.
 
         It essentially reads the group centroid file of form:
         
@@ -64,12 +64,9 @@ G_SYNPOSIS="
         importing into OpenOffice and LaTeX.
 
   HISTORY
-  
-  02 December 2010
-  o Initial design and coding.
-  
-  11 March 2011
-  o Group additions.
+    
+  25 March 2011
+  o Grid additions.
 
 "
 
@@ -81,15 +78,13 @@ while getopts h:r:s:S:G:T option ; do
         s) SURFACE=$OPTARG      ;;
         S) G_SEPSTRING=$OPTARG  ;;
         G) G_GROUPNUM=$OPTARG   ;;
-        T) Gb_extraLines=1      ;;
     esac
 done
 
-if (( Gb_extraLines )) ; then G_EXTRALINES="|||" ; fi
 
 printf "%15s%s" "curv" "$G_SEPSTRING"
-for GROUP in $G_GROUPS ; do 
-    for SIGN in $G_SIGN ; do
+for SIGN in $G_SIGN ; do
+    for GROUP in $G_GROUPS ; do
         printf "%15s%s" "$SIGN-${GROUP}${G_EXTRALINES}" "$G_SEPSTRING"
     done
 done
@@ -103,8 +98,8 @@ if (( Gb_extraLines )) ; then G_EXTRALINES="|" ; fi
 
 for CURV in $G_CURVpos ; do
     printf "%15s%s" "$CURV" "$G_SEPSTRING"
-    for GROUP in $G_GROUPS ; do
-      for SIGN in $G_SIGN ; do
+    for SIGN in $G_SIGN ; do
+      for GROUP in $G_GROUPS ; do
         fileName=${SIGN}-centroids-analyze-${HEMI}.${CURV}.${REGION}.${SURFACE}.txt
         if [[ -f $fileName ]] ; then
             centroids=$(cat $fileName)
@@ -114,12 +109,15 @@ for CURV in $G_CURVpos ; do
                 a_Y[line]=$(echo "${a_GIDLINE[$line]}" | awk '{print $3}')
             done
             Xorder=$(echo "${a_X[@]}" | tr ' ' '\n' | asort.awk -v width=1 -v b_indexOrder=1)
-            Yorder=$(echo "${a_Y[@]}" | tr ' ' '\n' | asort.awk -v width=1 -v b_indexOrder=1)
+            Yorder=$(echo "${a_Y[@]}" | tr ' ' '\n' | asort.awk -v width=1 -v b_indexOrder=1 -v b_descend=1)
             if [[ "$GROUP" == "X" ]] ; then 
+                Xordering=${Xorder//' '/}
                 ordering=${Xorder//' '/$G_EXTRALINES}
             else
+                Yordering=${Yorder//' '/}
                 ordering=${Yorder//' '/$G_EXTRALINES}
             fi
+            grid2D_show.py -S ${fileName}.grid -X $Xordering -Y $Yordering
         else
             if (( Gb_extraLines )) ; then
                 ordering="N|N|N|"

@@ -85,6 +85,7 @@ in
         areas)          TABULATE="areas_tabulate.sh"            ;;
         ordering)       TABULATE="ordering_tabulate.sh"         ;;
         ordering2)      TABULATE="ordering_tabulate.sh -T "     ;;
+        grid)           TABULATE="grid_tabulate.sh"             ;;
         *)              printf "Invalid <dataType>! Exiting with code '2'.\n\n"
                         exit 2                                          ;;
 esac

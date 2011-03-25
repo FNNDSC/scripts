@@ -85,7 +85,7 @@ while getopts h:r:s:S:G:T option ; do
     esac
 done
 
-if (( Gb_extraLines )) ; then G_EXTRALINES="|||" ; fi
+# if (( Gb_extraLines )) ; then G_EXTRALINES="|||" ; fi
 
 printf "%15s%s" "curv" "$G_SEPSTRING"
 for GROUP in $G_GROUPS ; do 
@@ -115,9 +115,11 @@ for CURV in $G_CURVpos ; do
             done
             Xorder=$(echo "${a_X[@]}" | tr ' ' '\n' | asort.awk -v width=1 -v b_indexOrder=1)
             Yorder=$(echo "${a_Y[@]}" | tr ' ' '\n' | asort.awk -v width=1 -v b_indexOrder=1 -v b_descend=1)
-            if [[ "$GROUP" == "X" ]] ; then 
+            if [[ "$GROUP" == "X" ]] ; then
+                Xordering=${Xorder//' '/}
                 ordering=${Xorder//' '/$G_EXTRALINES}
             else
+                Yordering=${Yorder//' '/}
                 ordering=${Yorder//' '/$G_EXTRALINES}
             fi
         else

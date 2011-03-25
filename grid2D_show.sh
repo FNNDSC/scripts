@@ -1,5 +1,7 @@
 #/bin/bash
 
+Gstr_Xorder=""
+Gstr_Yorder=""
 
 G_SYNOPSIS="
 
@@ -9,7 +11,7 @@ G_SYNOPSIS="
  
   SYNPOSIS
 
-      grid2D_show.sh <X-ordering> <Y-ordering>
+      grid2D_show.sh -X <X-ordering> -Y <Y-ordering>
 
   DESC
 
@@ -20,7 +22,7 @@ G_SYNOPSIS="
     
   ARGS
 
-      <X-ordering> <Y-ordering>
+      -X <X-ordering> -Y <Y-ordering>
       The string order desription of the cluster groups. Note that the
       Y-ordering is assumed to be left-right decreasing (i.e. the left most
       value is the highest Y-group -- see the example).
@@ -38,19 +40,18 @@ G_SYNOPSIS="
 
 "
 
-while getopts option h; do
+while getopts X:Y:h option ; do
     case "$option" 
     in
+        X)  Gstr_Xorder=$OPTARG         ;;
+        Y)  Gstr_Yorder=$OPTARG         ;;
         \?) echo "$G_SYNOPSIS"
             exit 1                      ;;
     esac
 done
 
-Xorder=$1
-Yorder=$2
-
-groupsX=${#Xorder}
-groupsY=${#Yorder}
+groupsX=${#Gstr_Xorder}
+groupsY=${#Gstr_Yorder}
 
 if (( groupsX != groupsY )) ; then
     printf "Error! X-ordering and Y-ordering strings are unequal length.\n"
@@ -58,9 +59,9 @@ if (( groupsX != groupsY )) ; then
 fi
 
 for GROUP in $(seq 0 $(expr $groupsX - 1)) ; do
-    GROUPIDX=${Xorder:$GROUP:1}
-    COL=$(echo $(expr index "$Xorder" $GROUPIDX))
-    ROW=$(echo $(expr index "$Yorder" $GROUPIDX))
+    GROUPIDX=${Gstr_Xorder:$GROUP:1}
+    COL=$(echo $(expr index "$Gstr_Xorder" $GROUPIDX))
+    ROW=$(echo $(expr index "$Gstr_Yorder" $GROUPIDX))
     printf "%s: %s, %s\n" $GROUPIDX $ROW $COL
 done
 
