@@ -21,7 +21,7 @@ PATH=$PATH:$PKGDIR/mricron:$PKGDIR/dtk:$PKGDIR/gdcm/bin:$PKGDIR/Slicer/current
 PATH=$PATH:$2
 export PATH
 echo $PATH
-PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp:/chb/arch/python/cfflib
+PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp:/chb/arch/python/cfflib:/chb/arch/python/nibabel
 export PYTHONPATH
 cd $4
 pl_batch.bash $3 > $5.std 2> $5.err
