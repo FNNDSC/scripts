@@ -857,7 +857,7 @@ if (( ${barr_stage[4]} )) ; then
                 ${NIIOUT4}.trk                          \
                 $EXOPTS                                 \
                 $RECONALG                               \
-                -at G_ANGLETHRESHOLD                    \
+                -at $G_ANGLETHRESHOLD                   \
                 -it nii                                 \
                 -m $MASK1                               \
                 $MASK2                                  \
