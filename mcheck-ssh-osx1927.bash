@@ -72,7 +72,7 @@ EM_badRestart="the corrective action failed. Perhaps a target process failed?"
 # Error codes
 EC_badRestart=10
 
-targetList=19
+targetList=21
 
 TARGETCHECK[0]="psa 7777  | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[0]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 7777 -L 22)"
@@ -100,7 +100,7 @@ TARGETCHECK[11]="psa 7776 | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[11]="(~/arch/scripts/sshTunnel_restart.sh -g -F -H kaos -h gate -u rudolph -L 7776 -R 22)"
 TARGETCHECK[12]="psa 7775 | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[12]="(~/arch/scripts/sshTunnel_restart.sh -g -F -H heisenberg -h gate -u rudolph -L 7775 -R 22)"
-TARGETCHECK[13]="psa 4204 | grep $(whoami) | grep -v grep |  wc -l"
+TARGETCHECK[13]="psa 4204 | grep $(whoami) | grep ssh | grep -v grep |  wc -l"
 TARGETACTION[13]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 4204 -H rc-drno -h dreev.tch.harvard.edu -u ch137123 -L 22)"
 TARGETCHECK[14]="psa 8888 | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[14]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 8888 -H natal -h dreev.tch.harvard.edu -u ch137123 -L 22)"
@@ -112,6 +112,10 @@ TARGETCHECK[17]="psa 8800 | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[17]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 8800 -H natal -h dreev.tch.harvard.edu -u ch137123 -L 80)"
 TARGETCHECK[18]="psa 4216 | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[18]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 4216 -H babymeg -h dreev.tch.harvard.edu -u ch137123 -L 22)"
+TARGETCHECK[19]="psa 9000| grep $(whoami) | grep -v grep |  wc -l"
+TARGETACTION[19]="( ssh -p 7778 -g -f -N -X -L 9000:localhost:80 rudolph@71.184.80.220 )"
+TARGETCHECK[20]="psa 6812 | grep $(whoami) | grep -v grep |  wc -l"
+TARGETACTION[20]="( ssh -p 7778 -g -f -N -X -L 6812:localhost:22 rudolph@71.184.80.220 )"
 
 # Process command line options
 while getopts h option ; do

@@ -63,6 +63,12 @@ G_SYNPOSIS="
         If specified, generate extra col separation characters -- useful for
         importing into OpenOffice and LaTeX.
 
+  POSTCONDITIONS
+  o For each pos,neg for each curv, for each region, for each surface, create:
+      <fileName>.grid
+      <fileName>.xord
+      <fileName>.yord
+
   HISTORY
     
   25 March 2011
@@ -118,6 +124,8 @@ for CURV in $G_CURVpos ; do
                 ordering=${Yorder//' '/$G_EXTRALINES}
             fi
             grid2D_show.py -S ${fileName}.grid -X $Xordering -Y $Yordering
+            echo $Xordering > ${fileName}.xord
+            echo $Yordering > ${fileName}.yord
         else
             if (( Gb_extraLines )) ; then
                 ordering="N|N|N|"
