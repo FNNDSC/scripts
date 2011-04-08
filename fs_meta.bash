@@ -524,12 +524,13 @@ STAGE1DIR=$(cat $LOGFILE | grep Collection | tail -n 1 	|\
 if (( ! ${#STAGE1DIR} )) ; then fatal dependencyStage; fi
 
 G_OUTDIR=$(dirname $STAGE1DIR)
+G_OUTDIR=${G_OUTDIR}/FREESURFER
 lprintn "<outputDir>: $G_OUTDIR"
 STAGE1OUT=$STAGE1DIR
 
 cd $G_OUTDIR
-export SUBJECTS_DIR=$(dirname $(pwd))
-SUBJECT=$(basename $(pwd))
+export SUBJECTS_DIR=$(pwd)
+SUBJECT=FREESURFER
 
 # Stage 2
 STAGE2PROC=recon-all
@@ -545,8 +546,7 @@ if (( ${barr_stage[2]} )) ; then
 		 awk '{for(i=1; i<=NF; i++)		\
 			 {printf("-i %s ", $i);}}')
     EXOPTS=$(eval expertOpts_parse $STAGE2PROC)
-    STAGECMD="recon-all $STAGEINPUTS -s $SUBJECT 	\
-		-force"
+    STAGECMD="recon-all $STAGEINPUTS -s $SUBJECT"
     stage_run "$STAGE" "$STAGECMD" 			\
                 "${G_LOGDIR}/${STAGE2PROC}-i.std"	\
                 "${G_LOGDIR}/${STAGE2PROC}-i.err"	\
