@@ -9,6 +9,7 @@ let Gb_groupOverride=0
 G_GROUPNUM=3
 G_GROUPNUMOVERRIDE=3
 G_TYPE="-x"
+G_EXPDIR=$(pwd)
 
 let Gb_expDirSpecified=0
 
@@ -31,7 +32,7 @@ G_SYNPOSIS="
   ARGS
   
         -t <dataType>
-        One of 'overlap', 'ordering', 'ordering2', or 'areas'.
+        One of 'overlap', 'ordering', 'ordering2', 'areas', or 'grid'.
 
         -s 
         If specified, save summary reports (one per region/hemi/surface)

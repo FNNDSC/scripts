@@ -47,7 +47,7 @@ Gstr_synopsis 	= """
 
   EXAMPLE
   Typical example:
-        $>grid2D_show.sh 4312 4321
+        $>grid2D_show.py -X 4312 -Y 4321
         4 0 0 0 
         0 3 0 0
         0 0 0 2

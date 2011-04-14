@@ -27,15 +27,17 @@ import 		sys
 import		time
 import		string
 import          re
+import          types
 import          commands
 from 		subprocess	import *
 from            cStringIO       import StringIO
+from            numpy           import *
 
 def error_exit(         astr_func,
                         astr_action,
                         astr_error,
                         aexitCode):
-        print "%s: FATAL ERROR" % astr_func
+        print "%s: FATAL ERROR"
         print "\tSorry, some error seems to have occurred in <%s::%s>" \
                 % ('systemMisc', astr_func)
         print "\tWhile %s"                                  % astr_action
@@ -60,6 +62,14 @@ def list_removeDuplicates(alist):
     alist = list(set(alist))
     return alist
 
+def list_i2str(ilist):
+    """
+    Convert an integer list into a string list.
+    """
+    slist = []
+    for el in ilist:
+        slist.append(str(el))
+    return slist
         
 """
 The attribute* set of functions process strings/dictionaries of the
@@ -195,20 +205,24 @@ def system_procRet(str_command, b_echoCommand = 0):
 	return retcode, str_stdout
 	
 def subprocess_eval(str_command, b_echoCommand = 0):
-    if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
+    if b_echoCommand: printf('%s', str_command)
     b_OK	= True
     retcode	= -1    
+    p = Popen(string.split(str_command), stdout=PIPE, stderr=PIPE)
+    str_stdout, str_stderr = p.communicate()
     try:
-	str_forRet	= str_command + " >/dev/null"
+	str_forRet	= str_command + " 2>/dev/null >/dev/null"
 	retcode 	= call(str_forRet, shell=True)
     except OSError, e:
 	b_OK	= False
-    if b_OK:
-	lstr_cmd 	= string.split(str_command)
-	str_stdout	= Popen(lstr_cmd, stdout=PIPE).communicate()[0]	    
-    else:
-    	str_stdout 	= None
-    return retcode, str_stdout	
+    return retcode, str_stdout, str_stderr
+    
+def getCommandOutput2(command):
+    child = os.popen(command)
+    data = child.read( )
+    err = child.close( )
+    if err:
+        raise RuntimeError, '%r failed with exit code %d' % (command, err)
 		
 def file_exists(astr_fileName):
     try:
@@ -263,8 +277,10 @@ def currentDate_formatted(astr_format = 'US', astr_sep = '/'):
 
 def dict_init(al_key, avalInit = None):
   adict = {}
-  for key in al_key:
-    adict[key]  = avalInit
+  if type(avalInit) is types.ListType:
+      adict = dict(zip(al_key, avalInit))
+  else:
+      adict = dict.fromkeys(al_key, avalInit)
   return adict
   
 def str2lst(astr_input, astr_separator=" "):
