@@ -1,0 +1,108 @@
+#!/bin/bash
+#
+# Copyright 2010 Rudolph Pienaar, Dan Ginsburg, FNNDSC
+# Childrens Hospital Boston
+#
+# GPL v2
+#
+
+# "include" the set of common script functions
+source common.bash
+declare -i Gi_verbose=0
+
+G_HOSTLIST="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
+G_LOG=/chb/install/ubuntu/setup/fnndsc-apt-get.packages
+
+G_SYNPOSIS="
+
+  NAME
+
+        fnndsc-apt-get 
+
+  SYNOPSIS
+  
+        fnndsc-apt-get [-h <hostlist>] [-v <verbosityLevel>] [-l <packageLog>] \
+                        [apt-get-args]
+
+  DESC
+
+        'fnndsc-apt-get' is a thin wrapper about apt-get that is spawned off
+        on each machine in <hostlist>.
+        
+        Packages are also automatically appended to a log file.
+
+  ARGS
+
+        -h <hostlist> (Optional: default $G_HOSTLIST)
+        List of hosts to perform remote 'apt-get [apt-get-args]' on.
+        
+        -l <packageLog> (Optional)
+        Log the [apt-get-args] to this file.
+        
+	-v <verbosityLevel> (Optional)
+	Verbosity level. A value of '10' is a good choice here.
+        
+  HISTORY
+    
+  20 April 2011
+  o Initial design and coding.
+
+"
+
+A_args="checking command line arguments"
+A_packages="collecting package info from remote host"
+A_release="checking release versions"
+A_noAptGetArgs="checking on command line"
+A_execRemoteApt="executing remote apt-get"
+
+EM_args="you *must* specify a '-h <remoteHost>'."
+EM_packages="I was not able to successfully collect the package state."
+EM_release="the remote host and this host are not the same Ubuntu release."
+EM_noAptGetArgs="no remote apt-get args were specified"
+EM_execRemoteApt="an error occurred."
+
+EC_args=10
+EC_packages=11
+EC_release=12
+EC_noAptGetArgs=14
+EC_execRemoteApt=15
+
+while getopts h:l:v: option ; do
+    case "$option" 
+    in
+        v) Gi_verbose=$OPTARG   ;;
+        h) G_HOSTLIST=$OPTARG   ;;
+        l) G_LOG=$OPTARG        ;;
+    esac
+done
+
+shift $((OPTIND - 1))
+APTGETARGS=$*
+if (( ! ${#APTGETARGS} )) ; then fatal noAptGetArgs ; fi
+
+for HOST in $(echo "$G_HOSTLIST" | tr ',' ' ') ; do
+        cprint "Remote host" "[ $HOST ]"
+        lprint "Local release info" 
+        LOCALRELEASE=$(cat /etc/issue)
+        rprint "[ $LOCALRELEASE ]"
+
+        lprint "Remote release info"
+        REMOTERELEASE=$(ssh $HOST cat /etc/issue)
+        rprint "[ $REMOTERELEASE ]"
+
+        lprint "Local and remote release"
+        if [[ "$LOCALRELEASE" == "$REMOTERELEASE" ]]  ; then
+                rprint "[ ok ]"
+        else
+                fatal release
+        fi
+        statusPrint "Executing remote \"apt-get $APTGETARGS\"" "\n"
+        ssh -t $HOST sudo apt-get "$APTGETARGS"
+        REMOTESTATUS=$?
+        lprint "Checking return result"
+        ret_check $REMOTESTATUS || fatal execRemoteApt
+        logstr=$(sysprint "| (whoami=$(whoami), remote=$HOST) apt-get $APTGETARGS")
+        echo $logstr >> $G_LOG
+done
+
+
