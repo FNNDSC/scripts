@@ -60,14 +60,10 @@ G_SYNOPSIS="
         some care.
 
         -a <aetitle> (Optional $G_AETITLE)
-        Local AETITLE.
-        
-        -c <calltitle> (Optional $G_CALLTITLE)
-        
-        
-        -l <localPort> (Optional $G_RCVPORT)
-        The port on 
-        
+        Local AETITLE. This is the only field that the CHB PACS seems to care 
+        about. Queries are retrieved to the host:port that is associated
+        with this <aetitle>.
+                
         -P <PACShost> (Optional $G_QUERYHOST)
         The PACS host to query.
 
