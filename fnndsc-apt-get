@@ -11,9 +11,14 @@ source common.bash
 declare -i Gi_verbose=0
 
 G_HOSTLIST="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
+
+G_HOSTLISTPICES="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
+G_HOSTLISTMEG="babymeg,mercury,venus,terra,mars,jupiter"
+G_HOSTLISTFNNDSC="shaka,ipmi"
+
 G_LOG=/chb/install/ubuntu/setup/fnndsc-apt-get.packages
 
-G_SYNPOSIS="
+G_SYNOPSIS="
 
   NAME
 
@@ -21,7 +26,7 @@ G_SYNPOSIS="
 
   SYNOPSIS
   
-        fnndsc-apt-get [-h <hostlist>] [-v <verbosityLevel>] [-l <packageLog>] \
+        fnndsc-apt-get [-h <hostlist>] [-v <verbosityLevel>] [-l <packageLog>] \\
                         [apt-get-args]
 
   DESC
@@ -33,8 +38,14 @@ G_SYNPOSIS="
 
   ARGS
 
-        -h <hostlist> (Optional: default $G_HOSTLIST)
-        List of hosts to perform remote 'apt-get [apt-get-args]' on.
+        -h <hostlist> (Optional: default 'pices')
+        List of hosts on which to perform remote 'apt-get [apt-get-args]'.
+        Hosts are specified as comma delimites list with no white space.
+        Several convenience lists are available:
+        
+                -h pices        : all the cluster hosts
+                -h meg          : all the MEG hosts
+                -h fnndsc       : all the 1 Autumn hosts
         
         -l <packageLog> (Optional)
         Log the [apt-get-args] to this file.
@@ -73,9 +84,17 @@ while getopts h:l:v: option ; do
         v) Gi_verbose=$OPTARG   ;;
         h) G_HOSTLIST=$OPTARG   ;;
         l) G_LOG=$OPTARG        ;;
+        *) synopsis_show        ;;
     esac
 done
 
+case $G_HOSTLIST 
+in
+        "pices")        G_HOSTLIST=$G_HOSTLISTPICES     ;;
+        "meg")          G_HOSTLIST=$G_HOSTLISTMEG       ;;
+        "fnndsc")       G_HOSTLIST=$G_HOSTLISTFNNDSC    ;;
+esac
+    
 shift $((OPTIND - 1))
 APTGETARGS=$*
 if (( ! ${#APTGETARGS} )) ; then fatal noAptGetArgs ; fi

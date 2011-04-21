@@ -421,6 +421,7 @@ function cprint
 	local left=$1
 	local right=$2
 
+	if (( ! Gi_verbose )) ; then return 1 ; fi
 	printf "%*s"	$G_LC 	"$left"
 	printf "%*s\n"	$G_RC	"$right"
 }
@@ -465,6 +466,7 @@ function rprint
 	#
 	local right=$1
 
+	if (( ! Gi_verbose )) ; then return 1 ; fi
 	printf "%*s\n"	$G_RC	"$right"
 }
 
@@ -481,6 +483,7 @@ function statusPrint
         local status=$1
         local ctrlN=$2
 
+	if (( ! Gi_verbose )) ; then return 1 ; fi
         printf "%*s$ctrlN" $G_LC "$status"
 }
 
@@ -502,6 +505,12 @@ function stage_check
                         fatal metaLog
                 fi
         fi
+}
+
+function sysprint
+{
+    local message="$1"
+    echo -e "$(date) $(hostname) $message"
 }
 
 function stage_stamp

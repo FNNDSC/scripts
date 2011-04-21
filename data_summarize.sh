@@ -32,7 +32,7 @@ G_SYNPOSIS="
   ARGS
   
         -t <dataType>
-        One of 'overlap', 'ordering', 'ordering2', 'areas', or 'grid'.
+        One of 'overlap', 'ordering', 'ordering2', 'areas', 'grid', or 'ggrid'.
 
         -s 
         If specified, save summary reports (one per region/hemi/surface)
@@ -52,6 +52,9 @@ G_SYNPOSIS="
   
   10 March 2011
   o More flexible dir layout handling.
+
+  14 April 2011
+  o Added 'ggrid'.
 
 "
 
@@ -87,6 +90,7 @@ in
         ordering)       TABULATE="ordering_tabulate.sh"         ;;
         ordering2)      TABULATE="ordering_tabulate.sh -T "     ;;
         grid)           TABULATE="grid_tabulate.sh"             ;;
+        ggrid)          TABULATE="ggrid_tabulate.sh"            ;;
         *)              printf "Invalid <dataType>! Exiting with code '2'.\n\n"
                         exit 2                                          ;;
 esac
