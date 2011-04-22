@@ -37,6 +37,7 @@ declare -i Gb_bValueOverride=0
 declare -i Gb_b0override=0
 declare -i Gi_b0vols=1
 declare -i Gb_Siemens=0
+declare -i Gb_Philips=0
 declare -i Gb_GE=0
 declare -i Gb_forceGradientFile=0
 declare -i Gb_skipEddyCurrentCorrection=0
@@ -409,6 +410,7 @@ A_noDicomDirArg="checking on -d <dicomInputDir> argument"
 A_unknownManufacturer="checking on the diffusion data"
 A_ge_diffusionProcess="running ge_diffusionProcess.bash"
 A_siemens_diffusionProcess="running siemens_diffusionProcess.bash"
+A_philips_diffusionProcess="running philips_diffusionProcess.bash"
 A_reconAlg="checking on the reconstruction algorithm"
 A_imageModel="checking on the image model"
 A_fa="checking on the FA argument "
@@ -430,6 +432,7 @@ EM_noDicomDirArg="it seems as though you didn't specify a -D <dicomInputDir>."
 EM_unknownManufacturer="the manufacturer field for the DICOM data is unknown."
 EM_ge_diffusionProcess="some internal error occurred."
 EM_siemens_diffusionProcess="some internal error occurred."
+EM_philips_diffusionProcess="some internal error occurred."
 EM_reconAlg="must be either 'fact', 'rk2', 'sl', or 'tl'."
 EM_imageModel="must be either 'hardi' or 'dti'."
 EM_fa="No <lth> has been specified."
@@ -451,6 +454,7 @@ EC_noDicomFile=52
 EC_unknownManufacturer=60
 EC_ge_diffusionProcess=61
 EC_siemens_diffusionProcess=62
+EC_philips_diffusionProcess=62
 EC_reconAlg=70
 EC_imageModel=71
 EC_fa=80
@@ -666,7 +670,8 @@ cprint  "hostname"      "[ $(hostname) ]"
 ## Check on script preconditions
 REQUIREDFILES="common.bash dcm2trk.bash tract_slice.bash dicom_dirSend.bash \
                 dicom_seriesCollect.bash mri_info $XVFB dcm_mkIndx.bash \
-                ge_diffusionProcess.bash siemens_diffusionProcess.bash convert"
+                ge_diffusionProcess.bash siemens_diffusionProcess.bash \
+                philips_diffusionProcess.bash convert"
 
 cprint  "Use diff_unpack for dcm->nii"  "[ $Gb_useDiffUnpack ]"
 if (( Gb_useDiffUnpack )) ; then
@@ -702,8 +707,10 @@ MANUFACTURER=$(echo "$G_DCM_MKINDX"     |\
 cprint          "Manufacturer"  " [ $MANUFACTURER ]"
 Gb_Siemens=$(echo $MANUFACTURER | grep -i Siemens       | wc -l)
 Gb_GE=$(echo $MANUFACTURER      | grep -i GE            | wc -l)
+Gb_Philips=$(echo $MANUFACTURER | grep -i Philips       | wc -l)
 if (( Gb_Siemens )) ;   then G_MANUFACTURER="Siemens" ; fi
 if (( Gb_GE)) ;         then G_MANUFACTURER="GE" ;      fi
+if (( Gb_Philips )) ;   then G_MANUFACTURER="Philips" ; fi
 MRID=$(MRID_find $G_DICOMINPUTDIR)
 cprint          "MRID"          "[ $MRID ]"
 
@@ -937,6 +944,25 @@ if (( ${barr_stage[2]} )) ; then
                 echo "-Z" >> $(expertOpts_file $STAGE2PROC)
            echo "opt file: $(expertOpts_file $STAGE2PROC)"
         fi
+        ;;
+      "Philips" )               
+        statusPrint "Extracting meta data: philips_diffusionProcess.bash"
+        TARGETSPEC=""
+        if (( Gb_useDICOMFile )) ; then
+            TARGETSPEC="-d $G_DICOMINPUTFILE"
+        fi
+        philips_diffusionProcess.bash -D $G_DICOMINPUTDIR $GEOPTS          \
+            $TARGETSPEC                                                    \
+            -O $G_OUTDIR/philips_diffusionProcess                          \
+            -L $G_LOGDIR                                                   \
+             >${G_LOGDIR}/${STAGE2PROC}-philips_diffusionProcess.bash.std  \
+            2>${G_LOGDIR}/${STAGE2PROC}-philips_diffusionProcess.bash.err  
+        DIFFUSIONINFO=$(cat                                                \
+            ${G_LOGDIR}/${STAGE2PROC}-philips_diffusionProcess.bash.std)
+        ret_check $? || fatal philips_diffusionProcess
+        if (( !Gb_useDiffUnpack )) ; then
+          DIFFUSIONINPUT=$(find $G_OUTDIR/philips_diffusionProcess -name "*.nii.gz" | head -n 1)
+        fi                          
         ;;
       *) fatal unknownManufacturer
         ;;
