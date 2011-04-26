@@ -13,13 +13,13 @@ SYNOPSIS
 DESCRIPTION
 
     'age_calc.py' accepts as input <birthDate> and <scanDate> which must be
-        of the format YYYYMMDD (from DICOM StudyDate and PatientBirthDate).
-        This script will convert it to a DICOM Age String which is of the format:
+     of the format YYYYMMDD (from DICOM StudyDate and PatientBirthDate).
+     This script will convert it to a DICOM Age String which is of the format:
 
-           'A string of characters with one of the following formats -- nnnD, nnnW, 
-           nnnM, nnnY; where nnn shall contain the number of days for D, weeks for W, 
-           months for M, or years for Y.  Example: '018M' would represent an age of
-           18 months.'
+     'A string of characters with one of the following formats -- nnnD, nnnW, 
+     nnnM, nnnY; where nnn shall contain the number of days for D, weeks for W, 
+     months for M, or years for Y.  Example: '018M' would represent an age of
+     18 months.'
         
 ARGUMENTS
 
@@ -27,11 +27,13 @@ ARGUMENTS
         
 PRECONDITIONS
 
-    o The <birthDate> and <scanDate> must be of form 'YYYYMMDD' as described above.
+    o The <birthDate> and <scanDate> must be of form 'YYYYMMDD' as described 
+      above.
     
 POSTCONDITIONS
 
-    o  This script will convert the difference in dates to a DICOM Age String (DICOM Table 6.2-1)
+    o  This script will convert the difference in dates to a i
+       DICOM Age String (DICOM Table 6.2-1)
         
 HISTORY
 
