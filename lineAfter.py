@@ -7,72 +7,55 @@ import systemMisc as misc
 Gb_showErr                      = 1
 Gb_silent                       = 0
 Gstr_fileName                   = ""
-Gstr_tagStartString             = ""
-Gstr_tagStopString              = ""
-Gstr_tagSortString              = ""
-G_columnLine                    = -1
+Gstr_tagHoldString              = ""
+Gstr_tagAfterString             = ""
 
 Gstr_synopsis 	= """
 
   NAME
        
-      blockSort.py
+      lineAfter.py
  
   SYNPOSIS
 
-      blockSort.py -f <fileName> -s <tagStartString> -u <tagStopString> \\
-                   -S <tagSortString> -C <columnInLine>
+      lineAfter.py -f <fileName> -s <tagHoldString> -u <tagAfterString>
 
   DESC
 
-      'blockSort.py' sorts an input <fileName> into multiple smaller files
-      based off a single pass through <fileName>. Text lines that are delimited
-      between <tagStartString> and <tagStopString> (including) are appended
-      to new files. The name of these new files are based on the text in
-      <columnInLine> of matches to <tagSortString>. For example, if this
-      text is <sortText>, the output sorted file is <fileName>.<sortText>
+      'lineAfter.py' reorders pairs of lines in <fileName>. It essentially
+      moves a line containing <tagHoldString> to appear directly after
+      <tagAfterString>.
           
   ARGS
 
       -f <fileName>
       The input file to sort.
 
-      -s <tagStartString>
-      A string that tags the line on which to start applying the filter.
+      -s <tagHoldString>
+      A string that tags the line to delay.
       
-      -u <tagStopString>
-      A string that tags the line on which to stop applying the filter.
-
-      -S <tagSortString> -C <columnInLine>
-      A string that defines where to append the filtered text. The
-      <columnInLine> of <tagSortString> is used to create a new file,
-      <fileName>.<columnInLine> which contains all sorted lines that
-      conform to the search tags.
-      		
+      -u <tagAfterString>
+      A string that tags the line after which the <holdString> should
+      appear.
+            		
   PRECONDITIONS
 
         o Valid input file.
         o Text blocks are not interleaved.
+        o <tagHoldString> should appear before <tagAfterString>.
         
   POSTCONDITIONS
 
-	o Input is filtered into multiple smaller files.
+	o All lines corresponding to <tagHoldString> are delayed to
+          appear after the next <tagAfterString>.
 	
   EXAMPLE
       Typical example:
 
-        $>blockSort.py -f DICOMseries.std -s Dicom-Data -u RESPONSE     \\
-                        -S StudyInstanceUID -C 3
+        $>lineAfter.py -f DICOMseries.std -s StudyInstance -u SeriesInstance
 
-      will sort the input file 'DICOMseries.std' into smaller files.
-      These sorted files' names will have an extention built from the
-      3rd column of a line containing "StudyInstanceUID", and will contain
-      all text lines between those starting with "Dicom-Data" up to and
-      inlcuding the line containing "RESPONSE".
-
-      This has the practical effect of sorting a single file with many
-      different StudyInstanceUIDs into separate files, each containing
-      a single StudyInstanceUID.
+      will print lines containing "StudyInstance" after lines containing
+      "SeriesInstance". 
 
   HISTORY
 
@@ -104,12 +87,12 @@ dictErr = {
         'action'        : 'opening the output <fileName>, ',
         'error'         : 'an access error occurred!',
         'exitCode'      : 17},
-    'tagStartString'         : {
-        'action'        : 'checking the -s <tagStartString>, ',
+    'tagHoldString'      : {
+        'action'        : 'checking the -s <tagHoldString>, ',
         'error'         : 'the <tagString> was not specified!',
         'exitCode'      : 11},
-    'tagStopString'     : {
-        'action'        : 'checking the -s <tagStopString>, ',
+    'tagAfterString'    : {
+        'action'        : 'checking the -s <tagAfterString>, ',
         'error'         : 'the <tagStopString> was not specified!',
         'exitCode'      : 11},
     'tagSortString'     : {
@@ -165,16 +148,16 @@ def contains(theString, theQueryValue):
     return theString.find(theQueryValue) > -1
 
 try:
-    opts, remargs   = getopt.getopt(sys.argv[1:], 'f:s:u:S:C:')
+    opts, remargs   = getopt.getopt(sys.argv[1:], 'f:s:u:')
 except getopt.GetoptError:
     synopsis_show()
     sys.exit(1)
 
 for o, a in opts:
     if (o == '-s'):
-        Gstr_tagStartString             = a
+        Gstr_tagHoldString             = a
     if (o == '-u'):
-        Gstr_tagStopString              = a
+        Gstr_tagAfterString              = a
         Gb_tagStopStringSpecified       = True
     if (o == '-f'):
         Gstr_fileName                   = a
@@ -185,49 +168,23 @@ for o, a in opts:
 
 if len(sys.argv) == 1: fatal('NoArgs')
 if not len(Gstr_fileName): fatal('fileName')
-if not len(Gstr_tagStartString): fatal('tagStartString')
-if not len(Gstr_tagStopString): fatal('tagStopString')
-if not len(Gstr_tagSortString): fatal('tagSortString')
-if G_columnLine <=0: fatal('columnInLine')
+if not len(Gstr_tagHoldString): fatal('tagHoldString')
+if not len(Gstr_tagAfterString): fatal('tagAfterString')
 
 try:
     FILE_input = open(Gstr_fileName)
 except IOError:
     fatal('fileInputAccess')
 
-
-# Delete any previous sorts...
-misc.system_pipeRet('rm %s.* 2>/dev/null' % Gstr_fileName)
-
-arrstr_window           = []
-dictFILE_output         = {}
-Gstr_sortExt            = ""
-b_sort                  = False
 for line in FILE_input:
     line        = line.strip()
-    if contains(line, Gstr_tagStartString):
-       b_sort   = True
-    if b_sort:
-        arrstr_window.append(line)
-        if contains(line, Gstr_tagSortString):
-            lstr        = line.split()
-            str_sort    = lstr[G_columnLine-1]
-            str_sortExt = str_sort.strip('[]')
-    if contains(line, Gstr_tagStopString):
-        b_sort          = False
-        if not len(str_sortExt): fatal('sortExt')
-        str_outputFileName = '%s.%s' % (Gstr_fileName, str_sortExt)
-        if str_outputFileName not in dictFILE_output.keys():
-            try:
-                dictFILE_output[str_outputFileName] = open(str_outputFileName, 'w')
-            except IOError:
-                fatal('fileOutputAccess', 'Output file = %s' % str_outputFileName);
-        for line in arrstr_window:
-            dictFILE_output[str_outputFileName].write('%s\n' % line)
-        arrstr_window     = []
+    if contains(line, Gstr_tagHoldString):
+       str_holdLine     = line
+    else:
+       print "%s" % line 
+    if contains(line, Gstr_tagAfterString):
+        print "%s" % str_holdLine
 
 FILE_input.close()
-for str_file in dictFILE_output.keys():
-    dictFILE_output[str_file].close()
     
 sys.exit(0)

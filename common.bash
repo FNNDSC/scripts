@@ -159,6 +159,11 @@ function expertOpts_write
     echo "$OPTS"
 }
 
+function trim
+{
+    echo $1;
+}
+
 function string_clean
 {
     # ARGS

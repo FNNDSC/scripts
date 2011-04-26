@@ -32,7 +32,7 @@ Gstr_synopsis 	= """
       -f <fileName>
       The input file to filter.
 
-      -s <tagString>
+      -s <tagStartString>
       A string that tags the line on which to start applying the filter.
       
       -k <skipLines>

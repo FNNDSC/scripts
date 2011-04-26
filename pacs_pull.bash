@@ -12,8 +12,12 @@ declare -i Gi_verbose=1
 declare -i Gb_queryOnly=0
 declare -i Gb_final=0
 declare -i Gb_metaInfoPrinted=0
-
 declare -i Gb_dateSpecified=0
+declare -i Gb_seriesRetrieve=0
+
+# Column formatting (from common.bash)
+G_LC=30
+G_RC=50
 
 # User searchable fields
 # Fields initialised with "-x" must be specified by the user
@@ -50,6 +54,7 @@ G_SYNOPSIS="
         pacs_pull.bash  -M <MRN>                                        \\
                         [-Q]                                            \\
                         [-D <scandate>]                                 \\
+                        [-S <seriesDescription>]                        \\
                         [-a <aetitle>]                                  \\
                         [-P <PACShost>]                                 \\
                         [-p <PACSport>]                                 \\
@@ -80,6 +85,11 @@ G_SYNOPSIS="
         -D <scandate>
         Scan date. If not specified, will collect *all* matches. Use with
         some care.
+
+        -S <seriesDescription>
+        Series description. If specified, limit retrieve or query to
+        <seriesDescription>. This must be an EXACT match for a series
+        in a given study.
 
         -a <aetitle> (Optional $G_AETITLE)
         Local AETITLE. This is the only field that the CHB PACS seems to care 
@@ -114,6 +124,7 @@ G_QueryRetrieveLevel="0008,0052"
 G_PatientsName="0010,0010"
 G_SeriesDescription="0008,103e"
 G_StudyInstanceUID="0020,000d"
+G_SeriesInstanceUID="0020,000e"
 G_PatientID="0010,0020"
 G_Modality="0008,0060"
 G_StudyDate="0008,0020"
@@ -148,19 +159,59 @@ function DICOMline_scanFor
     fi
 }
 
-while getopts M:QD:a:c:l:P:p:v: option ; do
+function moveSERIES_cmd
+{
+    STUDYIDTOPULL="$1"
+    SERIESUIDTOPULL="$2"
+
+    lprint "Starting PACS SERIES retrieve..."
+
+    PULL="movescu  -S --aetitle ${G_AETITLE}                            \
+                   --move $G_AETITLE                                    \
+                   -k $G_QueryRetrieveLevel=SERIES                      \
+                   -k $G_StudyInstanceUID=${STUDYIDTOPULL}              \
+                   -k $G_SeriesInstanceUID=$SERIESUIDTOPULL             \
+                   $G_QUERYHOST $G_QUERYPORT"
+
+    eval "$PULL"
+    rprint "[ $? ]"
+    Gb_final=$(( Gb_final || $? ))
+}
+
+function moveSTUDY_cmd
+{
+    STUDYIDTOPULL="$1"
+    SERIESTOPULL="$2"
+
+    lprint "Starting PACS STUDY retrieve..."
+
+    PULL="movescu  --aetitle ${G_AETITLE}                               \
+                   --move $G_AETITLE                                    \
+                   --study                                              \
+                   -k $G_QueryRetrieveLevel=STUDY                       \
+                   -k $G_StudyInstanceUID=${STUDYIDTOPULL}              \
+                   $G_QUERYHOST $G_QUERYPORT"
+
+    eval "$PULL"
+    rprint "[ $? ]"
+    Gb_final=$(( Gb_final || $? ))
+}
+
+while getopts M:QD:S:a:c:l:P:p:v: option ; do
     case "$option" 
     in
-        v) Gi_verbose=$OPTARG   ;;
-        M) G_PATIENTID=$OPTARG  ;;
-        Q) let Gb_queryOnly=1   ;;
-        D) G_SCANDATE=$OPTARG   ;;
-        a) G_AETITLE=$OPTARG    ;;
-        c) G_CALLTITLE=$OPTARG  ;;
-        l) G_RCVPORT=$OPTARG    ;;
-        P) G_QUERYHOST=$OPTARG  ;;
-        p) G_QUERYPORT=$OPTARG  ;;
-        *) synopsis_show        ;;
+        v) Gi_verbose=$OPTARG           ;;
+        M) G_PATIENTID=$OPTARG          ;;
+        Q) let Gb_queryOnly=1           ;;
+        D) G_SCANDATE=$OPTARG           ;;
+        S) G_SERIESDESCRIPTION=$OPTARG
+           let Gb_seriesRetrieve=1      ;;
+        a) G_AETITLE=$OPTARG            ;;
+        c) G_CALLTITLE=$OPTARG          ;;
+        l) G_RCVPORT=$OPTARG            ;;
+        P) G_QUERYHOST=$OPTARG          ;;
+        p) G_QUERYPORT=$OPTARG          ;;
+        *) synopsis_show                ;;
     esac
 done
 
@@ -217,7 +268,8 @@ if (( ${#UI} )) ; then
          -k $G_PatientsName=$G_PATIENTSNAME                             \
          -k $G_PatientBirthDate=                                        \
          -k $G_StudyInstanceUID=$currentUI                              \
-         -k $G_SeriesDescription=\"$G_SERIESDESCRIPTION\"               \
+         -k $G_SeriesInstanceUID=                                       \
+         -k $G_SeriesDescription=                                       \
          $G_QUERYHOST $G_QUERYPORT >> $G_FINDSCUSERIESSTD 2>> $G_FINDSCUSERIESERR"
     eval "$QUERYSERIES"
   done
@@ -239,6 +291,16 @@ lprint "Filtering down UI list"
 UILINE=$(cat $G_FINDSCUSERIESSTD| grep StudyInstanceUID | uniq)
 UI=$(echo "$UILINE" | awk '{print $3}')
 rprint "[ ok ]"
+lprint "Sorting UI series files"
+blockSort.py -f $G_FINDSCUSERIESSTD -s Dicom-Data -u RESPONSE -S StudyInstanceUID -C 3
+rprint "[ ok ]"
+lprint "Reordering UI series files"
+for FILE in $G_FINDSCUSERIESSTD.* ; do
+    lineAfter.py -f $FILE -s StudyInstance -u SeriesInstance > ${FILE}.reordered
+    mv ${FILE}.reordered $FILE
+done
+rprint "[ ok ]"
+
 PACSdata_size
 echo ""
 
@@ -252,8 +314,11 @@ Gb_final=$(( Gb_final || $? ))
 b_dateHit=0
 for currentUIb in $UI ; do
   currentUI=$(bracket_find $currentUIb)
-  statusPrint "$currentUI" "\n"
+  echo ""
+  statusPrint "StudyInstanceUID = $currentUI:" "\n"
   Gb_metaInfoPrinted=0
+  SERIESFILE=${G_FINDSCUSERIESSTD}.${currentUI}
+  IFS=$'\n'
   while read line ; do
     DA=$(echo "$line" | grep "0008,0020")
     if (( ${#DA} )) ; then
@@ -273,43 +338,57 @@ for currentUIb in $UI ; do
     tNAME=$(echo "$line"        | grep "$G_PatientsName")
     if (( ${#tNAME} )) ; then   NAME=$(bracket_find "$tNAME");    fi
 
+    tSERIESUID=$(echo "$line"   | grep "$G_SeriesInstanceUID")
+    if (( ${#tSERIESUID} )) ; then
+        SERIESUID=$(bracket_find "$tSERIESUID");
+        b_seriesUIDOK=1
+    fi
+
     tSERIES=$(echo "$line"      | grep "$G_SeriesDescription")
     if (( ${#tSERIES} )) ; then
         SERIES=$(bracket_find "$tSERIES")
         b_seriesOK=$(echo "$SERIES" | grep -v "no value" | wc -l)
-    fi
-    if [[ ${STUDYUID} == $currentUI && $b_dateHit == 1 && $b_seriesOK == 1 ]] ; then
-        if (( !Gb_metaInfoPrinted )) ; then
-            cprint "Patient Name"       "$NAME"
-            cprint "Patient MRN"        "$G_PATIENTID"
-            cprint "Scan Date"          "$STUDYDATE"
-            cprint "Patient Birthdate"  "$BIRTHDATE"
-            cprint "Patient Age"        "$(age_calc.py $STUDYDATE $BIRTHDATE)"
-            echo ""
-            Gb_metaInfoPrinted=1
-            if (( !Gb_queryOnly )) ; then
-                lprint "Starting PACS retrieve..."
-                # Grab the result from the PACS
-                PULL="movescu  --aetitle ${G_AETITLE}                             \
-                               --move $G_AETITLE --study                          \
-                               -k 0008,0052=STUDY                                 \
-                               -k 0020,000D=${STUDYUID}                           \
-                               $G_QUERYHOST $G_QUERYPORT"
-                eval "$PULL"
-                rprint "[ $? ]"
-                Gb_final=$(( Gb_final || $? ))
+        if (( Gb_seriesRetrieve )) ; then
+            if [[ $(string_clean $SERIES) == \
+                  $(string_clean $G_SERIESDESCRIPTION) ]] ; then
+                b_seriesOK=1
+            else
+                b_seriesOK=0
             fi
         fi
-        cprint "Series" "$SERIES"
-        b_dateHit=0
     fi
-  done < $G_FINDSCUSERIESSTD
+    if [[   ${STUDYUID} == $currentUI   &&              \
+            $b_dateHit == 1             &&              \
+            $b_seriesOK == 1            &&              \
+            $b_seriesUIDOK == 1 ]] ; then
+        if (( !Gb_metaInfoPrinted )) ; then
+            cprint "Scan Date"          "$STUDYDATE"
+            cprint "Patient Name"       "$NAME"
+            cprint "Patient MRN"        "$G_PATIENTID"
+            cprint "Patient Birthdate"  "$BIRTHDATE"
+            cprint "Patient Age"        "$(age_calc.py $BIRTHDATE $STUDYDATE 2>/dev/null)"
+            echo ""
+            Gb_metaInfoPrinted=1
+            if (( !Gb_queryOnly && !Gb_seriesRetrieve )) ; then
+                moveSTUDY_cmd $STUDYUID;
+            fi
+        fi
+        cprint "SeriesDescription" "$SERIES"
+        #cprint "SeriesUID" "$SERIESUID"
+        if (( !Gb_queryOnly && Gb_seriesRetrieve )) ; then
+            moveSERIES_cmd $STUDYUID "$SERIESUID";
+        fi
+        b_dateHit=0
+        b_seriesUIDOK=0
+    fi
+    done < ${G_FINDSCUSERIESSTD}.${currentUI}
 done
 
 rm $G_FINDSCUSTUDYERR
 rm $G_FINDSCUSTUDYSTD
 rm $G_FINDSCUSERIESERR
 rm $G_FINDSCUSERIESSTD
+rm $G_FINDSCUSERIESSTD.*
 
 exit $Gb_final
 
