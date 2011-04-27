@@ -88,8 +88,7 @@ G_SYNOPSIS="
 
         -S <seriesDescription>
         Series description. If specified, limit retrieve or query to
-        <seriesDescription>. This must be an EXACT match for a series
-        in a given study.
+        <seriesDescription>. This is a substring search match.
 
         -a <aetitle> (Optional $G_AETITLE)
         Local AETITLE. This is the only field that the CHB PACS seems to care 
@@ -349,12 +348,7 @@ for currentUIb in $UI ; do
         SERIES=$(bracket_find "$tSERIES")
         b_seriesOK=$(echo "$SERIES" | grep -v "no value" | wc -l)
         if (( Gb_seriesRetrieve )) ; then
-            if [[ $(string_clean $SERIES) == \
-                  $(string_clean $G_SERIESDESCRIPTION) ]] ; then
-                b_seriesOK=1
-            else
-                b_seriesOK=0
-            fi
+            b_seriesOK=$(echo "$SERIES" | grep "$G_SERIESDESCRIPTION" | wc -l)
         fi
     fi
     if [[   ${STUDYUID} == $currentUI   &&              \
