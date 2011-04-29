@@ -5,11 +5,15 @@
 #
 # GPL v2
 #
+# pacs_pull.bash -- General purpose PACS query/retrieve
+#                   text-based front end.
+#
+#
 
 # "include" the set of common script functions
 source common.bash
 declare -i Gi_verbose=1
-declare -i Gb_queryOnly=0
+declare -i Gb_queryOnly=1
 declare -i Gb_final=0
 declare -i Gb_metaInfoPrinted=0
 declare -i Gb_dateSpecified=0
@@ -30,8 +34,6 @@ G_SERIESDESCRIPTION=""
 G_STUDYINSTANCEUID=""
 G_SCANDATE=""
 
-
-
 G_FINDSCUSTUDYSTD=/tmp/${G_SELF}_${G_PID}_findscu_study.std
 G_FINDSCUSTUDYERR=/tmp/${G_SELF}_${G_PID}_findscu_study.err
 G_FINDSCUSERIESSTD=/tmp/${G_SELF}_${G_PID}_findscu_series.std
@@ -43,6 +45,11 @@ G_QUERYPORT=104
 G_CALLTITLE=osx1927
 G_RCVPORT=11112
 
+# For Mac OS X Darwin with MacPorts
+if [[ -f /opt/local/lib/dicom.dic ]] ; then
+    export DCMDICTPATH=/opt/local/lib/dicom.dic
+fi
+
 G_SYNOPSIS="
 
   NAME
@@ -52,7 +59,7 @@ G_SYNOPSIS="
   SYNOPSIS
   
         pacs_pull.bash  -M <MRN>                                        \\
-                        [-Q]                                            \\
+                        [-R]                                            \\
                         [-D <scandate>]                                 \\
                         [-S <seriesDescription>]                        \\
                         [-a <aetitle>]                                  \\
@@ -79,8 +86,11 @@ G_SYNOPSIS="
         -M <MRN>
         MRN to query.
         
-        -Q
-        If specified, query only and do not retrieve.
+        -R
+        By default, the script will only query the PACS and not retrieve
+        images. This behaviour is by design and protects the user from
+        accidentally starting a pull operation by mistake. In order to
+        actually pull data, specify this flag.
         
         -D <scandate>
         Scan date. If not specified, will collect *all* matches. Use with
@@ -201,7 +211,7 @@ while getopts M:QD:S:a:c:l:P:p:v: option ; do
     in
         v) Gi_verbose=$OPTARG           ;;
         M) G_PATIENTID=$OPTARG          ;;
-        Q) let Gb_queryOnly=1           ;;
+        R) let Gb_queryOnly=0           ;;
         D) G_SCANDATE=$OPTARG           ;;
         S) G_SERIESDESCRIPTION=$OPTARG
            let Gb_seriesRetrieve=1      ;;
