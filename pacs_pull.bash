@@ -42,7 +42,7 @@ G_FINDSCUSERIESERR=/tmp/${G_SELF}_${G_PID}_findscu_series.err
 G_AETITLE=rudolphpienaar
 G_QUERYHOST=134.174.12.21
 G_QUERYPORT=104
-G_CALLTITLE=osx1927
+G_CALLTITLE=""
 G_RCVPORT=11112
 
 # For Mac OS X Darwin with MacPorts
@@ -65,6 +65,7 @@ G_SYNOPSIS="
                         [-a <aetitle>]                                  \\
                         [-P <PACShost>]                                 \\
                         [-p <PACSport>]                                 \\
+			[-c <calltitle>					\\
                         [-v <verbosityLevel>]
 
   DESC
@@ -105,6 +106,9 @@ G_SYNOPSIS="
         about. Queries are retrieved to the host:port that is associated
         with this <aetitle>.
                 
+	-c <calltitle> (Optional)
+	The call title. Required by some, but not all, PACS.
+
         -P <PACShost> (Optional $G_QUERYHOST)
         The PACS host to query.
 
@@ -114,6 +118,10 @@ G_SYNOPSIS="
 	-v <verbosityLevel> (Optional)
         This script defaults to a verbosityLevel of '1'. To be most
         verbose, use a level of '10'.
+
+  DEPENDS
+  o blockSort.py, blockFilter.py, lineAfter.py
+  o numpy
         
   HISTORY
     
@@ -123,10 +131,16 @@ G_SYNOPSIS="
 "
 
 A_MRN="checking command line args"
+A_noBlockSort="performing the block sort"
+A_studyFindFail="performing a findscu based search for the study"
 
 EM_MRN="I couldn't find -M <MRN>. This is a required key.'"
+EM_noBlockSort="I couldn't find any sorted series files."
+EM_studyFindFail="the PACS replied that the query was malformed."
 
 EC_MRN=10
+EC_noBlockSort=11
+EC_studyFindFail=12
 
 # DICOM tag label
 G_QueryRetrieveLevel="0008,0052"
@@ -235,7 +249,6 @@ else
     cprint "Querying for SCANDATE" "[ unspecified ]"
 fi
 
-statusPrint "" "\n"
 
 
 # We perform two queries off 'findscu'. The first at the STUDY level
@@ -245,7 +258,10 @@ statusPrint "" "\n"
 # First, query the PACS for StudyInstanceUID. This is a unique tag, and
 # in this case the combination of MRN:SCANDATE is a unique specifier. If
 # the date is not specified, then multiple StudyInstanceUIDs are returned.
-QUERYSTUDY="findscu -xi -S --aetitle $G_AETITLE                         \
+if (( ${#G_CALLTITLE} )) ; then
+    CALLSPEC="--call $G_CALLTITLE"
+fi
+QUERYSTUDY="findscu -xi -S --aetitle $G_AETITLE $CALLSPEC               \
          -k $G_QueryRetrieveLevel=STUDY                                 \
          -k $G_PatientID=$G_PATIENTID                                   \
          -k $G_Modality=$G_MODALITY                                     \
@@ -255,11 +271,16 @@ QUERYSTUDY="findscu -xi -S --aetitle $G_AETITLE                         \
          $G_QUERYHOST $G_QUERYPORT > $G_FINDSCUSTUDYSTD 2> $G_FINDSCUSTUDYERR"
 
 QUERY="$QUERYSTUDY"
+lprint "Results of 'findscu'"
 eval "$QUERY"
+ret_check $? || fatal studyFindFail
+#echo "$QUERY"
 UILINE=$(cat $G_FINDSCUSTUDYSTD| grep StudyInstanceUID)
 # echo "UILINE=$UILINE"
 UI=$(echo "$UILINE" | awk '{print $3}')
 # echo "UI=$UI"
+
+statusPrint "" "\n"
 
 # Now collect the Series information
 rm -f $G_FINDSCUSERIESSTD
@@ -269,7 +290,7 @@ if (( ${#UI} )) ; then
   for currentUIb in $UI ; do
     currentUI=$(bracket_find $currentUIb)
     statusPrint "Collecting series information for $currentUI" "\n"
-    QUERYSERIES="findscu -v -S --aetitle $G_AETITLE                     \
+    QUERYSERIES="findscu -v -S --aetitle $G_AETITLE $CALLSPEC		\
          -k $G_QueryRetrieveLevel=SERIES                                \
          -k $G_PatientID=$G_PATIENTID                                   \
          -k $G_Modality=$G_MODALITY                                     \
@@ -301,15 +322,18 @@ UILINE=$(cat $G_FINDSCUSERIESSTD| grep StudyInstanceUID | uniq)
 UI=$(echo "$UILINE" | awk '{print $3}')
 rprint "[ ok ]"
 lprint "Sorting UI series files"
-blockSort.py -f $G_FINDSCUSERIESSTD -s Dicom-Data -u RESPONSE -S StudyInstanceUID -C 3
+blockSort.py -f $G_FINDSCUSERIESSTD -s Dicom-Data -u ---- -S StudyInstanceUID -C 3
 rprint "[ ok ]"
 lprint "Reordering UI series files"
+HITS=$(/bin/ls -1 $G_FINDSCUSERIESSTD.* 2>/dev/null | wc -l)
+if (( !HITS )) ; then fatal noBlockSort ; fi
 for FILE in $G_FINDSCUSERIESSTD.* ; do
-    lineAfter.py -f $FILE -s StudyInstance -u SeriesInstance > ${FILE}.reordered
+    LINE="lineAfter.py -f $FILE -s StudyInstance -u SeriesInstance > ${FILE}.reordered"
+    #echo "$LINE"
+    eval "$LINE"
     mv ${FILE}.reordered $FILE
 done
 rprint "[ ok ]"
-
 PACSdata_size
 echo ""
 

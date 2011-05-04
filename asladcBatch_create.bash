@@ -165,13 +165,14 @@ D_whatever=
 while getopts v:t:C:D:S:R:A option ; do
 	case "$option"
 	in
-		v) 	Gi_verbose=$OPTARG		;;
-		t)	G_TABLEFILE=$OPTARG		;;
-                C)      G_DEFAULTCOM=$OPTARG            ;;
-                D)      G_DEFAULTDIR=$OPTARG            ;;
-                S)      G_SERIESLIST=$OPTARG            ;;
-                R)      G_DIRSUFFIX=$OPTARG             ;;
-                A)	Gb_printNullEntries=1		;;
+		v) 	Gi_verbose=$OPTARG				;;
+		t)	G_TABLEFILE=$OPTARG				;;
+                C)      G_DEFAULTCOM=$OPTARG            		;;
+                D)      G_DEFAULTDIR=$OPTARG            
+			G_DCMMRIDTABLE=${G_DEFAULTDIR}/dcm_MRID_age.log	;;
+                S)      G_SERIESLIST=$OPTARG            		;;
+                R)      G_DIRSUFFIX=$OPTARG             		;;
+                A)	Gb_printNullEntries=1				;;
 		\?) synopsis_show
 		    exit 0;;
 	esac
