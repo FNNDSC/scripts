@@ -524,7 +524,6 @@ STAGE1DIR=$(cat $LOGFILE | grep Collection | tail -n 1 	|\
 if (( ! ${#STAGE1DIR} )) ; then fatal dependencyStage; fi
 
 G_OUTDIR=$(dirname $STAGE1DIR)
-G_OUTDIR=${G_OUTDIR}/FREESURFER
 lprintn "<outputDir>: $G_OUTDIR"
 STAGE1OUT=$STAGE1DIR
 
@@ -535,7 +534,7 @@ SUBJECT=FREESURFER
 # Stage 2
 STAGE2PROC=recon-all
 STAGE2IN=$STAGE1OUT
-STAGE2OUT=${G_OUTDIR}/mri/orig/001.mgz
+STAGE2OUT=${G_OUTDIR}/FREESURFER/mri/orig/001.mgz
 if (( ${barr_stage[2]} )) ; then
     statusPrint "$(date) | Processing STAGE 2 - recon-all init | START" "\n"
     statusPrint "Checking stage dependencies"
@@ -558,7 +557,7 @@ fi
 # Stage 3
 STAGE3PROC=recon-all
 STAGE3IN=${STAGE2OUT}
-STAGE3OUT=${G_OUTDIR}/surf/lh.smoothwm
+STAGE3OUT=${G_OUTDIR}/FREESURFER/surf/lh.smoothwm
 if (( ${barr_stage[3]} )) ; then
     statusPrint "$(date) | Processing STAGE 3 - recon-all run | START" "\n"
     statusPrint "Checking stage dependencies"
