@@ -43,7 +43,7 @@ my %dcmhead;
 print LOG "DEBUG: opening file for dcmdump\n";
 my $DCMDICTPATH=$ENV{'DCMDICTPATH'};
 print LOG "DEBUG: DCMDICTPATH = $DCMDICTPATH\n";
-open(DUMP,"dcmdump +P 0010,0020 +P 0010,1010 +P 0008,1090 +P 0018,1000 +P 0008,0020 +P 0008,0030 +P 0008,0031 +P 0020,0011 +P 0020,0013 +P 0010,0030 +P 0008,0023 +p $dir/$dcmfile |") or die "$!\n";
+open(DUMP,"dcmdump +P 0010,0020 +P 0010,1010 +P 0008,1090 +P 0018,1000 +P 0008,0020 +P 0008,0030 +P 0008,0031 +P 0020,0011 +P 0020,0013 +P 0010,0030 +P 0008,0023 +p '$dir/$dcmfile' |") or die "$!\n";
 while (<DUMP>) {
   print LOG "DEBUG: processing dcmdump loop...\n";
   if (/^\((\d+,\d+)\) \S+ \[(.+)\]\s+\#/) {
