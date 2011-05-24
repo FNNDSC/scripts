@@ -131,7 +131,7 @@ if len(Gstr_workingDir):
     Gstr_workingDir = os.getcwd()        
 
 verbose         = 0
-str_findCmd     = 'find . -iname "%s"' % Gstr_findStr
+str_findCmd     = 'find . -wholename "%s"' % Gstr_findStr
 lstr_hitsRaw    = misc.system_procRet(str_findCmd)
 
 str_fileHits    = lstr_hitsRaw[1]
@@ -170,6 +170,9 @@ if count:
     print Csp_xord
     print Csp_yord
     print Csp_xyord
+    Csp_xord.saveMat('spectrumX.txt')
+    Csp_yord.saveMat('spectrumY.txt')
+    Csp_xyord.saveMat('spectrumXY.txt');
 else: fatal('NoHits')
 
 sys.exit(0)
