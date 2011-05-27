@@ -111,6 +111,7 @@ ret_check $?
 
 # Because of problems with Xvfb, only run tract runs on node 2 which is ipmi
 FS_MB_REQ="2500"
+FS_PROC_REQ="4"
 CLUSTER_SCRIPT=$(echo ${G_CMD} | awk '{print $1}' | xargs basename)
 MOSIX_ARGS="-E -e -q"
 case "$CLUSTER_SCRIPT" in
@@ -118,10 +119,10 @@ case "$CLUSTER_SCRIPT" in
         MOSIX_ARGS="$MOSIX_ARGS -b"
     ;;
     fs-cluster.sh)
-        MOSIX_ARGS="$MOSIX_ARGS -b -m$FS_MB_REQ"
+        MOSIX_ARGS="$MOSIX_ARGS -b -P${FS_PROC_REQ} -m$FS_MB_REQ"
     ;;
     connectome-cluster.sh)
-        MOSIX_ARGS="$MOSIX_ARGS -b -m$FS_MB_REQ"
+        MOSIX_ARGS="$MOSIX_ARGS -b -P${FS_PROC_REQ} -m$FS_MB_REQ"
     ;;
     *)
         MOSIX_ARGS="$MOSIX_ARGS -b"
