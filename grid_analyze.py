@@ -7,6 +7,9 @@ Gb_silent       = 0
 Gstr_findStr    = ""
 Gstr_workingDir = ""
 
+Gb_iname	= False
+Gb_wholename	= False
+
 Gstr_synopsis 	= """
 
   NAME
@@ -15,7 +18,7 @@ Gstr_synopsis 	= """
  
   SYNPOSIS
 
-      grid_analyze.py -s <findRegEx> [-w <workingDir>]
+      grid_analyze.py -s|-w <findRegEx> [-D <workingDir>]
 
   DESC
 
@@ -26,12 +29,20 @@ Gstr_synopsis 	= """
     
   ARGS
 
-      -s <findRegEx>
+      -s|-w <findRegEx>
       A find (1) compatible string defining the grid cases to analyze.
       To protect from the shell, this string should be enclosed in 
       quotes, i.e. "<findRegEx>".
       
-      -w <workingDir> (Optional)
+      If a '-s' is passed, then the find will execute a 
+
+		  find . -iname <findRegEx>
+
+      otherwise, if a '-w' is passed, then the find will instead execute
+      
+		  find . -wholename <findRegEx>
+      
+      -D <workingDir> (Optional)
       Perform the analysis from the specified <workingDir>.
 
   EXAMPLE
@@ -68,7 +79,7 @@ dictErr = {
         'error'         : 'no options specified!', 
         'exitCode'      : 10},
     'findRegEx'         : {
-        'action'        : 'checking the -s <FindRegEx>, ',
+        'action'        : 'checking the -s|-w <FindRegEx>, ',
         'error'         : 'the <FindRegEx> was not specified!',
         'exitCode'      : 11},
     'workingDir'        : {
@@ -108,7 +119,7 @@ def warn(astr_key, astr_extraMsg=""):
     error_exit( astr_key, b_exitToOS)
 
 try:
-    opts, remargs   = getopt.getopt(sys.argv[1:], 'hxs:')
+    opts, remargs   = getopt.getopt(sys.argv[1:], 'hxs:w:')
 except getopt.GetoptError:
     sys.exit(1)
 
@@ -118,7 +129,13 @@ for o, a in opts:
         sys.exit(1)
     if (o == '-s'):
         Gstr_findStr    = a
-
+        Gb_iname	= True
+    if (o == '-w'):
+        Gstr_findStr    = a
+        Gb_wholename	= True
+    if (o == '-D'):
+        Gstr_workingDir = a        
+       
 Gstr_findStr += "grid"
 if len(sys.argv) == 1: fatal('NoArgs')
 if not len(Gstr_findStr): fatal('FindRegEx')
@@ -131,7 +148,11 @@ if len(Gstr_workingDir):
     Gstr_workingDir = os.getcwd()        
 
 verbose         = 0
-str_findCmd     = 'find . -wholename "%s"' % Gstr_findStr
+if Gb_iname:
+    str_findCmd = 'find . -iname "%s"' % Gstr_findStr
+elif Gb_wholename:
+    str_findCmd = 'find . -wholename "%s"' % Gstr_findStr
+
 lstr_hitsRaw    = misc.system_procRet(str_findCmd)
 
 str_fileHits    = lstr_hitsRaw[1]
