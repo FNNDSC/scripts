@@ -213,7 +213,7 @@ for line in FILE_input:
             lstr        = line.split()
             str_sort    = lstr[G_columnLine-1]
             str_sortExt = str_sort.strip('[]')
-    if contains(line, Gstr_tagStopString):
+    if contains(line, Gstr_tagStopString) or contains(line, "Releasing"):
         b_sort          = False
         if not len(str_sortExt): fatal('sortExt')
         str_outputFileName = '%s.%s' % (Gstr_fileName, str_sortExt)
