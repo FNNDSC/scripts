@@ -128,6 +128,11 @@ G_SYNOPSIS="
   20 April 2011
   o Initial design and coding.
 
+  01 June 2011
+  o Updates to handle new behaviour of 'findscu' ver 3.6.x --
+    all output is now to stderr, and an extra column in output
+    data appears as column 1.
+
 "
 
 A_MRN="checking command line args"
@@ -268,7 +273,7 @@ QUERYSTUDY="findscu -xi -S --aetitle $G_AETITLE $CALLSPEC               \
          -k $G_StudyDate=$G_SCANDATE                                    \
          -k $G_PatientsName=$G_PATIENTSNAME                             \
          -k $G_StudyInstanceUID=                                        \
-         $G_QUERYHOST $G_QUERYPORT > $G_FINDSCUSTUDYSTD 2> $G_FINDSCUSTUDYERR"
+         $G_QUERYHOST $G_QUERYPORT 2> $G_FINDSCUSTUDYSTD"
 
 QUERY="$QUERYSTUDY"
 lprint "Results of 'findscu'"
@@ -276,15 +281,15 @@ eval "$QUERY"
 ret_check $? || fatal studyFindFail
 #echo "$QUERY"
 UILINE=$(cat $G_FINDSCUSTUDYSTD| grep StudyInstanceUID)
-# echo "UILINE=$UILINE"
-UI=$(echo "$UILINE" | awk '{print $3}')
-# echo "UI=$UI"
+#echo "UILINE=$UILINE"
+UI=$(echo "$UILINE" | awk '{print $4}')
+#echo "UI=$UI"
 
 statusPrint "" "\n"
 
 # Now collect the Series information
 rm -f $G_FINDSCUSERIESSTD
-rm -f $G_FINDSCUSERIESERR
+#rm -f $G_FINDSCUSERIESERR
 if (( ${#UI} )) ; then
   printf "StudyInstanceUID hits:\n"
   for currentUIb in $UI ; do
@@ -300,8 +305,9 @@ if (( ${#UI} )) ; then
          -k $G_StudyInstanceUID=$currentUI                              \
          -k $G_SeriesInstanceUID=                                       \
          -k $G_SeriesDescription=                                       \
-         $G_QUERYHOST $G_QUERYPORT >> $G_FINDSCUSERIESSTD 2>> $G_FINDSCUSERIESERR"
+         $G_QUERYHOST $G_QUERYPORT 2>> $G_FINDSCUSERIESSTD"
     eval "$QUERYSERIES"
+    #echo "$QUERYSERIES"
   done
   echo ""
   PACSdata_size    
@@ -319,10 +325,10 @@ rm $G_FINDSCUSERIESSTD.bak
 rprint "[ ok ]"
 lprint "Filtering down UI list"
 UILINE=$(cat $G_FINDSCUSERIESSTD| grep StudyInstanceUID | uniq)
-UI=$(echo "$UILINE" | awk '{print $3}')
+UI=$(echo "$UILINE" | awk '{print $4}')
 rprint "[ ok ]"
 lprint "Sorting UI series files"
-blockSort.py -f $G_FINDSCUSERIESSTD -s Dicom-Data -u ---- -S StudyInstanceUID -C 3
+blockSort.py -f $G_FINDSCUSERIESSTD -s Dicom-Data -u ---- -S StudyInstanceUID -C 4
 rprint "[ ok ]"
 lprint "Reordering UI series files"
 HITS=$(/bin/ls -1 $G_FINDSCUSERIESSTD.* 2>/dev/null | wc -l)
@@ -412,9 +418,9 @@ for currentUIb in $UI ; do
     done < ${G_FINDSCUSERIESSTD}.${currentUI}
 done
 
-rm $G_FINDSCUSTUDYERR
+# rm $G_FINDSCUSTUDYERR
 rm $G_FINDSCUSTUDYSTD
-rm $G_FINDSCUSERIESERR
+# rm $G_FINDSCUSERIESERR
 rm $G_FINDSCUSERIESSTD
 rm $G_FINDSCUSERIESSTD.*
 

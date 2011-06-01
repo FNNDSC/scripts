@@ -883,8 +883,8 @@ if (( ${barr_stage[2]} )) ; then
         #     gradient file was automatically detected and if not
         #     the gradients will be extracted manually.   
         if (( !Gb_forceGradientFile )) ; then
-                G_GRADIENTFILE=$(echo "$DIFFUSIONINFO"                          |\
-                                 grep GradFile | awk '{print $2}')
+                G_GRADIENTFILE="" #$(echo "$DIFFUSIONINFO"                          |\
+                                  # grep GradFile | awk '{print $2}')
                 if [[ "$G_GRADIENTFILE" == "" || ! -e $G_GRADIENTFILE ]] ; then
                         statusPrint "Extracting meta data: siemens_diffusionProcess.bash"
                         TARGETSPEC=""
