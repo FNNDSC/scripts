@@ -225,7 +225,7 @@ function moveSTUDY_cmd
     Gb_final=$(( Gb_final || $? ))
 }
 
-while getopts M:QD:S:a:c:l:P:p:v: option ; do
+while getopts M:QD:S:a:c:l:P:p:v:R option ; do
     case "$option" 
     in
         v) Gi_verbose=$OPTARG           ;;
