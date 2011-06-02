@@ -17,8 +17,8 @@ declare -i Gi_verbose=1
 
 G_HEMI="lh"
 G_SURFACE="sphere"
-G_SUBJECTBASEDIR=/chb/users/rudolphpienaar/projects/curvatureAnalysis/recon-PMG
-G_REFSUBJECTDIR=/chb/users/rudolphpienaar/projects/curvatureAnalysis/recon-PMG/PMG01
+G_SUBJECTBASEDIR=/chb/users/ginsburg/projects/curvatureAnalysis/recon-normal
+G_REFSUBJECTDIR=/chb/users/ginsburg/projects/curvatureAnalysis/recon-normal/CHB01
 G_CLUSTERCMD="mosrun -e -b -q"
 G_OUTDIR=$(pwd)
 
@@ -96,20 +96,19 @@ while getopts v:D:R:H:S:C:O: option ; do
 done
 
 
-SUBJECTDIRS=$(find ${G_SUBJECTBASEDIR} -type l)
-
+SUBJECTDIRS=$(find ${G_SUBJECTBASEDIR} -maxdepth 1 -type d)
 for SUBJECTDIR in ${SUBJECTDIRS} ; do
     if [[ "${SUBJECTDIR}" != "${G_REFSUBJECTDIR}" ]] ; then
 	echo "Registering '${SUBJECTDIR}' to '${G_REFSUBJECTDIR}'..."
-	OUTDIR="${G_OUTDIR}/$(basename ${G_SUBJECTBASEDIR})/registered-to-$(basename ${G_REFSUBJECTDIR})"
+	OUTDIR="${G_OUTDIR}"
 	SUBJECT=$(basename $SUBJECTDIR)
-	mkdir -p ${OUTDIR}/${SUBJECT}/surf
+	#mkdir -p ${OUTDIR}/${SUBJECT}/surf
 
-	CMD="mris_register -1 ${SUBJECTDIR}/surf/${G_HEMI}.${G_SURFACE}       \
-                              ${G_REFSUBJECTDIR}/surf/${G_HEMI}.${G_SURFACE}  \
-                              ${OUTDIR}/${SUBJECT}/surf/${G_HEMI}.${G_SURFACE}.reg"
+	CMD="mris_register -1 ${SUBJECTDIR}/surf/${G_HEMI}.${G_SURFACE} \
+                    ${G_REFSUBJECTDIR}/surf/${G_HEMI}.${G_SURFACE}      \
+                    ${OUTDIR}/${SUBJECT}/surf/${G_HEMI}.${G_SURFACE}.to_$(basename ${G_REFSUBJECTDIR}).reg"
 
-	CLUSTERCMD="${G_CLUSTERCMD} ${CMD} &"
+	CLUSTERCMD="${G_CLUSTERCMD} ${CMD} &"	
 	eval ${CLUSTERCMD}
     fi
 done
