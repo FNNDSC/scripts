@@ -18,6 +18,7 @@ declare -i Gb_final=0
 declare -i Gb_metaInfoPrinted=0
 declare -i Gb_dateSpecified=0
 declare -i Gb_seriesRetrieve=0
+declare -i Gb_institution=0
 
 # Column formatting (from common.bash)
 G_LC=30
@@ -39,6 +40,7 @@ G_FINDSCUSTUDYERR=/tmp/${G_SELF}_${G_PID}_findscu_study.err
 G_FINDSCUSERIESSTD=/tmp/${G_SELF}_${G_PID}_findscu_series.std
 G_FINDSCUSERIESERR=/tmp/${G_SELF}_${G_PID}_findscu_series.err
 
+G_INSTITUTION=CHB
 G_AETITLE=rudolphpienaar
 G_QUERYHOST=134.174.12.21
 G_QUERYPORT=104
@@ -62,10 +64,11 @@ G_SYNOPSIS="
                         [-R]                                            \\
                         [-D <scandate>]                                 \\
                         [-S <seriesDescription>]                        \\
+			[-h <institution>]				\\
                         [-a <aetitle>]                                  \\
                         [-P <PACShost>]                                 \\
                         [-p <PACSport>]                                 \\
-			[-c <calltitle>					\\
+			[-c <calltitle>]				\\
                         [-v <verbosityLevel>]
 
   DESC
@@ -100,6 +103,11 @@ G_SYNOPSIS="
         -S <seriesDescription>
         Series description. If specified, limit retrieve or query to
         <seriesDescription>. This is a substring search match.
+
+	-h <institution>
+        If specified, assigns some default AETITLE and PACS variables
+        appropriate to the <institution>. Valid <institutions> are
+	'MGH' and 'CHB'.
 
         -a <aetitle> (Optional $G_AETITLE)
         Local AETITLE. This is the only field that the CHB PACS seems to care 
@@ -225,7 +233,26 @@ function moveSTUDY_cmd
     Gb_final=$(( Gb_final || $? ))
 }
 
-while getopts M:QD:S:a:c:l:P:p:v:R option ; do
+function institution_set
+{
+    local INSTITUTION=$1
+
+    case "$INSTITUTION" 
+    in
+	CHB)
+	  G_AETITLE=rudolphpienaar
+	  G_QUERYHOST=134.174.12.21
+	  G_QUERYPORT=104
+	;;
+	MGH)
+	  G_AETITLE=ELLENGRANT
+	  G_QUERYHOST=132.183.36.141
+	  G_QUERYPORT=104
+	  G_CALLTITLE=SDM1
+    esac
+}
+
+while getopts M:QD:S:a:c:l:P:p:v:Rh: option ; do
     case "$option" 
     in
         v) Gi_verbose=$OPTARG           ;;
@@ -234,6 +261,8 @@ while getopts M:QD:S:a:c:l:P:p:v:R option ; do
         D) G_SCANDATE=$OPTARG           ;;
         S) G_SERIESDESCRIPTION=$OPTARG
            let Gb_seriesRetrieve=1      ;;
+	h) G_INSTITUTION=$OPTARG
+	   let Gb_institution=1		;;
         a) G_AETITLE=$OPTARG            ;;
         c) G_CALLTITLE=$OPTARG          ;;
         l) G_RCVPORT=$OPTARG            ;;
@@ -242,6 +271,10 @@ while getopts M:QD:S:a:c:l:P:p:v:R option ; do
         *) synopsis_show                ;;
     esac
 done
+
+if (( Gb_institution )) ; then
+    institution_set $G_INSTITUTION
+fi
 
 if [[ $G_PATIENTID == "-x"      ]] ; then fatal MRN;            fi
 if (( ${#G_SCANDATE}            )) ; then Gb_dateSpecified=1;   fi
