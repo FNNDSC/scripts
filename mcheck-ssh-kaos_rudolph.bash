@@ -76,7 +76,7 @@ targetList=7
 
 TARGETCHECK[0]="psa 7777  | grep $(whoami) | grep -v grep | wc -l"
 TARGETACTION[0]="(exec ~/arch/scripts/sshTunnel_restart.sh  -g -F -L 7777 -H localhost -R 7777 -u ch137123 -h dreev.tch.harvard.edu)"
-TARGETCHECK[1]="psa 10402  | grep $(whoami) | grep -v grep | wc -l"
+TARGETCHECK[1]="psa 10402 | grep dreev  | grep $(whoami) | grep -v grep | wc -l"
 TARGETACTION[1]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -F -L 10402 -H localhost -R 10402 -u ch137123 -h dreev.tch.harvard.edu)"
 TARGETCHECK[2]="psa 8888| grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[2]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -F -H localhost -h dreev.tch.harvard.edu -u ch137123 -R 8888 -L 8888)"
@@ -86,9 +86,8 @@ TARGETCHECK[4]="psa 4212 | grep $(whoami) | grep -v grep | wc -l"
 TARGETACTION[4]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -F -L 4212 -H localhost -R 4212 -u ch137123 -h dreev.tch.harvard.edu)"
 TARGETCHECK[5]="psa 4214 | grep $(whoami) | grep -v grep | wc -l"
 TARGETACTION[5]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -F -L 4214 -H localhost -R 4214 -u ch137123 -h dreev.tch.harvard.edu)"
-TARGETCHECK[6]="psa 10400 | grep $(whoami) | grep -v grep | wc -l"
-TARGETACTION[6]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 10400 -H kaos -h gate -u rudolph -L 10402 )"
-
+TARGETCHECK[6]="psa 10403 | grep gate    | grep $(whoami) | grep -v grep | wc -l"
+TARGETACTION[6]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 10403 -H kaos -h gate -u rudolph -L 10402 )"
 
 # Process command line options
 while getopts h option ; do

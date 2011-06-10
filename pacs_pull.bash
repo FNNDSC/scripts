@@ -178,8 +178,8 @@ function PACSdata_size
 {
   seriesSize=$(/bin/ls -l $G_FINDSCUSERIESSTD | awk '{printf $5}')
   studySize=$(/bin/ls -l $G_FINDSCUSTUDYSTD | awk '{printf $5}')
-  cprint "Size of Study MetaInfo" "[ $studySize ]"
-  cprint "Size of Series MetaInfo" "[ $seriesSize ]"
+  cprint "I: Size of Study MetaInfo" "[ $studySize ]"
+  cprint "I: Size of Series MetaInfo" "[ $seriesSize ]"
 }
 
 function DICOMline_scanFor
@@ -279,12 +279,12 @@ fi
 if [[ $G_PATIENTID == "-x"      ]] ; then fatal MRN;            fi
 if (( ${#G_SCANDATE}            )) ; then Gb_dateSpecified=1;   fi
 
-cprint "Querying for MRN" "[ $G_PATIENTID ]"
+cprint "------> Querying for MRN <-----" "[ $G_PATIENTID ]"
 
 if (( Gb_dateSpecified )) ; then
-    cprint "Querying for SCANDATE" "[ $G_SCANDATE ]" 
+    cprint "---> Querying for SCANDATE <---" "[ $G_SCANDATE ]" 
 else
-    cprint "Querying for SCANDATE" "[ unspecified ]"
+    cprint "---> Querying for SCANDATE <---" "[ unspecified ]"
 fi
 
 
@@ -309,7 +309,7 @@ QUERYSTUDY="findscu -xi -S --aetitle $G_AETITLE $CALLSPEC               \
          $G_QUERYHOST $G_QUERYPORT 2> $G_FINDSCUSTUDYSTD"
 
 QUERY="$QUERYSTUDY"
-lprint "Results of 'findscu'"
+lprint "I: Results of 'findscu'"
 eval "$QUERY"
 ret_check $? || fatal studyFindFail
 #echo "$QUERY"
@@ -324,10 +324,10 @@ statusPrint "" "\n"
 rm -f $G_FINDSCUSERIESSTD
 #rm -f $G_FINDSCUSERIESERR
 if (( ${#UI} )) ; then
-  printf "StudyInstanceUID hits:\n"
+  printf "I: StudyInstanceUID hits:\n"
   for currentUIb in $UI ; do
     currentUI=$(bracket_find $currentUIb)
-    statusPrint "Collecting series information for $currentUI" "\n"
+    statusPrint "I: Collecting series information for $currentUI" "\n"
     QUERYSERIES="findscu -v -S --aetitle $G_AETITLE $CALLSPEC		\
          -k $G_QueryRetrieveLevel=SERIES                                \
          -k $G_PatientID=$G_PATIENTID                                   \
@@ -351,19 +351,19 @@ else
   shut_down 1
 fi
 
-lprint "Cleaning Series MetaInfo"
+lprint "I: Cleaning Series MetaInfo"
 cp $G_FINDSCUSERIESSTD $G_FINDSCUSERIESSTD.bak
 blockFilter.py -f $G_FINDSCUSERIESSTD.bak -s Unknown -u Dicom-Data > $G_FINDSCUSERIESSTD
 rm $G_FINDSCUSERIESSTD.bak
 rprint "[ ok ]"
-lprint "Filtering down UI list"
+lprint "I: Filtering down UI list"
 UILINE=$(cat $G_FINDSCUSERIESSTD| grep StudyInstanceUID | uniq)
 UI=$(echo "$UILINE" | awk '{print $4}')
 rprint "[ ok ]"
-lprint "Sorting UI series files"
+lprint "I: Sorting UI series files"
 blockSort.py -f $G_FINDSCUSERIESSTD -s Dicom-Data -u ---- -S StudyInstanceUID -C 4
 rprint "[ ok ]"
-lprint "Reordering UI series files"
+lprint "I: Reordering UI series files"
 HITS=$(/bin/ls -1 $G_FINDSCUSERIESSTD.* 2>/dev/null | wc -l)
 if (( !HITS )) ; then fatal noBlockSort ; fi
 for FILE in $G_FINDSCUSERIESSTD.* ; do
@@ -387,7 +387,7 @@ b_dateHit=0
 for currentUIb in $UI ; do
   currentUI=$(bracket_find $currentUIb)
   echo ""
-  statusPrint "StudyInstanceUID = $currentUI:" "\n"
+  statusPrint "I: StudyInstanceUID = $currentUI:" "\n"
   Gb_metaInfoPrinted=0
   SERIESFILE=${G_FINDSCUSERIESSTD}.${currentUI}
   IFS=$'\n'
@@ -450,7 +450,7 @@ for currentUIb in $UI ; do
     fi
     done < ${G_FINDSCUSERIESSTD}.${currentUI}
 done
-
+printf "\n"
 # rm $G_FINDSCUSTUDYERR
 rm $G_FINDSCUSTUDYSTD
 # rm $G_FINDSCUSERIESERR
