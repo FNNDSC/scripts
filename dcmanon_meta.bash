@@ -19,7 +19,7 @@ declare -i Gb_partialAnonymize=0
 
 G_LOGDIR="-x"
 G_OUTDIR="/dicom/postproc"
-G_SSLCERTIFICATE="/chb/osx1927/1/users/dicom/anonymize_key/CA_cert.pem"
+G_SSLCERTIFICATE="/chb/users/dicom/anonymize_key/CA_cert.pem"
 G_OUTPREFIX="-x"
 G_DIRSUFFIX=""
 G_OUTPREFIX="anon-"

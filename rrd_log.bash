@@ -4,7 +4,7 @@
 # $2 = output log file name
 #
 G_RRDFILE=/var/lib/ganglia/rrds/fnndsc/__SummaryInfo__/cpu_idle.rrd
-G_OUTFILE=/chb/osx1927/1/users/dicom/postproc/rrd_log.txt
+G_OUTFILE=/chb/users/dicom/postproc/rrd_log.txt
 
 if [ ! -z "$1" ] ; then
     G_RRDFILE=$1

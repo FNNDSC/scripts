@@ -13,7 +13,7 @@ G_FILEEXT=""
 G_HOST=heisenberg.nmr.mgh.harvard.edu
 G_AETITLE="DCM4CHEE"
 G_LISTENPORT=11112
-G_SSLCERTIFICATE="/chb/osx1927/1/users/dicom/anonymize_key/CA_cert.pem"
+G_SSLCERTIFICATE="/chb/users/dicom/anonymize_key/CA_cert.pem"
 
 G_SYNOPSIS="
 

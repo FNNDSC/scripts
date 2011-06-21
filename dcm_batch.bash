@@ -8,7 +8,7 @@ declare -i Gb_useOverrideOut=0
 declare -i Gb_forceStage=1
 declare -i Gb_scanAll=0
 
-DICOMDIR="/chb/osx1927/1/users/dicom/files"
+DICOMDIR="/chb/users/dicom/files"
 MRISLIST=""
 G_SYNOPSIS="
 

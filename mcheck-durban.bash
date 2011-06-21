@@ -75,7 +75,7 @@ EC_badRestart=10
 targetList=1
 
 TARGETCHECK[0]="psa rrd_log.bash | grep $(whoami) | grep -v grep |  wc -l"
-TARGETACTION[0]="(exec /chb/osx1927/1/users/dicom/repo/trunk/scripts/rrd_log.bash)"
+TARGETACTION[0]="(exec /chb/users/dicom/repo/trunk/scripts/rrd_log.bash)"
 
 # Process command line options
 while getopts h option ; do

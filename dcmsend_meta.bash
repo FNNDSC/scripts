@@ -36,7 +36,7 @@ G_DIRSUFFIX=""
 G_DICOMINPUTDIR="-x"
 G_DICOMINPUTFILE="-x"
 G_DICOMSERIESLIST="*"
-G_SSLCERTIFICATE="/chb/osx1927/1/users/dicom/anonymize_key/CA_cert.pem"
+G_SSLCERTIFICATE="/chb/users/dicom/anonymize_key/CA_cert.pem"
 G_MIGRATEANALYSISDIR="-x"
 
 G_STORESCU="storescu"

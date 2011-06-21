@@ -18,7 +18,7 @@ declare -i Gb_forceStage=1
 declare -i Gb_useMatrix=0
 
 G_LOGDIR="-x"
-G_OUTDIR="/chb/osx1927/1/users/dicom/postproc"
+G_OUTDIR="/chb/users/dicom/postproc"
 G_OUTRUNDIR="-x"
 G_OUTPREFIX="-x"
 G_DICOMINPUTDIR="-x"
