@@ -1,0 +1,112 @@
+#!/bin/bash
+#
+# Copyright 2011 Rudolph Pienaar, Dan Ginsburg, FNNDSC
+# Childrens Hospital Boston
+#
+# GPL v2
+#
+
+# "include" the set of common script functions
+source common.bash
+declare -i Gi_verbose=0
+
+G_HOSTLIST="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
+
+G_HOSTLISTPICES="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
+G_HOSTLISTMEG="pandora,mario,saggfire,megdaq,glacier,iceberg"
+G_HOSTLISTFNNDSC_LINUX="natal,durban,berea,ipmi,vuka,shaka,sparks,moja"
+G_HOSTLISTFNNDSC_MAC="osx2147,osx1927,osx1999,osx2193,newcastle,osaka,quebec"
+
+G_LOG=fnndsc-run-cmd.log
+
+G_SYNOPSIS="
+
+  NAME
+
+        fnndsc-run-cmd
+
+  SYNOPSIS
+  
+        fnndsc-run-cmd [-h <hostlist>] [-v <verbosityLevel>] \"command\"
+                        
+
+  DESC
+
+        'fnndsc-run-cmd' is a thin wrapper that executes <command>
+        on each machine in <hostlist>.
+        
+  ARGS
+
+        -h <hostlist> (Optional: default 'pices')
+        List of hosts on which to perform remote command.
+        Hosts are specified as comma delimites list with no white space.
+        Several convenience lists are available:
+        
+                -h pices        : all the cluster hosts
+                -h meg          : all the MEG hosts
+                -h fnndsc_linux : all the 1 Autumn Linux hosts
+                -h fnndsc_mac   : all the 1 Autumn Mac hosts
+        
+	-v <verbosityLevel> (Optional)
+	Verbosity level. A value of '10' is a good choice here.
+        
+  HISTORY
+    
+  21 June 2011
+  o Initial design and coding.
+
+"
+
+A_args="checking command line arguments"
+A_packages="collecting package info from remote host"
+A_release="checking release versions"
+A_noCmd="checking on command line"
+A_execRemoteApt="executing remote apt-get"
+
+EM_args="you *must* specify a '-h <remoteHost>'."
+EM_packages="I was not able to successfully collect the package state."
+EM_release="the remote host and this host are not the same Ubuntu release."
+EM_noCmd="no command to execute was specified"
+EM_execRemoteApt="an error occurred."
+
+EC_args=10
+EC_packages=11
+EC_release=12
+EC_noCmd=14
+EC_execRemoteApt=15
+
+while getopts h:l:v: option ; do
+    case "$option" 
+    in
+        v) Gi_verbose=$OPTARG   ;;
+        h) G_HOSTLIST=$OPTARG   ;;
+        l) G_LOG=$OPTARG        ;;
+        *) synopsis_show        ;;
+    esac
+done
+
+case $G_HOSTLIST 
+in
+        "pices")        G_HOSTLIST=$G_HOSTLISTPICES     ;;
+        "meg")          G_HOSTLIST=$G_HOSTLISTMEG       ;;
+        "fnndsc_linux") G_HOSTLIST=$G_HOSTLISTFNNDSC_LINUX    ;;
+        "fnndsc_mac")   G_HOSTLIST=$G_HOSTLISTFNNDSC_MAC      ;;
+esac
+    
+shift $((OPTIND - 1))
+CMD=$*
+if (( ! ${#CMD} )) ; then fatal noCmd ; fi
+
+for HOST in $(echo "$G_HOSTLIST" | tr ',' ' ') ; do
+        cprint "Remote host" "[ $HOST ]"
+
+        statusPrint "Executing remote \"${CMD}\"" "\n"
+        ssh -t $HOST "${CMD}"
+        REMOTESTATUS=$?
+        lprint "Checking return result"
+        ret_check $REMOTESTATUS || fatal execRemoteApt
+        logstr=$(sysprint "| (whoami=$(whoami), remote=$HOST) ${CMD}")
+        echo $logstr >> $G_LOG
+done
+
+
