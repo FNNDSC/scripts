@@ -22,6 +22,7 @@
 #    Children's Hospital Boston, 2011
 
 import nibabel
+import numpy as np
 from optparse import OptionParser
 
 def parseCommandLine():
@@ -57,8 +58,9 @@ def main():
     
     scale = hdr_copy['voxel_size'] / voxelSize
     hdr_copy['voxel_size'] = voxelSize
-    hdr_copy['dim'] = hdr_copy['dim'] * scale
-
+    hdr_copy['dim'][0] = np.int16(round(np.float(hdr_copy['dim'][0]) * scale[0]))
+    hdr_copy['dim'][1] = np.int16(round(np.float(hdr_copy['dim'][1]) * scale[1]))
+    hdr_copy['dim'][2] = np.int16(round(np.float(hdr_copy['dim'][2]) * scale[2]))
     nibabel.trackvis.write(outFileName, trk, hdr_copy)
     print ("Wrote %s.\n") % (outFileName)
     
