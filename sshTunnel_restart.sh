@@ -144,7 +144,7 @@ cprint	"remote user"	"[ $G_REMOTEUSER ]"
 statusPrint	"Searching for monitor on ports..."
 
 b_RUNNING=$(psa $G_REMOTEPORT 			| grep $G_LOCALPORT 	|\
-			 grep -v grep 		| grep -v $G_SELF 	|\
+			 grep -v grep | grep ss	| grep -v $G_SELF 	|\
 			 wc -l)
 if (( b_RUNNING )) ; then
 	statusPrint 	"[ running ]" "\n"
