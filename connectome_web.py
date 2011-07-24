@@ -172,6 +172,7 @@ def main():
     conf.publisher = 'CHB'
     conf.legalnotice = 'institution-specific'
     conf.email = 'default@default.edu'
+    # conf.recon_all_param = '-all -no-isrunning -notalairach'
     
     # Setup and parse command-line options
     options = parseCommandLine(conf)

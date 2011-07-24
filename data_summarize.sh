@@ -5,11 +5,17 @@ G_HEMI="lh rh"
 G_REGION="frontal temporal parietal occipital"
 G_SURFACE="smoothwm pial"
 G_REPORTDIR="reports"
+
 let Gb_groupOverride=0
+let Gb_surfaceSpec=0
+let Gb_regionSpec=0
+
 G_GROUPNUM=3
 G_GROUPNUMOVERRIDE=3
 G_TYPE="-x"
 G_EXPDIR=$(pwd)
+
+ANNOTATIONSTEM="lobesStrict"
 
 let Gb_expDirSpecified=0
 
@@ -19,7 +25,10 @@ G_SYNPOSIS="
 
   NAME
 
-        data_summarize.sh -t <dataType> [-s] [-E <expDir>] [-G <groups>]
+        data_summarize.sh -t <dataType> [-s] [-E <expDir>] [-G <groups>]\
+			  [-a <annotationStem]				\
+			  [-R <regionSpec>]				\
+			  [-S <surfaceSpec>]
 
   SYNOPSIS
   
@@ -44,6 +53,25 @@ G_SYNPOSIS="
         
         -G <groups>
         If specified, the number of a priori groups to analyze.
+
+	-a <annotationStem>
+	If specified, the annotation sub-directory off the groupAnalysis
+	directory. Defaults to $ANNOTATIONSTEM.
+	
+	-R <regionSpec>
+	If specified, the regions to process, i.e. subdirectories
+	off the <annotationStem>. This should be a comma-delimited list.
+	
+	-S <surfaceSpec>
+	If specified, the surface to process. 
+	
+  EXAMPLE
+
+    data_summarize.sh -t overlap -E PMGvNormal_autodijk -G 2 		  \\
+	-a regions-native 						  \\
+	-R \"entire,region-1,region-2,region-3,region-4,region-5,region-6\" \\
+	-S autodijk
+
         
   HISTORY
   
@@ -55,18 +83,28 @@ G_SYNPOSIS="
 
   14 April 2011
   o Added 'ggrid'.
+  
+  15 June 2011
+  o Added -a, -R, and -S options.
 
 "
 
-while getopts sE:t:G: option ; do
+while getopts sE:t:G:a:S:R: option ; do
     case "$option" 
     in
-        t)      G_TYPE=$OPTARG          ;;
-        s)      let Gb_reportSave=1     ;;
+	a)	ANNOTATIONSTEM=$OPTARG				;;
+	S)	Gb_surfaceSpec=1
+		G_SURFACE=$OPTARG	
+		G_SURFACE=$(echo "$G_SURFACE" | tr ',' ' ')	;;
+	R)	Gb_regionSpec=1
+		G_REGION=$OPTARG	
+		G_REGION=$(echo "$G_REGION" | tr ',' ' ')	;;
+        t)      G_TYPE=$OPTARG          			;;
+        s)      let Gb_reportSave=1     			;;
         E)      G_EXPDIR=$OPTARG        
-                Gb_expDirSpecified=1    ;;
+                Gb_expDirSpecified=1    			;;
         G)      G_GROUPNUMOVERRIDE=$OPTARG      
-                Gb_groupOverride=1      ;;
+                Gb_groupOverride=1      			;;
         ?)      echo "$G_SYNPOSIS"
                 exit 1
     esac
@@ -108,10 +146,10 @@ for HEMI in $G_HEMI ; do
         HEMIREGION="$HEMI-$REGION"
         if (( !Gb_expDirSpecified )) ; then
             G_GROUPNUM=$(cd $G_EXPDIR/$HEMIREGION; ls -1 groupID* | wc -l)
-            cd $G_EXPDIR/$HEMIREGION/groupCurvAnalysis/lobesStrict.annot/$REGION >/dev/null
+            cd $G_EXPDIR/$HEMIREGION/groupCurvAnalysis/${ANNOTATIONSTEM}.annot/$REGION >/dev/null
         else
             G_GROUPNUM=$(cd $G_EXPDIR; ls -1 groupID* | wc -l)
-            cd ${G_EXPDIR}/groupCurvAnalysis/lobesStrict.annot/$REGION
+            cd ${G_EXPDIR}/groupCurvAnalysis/${ANNOTATIONSTEM}.annot/$REGION
         fi
         if (( Gb_groupOverride )) ; then
             G_GROUPNUM=$G_GROUPNUMOVERRIDE

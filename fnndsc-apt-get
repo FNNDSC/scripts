@@ -13,8 +13,8 @@ declare -i Gi_verbose=0
 G_HOSTLIST="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
 
 G_HOSTLISTPICES="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
-G_HOSTLISTMEG="babymeg,mercury,venus,terra,mars,jupiter"
-G_HOSTLISTFNNDSC="shaka,ipmi"
+G_HOSTLISTMEG="pandora,mario,saggfire,glacier,iceberg"
+G_HOSTLISTFNNDSC="shaka,ipmi,pretoria,moja,sparks"
 
 G_LOG=/chb/install/ubuntu/setup/fnndsc-apt-get.packages
 
@@ -40,7 +40,7 @@ G_SYNOPSIS="
 
         -h <hostlist> (Optional: default 'pices')
         List of hosts on which to perform remote 'apt-get [apt-get-args]'.
-        Hosts are specified as comma delimites list with no white space.
+        Hosts are specified as comma delimited list with no white space.
         Several convenience lists are available:
         
                 -h pices        : all the cluster hosts

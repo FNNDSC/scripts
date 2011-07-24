@@ -72,7 +72,7 @@ EM_badRestart="the corrective action failed. Perhaps a target process failed?"
 # Error codes
 EC_badRestart=10
 
-targetList=21
+targetList=22
 
 TARGETCHECK[0]="psa 7777  | grep ssh | grep $(whoami) | grep -v grep |  wc -l"
 TARGETACTION[0]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 7777 -L 22)"
@@ -116,6 +116,8 @@ TARGETCHECK[19]="psa 9000| grep $(whoami) | grep ssh | grep -v grep |  wc -l"
 TARGETACTION[19]="( ssh -p 7778 -g -f -N -X -L 9000:localhost:80 rudolph@71.184.80.220 )"
 TARGETCHECK[20]="psa 6812 | grep $(whoami) | grep ssh | grep -v grep |  wc -l"
 TARGETACTION[20]="( ssh -p 7778 -g -f -N -X -L 6812:localhost:22 rudolph@71.184.80.220 )"
+TARGETCHECK[21]="psa 4215 | grep ssh | grep $(whoami) | grep -v grep |  wc -l"
+TARGETACTION[21]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 4215 -H pretoria -h dreev.tch.harvard.edu -u ch137123 -L 22)"
 
 # Process command line options
 while getopts h option ; do

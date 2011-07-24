@@ -119,7 +119,7 @@ def warn(astr_key, astr_extraMsg=""):
     error_exit( astr_key, b_exitToOS)
 
 try:
-    opts, remargs   = getopt.getopt(sys.argv[1:], 'hxs:w:')
+    opts, remargs   = getopt.getopt(sys.argv[1:], 'hxs:w:D:')
 except getopt.GetoptError:
     sys.exit(1)
 
@@ -142,16 +142,16 @@ if not len(Gstr_findStr): fatal('FindRegEx')
 
 if len(Gstr_workingDir):
     try:
-        chdir(Gstr_workingDir)
+        os.chdir(Gstr_workingDir)
     except OSError:
         fatal('workingDir', 'Current Working Dircectory: %s' % Gstr_workingDir)
     Gstr_workingDir = os.getcwd()        
 
 verbose         = 0
 if Gb_iname:
-    str_findCmd = 'find . -iname "%s"' % Gstr_findStr
+    str_findCmd = 'find . -iname "%s" 2>/dev/null' % Gstr_findStr
 elif Gb_wholename:
-    str_findCmd = 'find . -wholename "%s"' % Gstr_findStr
+    str_findCmd = 'find . -wholename "%s" 2>/dev/null' % Gstr_findStr
 
 lstr_hitsRaw    = misc.system_procRet(str_findCmd)
 
