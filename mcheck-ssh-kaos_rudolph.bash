@@ -72,7 +72,7 @@ EM_badRestart="the corrective action failed. Perhaps a target process failed?"
 # Error codes
 EC_badRestart=10
 
-targetList=10
+targetList=9
 
 TARGETCHECK[0]="psa 7777  | grep $(whoami) | grep -v grep | grep ssh | wc -l"
 TARGETACTION[0]="(exec ~/arch/scripts/sshTunnel_restart.sh  -g -F -L 7777 -H localhost -R 7777 -u ch137123 -h dreev.tch.harvard.edu)"
@@ -93,8 +93,8 @@ TARGETCHECK[7]="psa 5556  | grep $(whoami) | grep -v grep | grep ssh | wc -l"
 TARGETACTION[7]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -F -H localhost -h dreev.tch.harvard.edu -u ch137123 -R 5556 -L 5556)"
 TARGETCHECK[8]="psa 5559  | grep $(whoami) | grep -v grep |  grep ssh | wc -l"
 TARGETACTION[8]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -B -H kaos -h gate -u rudolph -R 5559 -L 80)"
-TARGETCHECK[9]="psa 10409  | grep $(whoami) | grep -v grep |  grep ssh | wc -l"
-TARGETACTION[9]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -B -H kaos -h gate -u rudolph -R 10409 -L 10401 -g)"
+#TARGETCHECK[9]="psa 10409  | grep $(whoami) | grep -v grep |  grep ssh | wc -l"
+#TARGETACTION[9]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -B -H kaos -h gate -u rudolph -R 10409 -L 10401 -g)"
 
 
 # Process command line options
