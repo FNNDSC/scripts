@@ -11,6 +11,8 @@ G_NEURODEBIAN_KEY=neuro.debian.net.asc
 DIALOG=zenity
 
 
+# NOTE: Incorporate chris_env.bash!!!
+
 ######################################################################
 # Confirm installation
 ######################################################################
