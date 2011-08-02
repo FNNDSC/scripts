@@ -35,8 +35,8 @@ export FSSOURCE=${CHRIS_SCRIPTPATH}/chris-fsdev
 
 case "$OS"
 in 
-        "Darwin")       export DCMDICTPATH=/opt/local/lib/dicom.dic     ;;
-        "Linux")        export DCMDICTPATH=/usr/share/dcmtk/dicom.dic   ;;
+        "Darwin")       export CHRIS_DCMDICTPATH=/opt/local/lib/dicom.dic     ;;
+        "Linux")        export CHRIS_DCMDICTPATH=/usr/share/dcmtk/dicom.dic   ;;
 esac
 
 # Location of DICOM data path where the storescp-based litener will
@@ -57,7 +57,7 @@ export CHRIS_AETITLE=CHRIS
 export DSI_PATH=${CHRIS_DICOMROOT}/dtk/matrices/
 
 # Source FreeSurfer env
-$FSSOURCE
+source $FSSOURCE
 
 export PATH=$PATH:${CHB_SCRIPTPATH}:${FSLDIR}:${FSLDIR}/bin
 
