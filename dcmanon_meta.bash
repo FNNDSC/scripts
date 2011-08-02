@@ -259,13 +259,13 @@ if (( ${barr_stage[1]} )) ; then
     # such as PatientsName, birthday, etc.
     if ((Gb_partialAnonymize)) ; then
         for FILE in $G_DICOMINPUTDIR/*.dcm ; do
-        	FILEBASE=$(basename $FILE)
+            FILEBASE=$(basename $FILE)
             STAGECMD="mri_probedicom --i $FILE --t 0010 0020 | openssl md5 |  \
                       xargs -i% $STAGEPROC                                    \
                             --dumb                                            \
                             --replace 0010,0010,anonymized                    \
                             --replace 0010,0020,%                             \
-                            --replace 0010,0030,19000101					  \
+                            --replace 0010,0030,19000101		      \
                             --replace 0008,1030,anonymized                    \
                             --replace 0032,1030,anonymized                    \
                             --replace 0032,1060,anonymized                    \
