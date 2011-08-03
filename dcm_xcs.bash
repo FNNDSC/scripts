@@ -241,35 +241,19 @@ if [ $? -ne 0 ] ; then fatal lockFileGet ; fi
 	fi
 
 	TO=$G_MAILTO
-	SUBJ="New DICOM Series Received"
+	SUBJ="CHRIS: New DICOM Series Received"
 	
 	b_alreadyProcessed=$(echo "$INDEX1" | grep Track | wc -l)
 	
 	if (( b_alreadyProcessed )) ; then
 	    TO=$G_MAILTO
-	    SUBJ="DICOM Series Processed"
+	    SUBJ="CHRIS: DICOM Series Processed"
 	fi
 
-	echo "
-		$(date)
-		A DICOM transmission has just been received on <$(hostname)>. Details:
-	
-		OutputDicomDir:		$G_OUTPUTDICOMDIR
-		LastSeriesFile:		$G_OUTPUTDICOMFILE
-		CallingEntity:		$G_CALLINGENTITY
-		CalledEntity:		$G_CALLEDENTITY
-	
-		This transmission contains:
-	
-	$INDEX1
-	
-	$INDEX2
-	" > /tmp/$MAILMSG
-
-	# Create a permissions.txt file with the user being the application-entity 
-	# title.
-	# If the file already exists, then add this user only if is not already in 
-	# the file. 
+	# Create a permissions.txt file with the user being the 
+        # application-entity title.
+	# If the file already exists, then add this user only if 
+        # is not already in the file. 
 	# Multiple users can be spec'd in the AETitle with commas.
 	PERMISSION_USER=$(echo $G_CALLEDENTITY | tr '[A-Z]' '[a-z]')
 	for USER in $(echo $PERMISSION_USER | tr ',' ' '); do
@@ -288,17 +272,47 @@ if [ $? -ne 0 ] ; then fatal lockFileGet ; fi
 	    fi
 	done
 
-	# Parse the mail alias file for PERMISSION_USER, and if found, append to TO
-	# string. Multiple users in the PERMISSION_USER are separated by commas
+	# Parse the mail alias file for PERMISSION_USER, and if found, append to 
+	# the 'TO' string. Multiple users in the PERMISSION_USER are separated 
+	# by commas
 	MAILALIAS=${G_USRETC}/${G_MAILALIAS}
+	USERLIST=""
 	if [[ -f $MAILALIAS ]] ; then
 	    for USER in $(echo $PERMISSION_USER | tr ',' ' '); do
-	        RETURNMAIL=$(grep $USER $MAILALIAS | awk '{print $2}')
+	        RETURNMAIL=$(grep -i ^$USER $MAILALIAS | awk -F \: '{print $2}')
+	        USERNAME=$(grep -i ^$USER $MAILALIAS | awk -F \: '{print $3}' | awk '{print $1}')
 	        if (( ${#RETURNMAIL} )) ; then
 		    TO="$TO,$RETURNMAIL"
+		    if ${#USERLIST}; then 
+		        USERLIST="$USERLIST, $USERNAME"
+		    else
+		        USERLIST="$USERNAME"
+	            fi
 	        fi
 	    done
 	fi
+
+
+	echo "
+		$(date)
+		Dear $USERLIST
+		A DICOM transmission has just been received on <$(hostname)>. Details:
+	
+		OutputDicomDir:		$G_OUTPUTDICOMDIR
+		LastSeriesFile:		$G_OUTPUTDICOMFILE
+		CallingEntity:		$G_CALLINGENTITY
+		CalledEntity:		$G_CALLEDENTITY
+	
+		This transmission contains:
+	
+	$INDEX1
+	
+	$INDEX2
+
+                -=+< ${CHRIS_NAME} >+=-
+
+	" > /tmp/$MAILMSG
+
 
 	# Check to see if the file has changed and only send it if so (or
 	# if it does not exist yet).  Only look at the "Scan"'s because the
@@ -308,7 +322,7 @@ if [ $? -ne 0 ] ; then fatal lockFileGet ; fi
 	cmp -s /tmp/$MAILMSG.cmp1 /tmp/$MAILMSG.cmp2 > /dev/null
 	if [ $? -ne 0 ] ; then
 		cp /tmp/$MAILMSG ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
-		/usr/bin/mail -s "$SUBJ" "$TO" <${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
+		$CHRIS_MAIL -s "$SUBJ" "$TO" <${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$MAILMSG
 	else	
 		rm -f /tmp/storescp*
 	fi
@@ -325,7 +339,31 @@ release_lockfile ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt.lock
 
 # If we are not already building the dcm_MRID.xml database, rebuild it.
 if [[ ! -f ${G_DICOMROOT}/dcm_MRID.xml.build ]] ; then
+        echo "
+                $(date)
+		Dear $USERLIST
+                
+                The CHRIS database is being updated with scans that were 
+                recently received from a DICOM push that were associated with
+                your user ID. Please be patient while this operation is 
+                performed; it can take up to 10 or more minutes.
+                
+		You will receive an email once update is complete. If you
+		have not received a completion email within an hour from 
+		this email, please contact the CHRIS admin user for help:
+		
+		        $CHRIS_ADMINUSERS
 
+                Scans in the following directory are being added:		
+		
+		$G_OUTPUTDICOMDIR
+
+                -=+< ${CHRIS_NAME} >+=-
+
+        " > /tmp/$MAILMSG
+        
+        $CHRIS_MAIL -s "CHRIS: Database update started" "$TO" </tmp/$MAILMSG
+        
 	# As long as new scans have arrived, keep updating the dcm_MRID.xml
 	# database.  This will keep running until all new scans have been
 	# processed.
@@ -377,6 +415,26 @@ if [[ ! -f ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}/$LOGGENFILE ]] ; then
 	# LOCK (RELEASE): {G_DICOMROOT}/${G_OUTPUTDICOMDIR}/toc.txt.lock
 	release_lockfile ${G_DICOMROOT}/dcm_MRID.log.lock
 fi
+
+echo "
+                $(date)
+		Dear $USERLIST
+
+                All scans have been successfully added to the database and
+                should now be available from the CHRIS web interface:
+                
+                        $CHRIS_WEBSITE
+
+                Scans in the following directory were successfully added:		
+		
+		$G_OUTPUTDICOMDIR
+
+                -=+< ${CHRIS_NAME} >+=-
+
+" > /tmp/$MAILMSG
+        
+$CHRIS_MAIL -s "CHRIS: Database update successful" "$TO" </tmp/$MAILMSG
+rm /tmp/$MAILMSG
 
 STAGE="Normal termination"
 stage_stamp "$STAGE" $STAMPLOG

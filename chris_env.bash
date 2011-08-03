@@ -15,12 +15,20 @@
 #
 #
 
-# Admin user(s) of the CHRIS deployment
+# The name of this CHRIS instance. Used on web front end and in any emails
+# communicated to end users by the system.
+export CHRIS_NAME=CHRIS
+
+# Admin user(s) of the CHRIS deployment -- comma separated if multiple
+# admins
 export CHRIS_ADMINUSERS=rudolph.pienaar@childrens.harvard.edu
 
-# Root dir of DICOM packer subsystem
+# Root dir of DICOM packer subsystem -- this is the main directory housing
+# everything relevant to CHRIS
 export CHRIS_DICOMROOT=/chb/users/dicom
-export CHRIS_ETC=${CHRIS_DICOMROOT}/etc
+
+# Mail binary location
+export CHRIS_MAIL=/usr/bin/mail
 
 # CHRIS script storage location
 export CHRIS_SCRIPTPATH=${CHRIS_DICOMROOT}/repo/trunk/scripts
@@ -28,13 +36,20 @@ export CHRIS_SCRIPTPATH=${CHRIS_DICOMROOT}/repo/trunk/scripts
 # FreeSurfer environment sourcing script: 
 export FSSOURCE=${CHRIS_SCRIPTPATH}/chris-fsdev
 
+# Webpage address
+export CHRIS_WEBSITE=http://durban.tch.harvard.edu
+
 #
 # +----- You shouldn't need to set anything below this line: -----------+
 # |     |       |       |       |       |       |       |       |       | 
 # V     V       V       V       V       V       V       V       V       V
 
+# The CHRIS_ETC directory contains scripts and files relevant mostly to the 
+# DICOM reception and unpacking of data.
+export CHRIS_ETC=${CHRIS_DICOMROOT}/etc
+
 # When called from a launchctl process or xinet.d, this script does not
-# have a full path. 
+# have a full path, hence we need to specify it here.
 export PATH=/usr/bin:/bin:/usr/local/bin:/sbin:/usr/sbin:/usr/local/sbin:/usr/games:/etc:/usr/etc:/usr/bin/X11:/usr/X11R6/bin:/opt/gnome/bin:/opt/local/bin:/sw/bin:$PATH
 
 # storescp binary
