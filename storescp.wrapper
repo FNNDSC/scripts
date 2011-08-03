@@ -3,7 +3,7 @@
 #umask 002
 
 # Execute the script which configure the CHB environment variables
-. ~/chris_env.bash
+source ~/chris_env.bash
 
 export PATH=$PATH:${CHRIS_SCRIPTPATH}
 export DCMDATAPATH=${CHRIS_DCMDATAPATH}

@@ -241,13 +241,13 @@ if [ $? -ne 0 ] ; then fatal lockFileGet ; fi
 	fi
 
 	TO=$G_MAILTO
-	SUBJ="CHRIS: New DICOM Series Received"
+	SUBJ="${CHRIS_NAME}: New DICOM Series Received"
 	
 	b_alreadyProcessed=$(echo "$INDEX1" | grep Track | wc -l)
 	
 	if (( b_alreadyProcessed )) ; then
 	    TO=$G_MAILTO
-	    SUBJ="CHRIS: DICOM Series Processed"
+	    SUBJ="${CHRIS_NAME}: DICOM Series Processed"
 	fi
 
 	# Create a permissions.txt file with the user being the 
@@ -362,7 +362,7 @@ if [[ ! -f ${G_DICOMROOT}/dcm_MRID.xml.build ]] ; then
 
         " > /tmp/$MAILMSG
         
-        $CHRIS_MAIL -s "CHRIS: Database update started" "$TO" </tmp/$MAILMSG
+        $CHRIS_MAIL -s "${CHRIS_NAME}: Database update started" "$TO" </tmp/$MAILMSG
         
 	# As long as new scans have arrived, keep updating the dcm_MRID.xml
 	# database.  This will keep running until all new scans have been
@@ -433,7 +433,7 @@ echo "
 
 " > /tmp/$MAILMSG
         
-$CHRIS_MAIL -s "CHRIS: Database update successful" "$TO" </tmp/$MAILMSG
+$CHRIS_MAIL -s "${CHRIS_NAME}: Database update successful" "$TO" </tmp/$MAILMSG
 rm /tmp/$MAILMSG
 
 STAGE="Normal termination"
