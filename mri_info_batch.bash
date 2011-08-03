@@ -216,6 +216,7 @@ MRID=$(MRID_find $G_DICOMINPUTDIR)
 cprint "MRID" "[ $MRID ]"
 
 statusPrint     "Checking on <tocFile>"
+G_TOCFILE=$G_DICOMINPUTDIR/$G_TOCFILE
 fileExist_check $G_TOCFILE || fatal badTOCFile
 
 statusPrint	"Checking on <logDir>"
@@ -242,18 +243,14 @@ STAMPLOG=${G_LOGDIR}/${G_SELF}.log
 stage_stamp "Init | ($topDir) $G_SELF $*" $STAMPLOG
 
 statusPrint     "Checking which stages to process"
-barr_stage=([0]=0 [1]=0 [2]=0 [3]=0 [4]=0 [5]=0)
-for i in $(seq 1 1) ; do
-        b_test=$(expr index $G_STAGES "$i")
-        if (( b_test )) ; then b_flag="1" ; else b_flag="0" ; fi
-        barr_stage[$i]=$b_flag
-done
+barr_stage[1]="1"
 ret_check $?
 
 DATE=$(date)
 
 STAGE1PROC=mri_info
 if (( ${barr_stage[1]} )) ; then
+    cd $G_DICOMINPUTDIR
     statusPrint "$(date) | Processing STAGE 1 - mri_info | START" "\n"
     STAGE=1-$STAGE1PROC
     LST=$(cat $G_TOCFILE | grep \.dcm | awk '{print $2}')
@@ -274,6 +271,7 @@ if (( ${barr_stage[1]} )) ; then
 		|| beware mri_info
     done
     statusPrint "$(date) | Processing STAGE 1 - mri_info | END" "\n"
+    cd $topDir
 fi
 
 shut_down 0

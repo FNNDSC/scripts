@@ -120,8 +120,8 @@ G_SYNOPSIS="
 	  email.
 "
 
-G_LC=50
-G_RC=30
+G_LC=40
+G_RC=40
 
 # Actions
 A_dependency="checking for a required file dependency"
@@ -348,7 +348,7 @@ fi
 STAGE1PROC=mri_info_batch.bash
 statusPrint "$(date) | Processing STAGE - mri_info_batch.bash | START" "\n"
 STAGE=1-$STAGE1PROC
-STAGECMD="$STAGE1PROC -v 10 -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}"
+STAGECMD="$STAGE1PROC -v 10 -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR} -s"
 stage_run "$STAGE" "$STAGECMD"                          \
           "${G_LOGDIR}/${STAGE1PROC}.std"               \
           "${G_LOGDIR}/${STAGE1PROC}.err"
