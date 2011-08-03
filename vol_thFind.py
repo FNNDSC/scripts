@@ -11,7 +11,7 @@ NAME
 
 SYNOPSIS
 
-        vol_lthFind.py  		-v <inputVolume>		\\
+        vol_thFind.py  			-v <inputVolume>		\\
 					-t <thresholdNorm>		
 	
 DESCRIPTION
