@@ -2,23 +2,25 @@
 
 # "include" the set of common script functions
 source common.bash
+source chris_env.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useOverrideOut=0
 declare -i Gb_forceStage=1
 declare -i Gb_scanAll=0
 
-DICOMDIR="/chb/users/dicom/files"
+
+DICOMDIR=$CHRIS_SESSIONPATH
 MRISLIST=""
 G_SYNOPSIS="
 
  NAME
 
-        dcm_MRIDget.bash
+        dcm_MRIDgetXML.bash
 
  SYNOPSIS
 
-        dcm_MRIDget.bash        [-v <verbosity>]                \\
+        dcm_MRIDgetXML.bash     [-v <verbosity>]                \\
                                 [-d <dicomDir>]                 \\
                                 [-a]                            \\
                                 [<DICOMDIR1> <DICOMDIR2> ... <DICOMDIRn>]
@@ -217,3 +219,4 @@ if (( b_hit )) ; then
 else
         shut_down 1
 fi
+

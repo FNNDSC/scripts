@@ -3,13 +3,13 @@
 #umask 002
 
 # Execute the script which configure the CHB environment variables
-. ~/chb-env
+. ~/chris_env.bash
 
-export PATH=$PATH:${CHB_SCRIPTPATH}
-export DCMDATAPATH=${CHB_DCMDATAPATH}
+export PATH=$PATH:${CHRIS_SCRIPTPATH}
+export DCMDATAPATH=${CHRIS_DCMDATAPATH}
 
-SESSIONPATH=${CHB_SESSIONPATH}
-LOGDIR=${CHB_LOGDIR}
+SESSIONPATH=${CHRIS_SESSIONPATH}
+LOGDIR=${CHRIS_LOGDIR}
 LOGWRAP=${LOGDIR}/storescp.wrapper.log
 LOGSCP=${LOGDIR}/storescp.log
 LOGXCS=${LOGDIR}/dcm_xcs.log
@@ -18,24 +18,25 @@ SCANLOGFILE=$LOGDIR/scans.$$.log
 UNIQSCANLOGFILE=${SCANLOGFILE}.uniq
 
 echo "$(date) $(whoami)@$(hostname) | Starting storescp..." > ${LOGWRAP}
-CMD="/usr/bin/storescp -id +ac -aet $CHB_AETITLE \
+CMD="$CHRIS_STORESCP -id -aet $CHRIS_AETITLE \
   	-od $DCMDATAPATH 	\
   	-pm			\
-  	-xcr 'dcm_rename $SESSIONPATH #p #f #a #c $SCANLOGFILE > ${LOGSCP}.std 2>${LOGSCP}.err'
+  	-xcr '$CHRIS_DCMRENAME $SESSIONPATH #p #f #a #c $SCANLOGFILE > ${LOGDCM}.std 2>${LOGDCM}.err'
 	-ss RX
 	-tos 120
-" 
+"
 echo "$(date) $(whoami)@$(hostname) | RUN $(echo $CMD | tr '\n' ' ')" > ${LOGWRAP}
-eval $CMD
+echo "$CMD" > ${LOGDIR}/storescp.cmd
+eval $CMD > $LOGSCP 2> $LOGSCP.err
 
 # Get a list of the unique directories that were written
-awk -F"|" '{print $3}' $SCANLOGFILE | sort| uniq | xargs -i% grep -m 1 % $SCANLOGFILE > ${UNIQSCANLOGFILE}
+sort -t \| -k 3,3 -u $SCANLOGFILE > $UNIQSCANLOGFILE
 while read line
 do  
     echo "$(date) $(whoami)@$(hostname) | Starting dcm_xcs.bash..." >> ${LOGWRAP}
 
     P=$(echo $line | awk -F \| '{print $3}') 
-    F=$(echo $line | awk -F \| '{print $4}')                                                                                                                                                                                                                         
+    F=$(echo $line | awk -F \| '{print $4}')
     A=$(echo $line | awk -F \| '{print $5}')    
     C=$(echo $line | awk -F \| '{print $6}')  
 
@@ -43,7 +44,9 @@ do
     echo "$(date) $(whoami)@$(hostname) | F = $F" >> ${LOGWRAP}
     echo "$(date) $(whoami)@$(hostname) | A = $A" >> ${LOGWRAP}
     echo "$(date) $(whoami)@$(hostname) | C = $C" >> ${LOGWRAP}
-    dcm_xcs.bash -v 10 -d $SESSIONPATH -l $LOGDIR -p $P -f $F -a $A -c $C >${LOGXCS}.std 2>${LOGXCS}.err   
+    DCMXCS="dcm_xcs.bash -v 10 -d $SESSIONPATH -l $LOGDIR -p $P -f $F -a $A -c $C"
+    echo "$DCMXCS" > ${LOGDIR}/dcm_xcs.cmd
+    eval $DCMXCS >${LOGXCS}.std 2>${LOGXCS}.err   
 done < ${UNIQSCANLOGFILE}
 
 rm -rf $SCANLOGFILE

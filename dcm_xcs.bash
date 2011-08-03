@@ -10,6 +10,7 @@
 
 # "include" the set of common script functions
 source common.bash
+source chris_env.bash
 declare -i Gb_forceStage=1
 
 let b_alreadyProcessed=0
@@ -17,10 +18,10 @@ let b_alreadyProcessed=0
 MAILMSG="mail.msg"
 LOGGENFILE="loggenfile.txt"
 G_MAILALIAS="aliases.mail"
-G_USRETC=/usr/etc
+G_USRETC=$CHRIS_ETC
 G_LOGDIR="/tmp"
-G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
-G_DICOMROOT=/local_mount/space/osx1927/1/users/dicom/files
+G_MAILTO=$CHRIS_ADMINUSERS
+G_DICOMROOT=$CHRIS_SESSIONPATH
 G_OUTPUTDICOMDIR="-x"
 G_OUTPUTDICOMFILE="-x"
 G_CALLINGENTITY="-x"
@@ -120,7 +121,7 @@ G_SYNOPSIS="
 "
 
 G_LC=50
-G_RC=20
+G_RC=30
 
 # Actions
 A_dependency="checking for a required file dependency"
@@ -180,7 +181,7 @@ done
 verbosity_check
 startDir=$(pwd)
 
-cprint  "hostname"      $(hostname)
+cprint  "host"      $(hostname)
 
 statusPrint 	"Checking -p <outputDicomDir>"
 if [[ "$G_OUTPUTDICOMDIR" == "-x" ]] ; then fatal noDicomDirArg ; fi
@@ -200,7 +201,7 @@ statusPrint 	"Checking -c <calledEntity>"
 if [[ "$G_CALLEDENTITY" == "-x" ]] ; then fatal noCalledEntityArg ; fi
 ret_check $?
 
-# Find the script directory so that we can find the pay to 
+# Find the script directory so that we can find the path to 
 # dayAge_calc.awk
 SCRIPT_DIR=$(which common.bash)
 G_DAYAGECALC_AWK="$(dirname $SCRIPT_DIR)/dayAge_calc.awk"
@@ -347,8 +348,7 @@ fi
 STAGE1PROC=mri_info_batch.bash
 statusPrint "$(date) | Processing STAGE - mri_info_batch.bash | START" "\n"
 STAGE=1-$STAGE1PROC
-STAGECMD="$STAGE1PROC	\
-                 -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR} -s"
+STAGECMD="$STAGE1PROC -v 10 -D ${G_DICOMROOT}/${G_OUTPUTDICOMDIR}"
 stage_run "$STAGE" "$STAGECMD"                          \
           "${G_LOGDIR}/${STAGE1PROC}.std"               \
           "${G_LOGDIR}/${STAGE1PROC}.err"

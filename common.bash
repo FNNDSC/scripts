@@ -256,7 +256,7 @@ function warn
 	echo -e "\n$G_SELF: WARNING\n" 			>&2
 	echo -e "\tWhile $1,"                           >&2
 	echo -e "\t$2\n"                                >&2
-	echo -e "\tSetting default to '$3'\n"		>&2
+	echo -e "\tWarning code: '$3'\n"		>&2
 }                
 
 function beware
