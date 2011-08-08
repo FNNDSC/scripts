@@ -202,7 +202,6 @@ function shut_down
     # to move the results from the analysis directory to their final
     # resting place
     if [[ "$G_COMMON_MIGRATEANALYSISDIR" != "-x" ]] ; then
-        origDir=$(pwd)
         
         # First remove the symbolic link between original directory
         # and analysis directory
@@ -213,8 +212,6 @@ function shut_down
         # into their final resting place
         mv $G_COMMON_MIGRATEANALYSISDIR .
         
-        # Go back to where we were
-        cd $origDir
     fi
     
     echo -e "\n$G_SELF:\n\tShutting down with code $1 at $(date).\n"

@@ -10,6 +10,7 @@
 
 # "include" the set of common script functions
 source common.bash
+source chris_env.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=0
@@ -18,8 +19,8 @@ declare -i Gb_forceStage=1
 declare -i Gb_partialAnonymize=0
 
 G_LOGDIR="-x"
-G_OUTDIR="/dicom/postproc"
-G_SSLCERTIFICATE="/chb/users/dicom/anonymize_key/CA_cert.pem"
+G_OUTDIR="$CHRIS_POSTPROC"
+G_SSLCERTIFICATE="${CHRIS_DICOMROOT}/anonymize_key/CA_cert.pem"
 G_OUTPREFIX="-x"
 G_DIRSUFFIX=""
 G_OUTPREFIX="anon-"

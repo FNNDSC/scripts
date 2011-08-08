@@ -11,6 +11,7 @@
 # "include" the set of common script functions
 source common.bash
 source getoptx.bash
+source chris_env.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=1
@@ -66,14 +67,16 @@ G_UPPERTHRESHOLD2="-x"
 G_MASKIMAGE2="-x"
 G_ANGLETHRESHOLD="-x"
 
-
-G_CLUSTERNAME=seychelles
-G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
+G_CLUSTERNAME=$CHRIS_CLUSTER
+G_CLUSTERDIR=$CHRIS_CLUSTERDIR
 G_SCHEDULELOG="schedule.log"
-G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
+G_MAILTO=$CHRIS_ADMINUSERS
 
 G_STAGES="12345"
 
+# The following MATLAB vars are obsolete and NMR specific! They pertain
+# to the re-DICOMization of output images and need to moved to 
+# chris_env.bash!!
 G_MATLAB32="/space/lyon/9/pubsw/Linux2-2.3-i386.new/bin/matlab.new -nosplash -nodesktop -nojvm -nodisplay "
 G_MATLAB64="/space/lyon/9/pubsw/Linux2-2.3-x86_64/bin/matlab.new -nosplash -nodesktop -nojvm -nodisplay "
 G_MATLABDARWIN="/space/lyon/9/pubsw/MacOS10.5-i686/bin/matlab -nosplash -nodesktop -nojvm -nodisplay "

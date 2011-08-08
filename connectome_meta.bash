@@ -11,6 +11,7 @@
 # "include" the set of common script functions
 source common.bash
 source getoptx.bash
+source chris_env.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=1
@@ -44,7 +45,7 @@ declare -i Gb_useDiffUnpack=1
 
 
 G_LOGDIR="-x"
-G_OUTDIR="/space/kaos/5/users/dicom/postproc"
+G_OUTDIR="$CHRIS_POSTPROC"
 G_OUTSUFFIX=""
 G_DIRSUFFIX=""
 G_DICOMINPUTDIR="-x"
@@ -65,10 +66,10 @@ G_ANGLETHRESHOLD="-x"
 G_RECONALLARGS=""
 
 
-G_CLUSTERNAME=seychelles
-G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
+G_CLUSTERNAME="$CHRIS_CLUSTER"
+G_CLUSTERDIR="$CHRIS_CLUSTERDIR"
 G_SCHEDULELOG="schedule.log"
-G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
+G_MAILTO="$CHRIS_ADMINUSERS"
 
 G_STAGES="123"
 G_TRACT_META_STAGES="12"

@@ -28,19 +28,21 @@ declare -i Gb_useDICOMSeries=0
 declare -i Gb_useDICOMFile=0
 
 G_LOGDIR="-x"
-G_OUTDIR="/space/kaos/5/users/dicom/postproc"
+G_OUTDIR="$CHRIS_POSTPROC"
 G_OUTSUFFIX=""
 G_DIRSUFFIX=""
 G_DICOMINPUTDIR="-x"
 G_DICOMINPUTFILE="-x"
 G_DICOMSERIESLIST="3D SPGR;MPRAGE;t1_mpr_ns_sag_1mm_iso"
 G_RECONALLARGS=""
+
 G_CLUSTERUSER=""
-G_CLUSTERNAME=seychelles
-G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
 G_SCHEDULELOG="schedule.log"
 G_MIGRATEANALYSISDIR="-x"
-G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
+G_CLUSTERNAME=$CHRIS_CLUSTER
+G_CLUSTERDIR=$CHRIS_CLUSTERDIR
+G_SCHEDULELOG="schedule.log"
+G_MAILTO=$CHRIS_ADMINUSERS
 
 G_STAGES="123"
 

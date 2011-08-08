@@ -11,6 +11,7 @@
 # "include" the set of common script functions
 source common.bash
 source getoptx.bash
+source chris_env.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=1
@@ -30,27 +31,26 @@ declare -i Gb_runCluster=0
 declare -i Gb_useDICOMFile=0
 
 G_LOGDIR="-x"
-G_OUTDIR="/space/kaos/5/users/dicom/postproc"
+G_OUTDIR=$CHRIS_POSTPROC
 G_OUTSUFFIX=""
 G_DIRSUFFIX=""
 G_DICOMINPUTDIR="-x"
 G_DICOMINPUTFILE="-x"
 G_DICOMSERIESLIST="*"
-G_SSLCERTIFICATE="/chb/users/dicom/anonymize_key/CA_cert.pem"
+G_SSLCERTIFICATE="${CHRIS_DICOMROOT}/CA_cert.pem"
 G_MIGRATEANALYSISDIR="-x"
 
 G_STORESCU="storescu"
 G_FILEEXT=""
-G_HOST=heisenberg.nmr.mgh.harvard.edu
-G_AETITLE="DCM4CHEE"
+G_HOST=localhost
+G_AETITLE=$CHRIS_AETITLE
 G_LISTENPORT=11112
 
-G_CLUSTERNAME=launchpad
-G_CLUSTERDIR=${G_OUTDIR}/${G_CLUSTERNAME}
+G_CLUSTERNAME=$CHRIS_CLUSTER
+G_CLUSTERDIR=$CHRIS_CLUSTERDIR
 G_SCHEDULELOG="schedule.log"
-G_MAILTO="rudolph.pienaar@childrens.harvard.edu,daniel.ginsburg@childrens.harvard.edu"
+G_MAILTO=$CHRIS_ADMINUSERS
 G_DCM_MKINDX="dcm_mkIndx.bash"
-
 
 G_STAGES="12"
 
