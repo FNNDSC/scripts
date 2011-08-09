@@ -11,6 +11,7 @@
 # "include" the set of common script functions
 source common.bash
 source getoptx.bash
+source chris_env.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=0
