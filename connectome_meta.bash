@@ -345,6 +345,9 @@ STAGES
           tractography processing.
 
  HISTORY
+        17 August 2011
+        o Corrected '-F notalairach' handling.
+
         3 December 2010
         o Connect to the cmt pipeline
 

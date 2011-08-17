@@ -16,6 +16,10 @@
 #    Rudolph Pienaar
 #    Children's Hospital Boston, 2010
 #
+# HISTORY
+# 17 August 2011
+# o Added '--notalairach' flag and handling.
+#
 
 import cmp,cmp.connectome,cmp.gui,cmp.configuration,cmp.pipeline,cmp.logme
 import sys
