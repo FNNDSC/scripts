@@ -91,7 +91,7 @@ def parseCommandLine(conf):
     if options.b0:
         conf.nr_of_b0 = options.b0
         
-    if options.notalairach
+    if options.notalairach:
         Gb_notalairach = 1
 
     if options.bValue:
