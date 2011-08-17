@@ -174,6 +174,9 @@ def main():
     conf.active_cffconverter = True
     conf.skip_completed_stages = False
     
+    # Setup and parse command-line options
+    options = parseCommandLine(conf)
+
     # XXX: These are hardcoded for now until I figure out how they
     #      should be set
     conf.creator = 'Neuroimaging Web Pipeline'
@@ -183,8 +186,6 @@ def main():
     if options.notalairach:
         conf.recon_all_param = '-all -no-isrunning -notalairach'
     
-    # Setup and parse command-line options
-    options = parseCommandLine(conf)
     
     # If writing pickle, return
     if options.writePickle:
