@@ -27,8 +27,6 @@ import os
 import shutil, glob
 from optparse import OptionParser
 
-Gb_notalairach = 0
-
 def parseCommandLine(conf):
     """Setup and parse command-line options"""
     
@@ -64,7 +62,8 @@ def parseCommandLine(conf):
                       help="Skip previously completed stages.")
     parser.add_option("--notalairach",
                       dest="notalairach",
-                      help="Skip previously completed stages.")
+                      action="store_true"
+                      help="Do not perform talairach registration.")
     parser.add_option("--writePickle",
                       dest="writePickle",
                       help="Filename to write pickle for use with CMT GUI. Exit after writing pickle file.")
@@ -91,9 +90,6 @@ def parseCommandLine(conf):
     if options.b0:
         conf.nr_of_b0 = options.b0
         
-    if options.notalairach:
-        Gb_notalairach = 1
-
     if options.bValue:
         conf.max_b0_val = options.bValue
 
@@ -184,7 +180,7 @@ def main():
     conf.publisher = 'CHB'
     conf.legalnotice = 'institution-specific'
     conf.email = 'default@default.edu'
-    if Gb_notalairach:
+    if options.notalairach:
         conf.recon_all_param = '-all -no-isrunning -notalairach'
     
     # Setup and parse command-line options
