@@ -62,7 +62,7 @@ def parseCommandLine(conf):
                       help="Skip previously completed stages.")
     parser.add_option("--notalairach",
                       dest="notalairach",
-                      action="store_true"
+                      action="store_true",
                       help="Do not perform talairach registration.")
     parser.add_option("--writePickle",
                       dest="writePickle",
