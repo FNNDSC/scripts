@@ -857,13 +857,18 @@ if (( ${barr_stage[3]} )) ; then
     XVFBCMD="Xvfb :${G_XVFB_SERVERNUM} -screen 1 1600x1200x24 2>/dev/null"
     echo "$XVFBCMD &" | sh
 
-    CMTARGS="-p ${MRID}${G_OUTSUFFIX}       \
-             -d ${G_OUTDIR}/${STAGE}        \
-             --b0=${B0VOLS}                 \
-             --bValue=${BVALUE}             \
-             --gm=${GRADMATRIX}             \
-             --dtiDir=${DIFFDCMDIR}        \
-             --t1Dir=${STAGE1OUT}"
+    CMTNOTAL=""
+    if [[ $G_RECONALLARGS == "-notalairach" ]] ; then
+        CMTNOTAL="--notalairach"
+    fi
+
+    CMTARGS="-p ${MRID}${G_OUTSUFFIX}           \
+             -d ${G_OUTDIR}/${STAGE}            \
+             --b0=${B0VOLS}                     \
+             --bValue=${BVALUE}                 \
+             --gm=${GRADMATRIX}                 \
+             --dtiDir=${DIFFDCMDIR}             \
+             --t1Dir=${STAGE1OUT} $CMTNOTAL"              
     CMTPKLARGS="${CMTARGS}"
     if [[ "$G_MIGRATEANALYSISDIR" != "-x" ]] ; then
 	CMTPKLARGS=$(echo "${CMTPKLARGS}" | sed "s|${G_MIGRATEANALYSISDIR}|${G_ORIG_OUTDIR}|g")
