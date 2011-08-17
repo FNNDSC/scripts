@@ -9,7 +9,7 @@
 #
 
 # "include" the set of common script functions
-source ~/arch/scripts/common.bash
+source common.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_useExpertOptions=0
@@ -58,6 +58,10 @@ G_SYNOPSIS="
         'flirt'. Additional options to 'flirt' can be specified in the
         <flirtOptsFile>, whose contents are blindly appended to the
         'flirt' command line.
+
+	If 4D input volumes are detected, the script will automatically
+	run a second-pass of 'flirt' to apply the registration to each
+	underlying volume component.
 
  ARGUMENTS
 
@@ -113,6 +117,22 @@ G_SYNOPSIS="
 	12 September 2008
 	o Initial design and coding.
 
+	15 August 2011
+	o Added 4D volume detection.
+
+ EXAMPLE USE:
+
+	Assuming you are in currently in a directory and containing the
+	input DICOMS as flat files, with the first file of the reference
+	series called <ref>.dcm and the first file of the input series
+	called <input>.dcm, and assuming you want the output to be in a 
+	new subjectory 'output' and an experiment called 'series',
+
+	$>dcm_coreg.bash -v 1 					\\
+			 -D $(pwd) 				\\
+			 -r <ref>.dcm -d <input>.dcm 		\\
+			 -O output -o series
+
 "
 
 ###\\\
@@ -136,6 +156,7 @@ A_noFlirt="checking for the 'flirt' binary"
 A_exitFlirt="running the 'flirt' process"
 A_dependencyStage="checking for a required dependency from an earlier stage"
 A_stageRun="running a stage in the processing pipeline"
+A_dimNumCheck="checking on the number of dimensions of input and ref"
 
 # Error messages
 EM_fileCheck="it seems that a dependency is missing."
@@ -152,6 +173,7 @@ EM_noFlirt="I couldn't find 'flirt' anywhere on your path."
 EM_exitFlirt="it seems as though an unexpected exit has occurred."
 EM_dependencyStage="it seems that a stage dependency is missing."
 EM_stageRun="I encountered an error processing this stage."
+EM_dimNumCheck="number of dimensions are inconsistent."
 
 # Error codes
 EC_fileCheck=1
@@ -168,6 +190,7 @@ EC_metaLog=80
 EC_runflirt=90
 EC_noFlirt=40
 EC_exitFlirt=41
+EC_dimNumCheck=50
 
 # Defaults
 D_whatever=
@@ -340,6 +363,49 @@ if (( ${barr_stage[2]} )) ; then
               || fatal stageRun
 
     statusPrint "$(date) | Processing STAGE 2 - coregistration | END" "\n"
+fi
+
+# 
+# If the inputs are 4D, need to apply the transform to each
+# underlying volume in the set.
+# 
+dimensionsIn=$(mri_info $NIFTIIN | grep dimensions 		|\
+		awk -F \: '{print $2}' | awk -F x '{print NF}')	
+dimensionsRef=$(mri_info $NIFTIREF | grep dimensions 		|\
+		awk -F \: '{print $2}' | awk -F x '{print NF}')	
+
+if (( dimensionsRef != dimensionsIn )) ; then fatal dimNumCheck ; fi
+
+STAGENUM=3
+STAGEPROC=flirt
+STAGE=3-$STAGE2PROC
+STAGE3OUTBASE="${G_OUTDIR}/${G_OUTRUNDIR}/${G_OUTPREFIX}-registered4D"
+if (( dimensionsIn == 4 )) ; then
+    statusPrint "$(date) | Processing STAGE 3 (extra) - 4D volume registration | START" "\n"
+    statusPrint "Input data is 4D... Applying transform to all underlying volumes" "\n"
+
+    EXOPTS=$(eval expertOpts_parse $STAGEPROC)
+    STAGE=${STAGENUM}-${STAGEPROC}
+    STAGECMD="$STAGEPROC                                        \
+                -dof    6                                       \
+                -cost   mutualinfo                              \
+                -usesqform                                      \
+                -in     $NIFTIIN                                \
+                -ref    $NIFTIREF                               \
+                -out    $STAGE3OUTBASE.nii                      \
+                -applyxfm                                       \
+                -init   $STAGE2OUTBASE.mat                      \
+                $EXOPTS"
+    stage_run "$STAGE"  "$STAGECMD"                             \
+              "${OUTDIR}/${STAGEPROC}.std"                      \
+              "${OUTDIR}/${STAGEPROC}.err"                      \
+              "SILENT"                                          \
+              || fatal stageRun
+
+    statusPrint "$(date) | Processing STAGE 3 (extra) - 4D volume registration | END" "\n"
+
+    statusPrint "Final output is $STAGE3OUTBASE.nii"
+
 fi
 
 verbosity_check

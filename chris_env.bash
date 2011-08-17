@@ -107,11 +107,12 @@ export CHRIS_LOGDIR=${CHRIS_DICOMROOT}/log
 # Application Entity Title for storescp listener
 export CHRIS_AETITLE=CHRIS
 
-# Location of DTK matrices
-export DSI_PATH=${CHRIS_DICOMROOT}/dtk/matrices/
-
 # Source FreeSurfer env
 source $FSSOURCE > /dev/null
+
+# PACKAGEDIR should be defined in the FS env
+export DTDIR=${PACKAGEDIR}/dtk
+export DSI_PATH=${DTDIR}/matrices
 
 export PATH=$PATH:${CHB_SCRIPTPATH}:${FSLDIR}:${FSLDIR}/bin
 
