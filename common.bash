@@ -295,7 +295,8 @@ function ret_check
 {
 	# ARGS
 	# $1 		in		return value to check
-	#
+	# $2		in (opt)	failure text
+	# $3		in (opt)	success text
 	# DESC
 	# Checks for the passed return value, and echoes a
 	# conditional to stdout. Returns this value back to
@@ -303,11 +304,23 @@ function ret_check
 	#
 	
 	local ret=$1
-		
+	FAIL="failure"
+	PASS="ok"
+	if (( ${#2} )) ; then
+		FAIL=$2
+	fi
+	if (( ${#3} )) ; then
+		PASS=$3
+	fi
+
 	if [[ $ret != "0" ]] ; then
-		printf "%*s\n" 	$G_RC	"[ failure ]"
+		if (( Gi_verbose )) ; then 
+		    printf "%*s\n" 	$G_RC	"[ $FAIL ]"
+		fi
 	else
-		printf "%*s\n" 	$G_RC	"[ ok ]"
+		if (( Gi_verbose )) ; then
+		    printf "%*s\n" 	$G_RC	"[ $PASS ]"
+		fi
 	fi
 	return $ret
 }
