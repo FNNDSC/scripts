@@ -200,6 +200,9 @@ cprint 	"from port"		"[ $FROMPORT ]"
 cprint 	"to host"		"[ $TOHOST ]"
 cprint 	"to port"		"[ $TOPORT ]"
 cprint  "via"			"[ $G_VIA ]"
+if (( ${#FLAGS_sshArgs} )) ; then
+    cprint "sshArgs"		"[ $FLAGS_sshArgs ]"
+fi
 
 statusPrint	"Searching for monitor on ports..."
 
@@ -217,11 +220,12 @@ else
 fi
 lprint	"Starting monitor..."
 
-SSH="ssh ${FLAGS_sshArgs} -f -N -X $SSHDIR ${FROMPORT}:${TOHOST}:${TOPORT} $G_VIA"
+SSH="ssh ${FLAGS_sshArgs} -g -f -N -X $SSHDIR ${FROMPORT}:${TOHOST}:${TOPORT} $G_VIA"
+
+echo "$SSH" 1>&2
 
 $SSH >/dev/null 2>/dev/null
 ret_check $?
-echo "$SSH" 1>&2
 
 shut_down 0
 
