@@ -137,8 +137,6 @@ DEFINE_string 	'from' 		$G_FROM 				\
 		'the <from> tunnel endpoint, in form <host>:<port>' 	'f'
 DEFINE_string 	'to'		$G_TO 					\
 		'the <to> tunnel endpoint, in form <host>:<port>' 	't'
-DEFINE_string	'asUser'	$G_USER					\
-		'the user name on the nexus host'			'u'
 DEFINE_boolean	'usage'		false					\
 		'show detailed usage help'				'm'
 DEFINE_boolean	'forward'	false					\

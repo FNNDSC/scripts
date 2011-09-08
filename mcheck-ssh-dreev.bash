@@ -16,7 +16,7 @@ G_ADMINUSERS=rudolph.pienaar@childrens.harvard.edu
 
 declare -i targetList
 
-declare -a TARGETCHECK
+declare -a TARGET_CHECK
 declare -a TARGETACTION
 
 G_SYNOPSIS="
@@ -83,6 +83,7 @@ EC_badRestart=10
 
 DREEV=dreev.tch.harvard.edu
 OSX1927=osx1927.tch.harvard.edu
+OSX2147=osx2147.tch.harvard.edu
 OSX1476=osx1476.tch.harvard.edu
 DURBAN=durban.tch.harvard.edu
 NATAL=natal.tch.harvard.edu
@@ -100,46 +101,46 @@ targetList=20
 ### REVERSE TUNNELS -- from dreev
 ##
 # VNC screen access on osx1927
-TARGETCHECK[0]="tunnelCheck.bash -p 9900"
+TARGET_CHECK[0]="tunnelCheck.bash -p 9900"
 TARGETACTION[0]="tunnel.bash --reverse 	--from ch137123@${DREEV}:9900 	--to ${OSX1927}:5900"
 # VNC screen access to osx1476
-TARGETCHECK[1]="tunnelCheck.bash -p 1476"
+TARGET_CHECK[1]="tunnelCheck.bash -p 1476"
 TARGETACTION[1]="tunnel.bash --reverse	--from ch137123@${DREEV}:1476 	--to ${OSX1476}:5900"
 # VNC screen access to Siemens Longwood 3.0T
-TARGETCHECK[2]="tunnelCheck.bash -p 5214"
+TARGET_CHECK[2]="tunnelCheck.bash -p 5214"
 TARGETACTION[2]="tunnel.bash --reverse	--from ch137123@${DREEV}:5214	--to 10.3.1.214:5900"
 # VNC screen access to Siemens Waltham 3.0T
-TARGETCHECK[3]="tunnelCheck.bash -p 5241"
+TARGET_CHECK[3]="tunnelCheck.bash -p 5241"
 TARGETACTION[3]="tunnel.bash --reverse	--from ch137123@${DREEV}:5241	--to 10.64.4.241:5900"
 # DICOM transmission/reception to osx1927
-TARGETCHECK[4]="tunnelCheck.bash -p 10402"
+TARGET_CHECK[4]="tunnelCheck.bash -p 10402"
 TARGETACTION[4]="tunnel.bash --reverse 	--from ch137123@${DREEV}:10402 	--to ${OSX1927}:10401"
 # Web access to 'durban'
-TARGETCHECK[5]="tunnelCheck.bash -p 8000"
+TARGET_CHECK[5]="tunnelCheck.bash -p 8000"
 TARGETACTION[5]="tunnel.bash --reverse 	--from ch137123@${DREEV}:8000 	--to ${DURBAN}:80"
 # Web access to 'natal'
-TARGETCHECK[6]="tunnelCheck.bash -p 8800"
+TARGET_CHECK[6]="tunnelCheck.bash -p 8800"
 TARGETACTION[6]="tunnel.bash --reverse	--from ch137123@${DREEV}:8800	--to ${NATAL}:80"
 # OsiriX listener on 'osx1927'
-TARGETCHECK[7]="tunnelCheck.bash -p 11112"
+TARGET_CHECK[7]="tunnelCheck.bash -p 11112"
 TARGETACTION[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${OSX1927}:11112"
 # SVN source code repositories
-TARGETCHECK[8]="tunnelCheck.bash -p 5555"
+TARGET_CHECK[8]="tunnelCheck.bash -p 5555"
 TARGETACTION[8]="tunnel.bash --reverse	--from ch137123@${DREEV}:5555	--to ${OSX2147}:22"
-TARGETCHECK[9]="tunnelCheck.bash -p 5556"
+TARGET_CHECK[9]="tunnelCheck.bash -p 5556"
 TARGETACTION[9]="tunnel.bash --reverse	--from ch137123@${DREEV}:5556	--to ${NATAL}:22"
-TARGETCHECK[10]="tunnelCheck.bash -p 4212"
+TARGET_CHECK[10]="tunnelCheck.bash -p 4212"
 TARGETACTION[10]="tunnel.bash --reverse	--from ch137123@${DREEV}:4212	--to ${IPMI}:22"
-TARGETCHECK[11]="tunnelCheck.bash -p 4214"
+TARGET_CHECK[11]="tunnelCheck.bash -p 4214"
 TARGETACTION[11]="tunnel.bash --reverse	--from ch137123@${DREEV}:4214	--to ${SHAKA}:22"
-TARGETCHECK[12]="tunnelCheck.bash -p 4216"
+TARGET_CHECK[12]="tunnelCheck.bash -p 4216"
 TARGETACTION[12]="tunnel.bash --reverse	--from ch137123@${DREEV}:4216 	--to ${GLACIER}:22"
-TARGETCHECK[13]="tunnelCheck.bash -p 7777"
+TARGET_CHECK[13]="tunnelCheck.bash -p 7777"
 TARGETACTION[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7777 	--to ${OSX1927}:22"
-TARGETCHECK[14]="tunnelCheck.bash -p 4215"
+TARGET_CHECK[14]="tunnelCheck.bash -p 4215"
 TARGETACTION[14]="tunnel.bash --reverse	--from ch137123@${DREEV}:4215	--to ${PRETORIA}:22"
 # Cluster repository
-TARGETCHECK[15]="tunnelCheck.bash -p 3204"
+TARGET_CHECK[15]="tunnelCheck.bash -p 3204"
 TARGETACTION[15]="tunnel.bash --reverse	--from ch137123@${DREEV}:3204	--to ${RCDRNO}:22"
 
 #
@@ -149,16 +150,16 @@ TARGETACTION[15]="tunnel.bash --reverse	--from ch137123@${DREEV}:3204	--to ${RCD
 ##
 # 
 # tesla VNC
-TARGETCHECK[16]="tunnelCheck.bash -p 4900"
-TARGETACTION[16]="tunnel.bash --forward	--from 4900 --via ch137123@${DREEV} --to localhost:5900"
+TARGET_CHECK[16]="tunnelCheck.bash -p 4900"
+TARGETACTION[16]="tunnel.bash --forward	--from 4900 --via ch137123@${DREEV} --to localhost:4900"
 # kaos login
-TARGETCHECK[17]="tunnelCheck.bash -p 7776"
+TARGET_CHECK[17]="tunnelCheck.bash -p 7776"
 TARGETACTION[17]="tunnel.bash --forward --from 7776 --via ch137123@${DREEV} --to localhost:7776"
 # tesla login
-TARGETCHECK[18]="tunnelCheck.bash -p 7775"
+TARGET_CHECK[18]="tunnelCheck.bash -p 7775"
 TARGETACTION[18]="tunnel.bash --forward	--from 7775 --via ch137123@${DREEV} --to localhost:7775  "
 # kaos -- DICOM listener
-TARGETCHECK[19]="tunnelCheck.bash -p 10301"
+TARGET_CHECK[19]="tunnelCheck.bash -p 10301"
 TARGETACTION[19]="tunnel.bash --forward --from 10301 --via ch137123@${DREEV} --to localhost:10301"
 
 #
@@ -166,9 +167,9 @@ TARGETACTION[19]="tunnel.bash --forward --from 10301 --via ch137123@${DREEV} --t
 ### FORWARD TUNNELS -- to site H
 ##
 #
-TARGETCHECK[20]="tunnelCheck.bash -p 9000"
+TARGET_CHECK[20]="tunnelCheck.bash -p 9000"
 TARGETACTION[20]="tunnel.bash --forward	--from 9000 --via rudolph@71.184.80.220 --to localhost:80 --sshArgs '-p 7778'"
-TARGETCHECK[21]="tunnelCheck.bash -p 6812"
+TARGET_CHECK[21]="tunnelCheck.bash -p 6812"
 TARGETACTION[21]="tunnel.bash --forward	--from 6812 --via rudolph@71.184.80.220 --to localhost:22 --sshArgs '-p 7778'"
 
 # Process command line options
@@ -186,7 +187,7 @@ rm -f $G_REPORTLOG
 b_logGenerate=0
 
 for i in $(seq 0 $(expr $targetList - 1)) ; do
-        result=$(eval ${TARGETCHECK[$i]})
+        result=$(eval ${TARGET_CHECK[$i]})
 	if (( result == 0 )) ; then
 	        #echo "${TARGETACTION[$i]}"
 		lprintn "Restarting target action..."
@@ -199,7 +200,7 @@ done
 
 for i in $TARGETRESTARTED ; do
         echo ""
-        echo -e "Failed:\t\t${TARGETCHECK[$i]}"         >> $G_REPORTLOG
+        echo -e "Failed:\t\t${TARGET_CHECK[$i]}"        >> $G_REPORTLOG
         echo -e "Executed:\t${TARGETACTION[$i]}"        >> $G_REPORTLOG
         echo ""
 done
