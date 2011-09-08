@@ -200,7 +200,7 @@ cprint 	"from port"		"[ $FROMPORT ]"
 cprint 	"to host"		"[ $TOHOST ]"
 cprint 	"to port"		"[ $TOPORT ]"
 cprint  "via"			"[ $G_VIA ]"
-cprint "sshArgs"		"[ $FLAGS_sshArgs ]"
+cprint  "sshArgs"		"[ $FLAGS_sshArgs ]"
 
 statusPrint	"Searching for monitor on ports..."
 
