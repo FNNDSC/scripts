@@ -19,7 +19,7 @@ G_TO="unspecified"
 G_VIA="unspecified"
 G_DIRECTION="unspecified"
 G_REMOTEUSER="unspecified"
-G_SSHARGS="-g"
+G_SSHARGS=" "
 
 G_SYNOPSIS="
 
@@ -145,7 +145,7 @@ DEFINE_boolean	'forward'	false					\
 		'create a forward tunnel'				'F'
 DEFINE_boolean	'reverse'	false					\
 		'create a reverse tunnel'				'R'
-DEFINE_string	'sshArgs'	$G_SSHARGS				\
+DEFINE_string	'sshArgs'	"$G_SSHARGS"				\
 		'additional args to the underlying ssh process'		'a'
 DEFINE_string	'via'		$G_VIA					\
 		'intermediate host connection spec'			'v'
@@ -200,9 +200,7 @@ cprint 	"from port"		"[ $FROMPORT ]"
 cprint 	"to host"		"[ $TOHOST ]"
 cprint 	"to port"		"[ $TOPORT ]"
 cprint  "via"			"[ $G_VIA ]"
-if (( ${#FLAGS_sshArgs} )) ; then
-    cprint "sshArgs"		"[ $FLAGS_sshArgs ]"
-fi
+cprint "sshArgs"		"[ $FLAGS_sshArgs ]"
 
 statusPrint	"Searching for monitor on ports..."
 
@@ -222,10 +220,10 @@ lprint	"Starting monitor..."
 
 SSH="ssh ${FLAGS_sshArgs} -g -f -N -X $SSHDIR ${FROMPORT}:${TOHOST}:${TOPORT} $G_VIA"
 
-echo "$SSH" 1>&2
-
 $SSH >/dev/null 2>/dev/null
 ret_check $?
+
+echo "$SSH" 1>&2
 
 shut_down 0
 
