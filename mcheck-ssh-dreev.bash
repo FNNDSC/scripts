@@ -74,12 +74,15 @@ G_SYNOPSIS="
 
 # Actions
 A_badRestart="attempting a corrective action"
+A_fileCheck="checking for a required file dependency"
 
 # Error messages
 EM_badRestart="the corrective action failed. Perhaps a target process failed?"
+EM_fileCheck="it seems that a dependency is missing."
 
 # Error codes
 EC_badRestart=10
+EC_fileCheck=1
 
 DREEV=dreev.tch.harvard.edu
 OSX1927=osx1927.tch.harvard.edu
@@ -94,6 +97,13 @@ RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
 H1=173.48.136.14
+
+REQUIREDFILES="common.bash tunnel.bash pgrep"
+
+for file in $REQUIREDFILES ; do
+        printf "%40s"   "Checking for $file"
+        file_checkOnPath $file || fatal fileCheck
+done
 
 targetList=22
 #
