@@ -77,7 +77,7 @@ EC_badRestart=10
 
 DREEV=dreev.tch.harvard.edu
 
-targetList=15
+targetList=17
 
 #
 ##
@@ -85,37 +85,37 @@ targetList=15
 ##
 #
 # ssh on osx1927
-TARGET_CHECK[0]="tunnelCheck.bash -p 7777"
+TARGET_CHECK[0]="tunnel.bash --forward	--from 7777  --via ch137123@${DREEV} --to localhost:7777 --isRunning"
 TARGETACTION[0]="tunnel.bash --forward	--from 7777  --via ch137123@${DREEV} --to localhost:7777"
 # DICOM listnener on osx1927
-TARGET_CHECK[1]="tunnelCheck.bash -p 10402"
+TARGET_CHECK[1]="tunnel.bash --forward	--from 10402 --via ch137123@${DREEV} --to localhost:10402 --isRunning"
 TARGETACTION[1]="tunnel.bash --forward	--from 10402 --via ch137123@${DREEV} --to localhost:10402"
 # VNC on osx1927
-TARGET_CHECK[2]="tunnelCheck.bash -p 9900"
+TARGET_CHECK[2]="tunnel.bash --forward	--from 9900  --via ch137123@${DREEV} --to localhost:9900 --isRunning"
 TARGETACTION[2]="tunnel.bash --forward	--from 9900  --via ch137123@${DREEV} --to localhost:9900"
 # OsiriX on osx1927
-TARGET_CHECK[3]="tunnelCheck.bash -p 11112"
+TARGET_CHECK[3]="tunnel.bash --forward	--from 11114  --via ch137123@${DREEV} --to localhost:11112 --isRunning"
 TARGETACTION[3]="tunnel.bash --forward	--from 11114  --via ch137123@${DREEV} --to localhost:11112"
 # ipmi
-TARGET_CHECK[4]="tunnelCheck.bash -p 4212"
+TARGET_CHECK[4]="tunnel.bash --forward	--from 4212  --via ch137123@${DREEV} --to localhost:4212 --isRunning"
 TARGETACTION[4]="tunnel.bash --forward	--from 4212  --via ch137123@${DREEV} --to localhost:4212"
 # shaka
-TARGET_CHECK[5]="tunnelCheck.bash -p 4214"
+TARGET_CHECK[5]="tunnel.bash --forward	--from 4214  --via ch137123@${DREEV} --to localhost:4214 --isRunning"
 TARGETACTION[5]="tunnel.bash --forward	--from 4214  --via ch137123@${DREEV} --to localhost:4214"
 # durban web (CHRIS)
-TARGET_CHECK[6]="tunnelCheck.bash -p 8000"
+TARGET_CHECK[6]="tunnel.bash --forward	--from 8000  --via ch137123@${DREEV} --to localhost:8000 --isRunning"
 TARGETACTION[6]="tunnel.bash --forward	--from 8000  --via ch137123@${DREEV} --to localhost:8000"
 # rc-drno
-TARGET_CHECK[7]="tunnelCheck.bash -p 3204"
+TARGET_CHECK[7]="tunnel.bash --forward	--from 3204  --via ch137123@${DREEV} --to localhost:3204 --isRunning"
 TARGETACTION[7]="tunnel.bash --forward	--from 3204  --via ch137123@${DREEV} --to localhost:3204"
 # glacier
-TARGET_CHECK[8]="tunnelCheck.bash -p 4216"
+TARGET_CHECK[8]="tunnel.bash --forward	--from 4216  --via ch137123@${DREEV} --to localhost:4216 --isRunning"
 TARGETACTION[8]="tunnel.bash --forward	--from 4216  --via ch137123@${DREEV} --to localhost:4216"
 # pretoria
-TARGET_CHECK[9]="tunnelCheck.bash -p 4215"
+TARGET_CHECK[9]="tunnel.bash --forward	--from 4215  --via ch137123@${DREEV} --to localhost:4215 --isRunning"
 TARGETACTION[9]="tunnel.bash --forward	--from 4215  --via ch137123@${DREEV} --to localhost:4215"
 # natal svn
-TARGET_CHECK[10]="tunnelCheck.bash -p 5556"
+TARGET_CHECK[10]="tunnel.bash --forward	--from 5556  --via ch137123@${DREEV} --to localhost:5556 --isRunning"
 TARGETACTION[10]="tunnel.bash --forward	--from 5556  --via ch137123@${DREEV} --to localhost:5556"
 
 #
@@ -124,17 +124,21 @@ TARGETACTION[10]="tunnel.bash --forward	--from 5556  --via ch137123@${DREEV} --t
 ##
 #
 # VNC from tesla out to FNNDSC 
-TARGET_CHECK[11]="tunnelCheck.bash -p 4900"
-TARGETACTION[11]="tunnel.bash --reverse --from ch137123@${DREEV}:4215 --to localhost:5900"
+TARGET_CHECK[11]="tunnel.bash --reverse --from ch137123@${DREEV}:4900 	--to localhost:5900 --isRunning"
+TARGETACTION[11]="tunnel.bash --reverse --from ch137123@${DREEV}:4900 	--to localhost:5900"
 # ssh from tesla out to FNNDSC
-TARGET_CHECK[12]="tunnelCheck.bash -p 7776"
-TARGETACTION[12]="tunnel.bash --reverse --from ch137123@${DREEV}:7776 --to localhost:22"
-# ssh from heisenberg out to FNNDSC
-TARGET_CHECK[13]="tunnelCheck.bash -p 7775"
-TARGETACTION[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7775 --to heisenberg:22"
-# DICOM listener on kaos out to FNNDSC
-TARGET_CHECK[14]="tunnelCheck.bash -p 10301"
-TARGETACTION[14]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 --to kaos:10301"
+TARGET_CHECK[12]="tunnel.bash --reverse --from ch137123@${DREEV}:7776 	--to localhost:22 --isRunning"
+TARGETACTION[12]="tunnel.bash --reverse --from ch137123@${DREEV}:7776 	--to localhost:22"
+# ssh from gate:7775 out to FNNDSC (dreev:7775)
+TARGET_CHECK[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7775 	--to gate:7775 --isRunning"
+TARGETACTION[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7775 	--to gate:7775"
+TARGET_CHECK[14]="tunnel.bash --reverse --from rudolph@gate:7775 	--to heisenberg:22 --isRunning"
+TARGETACTION[14]="tunnel.bash --reverse --from rudolph@gate:7775 	--to heisenberg:22"
+# DICOM listener from gate:10301 to FNNDSC
+TARGET_CHECK[15]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 	--to gate:10301 --isRunning"
+TARGETACTION[15]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 	--to gate:10301"
+TARGET_CHECK[16]="tunnel.bash --reverse --from rudolph@gate:10301 	--to kaos:10401 --isRunning"
+TARGETACTION[16]="tunnel.bash --reverse --from rudolph@gate:10301 	--to kaos:10401"
 
 # Process command line options
 while getopts h option ; do
