@@ -95,7 +95,7 @@ PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
 H1=173.48.136.14
 
-targetList=20
+targetList=22
 #
 ##
 ### REVERSE TUNNELS -- from dreev
