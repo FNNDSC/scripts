@@ -122,7 +122,7 @@ TARGETACTION[5]="tunnel.bash --reverse 	--from ch137123@${DREEV}:8000 	--to ${DU
 TARGET_CHECK[6]="tunnel.bash --reverse	--from ch137123@${DREEV}:8800	--to ${NATAL}:80 --isRunning"
 TARGETACTION[6]="tunnel.bash --reverse	--from ch137123@${DREEV}:8800	--to ${NATAL}:80"
 # OsiriX listener on 'osx1927'
-TARGET_CHECK[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${OSX1927}:11112i --isRunning"
+TARGET_CHECK[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${OSX1927}:11112 --isRunning"
 TARGETACTION[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${OSX1927}:11112"
 # SVN source code repositories
 TARGET_CHECK[8]="tunnel.bash --reverse	--from ch137123@${DREEV}:5555	--to ${OSX2147}:22 --isRunning"

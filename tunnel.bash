@@ -213,6 +213,9 @@ fi
 # Main --->
 ###///
 
+SSH="ssh -g -f -N -X $SSHDIR ${FROMPORT}:${TOHOST}:${TOPORT} $G_VIA"
+PID_running=$(pgrep -f "$SSH")
+
 if (( $FLAGS_isRunning )) ; then
 
     cprint	"tunnel direction"	"[ $DIRECTION ]"
@@ -224,10 +227,6 @@ if (( $FLAGS_isRunning )) ; then
     cprint  	"sshArgs"		"[ $FLAGS_sshArgs ]"
 
     statusPrint	"Searching for monitor on ports..."
-
-    PID_running=$(psa $FROMPORT 			 | grep $TOPORT 	|\
-			 grep -v grep | grep ssh | grep -v $G_SELF 	|\
-			awk '{print $2}')
 
     if (( ${#PID_running} )) ; then
 	statusPrint 	"[ running:$PID_running ]" "\n"
@@ -241,14 +240,16 @@ fi
 
 if (( ${#FLAGS_sshArgs} > 1 )) ; then SSHDIR="$SSHDIR $FLAGS_sshArgs" ; fi
 
-SSH="ssh -g -f -N -X $SSHDIR ${FROMPORT}:${TOHOST}:${TOPORT} $G_VIA"
 
 if (( $FLAGS_isRunning && $FLAGS_noExec )) ; then
     lprint	"Starting monitor..."
     $SSH >/dev/null 2>/dev/null
     ret_check $?
 else
-    RUNNING=$(pgrep -f "$SSH" | wc -l)
+    RUNNING=0
+    if (( ${#PID_running} )) ; then
+        RUNNING=$(echo $PID_running | wc -l)
+    fi
     echo $RUNNING
     exit $RUNNING
 fi
