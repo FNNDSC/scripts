@@ -34,7 +34,9 @@ G_SYNOPSIS="
 			[--forward --via <user>@<intermediateHost>]	  \\
 			[--sshArgs <sshArgs>]				  \\
 			[--verbosity <verbosity>]			  \\
-			[--usage]			
+			[--usage]					  \\
+			[--isRunning]					  \\
+			[--noExec]			
 	
  DESCRIPTION
 
@@ -76,7 +78,7 @@ G_SYNOPSIS="
 	The intermediate host and user id through which a forward tunnel is 
 	routed.
 
-	--forward || --reverse
+	--forward || --reverse (boolean)
 	The direction information flows in the tunnel.
 
 	--sshArgs <sshArgs>
@@ -85,6 +87,19 @@ G_SYNOPSIS="
 	--usage (boolean)
 	If specified, show this help page.
 
+	--isRunning (boolean)
+	If specified, does not open any tunnels, but creates the ssh tunnel
+	command string and checks if currently running. If true, return
+	a '1', else return a '0'.
+
+	--noExec (boolean)
+	If specified, do not actually open the tunnel, but construct and 
+	return the tunnel command string.
+
+ NOTE
+
+	o On Darwin hosts, need to install the 'proctools' MacPort.
+
  HISTORY
  26 May 2009
  o Initial design and coding.
@@ -92,6 +107,8 @@ G_SYNOPSIS="
  07 September 2011
  o Updating / revamping 
  
+ 
+
 "
 
 ###\\\
@@ -143,6 +160,10 @@ DEFINE_boolean	'forward'	false					\
 		'create a forward tunnel'				'F'
 DEFINE_boolean	'reverse'	false					\
 		'create a reverse tunnel'				'R'
+DEFINE_boolean	'isRunning'	false					\
+		'check if specified tunnel is running. Does not create tunnel' 'r'
+DEFINE_boolean	'noExec'	false					\
+		'Does not open tunnel, but will return the tunnel string' 'e'
 DEFINE_string	'sshArgs'	"$G_SSHARGS"				\
 		'additional args to the underlying ssh process'		'a'
 DEFINE_string	'via'		$G_VIA					\
@@ -192,36 +213,45 @@ fi
 # Main --->
 ###///
 
-cprint	"tunnel direction"	"[ $DIRECTION ]"
-cprint 	"from host"		"[ $FROMHOST ]"
-cprint 	"from port"		"[ $FROMPORT ]"
-cprint 	"to host"		"[ $TOHOST ]"
-cprint 	"to port"		"[ $TOPORT ]"
-cprint  "via"			"[ $G_VIA ]"
-cprint  "sshArgs"		"[ $FLAGS_sshArgs ]"
+if (( $FLAGS_isRunning )) ; then
 
-statusPrint	"Searching for monitor on ports..."
+    cprint	"tunnel direction"	"[ $DIRECTION ]"
+    cprint 	"from host"		"[ $FROMHOST ]"
+    cprint 	"from port"		"[ $FROMPORT ]"
+    cprint 	"to host"		"[ $TOHOST ]"
+    cprint	"to port"		"[ $TOPORT ]"
+    cprint  	"via"			"[ $G_VIA ]"
+    cprint  	"sshArgs"		"[ $FLAGS_sshArgs ]"
 
-PID_running=$(psa $FROMPORT 			 | grep $TOPORT 	|\
+    statusPrint	"Searching for monitor on ports..."
+
+    PID_running=$(psa $FROMPORT 			 | grep $TOPORT 	|\
 			 grep -v grep | grep ssh | grep -v $G_SELF 	|\
 			awk '{print $2}')
 
-if (( ${#PID_running} )) ; then
+    if (( ${#PID_running} )) ; then
 	statusPrint 	"[ running:$PID_running ]" "\n"
 	statusPrint	"Stopping monitor..."
 	echo "$PID_running" | awk '{printf("kill -9 %s\n", $1);}' | sh
 	ret_check $?
-else
+    else
 	statusPrint	"[ not running ]" "\n"
+    fi
+fi 
+
+if (( ${#FLAGS_sshArgs} > 1 )) ; then SSHDIR="$SSHDIR $FLAGS_sshArgs" ; fi
+
+SSH="ssh -g -f -N -X $SSHDIR ${FROMPORT}:${TOHOST}:${TOPORT} $G_VIA"
+
+if (( $FLAGS_isRunning && $FLAGS_noExec )) ; then
+    lprint	"Starting monitor..."
+    $SSH >/dev/null 2>/dev/null
+    ret_check $?
+else
+    RUNNING=$(pgrep -f "$SSH" | wc -l)
+    echo $RUNNING
+    exit $RUNNING
 fi
-lprint	"Starting monitor..."
-
-SSH="ssh ${FLAGS_sshArgs} -g -f -N -X $SSHDIR ${FROMPORT}:${TOHOST}:${TOPORT} $G_VIA"
-
-$SSH >/dev/null 2>/dev/null
-ret_check $?
 
 echo "$SSH" 1>&2
-
 shut_down 0
-
