@@ -9,7 +9,9 @@
 #
 
 # "include" the set of common script functions
-source ~/arch/scripts/common.bash
+source common.bash
+
+let Gi_verbose=0
 
 G_REPORTLOG=/tmp/${SELF}.reportLog.$G_PID
 G_ADMINUSERS=rudolph@nmr.mgh.harvard.edu
@@ -68,14 +70,25 @@ G_SYNOPSIS="
 
 # Actions
 A_badRestart="attempting a corrective action"
+A_fileCheck="checking for a required file dependency"
 
 # Error messages
 EM_badRestart="the corrective action failed. Perhaps a target process failed?"
+EM_fileCheck="it seems that a dependency is missing."
 
 # Error codes
 EC_badRestart=10
+EC_fileCheck=1
 
 DREEV=dreev.tch.harvard.edu
+verbosity_check
+
+REQUIREDFILES="common.bash tunnel.bash pgrep"
+
+for file in $REQUIREDFILES ; do
+        printf "%40s"   "Checking for $file"
+        file_checkOnPath $file || fatal fileCheck
+done
 
 targetList=17
 
