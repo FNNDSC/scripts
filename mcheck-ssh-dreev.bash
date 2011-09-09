@@ -93,7 +93,7 @@ GLACIER=glacier.tch.harvard.edu
 RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
-H1=172.48.136.13
+H1=173.48.136.14
 
 targetList=20
 #

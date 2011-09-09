@@ -213,6 +213,7 @@ fi
 # Main --->
 ###///
 
+if (( ${#FLAGS_sshArgs} > 1 )) ; then SSHDIR="$FLAGS_sshArgs $SSHDIR" ; fi
 SSH="ssh -g -f -N -X $SSHDIR ${FROMPORT}:${TOHOST}:${TOPORT} $G_VIA"
 PID_running=$(pgrep -f "$SSH")
 
@@ -238,14 +239,12 @@ if (( $FLAGS_isRunning )) ; then
     fi
 fi 
 
-if (( ${#FLAGS_sshArgs} > 1 )) ; then SSHDIR="$SSHDIR $FLAGS_sshArgs" ; fi
-
-
 if (( $FLAGS_isRunning && $FLAGS_noExec )) ; then
     lprint	"Starting monitor..."
     $SSH >/dev/null 2>/dev/null
     ret_check $?
-else
+fi
+if (( ! $FLAGS_isRunning )) ; then
     RUNNING=0
     if (( ${#PID_running} )) ; then
         RUNNING=$(echo $PID_running | wc -l)
