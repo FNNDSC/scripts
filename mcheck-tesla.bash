@@ -11,7 +11,7 @@
 # "include" the set of common script functions
 source common.bash
 
-let Gi_verbose=0
+let Gi_verbose=1
 
 G_REPORTLOG=/tmp/${SELF}.reportLog.$G_PID
 G_ADMINUSERS=rudolph@nmr.mgh.harvard.edu
@@ -86,8 +86,8 @@ verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
 
 for file in $REQUIREDFILES ; do
-        printf "%40s"   "Checking for $file"
-        file_checkOnPath $file || fatal fileCheck
+        # printf "%40s"   "Checking for $file"
+        file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
 targetList=17

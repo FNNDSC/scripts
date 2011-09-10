@@ -98,11 +98,12 @@ PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
 H1=173.48.136.14
 
+verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
 
 for file in $REQUIREDFILES ; do
-        printf "%40s"   "Checking for $file"
-        file_checkOnPath $file || fatal fileCheck
+#        printf "%40s"   "Checking for $file"
+        file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
 targetList=22
