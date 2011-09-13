@@ -184,9 +184,10 @@ TARGET_CHECK[21]="tunnel.bash --forward	--from 6812 --via rudolph@${H1} --to loc
 TARGETACTION[21]="tunnel.bash --forward	--from 6812 --via rudolph@${H1} --to localhost:22 --sshArgs '-p 7778'"
 
 # Process command line options
-while getopts h option ; do
+while getopts hv: option ; do
         case "$option"
         in
+		v) 	let Gi_verbose=$OPTARG	;;
                 h)      echo "$G_SYNOPSIS"
 		        shut_down 1 ;;
                 \?)     echo "$G_SYNOPSIS"

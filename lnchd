@@ -1,0 +1,72 @@
+#!/bin/bash
+
+G_SYNOPSIS="
+
+  NAME
+  
+        lnchd - change directory of a link.
+        
+  SYNOPSIS
+  
+        lnchd <newBaseDir> <link1> <link2> ... <linkN>
+        
+  DESCRIPTION
+  
+        'lnchd' preserves the relationship between a created link and its 
+        original destination file, but replaces the original destination
+        directory with <newBaseDir>.
+
+        It is useful when the original source file(s) have been moved, leaving
+        the original links to these files dead. 
+
+  EXAMPLES
+
+        $>cd /some/dir
+        $>lnchd /some/new/dir *
+  
+        In this snippet, /some/dir contains symbolic links along the lines of
+
+            ln1 -> /original/dir/file1
+            ln2 -> /original/dir/file2
+                          ...
+            lnN -> /original/dir/fileN
+
+        Assume that the files (file1, file2, ..., fileN) have all been moved
+        to a new location, /some/new/dir. All the original links are now 
+        dead. By running the above lnchd, the links are restored to
+
+            ln1 -> /some/new/dir/file1
+            ln2 -> /some/new/dir/file2
+                          ...
+            lnN -> /some/new/dir/fileN
+
+"
+
+if (( ! ${#1} )) ; then
+    echo "$G_SYNOPSIS"
+    exit 1
+fi
+
+NEWDIR=$1
+LNFILES=$(echo $* | awk '{for(i=2; i<=NF; i++) printf("%s ", $i);}')
+
+#echo "$LNFILES"
+
+for FILE in $LNFILES ; do
+     if [[ -h $FILE ]] ; then
+	 LINK=$(/bin/ls -l $FILE | awk '{print $NF}')
+	 ORIGFILE=$(basename $LINK)
+	 
+	 if [[ -d ${NEWDIR}/$ORIGFILE ]] ; then
+            rm $FILE
+            printf "%60s%20s\n" "$ORIGFILE ->" "[ $FILE ]"
+            ln -s ${NEWDIR}/$ORIGFILE $FILE
+	 else
+	    printf "%60s%20s\n" "$ORIGFILE not found in target" "[ skipping ]"
+	 fi
+     else
+	 printf "\n\t'$FILE' is not a symbolic link.\n"
+	 printf "\tNo action performed.\n"
+	 exit 2
+    fi
+done
