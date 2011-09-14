@@ -81,6 +81,7 @@ EC_badRestart=10
 EC_fileCheck=1
 
 DREEV=dreev.tch.harvard.edu
+GATE=gate.nmr.mgh.harvard.edu
 verbosity_check
 
 REQUIREDFILES="common.bash tunnel.bash pgrep"
@@ -90,7 +91,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=17
+targetList=18
 
 #
 ##
@@ -137,21 +138,23 @@ TARGETACTION[10]="tunnel.bash --forward	--from 5556  --via ch137123@${DREEV} --t
 ##
 #
 # VNC from tesla out to FNNDSC 
-TARGET_CHECK[11]="tunnel.bash --reverse --from ch137123@${DREEV}:4900 	--to localhost:5900 --isRunning"
-TARGETACTION[11]="tunnel.bash --reverse --from ch137123@${DREEV}:4900 	--to localhost:5900"
-# ssh from tesla out to FNNDSC
-TARGET_CHECK[12]="tunnel.bash --reverse --from ch137123@${DREEV}:7776 	--to localhost:22 --isRunning"
-TARGETACTION[12]="tunnel.bash --reverse --from ch137123@${DREEV}:7776 	--to localhost:22"
-# ssh from gate:7775 out to FNNDSC (dreev:7775)
-TARGET_CHECK[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7775 	--to gate:7775 --isRunning"
-TARGETACTION[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7775 	--to gate:7775"
-TARGET_CHECK[14]="tunnel.bash --reverse --from rudolph@gate:7775 	--to heisenberg:22 --isRunning"
-TARGETACTION[14]="tunnel.bash --reverse --from rudolph@gate:7775 	--to heisenberg:22"
-# DICOM listener from gate:10301 to FNNDSC
-TARGET_CHECK[15]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 	--to gate:10301 --isRunning"
-TARGETACTION[15]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 	--to gate:10301"
-TARGET_CHECK[16]="tunnel.bash --reverse --from rudolph@gate:10301 	--to kaos:10401 --isRunning"
-TARGETACTION[16]="tunnel.bash --reverse --from rudolph@gate:10301 	--to kaos:10401"
+TARGET_CHECK[11]="tunnel.bash --reverse --from ch137123@${DREEV}:4900 	--to ${GATE}:4900 --isRunning"
+TARGETACTION[11]="tunnel.bash --reverse --from ch137123@${DREEV}:4900 	--to ${GATE}:4900"
+TARGET_CHECK[12]="tunnel.bash --reverse --from rudolph@${GATE}:4900 	--to tesla:5900 --isRunning"
+TARGETACTION[12]="tunnel.bash --reverse --from rudolph@${GATE}:4900 	--to tesla:5900"
+# ssh from localhost out to FNNDSC
+TARGET_CHECK[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7776 	--to localhost:22 --isRunning"
+TARGETACTION[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7776 	--to localhost:22"
+# ssh from ${GATE}:7775 out to FNNDSC (dreev:7775)
+TARGET_CHECK[14]="tunnel.bash --reverse --from ch137123@${DREEV}:7775 	--to ${GATE}:7775 --isRunning"
+TARGETACTION[14]="tunnel.bash --reverse --from ch137123@${DREEV}:7775 	--to ${GATE}:7775"
+TARGET_CHECK[15]="tunnel.bash --reverse --from rudolph@${GATE}:7775 	--to heisenberg:22 --isRunning"
+TARGETACTION[15]="tunnel.bash --reverse --from rudolph@${GATE}:7775 	--to heisenberg:22"
+# DICOM listener from ${GATE}:10301 to FNNDSC
+TARGET_CHECK[16]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 	--to ${GATE}:10301 --isRunning"
+TARGETACTION[16]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 	--to ${GATE}:10301"
+TARGET_CHECK[17]="tunnel.bash --reverse --from rudolph@${GATE}:10301 	--to kaos:10401 --isRunning"
+TARGETACTION[17]="tunnel.bash --reverse --from rudolph@${GATE}:10301 	--to kaos:10401"
 
 # Process command line options
 while getopts h option ; do
