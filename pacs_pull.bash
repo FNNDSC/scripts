@@ -27,7 +27,7 @@ G_RC=50
 # User searchable fields
 # Fields initialised with "-x" must be specified by the user
 # when running this script
-G_PATIENTID="-x"
+G_PATIENTID=""
 G_QUERYRETRIEVELEVEL=""
 G_MODALITY="MR"
 G_PATIENTSNAME=""
@@ -60,7 +60,7 @@ G_SYNOPSIS="
 
   SYNOPSIS
   
-        pacs_pull.bash  -M <MRN>                                        \\
+        pacs_pull.bash  -M <MRN> || -N <PatientsName>                   \\
                         [-R]                                            \\
                         [-D <scandate>]                                 \\
                         [-S <seriesDescription>]                        \\
@@ -87,8 +87,9 @@ G_SYNOPSIS="
 
   ARGS
 
-        -M <MRN>
-        MRN to query.
+        -M <MRN> || -N <PatientsName>
+        MRN or patient name to query. Only specify one or the other; if
+	both are specified, the <PatientsName> is ignored.
         
         -R
         By default, the script will only query the PACS and not retrieve
@@ -146,14 +147,17 @@ G_SYNOPSIS="
 A_MRN="checking command line args"
 A_noBlockSort="performing the block sort"
 A_studyFindFail="performing a findscu based search for the study"
+A_noMRNorName="looking at the search criteria"
 
 EM_MRN="I couldn't find -M <MRN>. This is a required key.'"
 EM_noBlockSort="I couldn't find any sorted series files."
 EM_studyFindFail="the PACS replied that the query was malformed."
+EM_noMRNorName="I couldn't find either a -M <MRN> or -N <PatientsName>.\n\tYou *must* specify one or the other."
 
 EC_MRN=10
 EC_noBlockSort=11
 EC_studyFindFail=12
+EC_noMRNorName=13
 
 # DICOM tag label
 G_QueryRetrieveLevel="0008,0052"
@@ -252,11 +256,12 @@ function institution_set
     esac
 }
 
-while getopts M:QD:S:a:c:l:P:p:v:Rh: option ; do
+while getopts M:N:QD:S:a:c:l:P:p:v:Rh: option ; do
     case "$option" 
     in
         v) Gi_verbose=$OPTARG           ;;
         M) G_PATIENTID=$OPTARG          ;;
+	N) G_PATIENTSNAME=$OPTARG	;;
         R) let Gb_queryOnly=0           ;;
         D) G_SCANDATE=$OPTARG           ;;
         S) G_SERIESDESCRIPTION=$OPTARG
@@ -276,15 +281,28 @@ if (( Gb_institution )) ; then
     institution_set $G_INSTITUTION
 fi
 
-if [[ $G_PATIENTID == "-x"      ]] ; then fatal MRN;            fi
+if (( ! ${#G_PATIENTID} && ! ${#G_PATIENTSNAME} )) ; then fatal noMRNorName; fi
+if (( ${#G_PATIENTID} && ${#G_PATIENTSNAME} )) ; then G_PATIENTSNAME="" ; fi
 if (( ${#G_SCANDATE}            )) ; then Gb_dateSpecified=1;   fi
 
-cprint "------> Querying for MRN <-----" "[ $G_PATIENTID ]"
+cprint "M: Institution"		"[ $G_INSTITUTION ]"
+cprint "M: AETitle for query"	"[ $G_AETITLE ]"
+cprint "M: PACS IP"		"[ $G_QUERYHOST ]"
+cprint "M: CallTitle for query"	"[ $G_CALLTITLE ]"
+
+
+if (( ${#G_PATIENTID} )) ; then
+    cprint "M: Querying for MRN" "[ $G_PATIENTID ]"
+fi
+
+if (( ${#G_PATIENTSNAME} )) ; then
+    cprint "M: Querying for NAME" "[ $G_PATIENTSNAME ]"
+fi
 
 if (( Gb_dateSpecified )) ; then
-    cprint "---> Querying for SCANDATE <---" "[ $G_SCANDATE ]" 
+    cprint "M: Querying for SCANDATE" "[ $G_SCANDATE ]" 
 else
-    cprint "---> Querying for SCANDATE <---" "[ unspecified ]"
+    cprint "M: Querying for SCANDATE" "[ unspecified ]"
 fi
 
 
@@ -410,6 +428,9 @@ for currentUIb in $UI ; do
     tNAME=$(echo "$line"        | grep "$G_PatientsName")
     if (( ${#tNAME} )) ; then   NAME=$(bracket_find "$tNAME");    fi
 
+    tMRID=$(echo "$line"        | grep "$G_PatientID")
+    if (( ${#tMRID} )) ; then   G_PATIENTID=$(bracket_find "$tMRID");    fi
+    
     tSERIESUID=$(echo "$line"   | grep "$G_SeriesInstanceUID")
     if (( ${#tSERIESUID} )) ; then
         SERIESUID=$(bracket_find "$tSERIESUID");
