@@ -16,29 +16,32 @@ G_ADMINUSERS=rudolph.pienaar@childrens.harvard.edu
 
 declare -i targetList
 
-declare -a TARGETCHECK
+declare -a TARGET_CHECK
 declare -a TARGETACTION
 
 G_SYNOPSIS="
 
  NAME
 
-       mcheck-ssh-osx1927.bash
+       mcheck-ssh-dreev.bash
 
  SYNOPSIS
 
-       mcheck-ssh-osx1927.bash
+       mcheck-ssh-dreev.bash
 
  DESCRIPTION
  
-        'mcheck-ssh-osx1927.bash' is used to check that certain script-defined
+        'mcheck-ssh-dreev.bash' is used to check that certain script-defined
 	conditions are true. If any of these conditions are false, it executes 
 	a set of corrective actions.
-	
+
 	It should typically be called from a cron process, and this particular
 	version of 'mcheck' is tailored to monitoring ssh tunnels between this
 	host and remote hosts.
-	
+
+	This particular script sets up the web of ssh-tunnel connections allowing
+	connections to FNNDSC hosts.
+		
  PRECONDITIONS
 
 	 o Conditions to check are defined in the script code itself. These
@@ -57,6 +60,12 @@ G_SYNOPSIS="
  24 May 2009
   o OSX1927 integration.
 
+ 07 September 2011
+  o Re-routed all tunnels through 'dreev' to prevent accidental flooding of tunnel
+    nexus hosts.
+  o Added 'maxTunnel' check -- script will not open new tunnels if 'maxTunnel' is
+    exceeded (this is an added check against flooding).   
+
 "
 
 ###\\\
@@ -65,71 +74,61 @@ G_SYNOPSIS="
 
 # Actions
 A_badRestart="attempting a corrective action"
+A_fileCheck="checking for a required file dependency"
 
 # Error messages
 EM_badRestart="the corrective action failed. Perhaps a target process failed?"
+EM_fileCheck="it seems that a dependency is missing."
 
 # Error codes
 EC_badRestart=10
+EC_fileCheck=1
 
-targetList=25
+DREEV=dreev.tch.harvard.edu
+OSX1927=osx1927.tch.harvard.edu
+OSX2147=osx2147.tch.harvard.edu
+OSX1476=osx1476.tch.harvard.edu
+DURBAN=durban.tch.harvard.edu
+NATAL=natal.tch.harvard.edu
+IPMI=ipmi.tch.harvard.edu
+SHAKA=shaka.tch.harvard.edu
+GLACIER=glacier.tch.harvard.edu
+RCDRNO=rc-drno.tch.harvard.edu
+PRETORIA=pretoria.tch.harvard.edu
+GATE=gate.nmr.mgh.harvard.edu
+H1=173.48.136.14
 
-TARGETCHECK[0]="psa 7777  | grep ssh | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[0]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 7777 -L 22)"
-TARGETCHECK[1]="psa 9900  | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[1]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 9900 -L 5900)"
-TARGETCHECK[2]="psa 10402 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[2]="(~/arch/scripts/sshTunnel_restart.sh -g -R 10402 -L 10401)"
-TARGETCHECK[3]="psa 4900 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[3]="(~/arch/scripts/sshTunnel_restart.sh -g -F -H tesla -h gate -u rudolph -L 4900 -R 5900)"
-TARGETCHECK[4]="psa 10301 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[4]="(~/arch/scripts/sshTunnel_restart.sh -g -F -H kaos -h gate -u rudolph -L 10301 -R 10401)"
-TARGETCHECK[5]="psa 40960 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[5]="(~/arch/scripts/sshTunnel_restart.sh -g -F -H tesla -h gate -u rudolph -L 40960 -R 4096)"
-TARGETCHECK[6]="psa 11112 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[6]="(~/arch/scripts/sshTunnel_restart.sh -g -R 11112 -L 11112)"
-TARGETCHECK[7]="psa 8000 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[7]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 8000 -L 80 -H durban -h dreev.tch.harvard.edu)"
-TARGETCHECK[8]="psa 1476 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[8]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 1476 -L 5900 -H osx1476 -h dreev.tch.harvard.edu)"
-TARGETCHECK[9]="psa 4212 | grep ssh | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[9]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 4212 -H ipmi -L 22 -u ch137123 -h dreev.tch.harvard.edu)"
-TARGETCHECK[10]="psa 4214 | grep ssh | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[10]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 4214 -H shaka -h dreev.tch.harvard.edu -u ch137123 -L 22)"
-TARGETCHECK[11]="psa 7776 | grep kaos | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[11]="(~/arch/scripts/sshTunnel_restart.sh -g -F -H kaos -h gate -u rudolph -L 7776 -R 22)"
-TARGETCHECK[12]="psa 7775 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[12]="(~/arch/scripts/sshTunnel_restart.sh -g -F -H heisenberg -h gate -u rudolph -L 7775 -R 22)"
-TARGETCHECK[13]="psa 4204 | grep $(whoami) | grep ssh | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[13]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 4204 -H rc-drno -h dreev.tch.harvard.edu -u ch137123 -L 22)"
-TARGETCHECK[14]="psa 8888 | grep dreev | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[14]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 8888 -H natal -h dreev.tch.harvard.edu -u ch137123 -L 22)"
-TARGETCHECK[15]="psa 5214 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[15]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 5214 -H 10.3.1.214 -h dreev.tch.harvard.edu -u ch137123 -L 5900)"
-TARGETCHECK[16]="psa 5241 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[16]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 5241 -H 10.64.4.241 -h dreev.tch.harvard.edu -u ch137123 -L 5900)"
-TARGETCHECK[17]="psa 8800 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[17]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 8800 -H natal -h dreev.tch.harvard.edu -u ch137123 -L 80)"
-TARGETCHECK[18]="psa 4216 | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[18]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 4216 -H glacier -h dreev.tch.harvard.edu -u ch137123 -L 22)"
-TARGETCHECK[19]="psa 9000| grep $(whoami) | grep ssh | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[19]="( ssh -p 7778 -g -f -N -X -L 9000:localhost:80 rudolph@71.184.80.220 )"
-TARGETCHECK[20]="psa 6812 | grep $(whoami) | grep ssh | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[20]="( ssh -p 7778 -g -f -N -X -L 6812:localhost:22 rudolph@71.184.80.220 )"
-TARGETCHECK[21]="psa 4215 | grep ssh | grep $(whoami) | grep -v grep | grep ssh  |  wc -l"
-TARGETACTION[21]="(exec ~/arch/scripts/sshTunnel_restart.sh -g -R 4215 -H pretoria -h dreev.tch.harvard.edu -u ch137123 -L 22)"
-TARGETCHECK[22]="psa 10409 | grep $(whoami) | grep -v grep | grep ssh |  wc -l"
-TARGETACTION[22]="(~/arch/scripts/sshTunnel_restart.sh -g -F -H kaos -h gate -u rudolph -L 10409 -R 10401)"
+verbosity_check
+REQUIREDFILES="common.bash tunnel.bash pgrep"
 
-TARGETCHECK[23]="psa 5555  | grep $(whoami) | grep -v grep | grep ssh |  wc -l"
-TARGETACTION[23]="(~/arch/scripts/sshTunnel_restart.sh -B -H osx2147.tch.harvard.edu -h dreev.tch.harvard.edu -u ch137123 -R 5555 -L 22)"
-TARGETCHECK[24]="psa 5556  | grep $(whoami) | grep -v grep | grep ssh | wc -l"
-TARGETACTION[24]="(~/arch/scripts/sshTunnel_restart.sh -B -H natal.tch.harvard.edu -h dreev.tch.harvard.edu -u ch137123 -R 5556 -L 22)"
+for file in $REQUIREDFILES ; do
+#        printf "%40s"   "Checking for $file"
+        file_checkOnPath $file >/dev/null || fatal fileCheck
+done
+
+targetList=5
+
+#
+##
+### FORWARD TUNNELS -- to 'pretoria' start points
+##
+#
+ TARGET_CHECK[0]="tunnel.bash --forward	--from 10401 --via rudolphpienaar@pretoria --to localhost:10401 --isRunning"
+ TARGETACTION[0]="tunnel.bash --forward	--from 10401 --via rudolphpienaar@pretoria --to localhost:10401"
+ TARGET_CHECK[1]="tunnel.bash --forward	--from 10301 --via rudolphpienaar@pretoria --to localhost:10301 --isRunning"
+ TARGETACTION[1]="tunnel.bash --forward	--from 10301 --via rudolphpienaar@pretoria --to localhost:10301"
+ TARGET_CHECK[2]="tunnel.bash --forward	--from 7776  --via rudolphpienaar@pretoria --to localhost:7776 --isRunning"
+ TARGETACTION[2]="tunnel.bash --forward	--from 7776  --via rudolphpienaar@pretoria --to localhost:7776"
+ TARGET_CHECK[3]="tunnel.bash --forward	--from 7775  --via rudolphpienaar@pretoria --to localhost:7775 --isRunning"
+ TARGETACTION[3]="tunnel.bash --forward	--from 7775  --via rudolphpienaar@pretoria --to localhost:7775"
+ TARGET_CHECK[4]="tunnel.bash --forward	--from 4900  --via rudolphpienaar@pretoria --to localhost:4900 --isRunning"
+ TARGETACTION[4]="tunnel.bash --forward	--from 4900  --via rudolphpienaar@pretoria --to localhost:4900"
 
 # Process command line options
-while getopts h option ; do
+while getopts hv: option ; do
         case "$option"
         in
+		v) 	let Gi_verbose=$OPTARG	;;
                 h)      echo "$G_SYNOPSIS"
 		        shut_down 1 ;;
                 \?)     echo "$G_SYNOPSIS"
@@ -141,7 +140,7 @@ rm -f $G_REPORTLOG
 b_logGenerate=0
 
 for i in $(seq 0 $(expr $targetList - 1)) ; do
-        result=$(eval ${TARGETCHECK[$i]})
+        result=$(eval ${TARGET_CHECK[$i]})
 	if (( result == 0 )) ; then
 	        #echo "${TARGETACTION[$i]}"
 		lprintn "Restarting target action..."
@@ -154,7 +153,7 @@ done
 
 for i in $TARGETRESTARTED ; do
         echo ""
-        echo -e "Failed:\t\t${TARGETCHECK[$i]}"         >> $G_REPORTLOG
+        echo -e "Failed:\t\t${TARGET_CHECK[$i]}"        >> $G_REPORTLOG
         echo -e "Executed:\t${TARGETACTION[$i]}"        >> $G_REPORTLOG
         echo ""
 done
