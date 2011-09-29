@@ -89,7 +89,10 @@ G_SYNOPSIS="
 
         -M <MRN> || -N <PatientsName>
         MRN or patient name to query. Only specify one or the other; if
-	both are specified, the <PatientsName> is ignored.
+	both are specified, the <PatientsName> is ignored. Also note that
+	the <PatientsName> is an *exact* string -- no substring searching
+	is performed. The name is found only if it exactly matches the
+	name in the PACS.
         
         -R
         By default, the script will only query the PACS and not retrieve
