@@ -1,0 +1,14 @@
+# python
+*.pyc
+
+# svn
+*.svn
+
+# project from Eclipse/Aptana IDE
+*.project
+*.pydevproject
+*.settings
+
+#OSX specifics
+.DS_Store
+
