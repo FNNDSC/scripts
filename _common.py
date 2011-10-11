@@ -40,7 +40,7 @@ class FNNDSCConsole():
     return time.strftime( "%b %d %H:%M:%S" ) + " " + str( socket.gethostname() ) + " " + sys.argv[0] + "[" + str( os.getpid() ) + "]" + " "
 
   @staticmethod
-  def debug( message, showDebugOutput = True ):
+  def debug( message, showDebugOutput = False ):
     '''
     Print a debug statement if showDebugOutput is True
     '''
@@ -118,5 +118,5 @@ class FNNDSCFileIO():
       FNNDSCConsole.error( 'Aborting..' )
       sys.exit( 2 )
 
-    save( image, fileName )
+    return save( image, fileName )
 
