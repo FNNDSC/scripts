@@ -4,7 +4,7 @@ G_SYNOPSIS="
 
   NAME
   
-        lnchd - change directory of a link.
+        lnchd - change destination of a link.
         
   SYNOPSIS
   
@@ -57,7 +57,7 @@ for FILE in $LNFILES ; do
 	 LINK=$(/bin/ls -l $FILE | awk '{print $NF}')
 	 ORIGFILE=$(basename $LINK)
 	 
-	 if [[ -d ${NEWDIR}/$ORIGFILE ]] ; then
+	 if [[ -d ${NEWDIR}/$ORIGFILE || -f ${NEWDIR}/$ORIGFILE ]] ; then
             rm $FILE
             printf "%60s%20s\n" "$ORIGFILE ->" "[ $FILE ]"
             ln -s ${NEWDIR}/$ORIGFILE $FILE
