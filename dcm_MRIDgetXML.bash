@@ -123,7 +123,6 @@ done
 
 verbosity_check
 topDir=$(pwd)
-
 printf "%40s"   "Checking for SUBJECTS_DIR env variable"
 b_subjectsDir=$(set | grep SUBJECTS_DIR | wc -l)
 if (( !b_subjectsDir )) ; then
@@ -139,6 +138,10 @@ shift $(($OPTIND - 1))
 DCMLIST=$*
 b_DCMLIST=$(echo $DCMLIST | wc -w)
 
+if (( ! b_DCMLIST )) ; then
+    DCMLIST=*
+fi
+
 cd $DICOMDIR
 let hitCount=0
 let b_hit=0
@@ -147,11 +150,20 @@ if (( !b_DCMLIST )) ; then
     echo "<?xml version=\"1.0\"?>"
 fi
 
-for DIR in * ; do
+for DIR in $DCMLIST ; do
     dirExist_check $DIR >/dev/null
     if (( !$? )) ; then 
         cd "$DIR" >/dev/null 2>/dev/null; 
         DCMMKINDX=""
+        if [ -f toc.txt ] ; then
+            ID=$(cat toc.txt | grep ID | awk '{print $3}')
+            if (( ! ${#ID} )) ; then
+                # Perhaps the toc.txt has not been properly generated. 
+                # In that case, force a re-indexing
+                stage_stamp "Regenerating malformed toc.txt for $DIR" $CHRIS_LOGDIR/$G_SELF.log \($(whoami)\)
+                dcm_mkIndx.bash -a > toc.txt
+            fi
+        fi
         if [ -f toc.txt ] ; then    
             while read line  
             do  
@@ -185,6 +197,7 @@ for DIR in * ; do
                         SOFTWARE_VER=$(echo -e $DCMMKINDX | grep "Software Ver" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
 						                        
                         echo_stripped "<PatientRecord>"						
+                        echo_stripped "    <recordCtime>$(date)</recordCtime>"
                         echo_stripped "    <PatientID>$ID</PatientID>"
                         echo_stripped "    <Directory>$DIR</Directory>"
                         echo_stripped "    <PatientName>$PATIENT_NAME</PatientName>"

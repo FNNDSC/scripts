@@ -127,13 +127,17 @@ shift $(($OPTIND - 1))
 DCMLIST=$*
 b_DCMLIST=$(echo $DCMLIST | wc -w)
 
+if (( ! b_DCMLIST )) ; then
+    DCMLIST=*
+fi
+
 cd $DICOMDIR
 let hitCount=0
 let b_hit=0
 exec 1>&6 6>&-
-for DIR in * ; do
+for DIR in $DCMLIST ; do
     dirExist_check $DIR >/dev/null
-    if (( !$? )) ; then 
+    if (( !$? )) ; then     
 	cd "$DIR" >/dev/null 2>/dev/null; 
 	ID=$(dcm_mkIndx.bash 2>/dev/null | grep ID | awk '{print $3}'); 
 	b_MRID=$(echo "$ID" | wc -w)
