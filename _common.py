@@ -10,8 +10,9 @@ import time
 import socket
 
 # Nibabel imports
-from nibabel.loadsave import load as nibLoad
-from nibabel.loadsave import save as nibSave
+from nibabel.trackvis import read as nibLoad
+from nibabel.trackvis import write as nibSave
+# Nipy imports
 from nipy.io.files import load as nipLoad
 from nipy.io.files import save as nipSave
 
@@ -124,3 +125,49 @@ class FNNDSCFileIO():
 
     return nipSave( image, fileName )
 
+  @staticmethod
+  def loadTrk( fileName ):
+    '''
+    '''
+    if not os.path.isfile( fileName ):
+      # we need the file
+      FNNDSCConsole.error( 'Could not read ' + str( fileName ) )
+      FNNDSCConsole.error( 'Aborting..' )
+      sys.exit( 2 )
+
+    fileType = os.path.splitext( fileName )[1]
+    # we support the formats from NiPy
+    validFileTypes = ['.trk']
+
+    if not fileType in validFileTypes:
+      FNNDSCConsole.error( fileType + ' is no valid file format..' )
+      sys.exit( 2 )
+    else:
+      FNNDSCConsole.debug( 'Loading ' + str( fileType ).upper() + ' file..' )
+
+      image = nibLoad( fileName )
+
+      if not image:
+        FNNDSCConsole.error( 'Could not read ' + str( fileName ) )
+        FNNDSCConsole.error( 'Aborting..' )
+        sys.exit( 2 )
+      else:
+        return image
+
+
+  @staticmethod
+  def saveTrk( fileName, tracks, header = None, endianness = None ):
+    '''
+    '''
+    if os.path.exists( fileName ):
+      # abort if file already exists
+      FNNDSCConsole.error( 'File ' + str( fileName ) + ' already exists..' )
+      FNNDSCConsole.error( 'Aborting..' )
+      sys.exit( 2 )
+
+    if not tracks:
+      FNNDSCConsole.error( 'Invalid tracks' )
+      FNNDSCConsole.error( 'Aborting..' )
+      sys.exit( 2 )
+
+    return nibSave( fileName, tracks, header, endianness )
