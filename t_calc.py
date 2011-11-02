@@ -1,5 +1,6 @@
 import sys
 import os
+import threading
 from _common import FNNDSCParser
 from _common import FNNDSCConsole as c
 from _common import FNNDSCFileIO as io
@@ -47,7 +48,7 @@ class TrackvisCalcLogic():
 
         # add the tracks
         c.debug( 'Adding tracks from ' + i, verbose )
-        outputTracks = self.add( outputTracks, iTracks[0] )
+        outputTracks = TrackvisCalcLogic.add( outputTracks, iTracks[0] )
 
     elif mode == 'sub':
       #
@@ -59,7 +60,10 @@ class TrackvisCalcLogic():
 
         # subtract the tracks
         c.debug( 'Subtracting ' + i + ' (' + str( len( iTracks[0] ) ) + ' tracks) from master..', verbose )
-        outputTracks = self.sub( outputTracks, iTracks[0], verbose )
+        t = subThread( outputTracks, iTracks[0], verbose )
+        t.start()
+        t.join()
+        outputTracks = t.getOutput()
 
       # now we marked all relevant 'dirty'.. remove'em
       c.debug( 'Number of output tracks before final removal: ' + str( len( outputTracks ) ), verbose )
@@ -72,6 +76,7 @@ class TrackvisCalcLogic():
     c.info( 'All done!' )
 
 
+  @staticmethod
   def add( self, master, tracks ):
     '''
     Add tracks to master. Both parameters are nibabel.trackvis.streamlines objects.
@@ -90,8 +95,8 @@ class TrackvisCalcLogic():
     master.extend( tracks )
     return master
 
-
-  def sub( self, master, tracks, verbose ):
+  @staticmethod
+  def sub( master, tracks, verbose, threadName = 'Global' ):
     '''
     Subtract tracks from master. Both parameters are nibabel.trackvis.streamlines objects.
     
@@ -111,7 +116,7 @@ class TrackvisCalcLogic():
         return master
 
       moreToGo = len( tracks ) - subtractedCount
-      c.debug( 'Looking for ' + str( moreToGo ) + ' more tracks to subtract.. [Check #' + str( t ) + '/' + str( masterSizeBefore ) + ']', verbose )
+      c.debug( threadName + ': Looking for ' + str( moreToGo ) + ' more tracks to subtract.. [Check #' + str( t ) + '/' + str( masterSizeBefore ) + ']', verbose )
 
       if master[t] == -1:
         # this fiber was already removed, skip to next one
@@ -135,6 +140,27 @@ class TrackvisCalcLogic():
     return master
 
 
+# multithreading
+class subThread( threading.Thread ):
+
+  def __init__( self, master, tracks, verbose ):
+    '''
+    '''
+    self.__master = master
+    self.__tracks = tracks
+    self.__verbose = verbose
+    self.__output = None
+
+  def run( self ):
+    '''
+    Runs the subtraction
+    '''
+    self.__output = list( TrackvisCalcLogic.sub( self.__master, self.__tracks, self.__verbose, self.getName() ) )
+
+  def getOutput( self ):
+    '''
+    '''
+    return self.__output
 
 
 #
