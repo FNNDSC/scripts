@@ -165,9 +165,4 @@ class FNNDSCFileIO():
       FNNDSCConsole.error( 'Aborting..' )
       sys.exit( 2 )
 
-    if not tracks:
-      FNNDSCConsole.error( 'Invalid tracks' )
-      FNNDSCConsole.error( 'Aborting..' )
-      sys.exit( 2 )
-
     return nibSave( fileName, tracks, header, endianness )
