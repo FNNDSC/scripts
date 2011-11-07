@@ -17,6 +17,13 @@ from nipy.io.files import load as nipLoad
 from nipy.io.files import save as nipSave
 
 
+class FNNDSCUtil():
+
+  @staticmethod
+  def split_list( alist, wanted_parts = 1 ):
+    length = len( alist )
+    return [ alist[i * length // wanted_parts: ( i + 1 ) * length // wanted_parts]
+             for i in range( wanted_parts ) ]
 
 class FNNDSCParser( argparse.ArgumentParser ):
   '''
@@ -156,10 +163,10 @@ class FNNDSCFileIO():
 
 
   @staticmethod
-  def saveTrk( fileName, tracks, header = None, endianness = None ):
+  def saveTrk( fileName, tracks, header = None, endianness = None, skipCheck = False ):
     '''
     '''
-    if os.path.exists( fileName ):
+    if os.path.exists( fileName ) and not skipCheck:
       # abort if file already exists
       FNNDSCConsole.error( 'File ' + str( fileName ) + ' already exists..' )
       FNNDSCConsole.error( 'Aborting..' )
