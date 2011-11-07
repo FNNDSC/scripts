@@ -18,8 +18,7 @@ class TrackInfoLogic():
     '''
     for f in files:
 
-      t = io.loadTrk( f )
-      header = t[1]
+      header = io.loadTrkHeaderOnly( f )
       dimensions = header['dim']
       spacing = header['voxel_size']
       origin = header['origin']
