@@ -9,10 +9,21 @@ import sys
 import time
 import socket
 
-# NiPy imports
-from nipy.io.files import load
-from nipy.io.files import save
+# Nibabel imports
+from nibabel.trackvis import read as nibLoad
+from nibabel.trackvis import write as nibSave
+# Nipy imports
+from nipy.io.files import load as nipLoad
+from nipy.io.files import save as nipSave
 
+
+class FNNDSCUtil():
+
+  @staticmethod
+  def split_list( alist, wanted_parts = 1 ):
+    length = len( alist )
+    return [ alist[i * length // wanted_parts: ( i + 1 ) * length // wanted_parts]
+             for i in range( wanted_parts ) ]
 
 class FNNDSCParser( argparse.ArgumentParser ):
   '''
@@ -81,7 +92,7 @@ class FNNDSCFileIO():
     '''
     if not os.path.isfile( fileName ):
       # we need the file
-      FNNDSCConsole.error( 'ERROR: Could not read ' + str( fileName ) )
+      FNNDSCConsole.error( 'Could not read ' + str( fileName ) )
       FNNDSCConsole.error( 'Aborting..' )
       sys.exit( 2 )
 
@@ -90,14 +101,15 @@ class FNNDSCFileIO():
     validFileTypes = ['.nii', '.nii.gz', '.hdr', '.hdr.gz', '.img', '.img.gz']
 
     if not fileType in validFileTypes:
-      FNNDSCConsole.error( 'ERROR: ' + fileType + ' is no valid file format..' )
+      FNNDSCConsole.error( fileType + ' is no valid file format..' )
+      sys.exit( 2 )
     else:
       FNNDSCConsole.debug( 'Loading ' + str( fileType ).upper() + ' file..' )
 
-      image = load( fileName )
+      image = nipLoad( fileName )
 
       if not image:
-        FNNDSCConsole.error( 'ERROR: Could not read ' + str( fileName ) )
+        FNNDSCConsole.error( 'Could not read ' + str( fileName ) )
         FNNDSCConsole.error( 'Aborting..' )
         sys.exit( 2 )
       else:
@@ -114,9 +126,50 @@ class FNNDSCFileIO():
       sys.exit( 2 )
 
     if not image:
-      FNNDSCConsole.error( 'ERROR: Invalid image' )
+      FNNDSCConsole.error( 'Invalid image' )
       FNNDSCConsole.error( 'Aborting..' )
       sys.exit( 2 )
 
-    return save( image, fileName )
+    return nipSave( image, fileName )
 
+  @staticmethod
+  def loadTrk( fileName ):
+    '''
+    '''
+    if not os.path.isfile( fileName ):
+      # we need the file
+      FNNDSCConsole.error( 'Could not read ' + str( fileName ) )
+      FNNDSCConsole.error( 'Aborting..' )
+      sys.exit( 2 )
+
+    fileType = os.path.splitext( fileName )[1]
+    # we support the formats from NiPy
+    validFileTypes = ['.trk']
+
+    if not fileType in validFileTypes:
+      FNNDSCConsole.error( fileType + ' is no valid file format..' )
+      sys.exit( 2 )
+    else:
+      FNNDSCConsole.debug( 'Loading ' + str( fileType ).upper() + ' file..' )
+
+      image = nibLoad( fileName )
+
+      if not image:
+        FNNDSCConsole.error( 'Could not read ' + str( fileName ) )
+        FNNDSCConsole.error( 'Aborting..' )
+        sys.exit( 2 )
+      else:
+        return image
+
+
+  @staticmethod
+  def saveTrk( fileName, tracks, header = None, endianness = None, skipCheck = False ):
+    '''
+    '''
+    if os.path.exists( fileName ) and not skipCheck:
+      # abort if file already exists
+      FNNDSCConsole.error( 'File ' + str( fileName ) + ' already exists..' )
+      FNNDSCConsole.error( 'Aborting..' )
+      sys.exit( 2 )
+
+    return nibSave( fileName, tracks, header, endianness )
