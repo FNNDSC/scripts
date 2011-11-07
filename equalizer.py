@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 The equalizer converts/resamples a bunch of images to match a master image in terms of dimensions, origin and spacing.
 '''

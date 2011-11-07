@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 import os
 from _common import FNNDSCUtil as u
