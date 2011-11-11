@@ -83,11 +83,12 @@ def print_help( scriptName ):
 #
 # entry point
 #
+if __name__ == "__main__":
 
-# always show the help if no arguments were specified
-if len( sys.argv ) < 2:
-  print_help( sys.argv[0] )
-  sys.exit( 1 )
+  # always show the help if no arguments were specified
+  if len( sys.argv ) < 2:
+    print_help( sys.argv[0] )
+    sys.exit( 1 )
 
-logic = TrackInfoLogic()
-logic.run( sys.argv[1:] )
+  logic = TrackInfoLogic()
+  logic.run( sys.argv[1:] )

@@ -4,8 +4,7 @@ import os
 import time
 import tempfile
 import multiprocessing
-from multiprocessing import Process, Queue
-from Queue import Empty
+from multiprocessing import Process
 from _common import FNNDSCUtil as u
 from _common import FNNDSCParser
 from _common import FNNDSCConsole as c
@@ -211,21 +210,22 @@ class TrackvisCalcLogic( object ):
 #
 # entry point
 #
-parser = FNNDSCParser( description = 'Add or subtract TrackVis (*.trk) files.' )
+if __name__ == "__main__":
+  parser = FNNDSCParser( description = 'Add or subtract TrackVis (*.trk) files.' )
 
 
-parser.add_argument( '-i', '--input', action = 'append', dest = 'input', required = True, help = 'input trackvis files, f.e. -i ~/files/f01.trk -i ~/files/f02.trk -i ~/files/f03.trk ..' )
-parser.add_argument( '-o', '--output', action = 'store', dest = 'output', required = True, help = 'output trackvis file, f.e. -o /tmp/f_out.trk' )
-parser.add_argument( '-j', '--jobs', action = 'store', dest = 'jobs', default = multiprocessing.cpu_count(), help = 'number of parallel computations, f.e. -j 10' )
-parser.add_argument( '-v', '--verbose', action = 'store_true', dest = 'verbose', help = 'show verbose output' )
-parser.add_argument( 'mode', choices = ['add', 'sub'], help = 'ADD all input tracks to one file or SUBTRACT all other input tracks from the first specified input' )
+  parser.add_argument( '-i', '--input', action = 'append', dest = 'input', required = True, help = 'input trackvis files, f.e. -i ~/files/f01.trk -i ~/files/f02.trk -i ~/files/f03.trk ..' )
+  parser.add_argument( '-o', '--output', action = 'store', dest = 'output', required = True, help = 'output trackvis file, f.e. -o /tmp/f_out.trk' )
+  parser.add_argument( '-j', '--jobs', action = 'store', dest = 'jobs', default = multiprocessing.cpu_count(), help = 'number of parallel computations, f.e. -j 10' )
+  parser.add_argument( '-v', '--verbose', action = 'store_true', dest = 'verbose', help = 'show verbose output' )
+  parser.add_argument( 'mode', choices = ['add', 'sub'], help = 'ADD all input tracks to one file or SUBTRACT all other input tracks from the first specified input' )
 
-# always show the help if no arguments were specified
-if len( sys.argv ) == 1:
-  parser.print_help()
+  # always show the help if no arguments were specified
+  if len( sys.argv ) == 1:
+    parser.print_help()
   sys.exit( 1 )
 
-options = parser.parse_args()
+  options = parser.parse_args()
 
-logic = TrackvisCalcLogic()
-logic.run( options.input, options.output, options.mode, options.verbose, options.jobs )
+  logic = TrackvisCalcLogic()
+  logic.run( options.input, options.output, options.mode, options.verbose, options.jobs )
