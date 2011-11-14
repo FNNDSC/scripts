@@ -1,0 +1,20 @@
+OS=$(uname -a | awk '{print $1}')
+echo "Host type is $HOSTTYPE-${OS}"
+
+export PACKAGEDIR=/chb/pices/arch/${HOSTTYPE}-${OS}/packages
+export FSL_DIR=${PACKAGEDIR}/fsl
+export SUBJECTS_DIR=$(pwd)
+
+source ${PACKAGEDIR}/freesurfer/stable/SetUpFreeSurfer.sh
+source ${FSL_DIR}/etc/fslconf/fsl.sh
+unset TCLLIBPATH
+unset TCL_LIBRARY
+unset TK_LIBRARY
+unset TIX_LIBRARY
+
+OS=$(uname -a | awk '{print $1}')
+export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fsstable]"
+
+export PATH=$PATH:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/mricron:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/Slicer/current/:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/dtk
+
+export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp
