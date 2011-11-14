@@ -223,7 +223,7 @@ if __name__ == "__main__":
   # always show the help if no arguments were specified
   if len( sys.argv ) == 1:
     parser.print_help()
-  sys.exit( 1 )
+    sys.exit( 1 )
 
   options = parser.parse_args()
 
