@@ -1,1 +1,1 @@
-/usr/lib/afni/bin/suma
+/usr/lib/afni/bin/suma $@
