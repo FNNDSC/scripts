@@ -47,7 +47,7 @@ else
     in 
         Linux)  export PATH=/opt/MATLAB/R2010b/bin:/chb/arch/x86_64-Linux/packages/matlab/R2010b/bin:$PATH
                 ;;
-        Darwin) export PATH=/opt/matlab/MATLAB_R2010b.app/bin:/chb/arch/x86_64-Darwin/packages/matlab/MATLAB_R2011a.app/bin:$PATH
+        Darwin) export PATH=/chb/arch/x86_64-Darwin/packages/matlab/MATLAB_R2011b.app/bin:$PATH
     esac
 fi
 
@@ -62,6 +62,7 @@ done
 
 echo "matlab $MARGS"
 matlab $MARGS
+
 
 
 
