@@ -10,6 +10,7 @@
 
 # "include" the set of common script functions
 source common.bash
+source chris_env.bash
 
 declare -i Gi_verbose=0
 declare -i Gb_forceStage=1
@@ -24,7 +25,7 @@ declare -i Gb_firstSeriesOnly=0
 G_LOGDIR=$(pwd)
 G_TABLEFILE="-x"
 G_PIPELINETYPE="-x"
-G_DEFAULTDIR="/space/kaos/1/users/dicom/files"
+G_DEFAULTDIR="$CHRIS_SESSIONPATH"
 
 G_DEFAULTCOM_TRACT="-v 10 -t 12"
 G_SERIESLIST_TRACT="ISODIFFUSION,ISODIFFUSIONTRUEAXIAL,DIFFUSION"
