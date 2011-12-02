@@ -81,7 +81,7 @@ G_SYNOPSIS="
         The pipeline batch to create. Currently 'FS' (for FreeSurfer),  'Tract'
         (for tractography), 'Fetal' (for Fetal), 'dcmanon' (which anonymizes
         whole directories), 'dcmsend' (which sends directories), and
-        'conectome' (for connectivity matrices) are understood.
+        'connectome' (for connectivity matrices) are understood.
 	
 	-t <batchTableFile>
         The table file to process.
