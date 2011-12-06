@@ -109,10 +109,10 @@ done
 targetList=13
  TARGET_CHECK[0]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 --to localhost:10401 --isRunning"
  TARGETACTION[0]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 --to localhost:10401"
- TARGET_CHECK[1]="tunnel.bash --forward --from 4214 --via ch137123@${DREEV} --to localhost:4212 --isRunning"
+ TARGET_CHECK[1]="tunnel.bash --forward --from 4212 --via ch137123@${DREEV} --to localhost:4212 --isRunning"
  TARGETACTION[1]="tunnel.bash --forward --from 4212 --via ch137123@${DREEV} --to localhost:4212"
  TARGET_CHECK[2]="tunnel.bash --forward --from 4214 --via ch137123@${DREEV} --to localhost:4214 --isRunning"
- TARGETACTION[2]="tunnel.bash --forward --from 4212 --via ch137123@${DREEV} --to localhost:4214"
+ TARGETACTION[2]="tunnel.bash --forward --from 4214 --via ch137123@${DREEV} --to localhost:4214"
  TARGET_CHECK[3]="tunnel.bash --forward --from 4215 --via ch137123@${DREEV} --to localhost:4215 --isRunning"
  TARGETACTION[3]="tunnel.bash --forward --from 4215 --via ch137123@${DREEV} --to localhost:4215"
  TARGET_CHECK[4]="tunnel.bash --forward --from 4216 --via ch137123@${DREEV} --to localhost:4216 --isRunning"
