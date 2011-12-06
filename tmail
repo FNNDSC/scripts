@@ -1,0 +1,4 @@
+ #!/bin/sh
+ export LC_TIME=C  # or whatever you want
+ [ "$LC_ALL" != "$LC_TIME" ] && unset LC_ALL # only necessary if set to something different from LC_TIME
+ exec /usr/bin/thunderbird "$@"
