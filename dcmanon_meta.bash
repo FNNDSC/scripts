@@ -265,9 +265,9 @@ if (( ${barr_stage[1]} )) ; then
         for FILE in $G_DICOMINPUTDIR/*.dcm ; do
             FILEBASE=$(basename $FILE)
             TAG=$(mri_probedicom --i $FILE --t 0010 0020)
-            MD5=$(echo $TAG | openssl md5 | sed 's/^.*= *//')
+            MD5=$(echo $TAG | openssl md5 | sed 's/^.*= *//' | sed 's/[ \t]*$//')
             printf "$TAG --> %s\n" "$MD5"
-            STAGECMD="mri_probedicom --i $FILE --t 0010 0020 | openssl md5 | sed 's/^.*= *//' |  \
+            STAGECMD="echo $TAG |                                             \
                       xargs -i% $STAGEPROC                                    \
                             --dumb                                            \
                             --replace 0010,0010,anonymized                    \
