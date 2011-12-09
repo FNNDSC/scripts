@@ -631,11 +631,7 @@ stage_stamp "Init | ($topDir) $G_SELF $*" $STAMPLOG
 ## Check on cluster access
 if (( Gb_runCluster )) ; then
   statusPrint   "Checking on <clusterDir>"
-  echo $G_CLUSTERDIR
-  dirExist_check $G_CLUSTERDIR
-  echo 'after direxist_check'
-  mkdir $G_CLUSTERDIR #fatal badClusterDir
-  echo 'all done'
+  dirExist_check $G_CLUSTERDIR || mkdir $G_CLUSTERDIR || fatal badClusterDir
   cluster_schedule "$*" "connectome"
   G_STAGES=0
   STAGE="Cluster re-spawn termination"

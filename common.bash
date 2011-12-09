@@ -704,6 +704,9 @@ function cluster_schedule
     local cmdArgs=$1
     local pipelineName=$2
 
+    echo $cmdArgs
+    echo $pipelineName
+
     # Setup the command line args (stripping the -c)
     COMARGS=$(echo $cmdArgs | sed 's|-c||')
     # Create mini-script to run on cluster and add to schedule.log
