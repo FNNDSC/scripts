@@ -67,7 +67,8 @@ export CHRIS_ADMINUSERS=rudolph.pienaar@childrens.harvard.edu
 export CHRIS_MAIL=/usr/bin/mail
 
 # FreeSurfer environment sourcing script
-export FSSOURCE=${CHRIS_SCRIPTPATH}/chris-fsdev
+#export FSSOURCE=${CHRIS_SCRIPTPATH}/chris-fsdev
+export FSSOURCE=${CHRIS_SCRIPTPATH}/chb-fsstable
 
 #
 # +----- You shouldn't need to set anything below this line: -----------+
