@@ -113,6 +113,9 @@ G_SYNOPSIS="
 	24 March 2009
 	o Initial design and coding.
 
+	08 December 2011
+	o An update in output format of openssl library necessitated a
+	  sed post-filter.
 "
 
 ###\\\
@@ -261,7 +264,7 @@ if (( ${barr_stage[1]} )) ; then
     if ((Gb_partialAnonymize)) ; then
         for FILE in $G_DICOMINPUTDIR/*.dcm ; do
             FILEBASE=$(basename $FILE)
-            STAGECMD="mri_probedicom --i $FILE --t 0010 0020 | openssl md5 |  \
+            STAGECMD="mri_probedicom --i $FILE --t 0010 0020 | openssl md5 | sed 's/^.*= *//' |  \
                       xargs -i% $STAGEPROC                                    \
                             --dumb                                            \
                             --replace 0010,0010,anonymized                    \
