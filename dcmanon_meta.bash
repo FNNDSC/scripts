@@ -257,13 +257,16 @@ dirExist_check ${STAGE1FULLDIR} "not found - creating"        \
             || fatal noOutRunDir
 if (( ${barr_stage[1]} )) ; then
     cd $STAGE1FULLDIR
-    statusPrint "$(date) | Processing STAGE 1 - anonymizing DICOM dir | START" "\n"
+    statusPrint "$(date) | Processing STAGE x1x - anonymizing DICOM dir | START" "\n"
 
     # If partial anonymize was requested, just substitute some essential tags
     # such as PatientsName, birthday, etc.
     if ((Gb_partialAnonymize)) ; then
         for FILE in $G_DICOMINPUTDIR/*.dcm ; do
             FILEBASE=$(basename $FILE)
+            TAG=$(mri_probedicom --i $FILE --t 0010 0020)
+            MD5=$(echo $TAG | openssl md5 | sed 's/^.*= *//')
+            printf "$TAG --> %s\n" "$MD5"
             STAGECMD="mri_probedicom --i $FILE --t 0010 0020 | openssl md5 | sed 's/^.*= *//' |  \
                       xargs -i% $STAGEPROC                                    \
                             --dumb                                            \
