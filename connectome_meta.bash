@@ -549,7 +549,7 @@ cprint  "hostname"      "[ $(hostname) ]"
 
 ## Check on script preconditions
 REQUIREDFILES="common.bash tract_meta.bash fs_meta.bash dcm_coreg.bash \
-               dicom_seriesCollect.bash Slicer3 dcm_mkIndx.bash \
+               dicom_seriesCollect.bash dcm_mkIndx.bash \
                pipeline_status_cmd.py"
 for file in $REQUIREDFILES ; do
         printf "%40s"   "Checking for $file"
