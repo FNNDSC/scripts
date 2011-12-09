@@ -35,7 +35,8 @@ export CHRIS_HOME=/chb/users/dicom
 export CHRIS_DICOMROOT=/chb/users/dicom
 # CHRIS script storage location -- contains all script and related
 # files relevant to CHRIS
-export CHRIS_SCRIPTPATH=${CHRIS_DICOMROOT}/repo/trunk/scripts
+#export CHRIS_SCRIPTPATH=${CHRIS_DICOMROOT}/repo/trunk/scripts
+export CHRIS_SCRIPTPATH=${CHRIS_DICOMROOT}/arch/scripts
 # Webpage address
 export CHRIS_WEBSITE=http://durban.tch.harvard.edu
 # Postprocessing root
