@@ -58,7 +58,7 @@ done
 
 if [[ $HOST_PREFIX == "rc" ]] ; then
     printf "Using 'pices' local install of MatLAB...\n"
-    export PATH=/chb/pices/arch/x86_64-Linux/packages/matlab/${G_VERSION}/bin:$PATH
+    export PATH=/chb/pices/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin:$PATH
 else
     printf "Using local install of MatLAB...\n"
     case $OSTYPE 
