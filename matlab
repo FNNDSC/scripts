@@ -1,5 +1,6 @@
 #!/bin/bash
 
+G_VERSION="2011b"
 G_SYNOPSIS="
 
     NAME
@@ -8,12 +9,16 @@ G_SYNOPSIS="
         
     SYNOPSIS
     
-        matlab [-c]
+        matlab [-c] [-v <version>]
         
     ARGS
     
         -c
         Run MatLAB with '-nosplash -nodesktop'
+
+	-v <version> (Default '2011b')
+	Force a specific version of MatLAB to run. Currently supported
+	are '2010a' and '2011b'. 
         
     DESCRIPTION
     
@@ -30,6 +35,8 @@ G_SYNOPSIS="
         10 Dec 2010
         o Initial development.
         
+	12 Dec 2011
+	o Different version handling.
         
 "
 
@@ -38,9 +45,20 @@ HOST_PREFIX=$(echo $HOST | awk -F\- '{print $1}')
 
 OSTYPE=$(uname -s)
 
+
+while getopts cv: option ; do
+    case "$option" 
+    in
+        c) MARGS="-nosplash -nodesktop" ;;
+	v) G_VERSION="$OPTARG"		;;
+        *) echo "$G_SYNOPSIS"
+           exit 1                       ;;
+    esac
+done
+
 if [[ $HOST_PREFIX == "rc" ]] ; then
     printf "Using 'pices' local install of MatLAB...\n"
-    export PATH=/chb/pices/arch/x86_64-Linux/bin:$PATH
+    export PATH=/chb/pices/arch/x86_64-Linux/packages/matlab/${G_VERSION}/bin:$PATH
 else
     printf "Using local install of MatLAB...\n"
     case $OSTYPE 
@@ -51,14 +69,6 @@ else
     esac
 fi
 
-while getopts c option ; do
-    case "$option" 
-    in
-        c) MARGS="-nosplash -nodesktop" ;;
-        *) echo "$G_SYNOPSIS"
-           exit 1                       ;;
-    esac
-done
 
 echo "matlab $MARGS"
 matlab $MARGS
