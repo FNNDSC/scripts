@@ -50,7 +50,7 @@ while getopts cv: option ; do
     case "$option" 
     in
         c) MARGS="-nosplash -nodesktop" ;;
-	v) G_VERSION="$OPTARG"		;;
+        v) G_VERSION="$OPTARG"          ;;
         *) echo "$G_SYNOPSIS"
            exit 1                       ;;
     esac
