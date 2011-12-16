@@ -33,6 +33,28 @@ from 		subprocess	import *
 from            cStringIO       import StringIO
 from            numpy           import *
 
+def array2DIndices_enumerate(arr):
+        """
+        DESC
+            Given a 2D array defined by arr, prepare an explicit list
+            of the indices.
+            
+        ARGS
+            arr        in                 2 element array with the first
+                                          element the rows and the second
+                                          the cols
+        
+        """
+        rows            = arr[0]
+        cols            = arr[1]
+        arr_index       = zeros( (rows*cols, 2) )
+        count           = 0
+        for row in arange(0, rows):
+           for col in arange(0, cols):
+               arr_index[count] = array( [row, col])
+               count = count+1
+        return arr_index
+
 def error_exit(         astr_func,
                         astr_action,
                         astr_error,
