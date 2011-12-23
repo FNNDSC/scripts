@@ -32,6 +32,11 @@ import          commands
 from 		subprocess	import *
 from            cStringIO       import StringIO
 from            numpy           import *
+import          time
+import          itertools
+
+# For internal timing:
+Gtic_start      = 0.0
 
 def array2DIndices_enumerate(arr):
         """
@@ -126,66 +131,279 @@ def b10_convertFrom(anum10, aradix, *args):
                    1)
 
     numm = anum10;
-    num_r = zeros((1, forcelength));
+    num_r = zeros((forcelength));
     if(i):
         k = forcelength - i;
     else:
         k = forcelength - 1;
 
     if(anum10==1):
-        num_r[(0,k)] = 1;
+        num_r[(k)] = 1;
         return num_r;
 
     for j in arange(i,0,-1):
-        num_r[(0,k)] = fix(numm / pow(aradix,(j-1)));
+        num_r[(k)] = fix(numm / pow(aradix,(j-1)));
         numm = numm % pow(aradix, (j-1));
         k = k+1;
     return num_r
 
-def permutations_find(a_dimension, a_depth, *args):
+def tic():
+    """
+        Port of the MatLAB function of same name
+    """
+    global Gtic_start
+    Gtic_start = time.time()
+
+def toc():
+    """
+        Port of the MatLAB function of same name
+    """
+    global Gtic_start
+    print "Elapsed time is %f seconds" % (time.time() - Gtic_start)
+
+def neighbours_findFast(a_dimension, a_depth, *args, **kwargs):
     """
     
-         SYNOPSIS
+        SYNOPSIS
          
-              [I, D] = permutations_find(a_dimension, a_depth, *args)
+            [A] = neighbours_findFast(a_dimension, a_depth, *args, **kwargs)
         
-         ARGS
+        ARGS
          
            INPUT
            a_dimension         int32           number of dimensions
            a_depth             int32           depth of neighbours to find
         
            OPTIONAL
-           av_row              array           row vector that is optionally
-                                               added to each I and D row. This
-                                               is useful for expressing a 
-                                               permutation in terms of an
-                                               actual offset baseline vector.
+           av_origin           array          row vector that defines the
+                                              + origin in the <a_dimension>  
+                                              + space. Neighbours' locations
+                                              + are returned relative to this
+                                              + origin. Default is the zero
+                                              + origin.
+                                              
+                                              If specified, this *must* be
+                                              a 1xa_dimension nparray, i.e.
+                                              np.array( [(x,y)] ) in the
+                                              2D case.
            
            OUTPUT
-           I                   cell           a cell array containing 
-                                                  "indirect" neighbour 
+           A                   array           a single array containing
+                                                   all the neighbours. This
+                                                   does not include the origin.
+                                                   
+        Named keyword args
+          "includeOrigin"    If True, return the origin in the set.
+          "wrapGridEdges"    If True, wrap around the edges of grid.
+                             If False, do not wrap around grid edges.
+          "gridSize"         Specifies the gridSize for 'wrapEdges'.
+          
+          If "gridSize" is set, and "wrapEdges" is not, then the neighbors will
+          not include coordinates "outside" of the grid.
+
+        DESC
+               This method determines the neighbours of a point in an
+               n - dimensional discrete space. The "depth" (or ply) to
+               calculate is `a_depth'.
+                   
+        NOTE
+               o Uses the 'itertools' module product() method for
+                 MUCH faster results than the explicit neighbours_find()
+                 method.
+        
+         PRECONDITIONS
+               o The underlying problem is discrete.
+        
+         POSTCONDITIONS
+               o Returns all neighbours
+        
+         HISTORY
+         23 December 2011
+         o Rewrote earlier method using python idioms and resulting
+           in multiple order speed improvement.
+    """
+    if (a_depth<1):
+        A = None
+        return A;
+
+    # Process *kwargs and behavioural arguments  
+    b_includeOrigin             = False # If True, include the "origin" in A
+    b_wrapGridEdges             = False # If True, wrap around edges of grid
+    b_gridSize                  = False # Helper flag for tracking wrap
+    
+    for key, value in kwargs.iteritems():
+        if key == 'includeOrigin':      b_includeOrigin = value
+        if key == 'wrapGridEdges':      b_wrapGridEdges = value
+        if key == 'gridSize':
+            a_gridSize = value
+            b_gridSize = True           
+            if type(a_gridSize).__name__ != "ndarray":
+                error_exit("neighbours_find", 
+                           "checking on passed grid dimesnions", 
+                           "grid must be type ndarray.", 2)
+    
+    if b_wrapGridEdges and not b_gridSize:
+        error_exit(     "neighbours_find", 
+                        "checking call options", 
+                        "no 'gridSize' was specified with 'wrapGridEdges'",
+                        1)
+
+    # Check on *args, i.e. an optional 'origin' point in N-space
+    v_origin    = zeros( (a_dimension) );
+    b_origin    = 0;
+    if len(args):
+        av_origin  = args[0];
+        if av_origin.size ==a_dimension:
+            v_origin = av_origin;
+            b_origin = 1;
+
+    A = array(list(itertools.product(arange(-a_depth, a_depth+1),
+                                        repeat = a_dimension)))
+    if not b_includeOrigin:
+        Wbool = A == 0
+        W = Wbool.prod(axis=1)
+        A = A[where(W==0)]
+    if b_origin: A += v_origin
+    if b_gridSize: A = pointInGrid(A, a_gridSize, b_wrapGridEdges)            
+    return A
+    
+def pointInGrid(A_point, a_gridSize, *args):
+    """
+    SYNOPSIS
+    
+        [A_point] = pointInGrid(A_point, a_gridSize [, ab_wrapGridEdges]) 
+   
+    ARGS
+    
+        INPUT
+        A_point        array of N-D points     points in grid space
+        a_gridSize     array                   the size (rows, cols) of 
+                                               + the grid space
+
+        OPTIONAL
+        ab_wrapGridEdges        bool          if True, wrap "external" 
+                                              points back into grid
+
+        OUTPUT
+        A_point        array of N-D points     points that are within the
+                                               grid.
+    
+    DESC
+        Determines if set of N-dimensionals <A_point> is within a grid
+        <a_gridSize>. 
+        
+    PRECONDITIONS
+        o Assumes strictly positive domains, i.e. points with negative
+          locations are by definition out-of-range. If negative domains
+          are valid, the called will need to offset <a_point> first.
+          
+    POSTCONDITIONS
+        o if <ab_wrapGridEdges> is False, returns only the subset of points
+          in A_point that are within the <a_gridSize>.
+        o if <ab_wrapGridEdges> is True, "wraps" any points in A_point 
+          back into a_gridSize first, and then checks for those that
+          are still within <a_gridSize>.
+        
+    """
+    b_wrapGridEdges             = False # If True, wrap around edges of grid
+
+    if len(args): b_wrapGridEdges = args[0]    
+
+    # Check for points "less than" grid space
+    if b_wrapGridEdges:
+        W = where(A_point<0)
+        A_point[W] += a_gridSize[W[1]]
+    
+    Wbool =  A_point >= 0
+    W = Wbool.prod(axis=1)
+    A_point = A_point[where(W>0)]
+
+    # Check for points "more than" grid space
+    A_inGrid    = a_gridSize - A_point
+    if b_wrapGridEdges:
+        W = where(A_inGrid<=0)
+        A_point[W] = -A_inGrid[W]
+
+    Wbool = A_inGrid > 0
+    W = Wbool.prod(axis=1)
+    A_point = A_point[where(W>0)]
+#    A_point = abs(A_point)
+ 
+    return A_point
+    
+def neighbours_find(a_dimension, a_depth, *args, **kwargs):
+    """
+    
+        SYNOPSIS
+         
+            [I, D] = neighbours_find(a_dimension, a_depth, *args, **kwargs)
+        
+        ARGS
+         
+           INPUT
+           a_dimension         int32           number of dimensions
+           a_depth             int32           depth of neighbours to find
+        
+           OPTIONAL
+           av_origin           array          row vector that defines the
+                                              + origin in the <a_dimension>  
+                                              + space. Neighbours' locations
+                                              + are returned relative to this
+                                              + origin. Default is the zero
+                                              + origin.
+                                              
+                                              If specified, this *must* be
+                                              a 1xa_dimension nparray, i.e.
+                                              np.array( [(x,y)] ) in the
+                                              2D case.
+           
+           OUTPUT
+           I                   list           a python list (per depth) of 
+                                                   "indirect" neighbour 
                                                    information. Each index
-                                                   of the cell array is a row - order
+                                                   of the list is a row - order
                                                    matrix of "index" distant
                                                    indirect neighbours
-           D                   cell           a cell array containing 
+           D                   list           a python list (per depth) of 
                                                    "direct" neighbour 
                                                    information. Each index
-                                                   of the cell array is a row - order
+                                                   of the list is a row - order
                                                    matrix of "index" distant
                                                    direct neighbours
+                        - OR -
+           A                   list           a single array that is the union
+                                                   of I and D across all layers
         
-         DESC
+        Named keyword args
+        
+          "returnUnion"      If True, will return A = I union D, flattened 
+                             including the origin point. In effect, this is
+                             all combinations of the coordinates along the
+                             axes.
+          "wrapGridEdges"    If True, wrap around the edges of grid.
+                             If False, do not wrap around grid edges.
+          "gridSize"         Specifies the gridSize for 'wrapEdges'.
+          
+          If "gridSize" is set, and "wrapEdges" is not, then the neighbors will
+          not include coordinates "outside" of the grid.
+
+        DESC
                This method determines the neighbours of a point in an
                n - dimensional discrete space. The "depth" (or ply) to
                calculate is `a_depth'.
         
-               Indirect neighbours are non-orthogonormal.
-               Direct neighbours are orthonormal.
+               Indirect neighbours are non-orthogonal.
+               Direct neighbours are orthogonal.
                
-               This operation is identical to finding all the permutations
-               of a given set of elements.
+               Note: this operation is identical to finding all the 
+               combinations of a given set of elements.
+        
+               The neighbours_findFast() method is several orders
+               of magnitude faster, and should probably always be
+               used over this method. This will remain mostly for
+               historical/testing purposes. Also, this method does
+               return neighbours as "indirect" and "direct" and
+               per "layer" depth, which the ..._findFast does not.
         
         
          PRECONDITIONS
@@ -203,82 +421,163 @@ def permutations_find(a_dimension, a_depth, *args):
          
     """
     if (a_depth<1):
-        D       = None;
-        I       = None;
         l_D     = []
         l_I     = {}
-        return I, D;
+        return l_I, l_D;
 
-    # Allocate space for neighbours structure
-    D = zeros( (1, a_depth), dtype='object');
-    I = zeros( (1, a_depth), dtype='object');
-    l_D = [0] * a_depth
-    l_I = [0] * a_depth
+    # Process *kwargs and behavioural arguments  
+    b_returnUnion               = False # If True, return A = I union D
+    b_wrapGridEdges             = False # If True, wrap around edges of grid
+    b_gridSize                  = False # Helper flag for tracking wrap
+    
+    for key, value in kwargs.iteritems():
+        if key == 'returnUnion':        b_returnUnion           = value
+        if key == 'wrapGridEdges':      b_wrapGridEdges         = value
+        if key == 'gridSize':
+            a_gridSize = value
+            b_gridSize = True           
+            if type(a_gridSize).__name__ != "ndarray":
+                error_exit("neighbours_find", 
+                           "checking on passed grid dimesnions", 
+                           "grid must be type ndarray.", 2)
+    
+    if b_wrapGridEdges and not b_gridSize:
+        error_exit(     "neighbours_find", 
+                        "checking call options", 
+                        "no 'gridSize' was specified with 'wrapGridEdges'",
+                        1)
 
-    # Pre-allocate internal data structures
-    v_rowOffset     = zeros( (1, a_dimension) );
-    b_rowOffset     = 0;
+    # Check on *args, i.e. an optional 'origin' point in N-space
+    v_origin    = zeros( (a_dimension) );
+    b_origin    = 0;
     if len(args):
-        av_rowOffset = args[0];
-        rows, cols   = av_rowOffset.shape
-        if rows == 1 and size(av_rowOffset)==a_dimension:
-            v_rowOffset     = av_rowOffset;
-            b_rowOffset     = 1;
+        av_origin  = args[0];
+        if av_origin.size ==a_dimension:
+            v_origin = av_origin;
+            b_origin = 1;
 
+    # 
+    # Data structure allocation.
+    #
+    # Although python provides some elegant mechanisms to dynamically
+    # "grow" arrays and lists, pre-allocating memory is still by far
+    # the fastest way for this method to run.
+ 
+    # Pre-allocate space for lists containing direct and indirect neighbours
+    l_D = [zeros(a_dimension)] * a_depth
+    l_I = [zeros(a_dimension)] * a_depth
+
+    # Pre-allocate space for all the possible neighbouring points
     d                   = 1;
     hypercube           = pow((2*d+1), a_dimension);
     hypercubeInner      = 1;
     orthogonals         = 2*a_dimension;
     l_D[0]              = zeros( (orthogonals, a_dimension) )
     l_I[0]              = zeros( (hypercube - orthogonals -1, a_dimension) );
-    D[0,0]              = zeros( (orthogonals, a_dimension) );
-    I[0,0]              = zeros( (hypercube - orthogonals -1, a_dimension) );
-    for d in arange(1,a_depth):
+    for d in arange(2,a_depth+1):
         hypercubeInner  = hypercube;
-        hypercube       = pow(2*d+1,a_dimension);
-        l_D[d]          = zeros( (orthogonals, a_dimension) )
-        l_I[d]          = zeros( (hypercube - orthogonals - hypercubeInner))
-        D[0, d]          = zeros( (orthogonals, a_dimension) );
-        I[0, d]          = zeros( (hypercube - orthogonals -
-                                   hypercubeInner, a_dimension));
+        hypercube       = pow((2*d+1),a_dimension);
+        l_D[d-1]         = zeros( (orthogonals, a_dimension) )
+        l_I[d-1]         = zeros( (hypercube - orthogonals - hypercubeInner, 
+                                   a_dimension))
     # Offset and "current" vector
-    M_bDoffset      = ones( (1, a_dimension) ) * -a_depth;
-    M_current       = ones( (1, a_dimension) );
-    M_currentAbs    = ones( (1, a_dimension) );
+    M_bDoffset      = ones( (a_dimension) ) * -a_depth;
+    M_current       = ones( (a_dimension) );
+    M_currentAbs    = ones( (a_dimension) );
 
-    # Index counters
-    M_ii            = zeros( (1, a_depth) );
-    M_dd            = zeros( (1, a_depth) );
+    # Index counters -- one per "layer"
+    # These keep track of the number of entries in each layer.
+    M_ii            = [0] * a_depth 
+    M_dd            = [0] * a_depth 
 
     # Now we loop through *each* element of the last hypercube
     # and assign it to the appropriate matrix in the I,D structures
     for i in arange(0,hypercube):
         str_progress    = 'iteration %5d (of %5d) %3.2f' % \
                                 (i, hypercube-1, i/(hypercube-1)*100);
-        M_current       = b10_convertFrom(i, (2*a_depth+1), a_dimension);
+        M_current       = arr_base10toN(i, (2*a_depth+1), a_dimension);
         M_current       = M_current + M_bDoffset;
         M_currentAbs    = abs(M_current);
-        neighbour       = max(max(M_currentAbs));
+        neighbour       = max(M_currentAbs);
+        if b_origin:
+            M_current += v_origin
+        if b_gridSize:
+            # Check for points "less than" grid space
+            if min(M_current) < 0: 
+                if not b_wrapGridEdges: continue
+                else:
+                    Wt = where(M_current < 0)
+                    W  = Wt[0]  # See help on 'where'
+                    for el in arange(0, len(W)): 
+                        M_current[W[el]] += a_gridSize[W[el]]
+            # Check for points "more than" grid space
+            M_inGrid    = a_gridSize - M_current
+            if min(M_inGrid) <= 0: 
+                if not b_wrapGridEdges: continue
+                else:
+                    Wt = where(M_inGrid <= 0)
+                    W  = Wt[0]  # See help on 'where'
+                    for el in arange(0, len(W)): 
+                        M_current[W[el]] = -M_inGrid[W[el]]
+                    M_current = abs(M_current)
+        idx = int(neighbour) - 1
         if(sum(M_currentAbs) > neighbour):
-            l_I[int(neighbour-1)][M_ii[0, neighbour-1]]   = M_current
-            I[0,neighbour-1][M_ii[0, neighbour-1]]        = M_current;
-            M_ii[0, neighbour-1] += 1;
+            l_I[idx][M_ii[idx]]         = M_current
+            M_ii[idx] += 1;
         else: 
             if(sum(M_currentAbs) == neighbour and neighbour):
-                l_D[int(neighbour-1)][M_dd[0, neighbour-1]]     = M_current
-                D[0, neighbour-1][M_dd[0, neighbour-1]]         = M_current;
-                M_dd[0, neighbour-1] += 1;
+                l_D[idx][M_dd[idx]]     = M_current
+                M_dd[idx] += 1;
+    
+    if b_gridSize:
+        # Here, we use the counters in M_ii and M_dd (per layer)
+        # to determine how many actual indices were packed into
+        # memory, and slice the layer accordingly.
+        for layer in arange(0, a_depth, dtype=int):
+            l_I[layer] = l_I[layer][0:M_ii[layer],:]
+            l_D[layer] = l_D[layer][0:M_dd[layer],:]
+    
+    if b_returnUnion:
+        l_A  = []
+        l_Al = v_origin
+        for layer in arange(0, a_depth, dtype=int):
+            # first stack each I and D, per layer
+            l_A.append(vstack((l_I[layer], l_D[layer])))
+            l_Al = vstack((l_Al, l_A[layer]))
+        return l_Al
 
-    if b_rowOffset:
-        for layer in arange(0, neighbour):
-            rowsI, colsI   = I[layer].shape;
-            rowsD, colsD   = D[layer].shape;
-            M_OI           = tile(v_rowOffset, (rowsI, 1));
-            M_OD           = tile(v_rowOffset, (rowsD, 1));
-            I[0, layer]    = I[0, layer] + M_OI;
-            D[0, layer]    = D[0, layer] + M_OD;
     return l_I, l_D
 
+def arr_base10toN(anum10, aradix, *args):
+    """
+        ARGS
+        anum10            in      number in base 10
+        aradix            in      convert <anum10> to number in base
+                                  + <aradix>
+        
+        OPTIONAL
+        forcelength       in      if nonzero, indicates the length
+                                  + of the return array. Useful if
+                                  + array needs to be zero padded.
+        
+        DESC
+        Converts a scalar from base 10 to base radix. Return
+        an array.
+    """
+
+    new_num_arr = array( () )
+    current=anum10
+    while current!=0:
+        remainder=current%aradix
+        new_num_arr = r_[remainder, new_num_arr]
+        current=current/aradix
+
+    forcelength = new_num_arr.size
+    # Optionally, allow user to specify word length
+    if len(args): forcelength = args[0]
+    while new_num_arr.size < forcelength:
+        new_num_arr = r_[0, new_num_arr]
+    return new_num_arr
 
 def base10toN(num, n):
     """Change a num to a base-n number.
@@ -310,6 +609,7 @@ def base10toN(num, n):
          34:'y',
          35:'z'}
     new_num_string=''
+    new_num_arr = array( () )
     current=num
     while current!=0:
         remainder=current%n
@@ -320,7 +620,9 @@ def base10toN(num, n):
         else:
             remainder_string=str(remainder)
         new_num_string=remainder_string+new_num_string
+        new_num_arr = r_[remainder, new_num_arr]
         current=current/n
+    print new_num_arr
     return new_num_string
 
 def list_i2str(ilist):
