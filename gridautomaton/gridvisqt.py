@@ -169,6 +169,7 @@ class GridVisUI( QtGui.QWidget ):
     self.__iterations += 1
     self.__iterationLabel.setText( 'Iterations: ' + str( self.__iterations ) )
     self.draw()
+    self.__world.state_transition()
 
   def draw( self ):
 
@@ -177,11 +178,7 @@ class GridVisUI( QtGui.QWidget ):
     for i in range( self.__rows ):
       for j in range( self.__cols ):
 
-        rgb = self.__world.spectrum_get( i, j )
-
-        r = rgb[0]
-        g = rgb[1]
-        b = rgb[2]
+        r, g, b = self.__world.spectrum_get( i, j ).arr_get()
 
 #        r = random.randint( 0, 255 )
 #        g = random.randint( 0, 255 )
