@@ -1,14 +1,15 @@
 #!/bin/bash
 
 # "include" the set of common script functions
-source /homes/9/rudolph/arch/scripts/common.bash
+source common.bash
+source chris_env.bash
 
 declare -i Gi_mtime=-365
 declare -i Gi_verbosity=10
 
 G_TOCFILE="toc.txt"
 G_SEQUENCE="-x"
-G_DICOMROOTDIR="/space/kaos/5/users/dicom/files"
+G_DICOMROOTDIR="$CHRIS_SESSIONPATH"
 
 G_SYNOPSIS="
  NAME
