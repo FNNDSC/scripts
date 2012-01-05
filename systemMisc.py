@@ -154,12 +154,21 @@ def tic():
     global Gtic_start
     Gtic_start = time.time()
 
-def toc():
+def toc(*args, **kwargs):
     """
         Port of the MatLAB function of same name
+        
+        Behaviour is controllable to some extent by the keyword
+        args:
+        
+        
     """
     global Gtic_start
-    print "Elapsed time is %f seconds" % (time.time() - Gtic_start)
+    f_elapsedTime = time.time() - Gtic_start
+    for key, value in kwargs.iteritems():
+        if key == 'sysprint':   return value % f_elapsedTime
+        if key == 'default':    return "Elapsed time = %f seconds." % f_elapsedTime
+    return f_elapsedTime
 
 def neighbours_findFast(a_dimension, a_depth, *args, **kwargs):
     """
@@ -295,7 +304,8 @@ def pointInGrid(A_point, a_gridSize, *args):
     PRECONDITIONS
         o Assumes strictly positive domains, i.e. points with negative
           locations are by definition out-of-range. If negative domains
-          are valid, the called will need to offset <a_point> first.
+          are valid in a particular problem space, the caller will need 
+          to offset <a_point> to be strictly positive first.
           
     POSTCONDITIONS
         o if <ab_wrapGridEdges> is False, returns only the subset of points
@@ -323,12 +333,12 @@ def pointInGrid(A_point, a_gridSize, *args):
     if b_wrapGridEdges:
         W = where(A_inGrid<=0)
         A_point[W] = -A_inGrid[W]
+        A_inGrid = a_gridSize - A_point
 
     Wbool = A_inGrid > 0
     W = Wbool.prod(axis=1)
     A_point = A_point[where(W>0)]
 #    A_point = abs(A_point)
- 
     return A_point
     
 def neighbours_find(a_dimension, a_depth, *args, **kwargs):
