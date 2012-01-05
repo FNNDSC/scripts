@@ -6,7 +6,13 @@ from PyQt4 import QtGui, QtCore
 from _common import FNNDSCUtil as u
 from _common import FNNDSCParser
 from _common import FNNDSCConsole as c
-from _common import FNNDSCFileIO as io
+
+import  numpy           as np
+
+from    C_spectrum_CAM  import *
+from    C_CAE           import *
+
+import  systemMisc      as misc
 
 
 """
@@ -84,8 +90,8 @@ class GridVisUI( QtGui.QWidget ):
     self.__random = random
 
     self.__array = None
-    self.__rows = 100
-    self.__cols = 100
+    self.__rows = 101
+    self.__cols = 101
 
     self.__layout = QtGui.QGridLayout()
     self.__layout.setSpacing( 10 )
@@ -119,6 +125,32 @@ class GridVisUI( QtGui.QWidget ):
     # stats
     self.__iterations = 0
 
+    self.__world = None
+
+    self.setup()
+
+
+  def setup( self ):
+
+    b_overwriteSpectralValue = True
+    maxEnergy = 249
+    automaton = C_spectrum_CAM_RGB( maxQuanta=maxEnergy )
+    automaton.component_add( 'R', maxEnergy / 3, b_overwriteSpectralValue )
+    automaton.component_add( 'G', maxEnergy / 3, b_overwriteSpectralValue )
+    automaton.component_add( 'B', maxEnergy / 3, b_overwriteSpectralValue )
+
+    world = C_CAE( np.array( ( 101, 101 ) ), automaton )
+    world.verbosity_set( 1 )
+    arr_world = np.zeros( ( 101, 101 ) )
+    arr_world[0, 0] = 1
+    arr_world[50, 50] = maxEnergy / 3 + 1
+    arr_world[100, 100] = maxEnergy / 3 * 2 + 1
+
+    world.initialize( arr_world )
+
+    self.__world = world
+
+
 
   def togglePlay( self ):
     '''
@@ -145,9 +177,15 @@ class GridVisUI( QtGui.QWidget ):
     for i in range( self.__rows ):
       for j in range( self.__cols ):
 
-        r = random.randint( 0, 255 )
-        g = random.randint( 0, 255 )
-        b = random.randint( 0, 255 )
+        rgb = self.__world.spectrum_get( i, j )
+
+        r = rgb[0]
+        g = rgb[1]
+        b = rgb[2]
+
+#        r = random.randint( 0, 255 )
+#        g = random.randint( 0, 255 )
+#        b = random.randint( 0, 255 )
 
         self.__gridWidget.draw( i, j, r, g, b )
 
