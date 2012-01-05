@@ -119,6 +119,8 @@ class C_CAE:
             self.m_rows = self.mgg_current.rows_get()
             self.m_cols = self.mgg_current.cols_get()
 
+            self.__neighbors = {}
+
         def initialize( self, *args, **kwargs ):
             """
             ARGS
@@ -226,13 +228,22 @@ class C_CAE:
                 for col in np.arange( 0, self.m_cols ):
                     dict_nextStateNeighbourSpectra = {}
                     A_neighbours = None
-                    A_neighbours = \
-                        misc.neighbours_findFast( 2, 1,
-                                    np.array( ( row, col ) ),
-                                    gridSize=np.array( ( self.m_rows, self.m_cols ) ),
-                                    wrapGridEdges=False,
-                                    returnUnion=True,
-                                    includeOrigin=False )
+
+                    key = str( row ) + ':' + str( col )
+                    if self.__neighbors.has_key( key ):
+                      # we already have the neighbors
+                      A_neighbours = self.__neighbors[key]
+                    else:
+                      # we don't have the neighbors, so let's calculate them
+                      A_neighbours = \
+                          misc.neighbours_findFast( 2, 1,
+                                      np.array( ( row, col ) ),
+                                      gridSize=np.array( ( self.m_rows, self.m_cols ) ),
+                                      wrapGridEdges=False,
+                                      returnUnion=True,
+                                      includeOrigin=False )
+                      self.__neighbors[key] = A_neighbours
+
                     dict_nextStateNeighbourSpectra = \
                         self.dict_createFromGridLocations( A_neighbours )
                     deltaSelf, deltaNeighbour = \
