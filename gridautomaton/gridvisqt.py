@@ -80,7 +80,7 @@ class GridVisUI( QtGui.QWidget ):
   The main program - creates a UI showing a GridView and some buttons.
   """
 
-  def __init__( self, test=False ):
+  def __init__( self, test=False, matrix=None ):
     super( GridVisUI, self ).__init__()
 
     self.__random = random
@@ -107,8 +107,8 @@ class GridVisUI( QtGui.QWidget ):
 
     self.setLayout( self.__layout )
 
-    self.setGeometry( 640, 405, 660, 480 )
-    self.setFixedSize( 660, 480 )
+    self.setGeometry( 640, 405, 660, 700 )
+    self.setFixedSize( 660, 700 )
     self.setWindowTitle( 'GridVisQt' )
     self.show()
 
@@ -117,17 +117,17 @@ class GridVisUI( QtGui.QWidget ):
 
     self.__world = None
 
-    self.setupGrid( test )
+    self.setupGrid( test, matrix )
 
 
-  def setupGrid( self, test ):
+  def setupGrid( self, test, matrix ):
 
     if test:
       self.__rows = 101
       self.__cols = 101
 
       self.__gridWidget = GridView( self, self.__rows, self.__cols, False )
-      self.__gridWidget.setSize( 600, 400 )
+      self.__gridWidget.setSize( 600, 600 )
       self.__layout.addWidget( self.__gridWidget, 0, 0 )
 
       b_overwriteSpectralValue = True
@@ -144,10 +144,30 @@ class GridVisUI( QtGui.QWidget ):
       arr_world[50, 50] = maxEnergy / 3 + 1
       arr_world[100, 100] = maxEnergy / 3 * 2 + 1
 
+    elif matrix:
+      arr_world = np.loadtxt( matrix, float, '#', '\t' )
+
+      self.__rows, self.__cols = arr_world.shape
+
+      self.__gridWidget = GridView( self, self.__rows, self.__cols, False )
+      self.__gridWidget.setSize( 600, 600 )
+      self.__layout.addWidget( self.__gridWidget, 0, 0 )
+
+      b_overwriteSpectralValue = True
+      maxEnergy = 249
+      automaton = C_spectrum_CAM_RGB( maxQuanta=maxEnergy )
+      automaton.component_add( 'R', maxEnergy / 3, b_overwriteSpectralValue )
+      automaton.component_add( 'G', maxEnergy / 3, b_overwriteSpectralValue )
+      automaton.component_add( 'B', maxEnergy / 3, b_overwriteSpectralValue )
+
+      world = C_CAE( np.array( ( self.__rows, self.__cols ) ), automaton )
+      world.verbosity_set( 1 )
+
     else:
-      c.error( 'Not there yet..! Use -t for a test case..' )
+      c.error( 'No test mode and no matrix..' )
       sys.exit()
 
+    print arr_world
     world.initialize( arr_world )
 
     self.__world = world
@@ -195,7 +215,7 @@ if __name__ == "__main__":
   parser = FNNDSCParser( description='Visualize a grid..' )
 
   parser.add_argument( '-t', '--test', action='store_true', dest='test', required=False, help='activate a test case (101x101, initialized at 3 points along the diagonal' )
-
+  parser.add_argument( '-m', '--matrix', action='store', dest='matrix', required=True, help='File path of a connectivity matrix in ascii format, delimiter: space.' )
   # always show the help if no arguments were specified
 #  if len( sys.argv ) == 1:
 #    parser.print_help()
@@ -204,6 +224,6 @@ if __name__ == "__main__":
   options = parser.parse_args()
 
   app = QtGui.QApplication( sys.argv )
-  gui = GridVisUI( options.test )
+  gui = GridVisUI( options.test, options.matrix )
   sys.exit( app.exec_() )
 
