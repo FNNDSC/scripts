@@ -115,4 +115,5 @@ SEARCH=$(for DIR in $(cat ${G_FILTERDIR}/${G_FILTERFILE} | awk '{print $1}') ; d
     fi
 done)
 
-echo "$SEARCH" | grep -v "Not"
+echo "$SEARCH" | grep -v "Not" | sort -t \| -k 2
+
