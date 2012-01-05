@@ -33,8 +33,6 @@ class GridView( QtGui.QGraphicsView ):
 
     # all rectangles
     self.__padding = 0
-    self.__rectangleRadiusX = 0
-    self.__rectangleRadiusY = 0
     self.__rectangles = []
 
     # create the scene
@@ -52,8 +50,6 @@ class GridView( QtGui.QGraphicsView ):
     self.size().setWidth( w )
     self.size().setHeight( h )
     self.__scene.setSceneRect( 5, 5, w - 5, h - 5 )
-    self.__rectangleRadiusX = ( ( w / self.__cols ) - self.__padding ) / 2
-    self.__rectangleRadiusY = ( ( h / self.__rows ) - self.__padding ) / 2
 
   def draw( self, i, j, r, g, b ):
 
@@ -70,7 +66,7 @@ class GridView( QtGui.QGraphicsView ):
     rect = QtGui.QGraphicsRectItem()
     rect.setPen( color )
     rect.setBrush( color )
-    rect.setRect( x, y, self.__rectangleRadiusX * 2, self.__rectangleRadiusY * 2 )
+    rect.setRect( x, y, self.__d_w - 2 * self.__padding, self.__d_h - 2 * self.__padding )
 
     self.__scene.addItem( rect )
 
@@ -84,24 +80,18 @@ class GridVisUI( QtGui.QWidget ):
   The main program - creates a UI showing a GridView and some buttons.
   """
 
-  def __init__( self, random=False, interval=1 ):
+  def __init__( self, test=False ):
     super( GridVisUI, self ).__init__()
 
     self.__random = random
 
     self.__array = None
-    self.__rows = 101
-    self.__cols = 101
 
     self.__layout = QtGui.QGridLayout()
     self.__layout.setSpacing( 10 )
 
     self.__timer = QtCore.QTimer()
     QtCore.QObject.connect( self.__timer, QtCore.SIGNAL( "timeout()" ), self.onTick )
-
-    self.__gridWidget = GridView( self, self.__rows, self.__cols, False )
-    self.__gridWidget.setSize( 600, 400 )
-    self.__layout.addWidget( self.__gridWidget, 0, 0 )
 
     # the toolbar
     self.__toolbar = QtGui.QHBoxLayout()
@@ -127,30 +117,40 @@ class GridVisUI( QtGui.QWidget ):
 
     self.__world = None
 
-    self.setup()
+    self.setupGrid( test )
 
 
-  def setup( self ):
+  def setupGrid( self, test ):
 
-    b_overwriteSpectralValue = True
-    maxEnergy = 249
-    automaton = C_spectrum_CAM_RGB( maxQuanta=maxEnergy )
-    automaton.component_add( 'R', maxEnergy / 3, b_overwriteSpectralValue )
-    automaton.component_add( 'G', maxEnergy / 3, b_overwriteSpectralValue )
-    automaton.component_add( 'B', maxEnergy / 3, b_overwriteSpectralValue )
+    if test:
+      self.__rows = 101
+      self.__cols = 101
 
-    world = C_CAE( np.array( ( 101, 101 ) ), automaton )
-    world.verbosity_set( 1 )
-    arr_world = np.zeros( ( 101, 101 ) )
-    arr_world[0, 0] = 1
-    arr_world[50, 50] = maxEnergy / 3 + 1
-    arr_world[100, 100] = maxEnergy / 3 * 2 + 1
+      self.__gridWidget = GridView( self, self.__rows, self.__cols, False )
+      self.__gridWidget.setSize( 600, 400 )
+      self.__layout.addWidget( self.__gridWidget, 0, 0 )
+
+      b_overwriteSpectralValue = True
+      maxEnergy = 249
+      automaton = C_spectrum_CAM_RGB( maxQuanta=maxEnergy )
+      automaton.component_add( 'R', maxEnergy / 3, b_overwriteSpectralValue )
+      automaton.component_add( 'G', maxEnergy / 3, b_overwriteSpectralValue )
+      automaton.component_add( 'B', maxEnergy / 3, b_overwriteSpectralValue )
+
+      world = C_CAE( np.array( ( self.__rows, self.__cols ) ), automaton )
+      world.verbosity_set( 1 )
+      arr_world = np.zeros( ( self.__rows, self.__cols ) )
+      arr_world[0, 0] = 1
+      arr_world[50, 50] = maxEnergy / 3 + 1
+      arr_world[100, 100] = maxEnergy / 3 * 2 + 1
+
+    else:
+      c.error( 'Not there yet..! Use -t for a test case..' )
+      sys.exit()
 
     world.initialize( arr_world )
 
     self.__world = world
-
-
 
   def togglePlay( self ):
     '''
@@ -180,10 +180,6 @@ class GridVisUI( QtGui.QWidget ):
 
         r, g, b = self.__world.spectrum_get( i, j ).arr_get()
 
-#        r = random.randint( 0, 255 )
-#        g = random.randint( 0, 255 )
-#        b = random.randint( 0, 255 )
-
         self.__gridWidget.draw( i, j, r, g, b )
 
 
@@ -198,21 +194,16 @@ class GridVisUI( QtGui.QWidget ):
 if __name__ == "__main__":
   parser = FNNDSCParser( description='Visualize a grid..' )
 
-  parser.add_argument( '-r', '--random', action='store', dest='random', required=True, help='visualize random data' )
-  #parser.add_argument( '-i', '--input', action = 'store', dest = 'input', required = True, help = 'input grid file, f.e. -i ~/files/f01.trk -i ~/files/f02.trk -i ~/files/f03.trk ..' )
-  #parser.add_argument( '-o', '--output', action = 'store', dest = 'output', required = True, help = 'output trackvis file, f.e. -o /tmp/f_out.trk' )
-  #parser.add_argument( '-j', '--jobs', action = 'store', dest = 'jobs', default = multiprocessing.cpu_count(), help = 'number of parallel computations, f.e. -j 10' )
-  #parser.add_argument( '-v', '--verbose', action = 'store_true', dest = 'verbose', help = 'show verbose output' )
-  #parser.add_argument( 'mode', choices = ['add', 'sub'], help = 'ADD all input tracks to one file or SUBTRACT all other input tracks from the first specified input' )
+  parser.add_argument( '-t', '--test', action='store_true', dest='test', required=False, help='activate a test case (101x101, initialized at 3 points along the diagonal' )
 
   # always show the help if no arguments were specified
-  if len( sys.argv ) == 1:
-    parser.print_help()
-    sys.exit( 1 )
+#  if len( sys.argv ) == 1:
+#    parser.print_help()
+#    sys.exit( 1 )
 
   options = parser.parse_args()
 
   app = QtGui.QApplication( sys.argv )
-  gui = GridVisUI()
+  gui = GridVisUI( options.test )
   sys.exit( app.exec_() )
 
