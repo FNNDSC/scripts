@@ -386,9 +386,15 @@ class C_ggrid :
  	    	np_gridSpectra[location] = ( self.ma_grid[row, col] ).copy()
  	    return np_gridSpectra
 
+ 	def spectrumArr_get(self, row, col):
+ 	    """
+		Return the spectral array at [row, col]
+ 	    """
+ 	    return self.ma_grid[row, col]
+
  	def spectrum_get( self, row, col ):
  	    """
- 	    	Return the spectrum at [row, col]
+ 	    	Return the spectrum (object) at [row, col]
  	    """
  	    return self.macs_grid[row, col]
 

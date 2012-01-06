@@ -103,7 +103,10 @@ class C_CAE:
             # The core data containers are grids of cellular automata 
             # machines
             self.mgg_current = None          # Current grid
-            self.mgg_next = None          # Next iteration grid            
+            self.mgg_next = None          # Next iteration grid
+            self.mb_syncGridSpectralArray = False # Controls whether or not
+                                                  # to synchronize grid spectra
+                                                  # and grid helper array            
 
             # For the most part, the CAE accepts the same constructor
             # pattern as the C_ggrid:
@@ -278,7 +281,7 @@ class C_CAE:
             # Now update the current state with the next state
             misc.tic()
             b_setFromArray = False
-            self.mgg_next.internals_sync( b_setFromArray )
+            if self.mb_syncGridSpectralArray: self.mgg_next.internals_sync( b_setFromArray )
             print misc.toc( sysprint="Synchronization: %f seconds." )
             misc.tic()
             # self.mgg_current    = copy.deepcopy(self.mgg_next)
