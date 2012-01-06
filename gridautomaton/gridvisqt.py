@@ -73,6 +73,9 @@ class GridView( QtGui.QGraphicsView ):
   def clear( self ):
     self.__scene.clear()
 
+  def scene( self ):
+    return self.__scene
+
 
 
 class GridVisUI( QtGui.QWidget ):
@@ -80,10 +83,13 @@ class GridVisUI( QtGui.QWidget ):
   The main program - creates a UI showing a GridView and some buttons.
   """
 
-  def __init__( self, test=False, matrix=None ):
+  def __init__( self, test=False, matrix=None, maxIterations= -1, screenshot=None ):
     super( GridVisUI, self ).__init__()
 
-    self.__random = random
+    # args
+    self.__test = test
+    self.__maxIterations = maxIterations
+    self.__screenshot = screenshot
 
     self.__array = None
 
@@ -99,6 +105,8 @@ class GridVisUI( QtGui.QWidget ):
     self.__playButton = QtGui.QPushButton( 'Start' )
     self.__playButton.clicked.connect( self.togglePlay )
     self.__toolbar.addWidget( self.__playButton )
+    self.__screenshotButton = QtGui.QPushButton( 'Save as ' )
+    self.__screenshotButton.clicked.connect( self.takeScreenshot )
     self.__iterationLabel = QtGui.QLabel( 'Iterations: 0' )
     self.__toolbar.addWidget( self.__iterationLabel )
     self.__toolbar.insertStretch( -1, 1 )
@@ -117,12 +125,14 @@ class GridVisUI( QtGui.QWidget ):
 
     self.__world = None
 
-    self.setupGrid( test, matrix )
+    self.setupGrid( matrix )
+
+    self.togglePlay()
 
 
-  def setupGrid( self, test, matrix ):
+  def setupGrid( self, matrix ):
 
-    if test:
+    if self.__test:
       self.__rows = 101
       self.__cols = 101
 
@@ -148,7 +158,7 @@ class GridVisUI( QtGui.QWidget ):
       maxEnergy = 255
 
       arr_worldRaw = np.loadtxt( matrix, float, '#', '\t' )
-      arr_world = misc.arr_normalize(arr_worldRaw, scale=maxEnergy)
+      arr_world = misc.arr_normalize( arr_worldRaw, scale=maxEnergy )
 
       self.__rows, self.__cols = arr_world.shape
 
@@ -173,12 +183,13 @@ class GridVisUI( QtGui.QWidget ):
     world.initialize( arr_world )
 
     self.__world = world
+    self.draw()
 
   def togglePlay( self ):
     '''
     '''
     if not self.__timer.isActive():
-      self.__timer.start( 300 )
+      self.__timer.start( 1 )
       self.__playButton.setText( 'Pause' )
     else:
       self.__timer.stop()
@@ -190,8 +201,34 @@ class GridVisUI( QtGui.QWidget ):
     # update the iterations counter
     self.__iterations += 1
     self.__iterationLabel.setText( 'Iterations: ' + str( self.__iterations ) )
-    self.draw()
     self.__world.state_transition()
+
+    # draw it
+    self.draw()
+
+    if self.__iterations >= int( self.__maxIterations ) and int( self.__maxIterations ) != -1:
+
+      # max. iterations reached
+
+      self.__timer.stop()
+      self.__playButton.setText( 'Max. Iterations reached!' )
+      self.__playButton.setEnabled( False )
+
+      if self.__screenshot:
+        # take a screenshot and exit
+        self.takeScreenshot( self.__screenshot )
+        c.info( 'Took screenshot.. (' + str( self.__screenshot ) + ') and good-bye!' )
+        sys.exit()
+
+  def takeScreenshot( self, fileName=None ):
+    '''
+    '''
+    scene = self.__gridWidget.scene()
+    isize = scene.sceneRect().size().toSize()
+    self.qimage = QtGui.QImage( isize, QtGui.QImage.Format_ARGB32 )
+    self.painter = QtGui.QPainter( self.qimage )
+    scene.render( self.painter )
+    self.qimage.save( fileName, 'PNG', 100 )
 
   def draw( self ):
 
@@ -214,18 +251,23 @@ class GridVisUI( QtGui.QWidget ):
 # entry point
 #
 if __name__ == "__main__":
-  parser = FNNDSCParser( description='Visualize a grid..' )
+  parser = FNNDSCParser( description='Visualize the evolution of a grid..' )
 
   parser.add_argument( '-t', '--test', action='store_true', dest='test', required=False, help='activate a test case (101x101, initialized at 3 points along the diagonal' )
-  parser.add_argument( '-m', '--matrix', action='store', dest='matrix', required=True, help='File path of a connectivity matrix in ascii format, delimiter: space.' )
+  parser.add_argument( '-m', '--matrix', action='store', dest='matrix', required=True, help='File path of a 2D-grid (matrix) in ascii format, delimiter: tab.' )
+  parser.add_argument( '-i', '--iterations', action='store', dest='iterations', default= -1, required=False, help='Optional number of max. iterations.' )
+  parser.add_argument( '-s', '--screenshot', action='store', dest='screenshot', default=None, required=False, help='Automatically take a screenshot of the evolved matrix when the number of max. iterations is reached and exit the program. This only works if -i/--iterations is specified.' )
+
   # always show the help if no arguments were specified
-#  if len( sys.argv ) == 1:
-#    parser.print_help()
-#    sys.exit( 1 )
+  if len( sys.argv ) == 1:
+    parser.print_help()
+    sys.exit( 1 )
 
   options = parser.parse_args()
 
+  c.error( options.iterations )
+
   app = QtGui.QApplication( sys.argv )
-  gui = GridVisUI( options.test, options.matrix )
+  gui = GridVisUI( options.test, options.matrix, options.iterations, options.screenshot )
   sys.exit( app.exec_() )
 
