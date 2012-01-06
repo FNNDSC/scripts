@@ -145,7 +145,7 @@ class GridVisUI( QtGui.QWidget ):
       arr_world[100, 100] = maxEnergy / 3 * 2 + 1
 
     elif matrix:
-      maxEnergy = 249
+      maxEnergy = 255
 
       arr_worldRaw = np.loadtxt( matrix, float, '#', '\t' )
       arr_world = misc.arr_normalize(arr_worldRaw, scale=maxEnergy)

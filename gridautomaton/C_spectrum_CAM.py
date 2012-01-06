@@ -139,6 +139,7 @@ class C_spectrum_CAM_RGB(C_spectrum_CAM):
         # Initialize to a neutral default
         a_init = np.ones( len(self.ml_keys) ) * self.m_maxQuanta/3
         if len(args):
+            v_l    = args[0]
             pcount = 0
             for partition in v_l:
                 b_hits = partition[0] == value
@@ -154,7 +155,6 @@ class C_spectrum_CAM_RGB(C_spectrum_CAM):
                 a_init = np.array( (0, 1, 0) ) * self.m_maxQuanta
             if value > 2*self.m_maxQuanta/3:
                 a_init = np.array( (0, 0, 1) ) * self.m_maxQuanta
-
         self.arr_set(a_init)
             
     def nextStateDelta_determine(self, adict_neighbors):

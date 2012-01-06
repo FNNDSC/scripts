@@ -173,7 +173,8 @@ class C_CAE:
             """
             l_components  = self.mgg_current.spectrum_get(0, 0).spectrumKeys_get()
             numComponents = len(l_components)
-            maxQuanta     = 255 / numComponents
+            maxEnergy     = 255
+            maxQuanta     = maxEnergy / numComponents
             if len( args ):
                 a_init = args[0]
                 if type( a_init ).__name__ == 'ndarray':
@@ -186,7 +187,7 @@ class C_CAE:
                         # space, we need to re-scale the observed values such that
                         # a uniform partitioning of the domain results in a uniform
                         # partitioning of the values, too.
-                        a_norm  = misc.arr_normalize(a_init, scale=maxQuanta)
+                        a_norm  = misc.arr_normalize(a_init, scale=maxEnergy)
                         a_round = a_norm.round()
                         # We bin the cdf with a '+1' since the 'zeros' in the
                         # input matrix are a special case. This also simplifies
@@ -195,7 +196,7 @@ class C_CAE:
                         l_v     = misc.cdf_distribution(a_cdf, numComponents)
                         for row in np.arange( 0, rows ):
                             for col in np.arange( 0, cols ):
-                                value = a_init[row, col]
+                                value = a_round[row, col]
                                 self.mgg_current.spectrum_get( row, col ).\
                                         spectrum_init( value, l_v )
             # self.mgg_next = copy.deepcopy( self.mgg_current )
