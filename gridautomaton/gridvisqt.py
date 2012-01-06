@@ -265,8 +265,6 @@ if __name__ == "__main__":
 
   options = parser.parse_args()
 
-  c.error( options.iterations )
-
   app = QtGui.QApplication( sys.argv )
   gui = GridVisUI( options.test, options.matrix, options.iterations, options.screenshot )
   sys.exit( app.exec_() )
