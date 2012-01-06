@@ -160,7 +160,7 @@ class C_CAE:
                     Initialize all elements.
                     
             PRECONIDTIONS:
-                o Internal grids must exist
+                o Internal grids must exist and contain valid objects.
                 
             POSTCONDITIONS:
                 o The "current" and "next" are initialized based on pattern
@@ -171,16 +171,33 @@ class C_CAE:
                   are ignored. If array size is not same as grid, no
                   initialization is performed.
             """
-
+            l_components  = self.mgg_current.spectrum_get(0, 0).spectrumKeys_get()
+            numComponents = len(l_components)
+            maxQuanta     = 255 / numComponents
             if len( args ):
                 a_init = args[0]
                 if type( a_init ).__name__ == 'ndarray':
                     rows, cols = a_init.shape
                     if rows == self.m_rows and cols == self.m_cols:
+                        # In this case, an initialization matrix has been supplied
+                        # by the caller. The value at each cell index is used 
+                        # to initialize the corresponding spectrum object. In order
+                        # for the initialization to be "uniform" across the RGB
+                        # space, we need to re-scale the observed values such that
+                        # a uniform partitioning of the domain results in a uniform
+                        # partitioning of the values, too.
+                        a_norm  = misc.arr_normalize(a_init, scale=maxQuanta)
+                        a_round = a_norm.round()
+                        # We bin the cdf with a '+1' since the 'zeros' in the
+                        # input matrix are a special case. This also simplifies
+                        # the value lookup in the cdf partitions.
+                        a_cdf   = misc.cdf(a_round, bins=a_round.max()+1)
+                        l_v     = misc.cdf_distribution(a_cdf, numComponents)
                         for row in np.arange( 0, rows ):
                             for col in np.arange( 0, cols ):
                                 value = a_init[row, col]
-                                self.mgg_current.spectrum_get( row, col ).spectrum_init( value )
+                                self.mgg_current.spectrum_get( row, col ).\
+                                        spectrum_init( value, l_v )
             # self.mgg_next = copy.deepcopy( self.mgg_current )
             # use cPickle instead of deepcopy
             self.mgg_next = cPickle.loads( cPickle.dumps( self.mgg_current, -1 ) )

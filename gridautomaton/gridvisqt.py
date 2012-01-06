@@ -131,7 +131,7 @@ class GridVisUI( QtGui.QWidget ):
       self.__layout.addWidget( self.__gridWidget, 0, 0 )
 
       b_overwriteSpectralValue = True
-      maxEnergy = 249
+      maxEnergy = 255 / 3
       automaton = C_spectrum_CAM_RGB( maxQuanta=maxEnergy )
       automaton.component_add( 'R', maxEnergy / 3, b_overwriteSpectralValue )
       automaton.component_add( 'G', maxEnergy / 3, b_overwriteSpectralValue )
@@ -145,7 +145,10 @@ class GridVisUI( QtGui.QWidget ):
       arr_world[100, 100] = maxEnergy / 3 * 2 + 1
 
     elif matrix:
-      arr_world = np.loadtxt( matrix, float, '#', '\t' )
+      maxEnergy = 249
+
+      arr_worldRaw = np.loadtxt( matrix, float, '#', '\t' )
+      arr_world = misc.arr_normalize(arr_worldRaw, scale=maxEnergy)
 
       self.__rows, self.__cols = arr_world.shape
 
@@ -154,7 +157,6 @@ class GridVisUI( QtGui.QWidget ):
       self.__layout.addWidget( self.__gridWidget, 0, 0 )
 
       b_overwriteSpectralValue = True
-      maxEnergy = 249
       automaton = C_spectrum_CAM_RGB( maxQuanta=maxEnergy )
       automaton.component_add( 'R', maxEnergy / 3, b_overwriteSpectralValue )
       automaton.component_add( 'G', maxEnergy / 3, b_overwriteSpectralValue )

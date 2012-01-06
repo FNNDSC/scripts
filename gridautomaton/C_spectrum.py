@@ -185,6 +185,12 @@ class C_spectrum :
 	    	Return the 'mstr_name' of the object
 	    """
 	    return self.mstr_name
+
+	def spectrumKeys_get(self):
+	   """
+	   	Return the self.ml_keys
+	   """
+	   return self.ml_keys
 	    	
 	def arr_get(self):
 	   """

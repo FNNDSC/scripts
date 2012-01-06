@@ -109,9 +109,9 @@ class C_spectrum_CAM_RGB(C_spectrum_CAM):
     # 'amount' denotes how many 'quanta' to transfer.
     #
     mdict_updateRule = {
-        'R' : {'direction' : [ 'G', 'R' ], 'amount' : 1},
-        'G' : {'direction' : [ 'B', 'G' ], 'amount' : 1},
-        'B' : {'direction' : [ 'R', 'B' ], 'amount' : 1}
+        'R' : {'direction' : [ 'G', 'R' ], 'amount' : 9},
+        'G' : {'direction' : [ 'B', 'G' ], 'amount' : 9},
+        'B' : {'direction' : [ 'R', 'B' ], 'amount' : 9}
     }
     
     def __init__(self, *args, **kwargs):
@@ -125,22 +125,38 @@ class C_spectrum_CAM_RGB(C_spectrum_CAM):
             if key == "maxQuanta":
                 self.m_maxQuanta        = kwargs[key]
      
-    def spectrum_init(self, value):
+    def spectrum_init(self, value, *args):
         """
+        ARGS
+            value        scalar        value to base initialization upon
+            
+        *args
+            l_v          list          if passed, the domain partitioning
+            
         DESC
-        Given a single value, initialize the internal spectrum
+            Given a single value, initialize the internal spectrum
         """
-        if value == 0:
-            a_init = np.array( (1, 1, 1) ) * self.m_maxQuanta/3
-        if value > 0 and value <= self.m_maxQuanta/3:
-            a_init = np.array( (1, 0, 0) ) * self.m_maxQuanta
-        if value > self.m_maxQuanta/3 and value <= 2*self.m_maxQuanta/3:
-            a_init = np.array( (0, 1, 0) ) * self.m_maxQuanta
-        if value > 2*self.m_maxQuanta/3:
-            a_init = np.array( (0, 0, 1) ) * self.m_maxQuanta
+        # Initialize to a neutral default
+        a_init = np.ones( len(self.ml_keys) ) * self.m_maxQuanta/3
+        if len(args):
+            pcount = 0
+            for partition in v_l:
+                b_hits = partition[0] == value
+                b_hit  = b_hits.sum()
+                if b_hit:
+                    a_init = np.zeros( len(self.ml_keys) )
+                    a_init[pcount] = self.m_maxQuanta
+                pcount += 1
+        else:
+            if value > 0 and value <= self.m_maxQuanta/3:
+                a_init = np.array( (1, 0, 0) ) * self.m_maxQuanta
+            if value > self.m_maxQuanta/3 and value <= 2*self.m_maxQuanta/3:
+                a_init = np.array( (0, 1, 0) ) * self.m_maxQuanta
+            if value > 2*self.m_maxQuanta/3:
+                a_init = np.array( (0, 0, 1) ) * self.m_maxQuanta
 
         self.arr_set(a_init)
-    
+            
     def nextStateDelta_determine(self, adict_neighbors):
         """
         ARGS

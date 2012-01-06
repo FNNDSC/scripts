@@ -38,6 +38,85 @@ import          itertools
 # For internal timing:
 Gtic_start      = 0.0
 
+def arr_normalize(arr, *args, **kwargs):
+    """
+    ARGS
+        arr                      array to normalize
+        
+    **kargs
+        scale = <f_scale>        scale the normalized output by <f_scale>
+    
+        
+    DESC
+        Given an input array, <arr>, normalize all values to range 
+        between 0 and 1.
+        
+        If specified in the **kwargs, optionally set the scale with <f_scale>.
+    """
+    f_max       = arr.max()
+    f_min       = arr.min()
+    f_range     = f_max - f_min
+    arr_shifted = arr + -f_min
+    arr_norm    = arr_shifted / f_range
+    for key, value in kwargs.iteritems():
+        if key == 'scale': arr_norm *= value
+    return arr_norm
+
+def cdf(arr, **kwargs):
+    """
+    ARGS
+        arr                array to calculate cumulative distribution function
+        
+    **kwargs
+        Passed directly to numpy.histogram. Typical options include:
+        bins = <num_bins>
+        normed = True|False
+        
+    DESC
+        Determines the cumulative distribution function.
+    """
+    counts, bin_edges = histogram(arr, **kwargs)
+    cdf = cumsum(counts)
+    return cdf
+    
+def cdf_distribution(a_cdf, a_partitions):
+    """
+    ARGS
+       a_cdf               vector         a vectors of values/observations
+       a_partitions        int            the number of partitions 
+       
+    DESC
+        This function returns the indices of a passed cdf such that the
+        the range of values across the indices is uniform across the
+        number of partitions.
+        
+        Imagine you have a range of observations/values, and you'd
+        like to partition the observations over 3 ranges. If you simply
+        partition the range of values into three evenly spaced groups
+        across the domain, you will most likely find all the dynamic range 
+        of values in each partition is non-uniform.
+        
+        By partitioning the cdf, however, the range of values in each
+        partition is uniform. The "size" of each partition, however, 
+        is not.
+    """ 
+    f_range     = a_cdf[-1] - a_cdf[0]
+    f_rangePart = f_range / a_partitions
+    lowerBound  = a_cdf[0]
+    vl          = []
+    for part in arange(0, a_partitions):
+        # Due to possible cumulative rounding errors, relax the tolerance
+        # on the final partition:
+        if part == a_partitions - 1:
+            subset      = (a_cdf > lowerBound)
+        else:
+            subset      = (a_cdf > lowerBound) & (a_cdf <= lowerBound + f_rangePart)
+        indices         = where(subset, 1, 0)
+        v               = where(indices==1)
+        vl.append(v)
+        lowerBound      += f_rangePart
+    return vl    
+       
 def array2DIndices_enumerate(arr):
         """
         DESC
