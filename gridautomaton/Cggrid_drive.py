@@ -2,11 +2,11 @@
 # 
 # NAME
 #
-#        Cgenome_drive.py
+#	Cgenome_drive.py
 #
 # DESCRIPTION
 #
-#         A simple 'driver' for a C_genome class instance
+# 	A simple 'driver' for a C_genome class instance
 #
 # HISTORY
 #

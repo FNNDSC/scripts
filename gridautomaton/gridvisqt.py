@@ -2,6 +2,7 @@
 import sys
 import os
 import random
+import time
 from PyQt4 import QtGui, QtCore
 from _common import FNNDSCUtil as u
 from _common import FNNDSCParser
@@ -42,15 +43,6 @@ class GridView( QtGui.QGraphicsView ):
     if openGL:
       self.setViewport( QtOpenGL.QGLWidget() )
 
-    # update the parameters using the current size
-    self.setSize( self.size().width(), self.size().height() )
-
-  def setSize( self, w, h ):
-
-    self.size().setWidth( w )
-    self.size().setHeight( h )
-    self.__scene.setSceneRect( 5, 5, w - 5, h - 5 )
-
   def draw( self, i, j, r, g, b ):
 
     self.__d_w = self.size().width() / self.__cols
@@ -83,13 +75,13 @@ class GridVisUI( QtGui.QWidget ):
   The main program - creates a UI showing a GridView and some buttons.
   """
 
-  def __init__( self, test=False, matrix=None, maxIterations= -1, screenshot=None ):
+  def __init__( self, test=False, matrix=None, maxIterations= -1, output=None ):
     super( GridVisUI, self ).__init__()
 
     # args
     self.__test = test
     self.__maxIterations = maxIterations
-    self.__screenshot = screenshot
+    self.__output = output
 
     self.__array = None
 
@@ -105,8 +97,9 @@ class GridVisUI( QtGui.QWidget ):
     self.__playButton = QtGui.QPushButton( 'Start' )
     self.__playButton.clicked.connect( self.togglePlay )
     self.__toolbar.addWidget( self.__playButton )
-    self.__screenshotButton = QtGui.QPushButton( 'Save as ' )
-    self.__screenshotButton.clicked.connect( self.takeScreenshot )
+    self.__saveButton = QtGui.QPushButton( 'Save..' )
+    self.__saveButton.clicked.connect( self.save )
+    self.__toolbar.addWidget( self.__saveButton )
     self.__iterationLabel = QtGui.QLabel( 'Iterations: 0' )
     self.__toolbar.addWidget( self.__iterationLabel )
     self.__toolbar.insertStretch( -1, 1 )
@@ -137,7 +130,6 @@ class GridVisUI( QtGui.QWidget ):
       self.__cols = 101
 
       self.__gridWidget = GridView( self, self.__rows, self.__cols, False )
-      self.__gridWidget.setSize( 600, 600 )
       self.__layout.addWidget( self.__gridWidget, 0, 0 )
 
       b_overwriteSpectralValue = True
@@ -163,7 +155,6 @@ class GridVisUI( QtGui.QWidget ):
       self.__rows, self.__cols = arr_world.shape
 
       self.__gridWidget = GridView( self, self.__rows, self.__cols, False )
-      self.__gridWidget.setSize( 600, 600 )
       self.__layout.addWidget( self.__gridWidget, 0, 0 )
 
       b_overwriteSpectralValue = True
@@ -183,13 +174,13 @@ class GridVisUI( QtGui.QWidget ):
     world.initialize( arr_world )
 
     self.__world = world
-    self.draw()
+    #self.draw()
 
   def togglePlay( self ):
     '''
     '''
     if not self.__timer.isActive():
-      self.__timer.start( 1 )
+      self.__timer.start( 200 )
       self.__playButton.setText( 'Pause' )
     else:
       self.__timer.stop()
@@ -214,21 +205,62 @@ class GridVisUI( QtGui.QWidget ):
       self.__playButton.setText( 'Max. Iterations reached!' )
       self.__playButton.setEnabled( False )
 
-      if self.__screenshot:
+      if self.__output:
         # take a screenshot and exit
-        self.takeScreenshot( self.__screenshot )
-        c.info( 'Took screenshot.. (' + str( self.__screenshot ) + ') and good-bye!' )
+        self.save( self.__output )
+        c.info( 'Took screenshot and saved matrix.. (Dir: ' + str( self.__output ) + ')' )
+        c.info( 'Good-bye!' )
         sys.exit()
 
-  def takeScreenshot( self, fileName=None ):
+  def save( self, output=None ):
     '''
     '''
+    if not output:
+      output = QtGui.QFileDialog.getExistingDirectory( self, "Location for saving a screenshot and the evolved matrix",
+                                                 "",
+                                                 QtGui.QFileDialog.ShowDirsOnly );
+
+    screenshotFile = str( output + os.sep + 'matrix.png' )
+    dataFile = str( output + os.sep + 'matrix.npy' )
+    r_dataFile = str( output + os.sep + 'r_matrix.dat' )
+    g_dataFile = str( output + os.sep + 'g_matrix.dat' )
+    b_dataFile = str( output + os.sep + 'b_matrix.dat' )
+
+    # take screenshot
     scene = self.__gridWidget.scene()
     isize = scene.sceneRect().size().toSize()
     self.qimage = QtGui.QImage( isize, QtGui.QImage.Format_ARGB32 )
     self.painter = QtGui.QPainter( self.qimage )
     scene.render( self.painter )
-    self.qimage.save( fileName, 'PNG', 100 )
+    self.qimage.save( screenshotFile, 'PNG', 100 )
+
+    # save matrix
+    # .. grab the current grid in synced state
+    matrix = self.__world.currentgrid_get( True )
+    np.save( dataFile, matrix )
+
+
+#
+#    print matrix
+#    print
+#
+#    print matrix.shape
+#
+#    print matrix[:]
+#    print
+#
+#    print matrix[:, :][0]
+#
+#    # save individual matrices for r,g,b
+#    r = matrix[:, :][0]
+#    np.savetxt( r_dataFile, r )
+#
+#    g = matrix[:, :, 1]
+#    np.savetxt( g_dataFile, g )
+#
+#    b = matrix[:, :, 2]
+#    np.savetxt( b_dataFile, b )
+
 
   def draw( self ):
 
@@ -256,7 +288,7 @@ if __name__ == "__main__":
   parser.add_argument( '-t', '--test', action='store_true', dest='test', required=False, help='activate a test case (101x101, initialized at 3 points along the diagonal' )
   parser.add_argument( '-m', '--matrix', action='store', dest='matrix', required=True, help='File path of a 2D-grid (matrix) in ascii format, delimiter: tab.' )
   parser.add_argument( '-i', '--iterations', action='store', dest='iterations', default= -1, required=False, help='Optional number of max. iterations.' )
-  parser.add_argument( '-s', '--screenshot', action='store', dest='screenshot', default=None, required=False, help='Automatically take a screenshot of the evolved matrix when the number of max. iterations is reached and exit the program. This only works if -i/--iterations is specified.' )
+  parser.add_argument( '-o', '--output', action='store', dest='output', default=None, required=False, help='Folder to automatically take a screenshot of the evolved matrix and store the matrix, when the number of max. iterations is reached and exit the program. This only works if -i/--iterations is specified.' )
 
   # always show the help if no arguments were specified
   if len( sys.argv ) == 1:
@@ -266,6 +298,6 @@ if __name__ == "__main__":
   options = parser.parse_args()
 
   app = QtGui.QApplication( sys.argv )
-  gui = GridVisUI( options.test, options.matrix, options.iterations, options.screenshot )
+  gui = GridVisUI( options.test, options.matrix, options.iterations, options.output )
   sys.exit( app.exec_() )
 

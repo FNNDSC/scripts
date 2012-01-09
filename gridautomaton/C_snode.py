@@ -3,11 +3,11 @@
 """
     NAME
     
-            C_snode, C_snodeBranch, C_stree
+    	C_snode, C_snodeBranch, C_stree
         
     DESCRIPTION
     
-        These three classes are used to construct tree-structures
+	These three classes are used to construct tree-structures
         composed of 'C_snode' instances. Branches contain dictionaries
         of C_snodes, while leaves contain dictionaries of a specific
         external data class.
@@ -17,32 +17,32 @@
 """
 
 # System modules
-import         os
-import         sys
-import        re
-from         string                 import         *
+import 	os
+import 	sys
+import	re
+from 	string 		import 	*
 
 from    systemMisc      import  *
 from    C_stringCore    import  *
 
 
 def attributes_toStr(**adict_attrib):
-        strIO_attribute        = StringIO()
-        for attribute in adict_attrib.keys():
-            str_text = ' %s="%s"' % (attribute, adict_attrib[attribute])
-            strIO_attribute.write(str_text)
-        str_attributes = strIO_attribute.getvalue()
-        return str_attributes
-                
+	strIO_attribute	= StringIO()
+	for attribute in adict_attrib.keys():
+	    str_text = ' %s="%s"' % (attribute, adict_attrib[attribute])
+	    strIO_attribute.write(str_text)
+	str_attributes = strIO_attribute.getvalue()
+	return str_attributes
+		
 def printf(format, *args):
         sys.stdout.write(format % args)
-                
+		
 def valuePair_fprint(astr_name, avalue):
-        print '%40s: %f' % (astr_name, avalue)
+	print '%40s: %f' % (astr_name, avalue)
 def valuePair_sprint(astr_name, avalue):
-        print '%40s: %s' % (astr_name, avalue)
+	print '%40s: %s' % (astr_name, avalue)
 def valuePair_dprint(astr_name, avalue):
-        print '%40s: %d' % (astr_name, avalue)
+	print '%40s: %d' % (astr_name, avalue)
 
 class C_snode:
         """

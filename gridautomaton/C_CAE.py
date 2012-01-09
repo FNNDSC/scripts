@@ -174,10 +174,10 @@ class C_CAE:
                   are ignored. If array size is not same as grid, no
                   initialization is performed.
             """
-            l_components  = self.mgg_current.spectrum_get(0, 0).spectrumKeys_get()
-            numComponents = len(l_components)
-            maxEnergy     = 255
-            maxQuanta     = maxEnergy / numComponents
+            l_components = self.mgg_current.spectrum_get( 0, 0 ).spectrumKeys_get()
+            numComponents = len( l_components )
+            maxEnergy = 255
+            maxQuanta = maxEnergy / numComponents
             if len( args ):
                 a_init = args[0]
                 if type( a_init ).__name__ == 'ndarray':
@@ -190,13 +190,13 @@ class C_CAE:
                         # space, we need to re-scale the observed values such that
                         # a uniform partitioning of the domain results in a uniform
                         # partitioning of the values, too.
-                        a_norm  = misc.arr_normalize(a_init, scale=maxEnergy)
+                        a_norm = misc.arr_normalize( a_init, scale=maxEnergy )
                         a_round = a_norm.round()
                         # We bin the cdf with a '+1' since the 'zeros' in the
                         # input matrix are a special case. This also simplifies
                         # the value lookup in the cdf partitions.
-                        a_cdf   = misc.cdf(a_round, bins=a_round.max()+1)
-                        l_v     = misc.cdf_distribution(a_cdf, numComponents)
+                        a_cdf = misc.cdf( a_round, bins=a_round.max() + 1 )
+                        l_v = misc.cdf_distribution( a_cdf, numComponents )
                         for row in np.arange( 0, rows ):
                             for col in np.arange( 0, cols ):
                                 value = a_round[row, col]
@@ -301,3 +301,17 @@ class C_CAE:
             Return the spectrum (from the current state) at the given location
             """
             return self.mgg_current.spectrum_get( row, col )
+
+        def currentgrid_get( self, synced=False, next=False ):
+            """
+            Return the current or next grid as a np-array which is synced on request.
+            """
+            if next:
+              grid = self.mgg_next
+            else:
+              grid = self.mgg_current
+
+            if synced:
+              grid.internals_sync( False )
+
+            return grid.gridarr_get()
