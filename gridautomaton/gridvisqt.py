@@ -75,13 +75,14 @@ class GridVisUI( QtGui.QWidget ):
   The main program - creates a UI showing a GridView and some buttons.
   """
 
-  def __init__( self, test=False, matrix=None, maxIterations= -1, output=None ):
+  def __init__( self, test=False, matrix=None, maxIterations= -1, output=None, filestem='matrix' ):
     super( GridVisUI, self ).__init__()
 
     # args
     self.__test = test
     self.__maxIterations = maxIterations
     self.__output = output
+    self.__filestem = filestem
 
     self.__array = None
 
@@ -207,12 +208,12 @@ class GridVisUI( QtGui.QWidget ):
 
       if self.__output:
         # take a screenshot and exit
-        self.save( self.__output )
-        c.info( 'Took screenshot and saved matrix.. (Dir: ' + str( self.__output ) + ')' )
+        self.save( self.__output, self.__filestem )
+        c.info( 'Took screenshot and saved matrix.. (Output: ' + str( self.__output ) + os.sep + self.__filestem + '.*)' )
         c.info( 'Good-bye!' )
         sys.exit()
 
-  def save( self, output=None ):
+  def save( self, output=None, filestem='matrix' ):
     '''
     '''
     if not output:
@@ -220,11 +221,11 @@ class GridVisUI( QtGui.QWidget ):
                                                  "",
                                                  QtGui.QFileDialog.ShowDirsOnly );
 
-    screenshotFile = str( output + os.sep + 'matrix.png' )
-    dataFile = str( output + os.sep + 'matrix.npy' )
-    r_dataFile = str( output + os.sep + 'r_matrix.dat' )
-    g_dataFile = str( output + os.sep + 'g_matrix.dat' )
-    b_dataFile = str( output + os.sep + 'b_matrix.dat' )
+    screenshotFile = str( output + os.sep + filestem + '.png' )
+    dataFile = str( output + os.sep + filestem + '.npy' )
+    r_dataFile = str( output + os.sep + filestem + '_r.dat' )
+    g_dataFile = str( output + os.sep + filestem + '_g.dat' )
+    b_dataFile = str( output + os.sep + filestem + '_b.dat' )
 
     # take screenshot
     scene = self.__gridWidget.scene()
@@ -239,6 +240,21 @@ class GridVisUI( QtGui.QWidget ):
     matrix = self.__world.currentgrid_get( True )
     np.save( dataFile, matrix )
 
+    r_matrix = np.empty( matrix.shape )
+    g_matrix = np.empty( matrix.shape )
+    b_matrix = np.empty( matrix.shape )
+
+
+    for i in range( matrix.shape[0] ):
+      for j in range( matrix.shape[1] ):
+
+        r_matrix[i, j] = matrix[i, j][0]
+        g_matrix[i, j] = matrix[i, j][1]
+        b_matrix[i, j] = matrix[i, j][2]
+
+    np.savetxt( r_dataFile, r_matrix )
+    np.savetxt( g_dataFile, g_matrix )
+    np.savetxt( b_dataFile, b_matrix )
 
 #
 #    print matrix
@@ -289,6 +305,7 @@ if __name__ == "__main__":
   parser.add_argument( '-m', '--matrix', action='store', dest='matrix', required=True, help='File path of a 2D-grid (matrix) in ascii format, delimiter: tab.' )
   parser.add_argument( '-i', '--iterations', action='store', dest='iterations', default= -1, required=False, help='Optional number of max. iterations.' )
   parser.add_argument( '-o', '--output', action='store', dest='output', default=None, required=False, help='Folder to automatically take a screenshot of the evolved matrix and store the matrix, when the number of max. iterations is reached and exit the program. This only works if -i/--iterations is specified.' )
+  parser.add_argument( '-f', '--filestem', action='store', dest='filestem', default='matrix', required=False, help='Filestem to use to name the output files, by default: \'matrix\'.' )
 
   # always show the help if no arguments were specified
   if len( sys.argv ) == 1:
@@ -298,6 +315,6 @@ if __name__ == "__main__":
   options = parser.parse_args()
 
   app = QtGui.QApplication( sys.argv )
-  gui = GridVisUI( options.test, options.matrix, options.iterations, options.output )
+  gui = GridVisUI( options.test, options.matrix, options.iterations, options.output, options.filestem )
   sys.exit( app.exec_() )
 
