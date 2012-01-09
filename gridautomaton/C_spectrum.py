@@ -36,8 +36,8 @@ class C_spectrum :
         #
         mdictErr = {
             'Keys'          : {
-                'action'        : 'initializing base class, ', 
-                'error'                 : 'it seems that no member keys are defined.', 
+                'action'        : 'initializing base class, ',
+                'error'                 : 'it seems that no member keys are defined.',
                 'exitCode'      : 10},
             'Save'              : {
                 'action'        : 'attempting to pickle save self, ',
@@ -58,80 +58,80 @@ class C_spectrum :
         #
         # Core methods - construct, initialise, id
         
-        def error_exit(                self,
+        def error_exit(self,
                                 astr_key,
-                                ab_exitToOs = 1
+                                ab_exitToOs=1
                                 ):
             print "%s:: FATAL ERROR" % self.mstr_obj
             print "\tSorry, some error seems to have occurred in <%s::%s>" \
                             % (self.__name__, self.mstr_def)
-            print "\tWhile %s"                 % C_spectrum.mdictErr[astr_key]['action']
-            print "\t%s"                % C_spectrum.mdictErr[astr_key]['error']
+            print "\tWhile %s" % C_spectrum.mdictErr[astr_key]['action']
+            print "\t%s" % C_spectrum.mdictErr[astr_key]['error']
             print ""
             if ab_exitToOs:
-                    print "Returning to system with error code %d" % \
-                                              C_spectrum.mdictErr[astr_key]['exitCode']
+                print "Returning to system with error code %d" % \
+                                 C_spectrum.mdictErr[astr_key]['exitCode']
                 sys.exit(C_spectrum.mdictErr[astr_key]['exitCode'])
             return C_spectrum.mdictErr[astr_key]['exitCode']
 
         def fatal(self, astr_key, astr_extraMsg=""):
             if len(astr_extraMsg): print astr_extraMsg
-            self.error_exit( astr_key)
+            self.error_exit(astr_key)
         
         def warn(self, astr_key, astr_extraMsg=""):
-            b_exitToOS  = 0
+            b_exitToOS = 0
             if len(astr_extraMsg): print astr_extraMsg
-            self.error_exit( astr_key, b_exitToOS)
+            self.error_exit(astr_key, b_exitToOS)
             
-        def core_construct(        self,
-                                astr_obj        = 'C_spectrum',
-                                astr_name        = 'void',
-                                a_id                = -1,
-                                a_iter                = 0,
-                                a_verbosity        = 0,
-                                a_warnings        = 0) :
+        def core_construct(self,
+                                astr_obj='C_spectrum',
+                                astr_name='void',
+                                a_id= -1,
+                                a_iter=0,
+                                a_verbosity=0,
+                                a_warnings=0) :
                 if not len(self.ml_keys):
                     self.error_exit("initializing base class",
-                                    "Class has no spectrum keys defined", 
+                                    "Class has no spectrum keys defined",
                                     1)
-                self.mstr_obj                = astr_obj
-                self.mstr_name                = astr_name
-                self.m_id                = a_id
-                self.m_iter                = a_iter
-                self.m_verbosity        = a_verbosity
-                self.m_warnings                = a_warnings
+                self.mstr_obj = astr_obj
+                self.mstr_name = astr_name
+                self.m_id = a_id
+                self.m_iter = a_iter
+                self.m_verbosity = a_verbosity
+                self.m_warnings = a_warnings
                 
         def __init__(self, *args):
-            self.__name__         = 'C_spectrum'
-            self.mstr_obj        = 'C_spectrum';        # name of object class
-            self.mstr_name        = 'unnamed';        # name of object variable
-            self.mstr_def        = 'void';        # name of function being processed
-            self.m_id                = -1;                 # int id
-            self.m_iter                = 0;                # current iteration in an
+            self.__name__ = 'C_spectrum'
+            self.mstr_obj = 'C_spectrum';        # name of object class
+            self.mstr_name = 'unnamed';        # name of object variable
+            self.mstr_def = 'void';        # name of function being processed
+            self.m_id = -1;                 # int id
+            self.m_iter = 0;                # current iteration in an
                                                 #+ arbitrary processing 
                                                 #+ scheme
-            self.m_verbosity        = 0;                # debug related value for 
+            self.m_verbosity = 0;                # debug related value for 
                                                 #+ object
-            self.m_warnings        = 0;            # show warnings 
+            self.m_warnings = 0;            # show warnings 
                                                 #+ (and warnings level)
-            self.mdict_keyIndex        = {};                # lookup of keys to indices
-            self.mdict_spectrum        = {};                # the actual spectrum
-            self.mNumKeys       = 0;
-            self.mb_printHist         = False;        # If true, print an actual
+            self.mdict_keyIndex = {};                # lookup of keys to indices
+            self.mdict_spectrum = {};                # the actual spectrum
+            self.mNumKeys = 0;
+            self.mb_printHist = False;        # If true, print an actual
                                                 #+ histogram representation
-            self.mb_printAsRow  = False;        # If true, print spectrum as a
+            self.mb_printAsRow = False;        # If true, print spectrum as a
                                                 # row, else print as column
             self.mb_printConcise = False;        # If true, print concise 
                                                 #+ version of spectrum
-            self.m_cellWidth          = 12                # For row printing, the width
+            self.m_cellWidth = 12                # For row printing, the width
                                                 #+ of a column
-            self.mf_totalPower         = 0.0;
+            self.mf_totalPower = 0.0;
                                                 
             c = args[0]
             if type(c) is types.ListType:
                     self.ml_keys = c
             if type(c).__name__ == 'ndarray':
-                ilist = range(1, np.size(c)+1)
+                ilist = range(1, np.size(c) + 1)
                 self.ml_keys = misc.list_i2str(ilist)
                 if len(args) >= 2:
                     if type(args[1] is types.ListType):
@@ -140,9 +140,9 @@ class C_spectrum :
 
             self.core_construct()
             self.mdict_keyIndex = misc.dict_init(self.ml_keys, 0)
-            self.mdict_spectrum        = misc.dict_init(self.ml_keys, 0)
+            self.mdict_spectrum = misc.dict_init(self.ml_keys, 0)
             if type(c).__name__ == 'ndarray':
-                self.mdict_spectrum = misc.dict_init(self.ml_keys, 
+                self.mdict_spectrum = misc.dict_init(self.ml_keys,
                                                         c.tolist())
             self.keys_index()
             if isinstance(c, int):
@@ -171,7 +171,7 @@ class C_spectrum :
            """
            b_setOK = False
            if type(arr).__name__ == 'ndarray':
-                self.mdict_spectrum = misc.dict_init(self.ml_keys, 
+                self.mdict_spectrum = misc.dict_init(self.ml_keys,
                                                         arr.tolist())
                 b_setOK = True
            if type(arr) is types.ListType:
@@ -196,7 +196,7 @@ class C_spectrum :
            """
                    Get the internal "spectrum" as a numpy array
            """
-           arr          = np.arange(len(self.ml_keys))
+           arr = np.arange(len(self.ml_keys))
            count = 0
            for key in self.ml_keys:
                    arr[count] = self.mdict_spectrum[key]
@@ -220,20 +220,20 @@ class C_spectrum :
                             
         def core_print(self):
                 str_t = ""
-                str_t += 'mstr_sobj\t\t= %s\n'         % self.mstr_obj
-                str_t += 'mstr_name\t\t= %s\n'         % self.mstr_name
-                str_t += 'm_id\t\t\t= %d\n'         % self.m_id
-                str_t += 'm_iter\t\t\t= %d\n'        % self.m_iter
-                str_t += 'm_verbosity\t\t= %d\n'% self.m_verbosity
-                str_t += 'm_warnings\t\t= %d\n'        % self.m_warnings
+                str_t += 'mstr_sobj\t\t= %s\n' % self.mstr_obj
+                str_t += 'mstr_name\t\t= %s\n' % self.mstr_name
+                str_t += 'm_id\t\t\t= %d\n' % self.m_id
+                str_t += 'm_iter\t\t\t= %d\n' % self.m_iter
+                str_t += 'm_verbosity\t\t= %d\n' % self.m_verbosity
+                str_t += 'm_warnings\t\t= %d\n' % self.m_warnings
                 return str_t
 
         def __str__(self):
-            b_canPrint                 = True
-            b_printedAtLeastOne        = False
-            b_firstColPrinted        = False
+            b_canPrint = True
+            b_printedAtLeastOne = False
+            b_firstColPrinted = False
             # Determine the 'longest' key for appropriate width setting
-            longestKeyLength         = 0
+            longestKeyLength = 0
             for field in self.ml_keys:
                     if len(field) > longestKeyLength: longestKeyLength = len(field)
             str_t = ""
@@ -242,7 +242,7 @@ class C_spectrum :
                     if self.arr_get().max() or not self.mb_printConcise: 
                         str_t += '%s---+\n' % self.mstr_name
                         str_blank = ''
-                        for ch in range(1,len(self.mstr_name)):
+                        for ch in range(1, len(self.mstr_name)):
                                 str_blank += ' '
                         str_t += '%s    |\n' % str_blank
                         str_t += '%s    V\n' % str_blank
@@ -254,10 +254,10 @@ class C_spectrum :
                            b_canPrint = True
                    if b_canPrint:
                        f_sum = self.sum()        
-                           str_t += "%5d - %-*s: %5d (%06.2f%s) " % (self.mdict_keyIndex[field], 
-                                                  longestKeyLength + 2, field, 
+                           str_t += "%5d - %-*s: %5d (%06.2f%s) " % (self.mdict_keyIndex[field],
+                                                  longestKeyLength + 2, field,
                                                      self.mdict_spectrum[field],
-                                                     float(self.mdict_spectrum[field])/float(f_sum)*100,
+                                                     float(self.mdict_spectrum[field]) / float(f_sum) * 100,
                                                      '%')
                            if self.mb_printHist:
                                for star in range(0, self.mdict_spectrum[field]):
@@ -266,52 +266,52 @@ class C_spectrum :
             else:
                     for key in self.ml_keys:
                         if self.mb_printConcise and not self.mdict_spectrum[key]:
-                                b_canPrint                 = False
+                                b_canPrint = False
                         else:
-                                b_canPrint                 = True
+                                b_canPrint = True
                                 if not b_firstColPrinted:
                                     str_t += '+'
-                                    b_firstColPrinted   = True
-                                b_printedAtLeastOne         = True
+                                    b_firstColPrinted = True
+                                b_printedAtLeastOne = True
                                 for i in range(0, self.m_cellWidth):
                                     str_t += '-'
                                 str_t += '+'
                     if b_printedAtLeastOne: str_t += "\n"
-                    b_firstColPrinted                = False
+                    b_firstColPrinted = False
                     for key in self.ml_keys:
                         if self.mb_printConcise and not self.mdict_spectrum[key]:
-                                b_canPrint                 = False
+                                b_canPrint = False
                         else:
-                                b_canPrint                 = True
+                                b_canPrint = True
                                 if not b_firstColPrinted:
                                     str_t += '|'
-                                    b_firstColPrinted   = True
+                                    b_firstColPrinted = True
                         if b_canPrint:
                             str_t += str(self.mdict_spectrum[key]).center(self.m_cellWidth)
                             str_t += "|"
                     if b_printedAtLeastOne: str_t += "\n"
-                    b_firstColPrinted                = False
+                    b_firstColPrinted = False
                     for key in self.ml_keys:
                         if self.mb_printConcise and not self.mdict_spectrum[key]:
-                                b_canPrint                 = False
+                                b_canPrint = False
                         else:
-                                b_canPrint                 = True
+                                b_canPrint = True
                                 if not b_firstColPrinted:
                                     str_t += '|'
-                                    b_firstColPrinted   = True
+                                    b_firstColPrinted = True
                         if b_canPrint:
                             str_t += ('(%d) %s' % (self.mdict_keyIndex[key], key)).center(self.m_cellWidth)
                             str_t += "|"
                     if b_printedAtLeastOne: str_t += "\n"
-                    b_firstColPrinted                = False
+                    b_firstColPrinted = False
                     for key in self.ml_keys:
                         if self.mb_printConcise and not self.mdict_spectrum[key]:
-                                b_canPrint                 = False
+                                b_canPrint = False
                         else:
-                                b_canPrint                 = True
+                                b_canPrint = True
                                 if not b_firstColPrinted:
                                     str_t += '+'
-                                    b_firstColPrinted   = True
+                                    b_firstColPrinted = True
                                 for i in range(0, self.m_cellWidth):
                                     str_t += '-'
                                 str_t += '+'
@@ -351,9 +351,9 @@ class C_spectrum :
             elif isinstance(componentID, int):
                     if componentID >= 1 and componentID <= len(self.ml_keys):
                         if ab_overwrite:
-                            self.mdict_spectrum[self.ml_keys[componentID-1]] = aval
+                            self.mdict_spectrum[self.ml_keys[componentID - 1]] = aval
                         else:
-                            self.mdict_spectrum[self.ml_keys[componentID-1]] += aval
+                            self.mdict_spectrum[self.ml_keys[componentID - 1]] += aval
                         b_ret = componentID
             return b_ret
                         
@@ -374,27 +374,27 @@ class C_spectrum :
                     The amount of energy shifted. If no shift, returns zero.
             """                        
             ret = 0
-            fromHarmonic        = al_fromToHarmonic[0]
-            toHarmonic                = al_fromToHarmonic[1]
-            b_validFromHarmonic        = False
-            b_validToHarmonic        = False
+            fromHarmonic = al_fromToHarmonic[0]
+            toHarmonic = al_fromToHarmonic[1]
+            b_validFromHarmonic = False
+            b_validToHarmonic = False
             if isinstance(fromHarmonic, types.StringTypes):
                     if fromHarmonic in self.ml_keys: b_validFromHarmonic = True
             if isinstance(toHarmonic, types.StringTypes):
                     if toHarmonic in self.ml_keys: b_validToHarmonic = True
             if isinstance(fromHarmonic, int):
-                    if fromHarmonic >=1 and fromHarmonic <= self.mNumKeys:
-                        fromHarmonic = self.ml_keys[fromHarmonic-1]
+                    if fromHarmonic >= 1 and fromHarmonic <= self.mNumKeys:
+                        fromHarmonic = self.ml_keys[fromHarmonic - 1]
                         b_validFromHarmonic = True        
             if isinstance(toHarmonic, int):
-                    if toHarmonic >=1 and toHarmonic <= self.mNumKeys:
-                        toHarmonic = self.ml_keys[toHarmonic-1]
+                    if toHarmonic >= 1 and toHarmonic <= self.mNumKeys:
+                        toHarmonic = self.ml_keys[toHarmonic - 1]
                         b_validToHarmonic = True        
             
             if b_validFromHarmonic and b_validToHarmonic:
                 if self.mdict_spectrum[fromHarmonic] >= amount:
                     self.mdict_spectrum[fromHarmonic] -= amount
-                    self.mdict_spectrum[toHarmonic]   += amount
+                    self.mdict_spectrum[toHarmonic] += amount
                     ret = amount
 
             return ret
@@ -431,7 +431,7 @@ class C_spectrum :
                    spectrum with keys as ordered and named
                    by self.
            """
-           C_add    = C_spectrum(self.arr_get() + cs.arr_get(), self.ml_keys)
+           C_add = C_spectrum(self.arr_get() + cs.arr_get(), self.ml_keys)
            
            return C_add
 
@@ -471,9 +471,9 @@ class C_spectrum :
                     Return as standard list the keys of the object that
                     correspond to the maximum value of the spectrum.
             """
-            a_sp                = self.arr_get()
-            f_max                = a_sp.max()
-            l_maxComponents        = []
+            a_sp = self.arr_get()
+            f_max = a_sp.max()
+            l_maxComponents = []
             for key in self.ml_keys:
                     if self.mdict_spectrum[key] == f_max:
                         l_maxComponents.append(key)
@@ -491,12 +491,12 @@ class C_spectrum_color(C_spectrum):
         """
 
         def __init__(self, *args):
-            self.mstr_obj        = 'C_spectrum_color';
-            self.ml_keys        = [        'red', 'yellow', 'green', 'blue', 
+            self.mstr_obj = 'C_spectrum_color';
+            self.ml_keys = [        'red', 'yellow', 'green', 'blue',
                                          'magenta', 'cyan', 'white', 'black']
             if not len(args): args = self.ml_keys
             C_spectrum.__init__(self, *args)
-            self.__name__        = 'C_spectrum_color';
+            self.__name__ = 'C_spectrum_color';
 
 class C_spectrum_permutation(C_spectrum):
         """
@@ -505,13 +505,13 @@ class C_spectrum_permutation(C_spectrum):
         """        
 
         def __init__(self, gridSize):
-            self.mlstr_perm1D        = []
-            l_permAll = list(itertools.permutations(range(1,gridSize+1)))
+            self.mlstr_perm1D = []
+            l_permAll = list(itertools.permutations(range(1, gridSize + 1)))
             for l_perm in l_permAll:
                     str_perm1D = "".join(["%s" % el for el in l_perm])
                     self.mlstr_perm1D.append(str_perm1D)
             C_spectrum.__init__(self, self.mlstr_perm1D)
-            self.__name__        = 'C_spectrum_permutation';
+            self.__name__ = 'C_spectrum_permutation';
 
 class C_spectrum_permutation2D(C_spectrum):
         """
@@ -520,9 +520,9 @@ class C_spectrum_permutation2D(C_spectrum):
         """
         
         def __init__(self, gridSize):
-            self.mlstr_perm1D        = []
-            self.mlstr_perm2D        = []
-            l_permAll = list(itertools.permutations(range(1,gridSize+1)))
+            self.mlstr_perm1D = []
+            self.mlstr_perm2D = []
+            l_permAll = list(itertools.permutations(range(1, gridSize + 1)))
             for l_perm in l_permAll:
                     str_perm1D = "".join(["%s" % el for el in l_perm])
                     self.mlstr_perm1D.append(str_perm1D)
@@ -531,5 +531,6 @@ class C_spectrum_permutation2D(C_spectrum):
                         str_key = "%s%s" % (str_permA, str_permB)
                         self.mlstr_perm2D.append(str_key)
             C_spectrum.__init__(self, self.mlstr_perm2D)
-            self.__name__        = 'C_spectrum_permutation2D';
+            self.__name__ = 'C_spectrum_permutation2D';
             
+

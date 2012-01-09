@@ -219,11 +219,11 @@ class C_mail :
             lstr_attach        = self.mlstr_attach
             
             for field in header.keys():
-                if field == 'to':        lstr_to                = header[field]
-                if field == 'sender':        str_from        = header[field]
-                    if field == 'subject':        str_subject        = header[field]
-                if field == 'body':        str_body        = header[field]
-                if field == 'attach':        lstr_attach        = header[field]
+                if field == 'to':       lstr_to         = header[field]
+                if field == 'sender':   str_from        = header[field]
+                if field == 'subject':  str_subject     = header[field]
+                if field == 'body':     str_body        = header[field]
+                if field == 'attach':   lstr_attach     = header[field]
                 
                 
             self.smtp_process(        lstr_to, str_from, str_subject, 
@@ -266,7 +266,7 @@ class C_mail :
             smtp.connect(self.mstr_SMTPserver)
             for str_to in alstr_to:
                 msg['To']        = str_to
-                    smtp.sendmail(astr_from, str_to, msg.as_string())
+                smtp.sendmail(astr_from, str_to, msg.as_string())
             smtp.close()            
                                   
                             

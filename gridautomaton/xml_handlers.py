@@ -238,7 +238,7 @@ class C_SAX_kXMLHandler(C_kXMLHandler):
         def endElement(self, astr_tag):
             #print "%s: end" % astr_tag
             if astr_tag == self.mstr_mainTag:
-                    self.mb_inRecord        = False
+                self.mb_inRecord        = False
                 if not self.mb_searchTagUse or self.b_searchTag_found():
                 #if self.mdict_element["idCode"] == self.mstr_idCode:
                         #print "****************************************"
@@ -250,7 +250,7 @@ class C_SAX_kXMLHandler(C_kXMLHandler):
                         self.mb_dbChildFound = 1;
                 self.internals_reset() 
             else:
-                    for key in self.mC_struct.ml_keys:
+                for key in self.mC_struct.ml_keys:
                     if astr_tag == key:        self.mbdict_inTag[key]        = False
                     
 class C_DBsplit_SAX_kXMLHandler(C_SAX_kXMLHandler):
@@ -287,19 +287,19 @@ class C_DBsplit_SAX_kXMLHandler(C_SAX_kXMLHandler):
         
         def endElement(self, astr_tag):
             if astr_tag == self.mstr_mainTag:
-                    self.mb_inRecord        = False
+                self.mb_inRecord        = False
                 str_localpath                 = '%s.xml' % self.mdict_element["idCode"]
                 print "Splitting: %s" % str_localpath
                 for key in self.mC_struct.ml_keys:
                     self.mC_struct.mdict_sgmlCore[key].value_set(self.mdict_element[key])
                 self.m_mainTagCount += 1;
                 # Populate internal memory with contents parsed from monolithic
-                    self.mFileDBOutput.mdict_sgmlCore= self.mC_struct.mdict_sgmlCore
+                self.mFileDBOutput.mdict_sgmlCore= self.mC_struct.mdict_sgmlCore
                 # Note that the XML_save() call is mono/distributed aware...
-                    self.mFileDBOutput.XML_save()                
+                self.mFileDBOutput.XML_save()                
                 self.internals_reset() 
             else:
-                    for key in self.mC_struct.ml_keys:
+                for key in self.mC_struct.ml_keys:
                     if astr_tag == key:        self.mbdict_inTag[key]        = False
 
 #
@@ -419,7 +419,7 @@ class C_DOM_kXMLHandler(C_kXMLHandler):
                                 if str_tag == astr_tag and str_data == astr_value:
                                     b_targetFound = 1
                         if b_targetFound:                        
-                                for key in self.mC_struct.ml_keys:
+                            for key in self.mC_struct.ml_keys:
                                 self.mC_struct.mdict_sgmlCore[key].value_set(self.mdict_element[key])
                             if ab_removeElement:
                                 database.removeChild(dbChild)

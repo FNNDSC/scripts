@@ -81,8 +81,8 @@ class C_ggrid :
             print "\t%s"                 % C_ggrid.mdictErr[astr_key]['error']
             print ""
             if ab_exitToOs:
-                    print "Returning to system with error code %d" % \
-                                              C_ggrid.mdictErr[astr_key]['exitCode']
+                print "Returning to system with error code %d" % \
+                                C_ggrid.mdictErr[astr_key]['exitCode']
                 sys.exit( C_ggrid.mdictErr[astr_key]['exitCode'] )
             return C_ggrid.mdictErr[astr_key]['exitCode']
 
@@ -218,7 +218,7 @@ class C_ggrid :
             if len( args ) == 2:
                     c = args[0]
                     if type( c ) is types.StringType:
-                            self.mstr_gridFileName = c
+                        self.mstr_gridFileName = c
                         try:
                            self.ma_grid = np.genfromtxt( self.mstr_gridFileName )
                         except IOError: self.fatal( 'ReadGrid' )
@@ -235,19 +235,19 @@ class C_ggrid :
                                                         dtype='object' )
                                 self.mb_initializeFromArr = False
                             if type( c[0] ).__name__ == 'ndarray':
-                                   self.ma_grid = c.copy()
+                                self.ma_grid = c.copy()
                                 self.mb_initializeFromArr = True
-                        else: fatal( 'ConstructingArray' )
+                    else: fatal( 'ConstructingArray' )
                     if type( c ) is types.IntType:
-                            # If constructed with single int, create
-                            # zeroes grid of [c x c] 
-                            self.ma_grid = np.zeros( ( c, c ), dtype='object' )
+                        # If constructed with single int, create
+                        # zeroes grid of [c x c] 
+                        self.ma_grid = np.zeros( ( c, c ), dtype='object' )
                         self.mb_initializeFromArr = False
-                    # 
-                    # At this point, the shape of the grid should
-                    # be known.
-                    #
-                           l_dim = self.ma_grid.shape;
+                        # 
+                        # At this point, the shape of the grid should
+                        # be known.
+                        #
+                        l_dim = self.ma_grid.shape;
                         self.m_rows = l_dim[0]
                         self.m_cols = l_dim[1]
 
@@ -314,8 +314,8 @@ class C_ggrid :
                     if type( a ).__name__ == 'ndarray':
                         a_flat = a
             for v_index in a_flat:
-                    row = v_index[0]
-                    col = v_index[1]
+                row = v_index[0]
+                col = v_index[1]
                 if ab_setFromArray:
                     if not b_initArrayIsSingleComponent:
                         self.macs_grid[row, col].arr_set( 
@@ -386,13 +386,13 @@ class C_ggrid :
                      np_gridSpectra[location] = ( self.ma_grid[row, col] ).copy()
              return np_gridSpectra
 
-         def spectrumArr_get(self, row, col):
-             """
+        def spectrumArr_get(self, row, col):
+            """
                 Return the spectral array at [row, col]
-             """
-             return self.ma_grid[row, col]
+            """
+            return self.ma_grid[row, col]
 
-         def spectrum_get( self, row, col ):
+        def spectrum_get( self, row, col ):
              """
                      Return the spectrum (object) at [row, col]
              """

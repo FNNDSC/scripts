@@ -425,7 +425,7 @@ class C_CSV :
             #
             if systemMisc.file_exists(self.mstr_DBFileName):
                 fout        = open(self.mstr_DBFileName, "a")
-                    for str_element in self.mStruct.ml_keys:
+                for str_element in self.mStruct.ml_keys:
                     str_val        = \
                         self.mStruct.mdict_sgmlCore[str_element].value_get()
                     if str_val == "None": str_val = ""
@@ -549,7 +549,7 @@ class C_xmlDB :
                             (self.mstr_DBfullName,
                          self.mstr_DBfullName,
                          self.mstr_DBfullName)
-             systemMisc.system_eval(str_cmd)
+            systemMisc.system_eval(str_cmd)
             
         def XML_postparse(self, ab_forceXlsRun = False):
             if self.mstr_DBtype == 'distributed':
