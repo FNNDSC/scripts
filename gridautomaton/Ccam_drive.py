@@ -2,11 +2,11 @@
 # 
 # NAME
 #
-#	Ccam_drive
+#        Ccam_drive
 #
 # DESCRIPTION
 #
-# 	A simple 'driver' for a cellular automaton machine
+#         A simple 'driver' for a cellular automaton machine
 #
 # HISTORY
 #

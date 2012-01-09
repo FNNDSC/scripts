@@ -2,11 +2,11 @@
 # 
 # NAME
 #
-#	CMail_drive.py
+#        CMail_drive.py
 #
 # DESCRIPTION
 #
-# 	A simple 'driver' for a C_Mail class instance
+#         A simple 'driver' for a C_Mail class instance
 #
 # HISTORY
 #
@@ -22,9 +22,9 @@ str_magnet      = 'MR_WALTHAM260PR'
 str_report      = 'QAplots-%s.txt' % str_magnet
 str_plots       = 'QAplots-%s.png' % str_magnet
 
-lstr_to		= ['rudolph@nmr.mgh.harvard.edu']
-str_subject	= "QA Report - %s" % str_magnet
-str_body	= open(str_report, 'r').read()
+lstr_to                = ['rudolph@nmr.mgh.harvard.edu']
+str_subject        = "QA Report - %s" % str_magnet
+str_body        = open(str_report, 'r').read()
 str_from        = "sdc@holocene.nmr.mgh.harvard.edu"
 lstr_attach     = [str_plots]
 

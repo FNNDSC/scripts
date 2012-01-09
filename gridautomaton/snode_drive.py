@@ -2,11 +2,11 @@
 # 
 # NAME
 #
-#	snode_drive.py
+#        snode_drive.py
 #
 # DESCRIPTION
 #
-# 	A simple 'driver' for C_snode and related classes
+#         A simple 'driver' for C_snode and related classes
 #
 # HISTORY
 #

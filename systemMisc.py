@@ -2,12 +2,12 @@
 # 
 # NAME
 #
-#	systemMisc
+#        systemMisc
 #
 # DESCRIPTION
 #
-#	The 'systemMisc' module contains some helper functions to 
-#	facilitate system-type interaction.
+#        The 'systemMisc' module contains some helper functions to 
+#        facilitate system-type interaction.
 #
 # HISTORY
 #
@@ -22,14 +22,14 @@
 #
 
 # System imports
-import 		os
-import 		sys
-import		time
-import		string
+import                 os
+import                 sys
+import                time
+import                string
 import          re
 import          types
 import          commands
-from 		subprocess	import *
+from                 subprocess        import *
 from            cStringIO       import StringIO
 from            numpy           import *
 import          time
@@ -156,7 +156,7 @@ def error_exit(         astr_func,
         sys.exit(aexitCode)
 
 def printf(format, *args):
-	sys.stdout.write(format % args)
+        sys.stdout.write(format % args)
 
 def list_removeDuplicates(alist):
     """
@@ -787,86 +787,86 @@ def str_blockIndent(astr_buf, a_tabs=1, a_tabLength=4):
     str_ret = '%s%s' % (str_Indent, str_ret)
     if b_trailN: str_ret = str_ret + '\n'
     return str_ret
-			
+                        
 def valuePair_fprint(astr_name, afvalue=None, leftCol=40, rightCol=40):
-	if afvalue != None:
-	    print '%*s:%*f' 	% (leftCol, astr_name, rightCol, afvalue)
-	else:
-	    printf('%*f', leftCol, astr_name)
+        if afvalue != None:
+            print '%*s:%*f'         % (leftCol, astr_name, rightCol, afvalue)
+        else:
+            printf('%*f', leftCol, astr_name)
 def valuePair_sprint(astr_name, astr_value, leftCol=40, rightCol=40):
-	if len(astr_value):
-	    print '%*s:%*s' 	% (leftCol, astr_name, rightCol, astr_value)
-	else:
-	    printf('%*s', leftCol, astr_name)
+        if len(astr_value):
+            print '%*s:%*s'         % (leftCol, astr_name, rightCol, astr_value)
+        else:
+            printf('%*s', leftCol, astr_name)
 def valuePair_dprint(astr_name, avalue=None, leftCol=40, rightCol=40):
-	if avalue != None:
-	    print '%*s:%*d' 	% (leftCol, astr_name, rightCol, avalue)
-	else:
-	    printf('%*d', leftCol, astr_name)
-	
-def html(astr_string, astr_tag = "p"):	
-	print """
-	<%s>
-	%s
-	</%s>
-	""" % (astr_tag, astr_string, astr_tag)
-	
+        if avalue != None:
+            print '%*s:%*d'         % (leftCol, astr_name, rightCol, avalue)
+        else:
+            printf('%*d', leftCol, astr_name)
+        
+def html(astr_string, astr_tag = "p"):        
+        print """
+        <%s>
+        %s
+        </%s>
+        """ % (astr_tag, astr_string, astr_tag)
+        
 def PRE(astr_string):
-	print """
-	<pre>
-	%s
-	</pre>
-	""" % astr_string
-	
+        print """
+        <pre>
+        %s
+        </pre>
+        """ % astr_string
+        
 def P(astr_string):
-	print "<p>%s</p>" % astr_string
+        print "<p>%s</p>" % astr_string
 
 def system_eval(str_command, b_echoCommand = 0):
-	if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
-	fp_stdout 	= os.popen(str_command)
-	str_stdout	= ''
-	while(1):
-		str_line = fp_stdout.readline()
-		if str_line:
-			str_stdout = str_stdout + str_line
-		else:
-			break	
-	if b_echoCommand: printf('<p>str_line = %s</p>', str_line)
-	if b_echoCommand: printf('<p>str_stdout = %s</p>', str_stdout)
-	return str_stdout
-	
+        if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
+        fp_stdout         = os.popen(str_command)
+        str_stdout        = ''
+        while(1):
+                str_line = fp_stdout.readline()
+                if str_line:
+                        str_stdout = str_stdout + str_line
+                else:
+                        break        
+        if b_echoCommand: printf('<p>str_line = %s</p>', str_line)
+        if b_echoCommand: printf('<p>str_stdout = %s</p>', str_stdout)
+        return str_stdout
+        
 def system_pipeRet(str_command, b_echoCommand = 0):
-	if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
-	fp_stdout 	= os.popen(str_command)
-	str_stdout	= ''
-	while(1):
-		str_line = fp_stdout.readline()
-		if str_line:
-			str_stdout = str_stdout + str_line
-		else:
-			break
-	retcode		= fp_stdout.close()	
-	if b_echoCommand: printf('<p>str_line = %s</p>', str_line)
-	if b_echoCommand: printf('<p>str_stdout = %s</p>', str_stdout)
-	return retcode, str_stdout
+        if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
+        fp_stdout         = os.popen(str_command)
+        str_stdout        = ''
+        while(1):
+                str_line = fp_stdout.readline()
+                if str_line:
+                        str_stdout = str_stdout + str_line
+                else:
+                        break
+        retcode                = fp_stdout.close()        
+        if b_echoCommand: printf('<p>str_line = %s</p>', str_line)
+        if b_echoCommand: printf('<p>str_stdout = %s</p>', str_stdout)
+        return retcode, str_stdout
 
 def system_procRet(str_command, b_echoCommand = 0):
-	if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
-	str_stdout	= os.popen(str_command).read()
-	retcode		= os.popen(str_command).close()
-	return retcode, str_stdout
-	
+        if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
+        str_stdout        = os.popen(str_command).read()
+        retcode                = os.popen(str_command).close()
+        return retcode, str_stdout
+        
 def subprocess_eval(str_command, b_echoCommand = 0):
     if b_echoCommand: printf('%s', str_command)
-    b_OK	= True
-    retcode	= -1    
+    b_OK        = True
+    retcode        = -1    
     p = Popen(string.split(str_command), stdout=PIPE, stderr=PIPE)
     str_stdout, str_stderr = p.communicate()
     try:
-	str_forRet	= str_command + " 2>/dev/null >/dev/null"
-	retcode 	= call(str_forRet, shell=True)
+        str_forRet        = str_command + " 2>/dev/null >/dev/null"
+        retcode         = call(str_forRet, shell=True)
     except OSError, e:
-	b_OK	= False
+        b_OK        = False
     return retcode, str_stdout, str_stderr
     
 def getCommandOutput2(command):
@@ -875,20 +875,20 @@ def getCommandOutput2(command):
     err = child.close( )
     if err:
         raise RuntimeError, '%r failed with exit code %d' % (command, err)
-		
+                
 def file_exists(astr_fileName):
     try:
-	fd	= open(astr_fileName)
-	if fd: fd.close()
-	return True
+        fd        = open(astr_fileName)
+        if fd: fd.close()
+        return True
     except IOError:
-	return False
+        return False
 
 def exefile_existsOnPath(astr_fileName):
-	try:
-		return open(astr_fileName)
-	except IOError:
-		return None
+        try:
+                return open(astr_fileName)
+        except IOError:
+                return None
 
 def str_dateStrip(astr_datestr, astr_sep = '/'):
   """
@@ -916,16 +916,16 @@ def str_dateStrip(astr_datestr, astr_sep = '/'):
   return tstr.encode('ascii')
 
 def currentDate_formatted(astr_format = 'US', astr_sep = '/'):
-	str_year 	= time.localtime()[0]
-    	str_month 	= time.localtime()[1]
-    	str_day		= time.localtime()[2]
-	if astr_format	== 'US':
-	    str_date	= '%02d%s%02d%s%s' % \
-	    	(str_month, astr_sep, str_day, astr_sep, str_year)
-	else:
-	    str_date	= '%s%s%02d%s%02d' % \
-	    	(str_year, astr_sep, str_month, astr_sep, str_day)
-	return string.strip(str_date)
+        str_year         = time.localtime()[0]
+            str_month         = time.localtime()[1]
+            str_day                = time.localtime()[2]
+        if astr_format        == 'US':
+            str_date        = '%02d%s%02d%s%s' % \
+                    (str_month, astr_sep, str_day, astr_sep, str_year)
+        else:
+            str_date        = '%s%s%02d%s%02d' % \
+                    (str_year, astr_sep, str_month, astr_sep, str_day)
+        return string.strip(str_date)
 
 def dict_init(al_key, avalInit = None):
   adict = {}

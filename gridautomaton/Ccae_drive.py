@@ -2,11 +2,11 @@
 # 
 # NAME
 #
-#	Ccae_drive
+#        Ccae_drive
 #
 # DESCRIPTION
 #
-# 	A simple 'driver' for a cellular automaton environment
+#         A simple 'driver' for a cellular automaton environment
 #
 # HISTORY
 #
