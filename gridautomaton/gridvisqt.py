@@ -75,15 +75,22 @@ class GridVisUI( QtGui.QWidget ):
   The main program - creates a UI showing a GridView and some buttons.
   """
 
-  def __init__( self, test=False, matrix=None, maxIterations= -1, output=None, filestem='matrix' ):
+  def __init__( self, 
+                test            = False, 
+                matrix          = None, 
+                maxIterations   = -1, 
+                stopAtCorners   = False, 
+                output          = None, 
+                filestem        = 'matrix' ):
     super( GridVisUI, self ).__init__()
 
     # args
-    self.__test = test
-    self.__maxIterations = maxIterations
-    self.__output = output
-    self.__filestem = filestem
-
+    self.__test                 = test
+    self.__maxIterations        = maxIterations
+    self.__output               = output
+    self.__filestem             = filestem
+    self.__stopAtCorners        = stopAtCorners
+    
     self.__array = None
 
     self.__layout = QtGui.QGridLayout()
@@ -98,7 +105,7 @@ class GridVisUI( QtGui.QWidget ):
     self.__playButton = QtGui.QPushButton( 'Start' )
     self.__playButton.clicked.connect( self.togglePlay )
     self.__toolbar.addWidget( self.__playButton )
-    self.__saveButton = QtGui.QPushButton( 'Save..' )
+    self.__saveButton = QtGui.QPushButton( 'Save...' )
     self.__saveButton.clicked.connect( self.save )
     self.__toolbar.addWidget( self.__saveButton )
     self.__iterationLabel = QtGui.QLabel( 'Iterations: 0' )
@@ -117,7 +124,8 @@ class GridVisUI( QtGui.QWidget ):
     # stats
     self.__iterations = 0
 
-    self.__world = None
+    # World and related
+    self.__world                = None
 
     self.setupGrid( matrix )
 
@@ -198,7 +206,13 @@ class GridVisUI( QtGui.QWidget ):
     # draw it
     self.draw()
 
-    if self.__iterations >= int( self.__maxIterations ) and int( self.__maxIterations ) != -1:
+    b_cornersDominant = False
+    if self.__stopAtCorners:
+        b_cornersDominant = self.__world.currentGridCorners_areAllDominant()
+
+    if self.__iterations >= int( self.__maxIterations ) and \
+       int( self.__maxIterations ) != -1                or \
+       self.__stopAtCorners and b_cornersDominant:
 
       # max. iterations reached
 
@@ -209,7 +223,9 @@ class GridVisUI( QtGui.QWidget ):
       if self.__output:
         # take a screenshot and exit
         self.save( self.__output, self.__filestem )
-        c.info( 'Took screenshot and saved matrix.. (Output: ' + str( self.__output ) + os.sep + self.__filestem + '.*)' )
+        c.info( 'Took screenshot and saved matrix.')
+        c.info( 'Output: ' + str( self.__output ) + os.sep + self.__filestem + '.*)' )
+        c.info( 'Number of iterations: %d' % self.__iterations )
         c.info( 'Good-bye!' )
         sys.exit()
 
@@ -217,9 +233,10 @@ class GridVisUI( QtGui.QWidget ):
     '''
     '''
     if not output:
-      output = QtGui.QFileDialog.getExistingDirectory( self, "Location for saving a screenshot and the evolved matrix",
-                                                 "",
-                                                 QtGui.QFileDialog.ShowDirsOnly );
+      output = QtGui.QFileDialog.getExistingDirectory( self, 
+                        "Location for saving a screenshot and the evolved matrix",
+                        "",
+                        QtGui.QFileDialog.ShowDirsOnly );
 
     screenshotFile = str( output + os.sep + filestem + '.png' )
     dataFile = str( output + os.sep + filestem + '.npy' )
@@ -256,28 +273,6 @@ class GridVisUI( QtGui.QWidget ):
     np.savetxt( g_dataFile, g_matrix )
     np.savetxt( b_dataFile, b_matrix )
 
-#
-#    print matrix
-#    print
-#
-#    print matrix.shape
-#
-#    print matrix[:]
-#    print
-#
-#    print matrix[:, :][0]
-#
-#    # save individual matrices for r,g,b
-#    r = matrix[:, :][0]
-#    np.savetxt( r_dataFile, r )
-#
-#    g = matrix[:, :, 1]
-#    np.savetxt( g_dataFile, g )
-#
-#    b = matrix[:, :, 2]
-#    np.savetxt( b_dataFile, b )
-
-
   def draw( self ):
 
     self.__gridWidget.clear()
@@ -299,13 +294,28 @@ class GridVisUI( QtGui.QWidget ):
 # entry point
 #
 if __name__ == "__main__":
-  parser = FNNDSCParser( description='Visualize the evolution of a grid..' )
+  parser = FNNDSCParser( description='Visualize the evolution of a grid.' )
 
-  parser.add_argument( '-t', '--test', action='store_true', dest='test', required=False, help='activate a test case (101x101, initialized at 3 points along the diagonal' )
-  parser.add_argument( '-m', '--matrix', action='store', dest='matrix', required=True, help='File path of a 2D-grid (matrix) in ascii format, delimiter: tab.' )
-  parser.add_argument( '-i', '--iterations', action='store', dest='iterations', default= -1, required=False, help='Optional number of max. iterations.' )
-  parser.add_argument( '-o', '--output', action='store', dest='output', default=None, required=False, help='Folder to automatically take a screenshot of the evolved matrix and store the matrix, when the number of max. iterations is reached and exit the program. This only works if -i/--iterations is specified.' )
-  parser.add_argument( '-f', '--filestem', action='store', dest='filestem', default='matrix', required=False, help='Filestem to use to name the output files, by default: \'matrix\'.' )
+  parser.add_argument( '-t', '--test', action='store_true', dest='test', required=False, 
+        help='activate a test case (101x101, initialized at 3 points along the diagonal' )
+  parser.add_argument( '-i', '--iterations', action='store', dest='iterations', 
+        default= -1, required=False, 
+        help='Optional number of max. iterations.' )
+  parser.add_argument( '-c', '--stopAtCorners', action='store_true', dest='stopAtCorners',
+        default= -1, required=False, 
+        help='Stop and save data once simulation reaches each grid corner.' )
+  parser.add_argument( '-o', '--output', action='store', dest='output', 
+        default=None, required=False, 
+        help='''
+        Folder in which to store a screenshot of the evolved matrix as well as the
+        numpy matrix itself. Used if either -i/--iterations or -c/--stopAtCorners
+        is specified.
+        ''' )
+  parser.add_argument( '-f', '--filestem', action='store', dest='filestem', 
+        default='matrix', required=False, 
+        help='Filestem to use to name the output files, by default: \'matrix\'.' )
+  parser.add_argument( '-m', '--matrix', action='store', dest='matrix', required=True, 
+        help='File path of a 2D-grid (matrix) in ascii format, delimiter: tab.' )
 
   # always show the help if no arguments were specified
   if len( sys.argv ) == 1:
@@ -315,6 +325,7 @@ if __name__ == "__main__":
   options = parser.parse_args()
 
   app = QtGui.QApplication( sys.argv )
-  gui = GridVisUI( options.test, options.matrix, options.iterations, options.output, options.filestem )
+  gui = GridVisUI( options.test, options.matrix, options.iterations, 
+                   options.stopAtCorners, options.output, options.filestem )
   sys.exit( app.exec_() )
 

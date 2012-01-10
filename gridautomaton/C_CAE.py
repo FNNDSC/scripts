@@ -315,3 +315,21 @@ class C_CAE:
               grid.internals_sync( False )
 
             return grid.gridarr_get()
+
+        def currentGridCorners_areAllDominant(self):
+            """
+            DESC
+                Simple conditional that returns a True if all the grid corners
+                have a dominant spectral harmonic. If any of the corners do not
+                have a dominant harmonic, return False.
+                
+                This method is mostly used as a conditional end check on the 
+                evolutionary state of a system.
+            """    
+            nTopLeft     = len(self.spectrum_get(0, 0).max_harmonics())
+            nTopRight    = len(self.spectrum_get(0, self.m_cols-1).max_harmonics())
+            nBottomLeft  = len(self.spectrum_get(self.m_rows-1, 0).max_harmonics())
+            nBottomRight = len(self.spectrum_get(self.m_rows-1, self.m_cols-1).max_harmonics())             
+            return nTopLeft | nTopRight | nBottomLeft | nBottomRight == 1     
+                
+                 
