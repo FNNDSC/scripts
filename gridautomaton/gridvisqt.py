@@ -302,7 +302,7 @@ if __name__ == "__main__":
         default= -1, required=False, 
         help='Optional number of max. iterations.' )
   parser.add_argument( '-c', '--stopAtCorners', action='store_true', dest='stopAtCorners',
-        default= -1, required=False, 
+        required=False, 
         help='Stop and save data once simulation reaches each grid corner.' )
   parser.add_argument( '-o', '--output', action='store', dest='output', 
         default=None, required=False, 
