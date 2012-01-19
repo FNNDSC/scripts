@@ -38,7 +38,7 @@ class RegisterFibers( pipy.Wheel ):
 
     print ">>> performing trkFile registration"
 
-    self.__bucket.put( self.__outputs[0], '/tmp/tracksRegistered.trk' )
+    self.__bucket.put( 'aaa', '/tmp/tracksRegistered.trk' )
 
 
 
@@ -75,6 +75,7 @@ def test():
   bucket.put( 'faVolume', '/tmp/faVol.mgz' )
   bucket.put( 'adcVolume', '/tmp/adcVol.mgz' )
   bucket.put( 't1Volume', '/tmp/t1Vol.mgz' )
+  bucket.put( 'type', '300' )
 
   pipeline = pipy.Pipeline( bucket )
   pipeline.add( Connectivity )
