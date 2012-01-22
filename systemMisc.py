@@ -2,12 +2,12 @@
 # 
 # NAME
 #
-#	systemMisc
+#        systemMisc
 #
 # DESCRIPTION
 #
-#	The 'systemMisc' module contains some helper functions to 
-#	facilitate system-type interaction.
+#        The 'systemMisc' module contains some helper functions to 
+#        facilitate system-type interaction.
 #
 # HISTORY
 #
@@ -22,22 +22,198 @@
 #
 
 # System imports
-import 		os
-import 		sys
-import		time
-import		string
+import                 os
+import                 sys
+import                time
+import                string
 import          re
 import          types
 import          commands
-from 		subprocess	import *
+from                 subprocess        import *
 from            cStringIO       import StringIO
 from            numpy           import *
 import          time
 import          itertools
 
 # For internal timing:
-Gtic_start      = 0.0
+Gtic_start = 0.0
 
+def arr_normalize(arr, *args, **kwargs):
+    """
+    ARGS
+        arr                      array to normalize
+        
+    **kargs
+        scale = <f_scale>        scale the normalized output by <f_scale>
+    
+        
+    DESC
+        Given an input array, <arr>, normalize all values to range 
+        between 0 and 1.
+        
+        If specified in the **kwargs, optionally set the scale with <f_scale>.
+    """
+    f_max = arr.max()
+    f_min = arr.min()
+    f_range = f_max - f_min
+    arr_shifted = arr + -f_min
+    arr_norm = arr_shifted / f_range
+    for key, value in kwargs.iteritems():
+        if key == 'scale': arr_norm *= value
+    return arr_norm
+
+def density(a_M, *args, **kwargs):
+    """
+    ARGS
+        a_M                matrix to analyze
+        
+        *args[0]           optional mask matrix; if passed, calculate
+                           density of a_M using non-zero elements of
+                           args[0] as a mask.
+        
+    DESC
+        Determine the "density" of a passed matrix. Two densities are returned:
+
+            o f_actualDensity -- density of the matrix using matrix values
+                                 as "mass"
+            o f_binaryDensity -- density of the matrix irrespective of actual
+                                 matrix values
+                                 
+        If the passed matrix contains only "ones", the f_binaryDensity will 
+        be equal to the f_actualDensity.
+        
+    """
+
+    rows, cols  = a_M.shape
+    a_Mmask     = ones( (rows, cols) )
+    if len(args):
+        a_Mmask = args[0]
+    
+    a_M *= a_Mmask
+    # The "binary" density determines the density of nonzero elements,
+    # irrespective of their actual value
+    f_binaryMass    = float(size(nonzero(a_M)[0]))
+    f_actualMass    = a_M.sum()
+
+    f_area          = float(size(nonzero(a_Mmask)[0]))
+    
+    f_binaryDensity = f_binaryMass / f_area;
+    f_actualDensity = f_actualMass / f_area;
+    return f_actualDensity, f_binaryDensity
+    
+
+def cdf(arr, **kwargs):
+    """
+    ARGS
+        arr                array to calculate cumulative distribution function
+        
+    **kwargs
+        Passed directly to numpy.histogram. Typical options include:
+        bins = <num_bins>
+        normed = True|False
+        
+    DESC
+        Determines the cumulative distribution function.
+    """
+    counts, bin_edges = histogram(arr, **kwargs)
+    cdf = cumsum(counts)
+    return cdf
+    
+def cdf_distribution(a_cdf, a_partitions):
+    """
+    ARGS
+       a_cdf               vector         a vectors of values/observations
+       a_partitions        int            the number of partitions 
+       
+    DESC
+        This function returns the indices of a passed cdf such that the
+        the range of values across the indices is uniform across the
+        number of partitions.
+        
+        Imagine you have a range of observations/values, and you'd
+        like to partition the observations over 3 ranges. If you simply
+        partition the range of values into three evenly spaced groups
+        across the domain, you will most likely find all the dynamic range 
+        of values in each partition is non-uniform.
+        
+        By partitioning the cdf, however, the range of values in each
+        partition is uniform. The "size" of each partition, however, 
+        is not.
+    """ 
+    f_range = a_cdf[-1] - a_cdf[0]
+    f_rangePart = f_range / a_partitions
+    lowerBound = a_cdf[0]
+    vl = []
+    for part in arange(0, a_partitions):
+        # Due to possible cumulative rounding errors, relax the tolerance
+        # on the final partition:
+        if part == a_partitions - 1:
+            subset = (a_cdf > lowerBound)
+        else:
+            subset = (a_cdf > lowerBound) & (a_cdf <= lowerBound + f_rangePart)
+        indices = where(subset, 1, 0)
+        v = where(indices == 1)
+        vl.append(v)
+        lowerBound += f_rangePart
+    return vl    
+       
+def com_find(ar_grid):
+    """
+    Find the center of mass in array grid <ar_grid>. Mass elements
+    are grid index values.
+    
+    Return an array, in format (x, y), i.e. col, row!
+    """
+    f_x = 0
+    f_y = 0
+    f_m = 0
+
+    for i in range(len(ar_grid)):
+       for j in range(len(ar_grid[i])):
+         if ar_grid[i][j]:
+            # Since python arrays are zero indexed, we need to offset
+            # the loop counters by 1 to account for mass in the 1st
+            # column.
+            f_x += (j+1) * ar_grid[i][j]
+            f_y += (i+1) * ar_grid[i][j]
+            f_m += ar_grid[i][j]
+    f_com = array( (float(f_x)/f_m , float(f_y)/f_m) )
+    return f_com
+    
+def com_find2D(ar_grid, **kwargs):           
+    """
+    ARGS
+    **kwargs
+        ordering = 'rc' or 'xy'        order the return either in (x,y)
+                                       or (row, col) order.
+        indexing = 'zero' or 'one'     return positions relative to zero (i.e.
+                                       python addressing) or one (i.e. MatLAB 
+                                       addressing)
+    
+    DESC
+        Find the center of mass in 2D array grid <ar_grid>. Mass elements
+        are grid index values.
+    
+        By using python idioms, his version is MUCH faster than the com_find()
+    """
+    b_reorder   = True
+    b_oneOffset = True
+    
+    for key, value in kwargs.iteritems():
+        if key == 'ordering' and value == 'rc':         b_reorder       = False
+        if key == 'ordering' and value == 'xy':         b_reorder       = True
+        if key == 'indexing' and value == 'zero':       b_oneOffset     = False
+        if key == 'indexing' and value == 'one':        b_oneOffset     = True
+        
+    f_Smass = ar_grid.sum()
+    f_comX = (ar_grid[nonzero(ar_grid)] * (nonzero(ar_grid)[1] + 1)).sum() / f_Smass
+    f_comY = (ar_grid[nonzero(ar_grid)] * (nonzero(ar_grid)[0] + 1)).sum() / f_Smass
+    
+    if b_reorder:       ar_ret = array( (f_comX, f_comY) )
+    if not b_reorder:   ar_ret = array( (f_comY, f_comX) )
+    if not b_oneOffset: ar_ret -= 1.0
+    return ar_ret  
+       
 def array2DIndices_enumerate(arr):
         """
         DESC
@@ -53,31 +229,31 @@ def array2DIndices_enumerate(arr):
             A list of explicit 2D coordinates.
         """
         
-        rows            = arr[0]
-        cols            = arr[1]
-        arr_index       = zeros( (rows*cols, 2) )
-        count           = 0
+        rows = arr[0]
+        cols = arr[1]
+        arr_index = zeros((rows * cols, 2))
+        count = 0
         for row in arange(0, rows):
            for col in arange(0, cols):
-               arr_index[count] = array( [row, col])
-               count = count+1
+               arr_index[count] = array([row, col])
+               count = count + 1
         return arr_index
 
-def error_exit(         astr_func,
+def error_exit(astr_func,
                         astr_action,
                         astr_error,
                         aexitCode):
         print "FATAL ERROR"
         print "\tSorry, some error seems to have occurred in <%s::%s>" \
                 % ('systemMisc', astr_func)
-        print "\tWhile %s"                                  % astr_action
-        print "\t%s"                                        % astr_error
+        print "\tWhile %s" % astr_action
+        print "\t%s" % astr_error
         print ""
-        print "Returning to system with error code %d"      % aexitCode
+        print "Returning to system with error code %d" % aexitCode
         sys.exit(aexitCode)
 
 def printf(format, *args):
-	sys.stdout.write(format % args)
+        sys.stdout.write(format % args)
 
 def list_removeDuplicates(alist):
     """
@@ -116,8 +292,8 @@ def b10_convertFrom(anum10, aradix, *args):
     
     # Cycle up in powers of radix until the largest exponent is found.
     # This is required to determine the word length
-    while (pow(aradix,i)) <= anum10:
-        i = i+1;
+    while (pow(aradix, i)) <= anum10:
+        i = i + 1;
     forcelength = i
 
     # Optionally, allow user to specify word length
@@ -125,8 +301,8 @@ def b10_convertFrom(anum10, aradix, *args):
 
     # Check that word length is valid
     if(forcelength and (forcelength < i)):
-        error_exit('b10_convertFrom',                    
-                   'checking on requested return array', 
+        error_exit('b10_convertFrom',
+                   'checking on requested return array',
                    'specified length is too small',
                    1)
 
@@ -137,14 +313,14 @@ def b10_convertFrom(anum10, aradix, *args):
     else:
         k = forcelength - 1;
 
-    if(anum10==1):
+    if(anum10 == 1):
         num_r[(k)] = 1;
         return num_r;
 
-    for j in arange(i,0,-1):
-        num_r[(k)] = fix(numm / pow(aradix,(j-1)));
-        numm = numm % pow(aradix, (j-1));
-        k = k+1;
+    for j in arange(i, 0, -1):
+        num_r[(k)] = fix(numm / pow(aradix, (j - 1)));
+        numm = numm % pow(aradix, (j - 1));
+        k = k + 1;
     return num_r
 
 def tic():
@@ -231,14 +407,14 @@ def neighbours_findFast(a_dimension, a_depth, *args, **kwargs):
          o Rewrote earlier method using python idioms and resulting
            in multiple order speed improvement.
     """
-    if (a_depth<1):
+    if (a_depth < 1):
         A = None
         return A;
 
     # Process *kwargs and behavioural arguments  
-    b_includeOrigin             = False # If True, include the "origin" in A
-    b_wrapGridEdges             = False # If True, wrap around edges of grid
-    b_gridSize                  = False # Helper flag for tracking wrap
+    b_includeOrigin = False # If True, include the "origin" in A
+    b_wrapGridEdges = False # If True, wrap around edges of grid
+    b_gridSize = False # Helper flag for tracking wrap
     
     for key, value in kwargs.iteritems():
         if key == 'includeOrigin':      b_includeOrigin = value
@@ -247,31 +423,31 @@ def neighbours_findFast(a_dimension, a_depth, *args, **kwargs):
             a_gridSize = value
             b_gridSize = True           
             if type(a_gridSize).__name__ != "ndarray":
-                error_exit("neighbours_find", 
-                           "checking on passed grid dimesnions", 
+                error_exit("neighbours_find",
+                           "checking on passed grid dimesnions",
                            "grid must be type ndarray.", 2)
     
     if b_wrapGridEdges and not b_gridSize:
-        error_exit(     "neighbours_find", 
-                        "checking call options", 
+        error_exit("neighbours_find",
+                        "checking call options",
                         "no 'gridSize' was specified with 'wrapGridEdges'",
                         1)
 
     # Check on *args, i.e. an optional 'origin' point in N-space
-    v_origin    = zeros( (a_dimension) );
-    b_origin    = 0;
+    v_origin = zeros((a_dimension));
+    b_origin = 0;
     if len(args):
-        av_origin  = args[0];
-        if av_origin.size ==a_dimension:
+        av_origin = args[0];
+        if av_origin.size == a_dimension:
             v_origin = av_origin;
             b_origin = 1;
 
-    A = array(list(itertools.product(arange(-a_depth, a_depth+1),
-                                        repeat = a_dimension)))
+    A = array(list(itertools.product(arange(-a_depth, a_depth + 1),
+                                        repeat=a_dimension)))
     if not b_includeOrigin:
         Wbool = A == 0
         W = Wbool.prod(axis=1)
-        A = A[where(W==0)]
+        A = A[where(W == 0)]
     if b_origin: A += v_origin
     if b_gridSize: A = pointInGrid(A, a_gridSize, b_wrapGridEdges)            
     return A
@@ -315,29 +491,29 @@ def pointInGrid(A_point, a_gridSize, *args):
           are still within <a_gridSize>.
         
     """
-    b_wrapGridEdges             = False # If True, wrap around edges of grid
+    b_wrapGridEdges = False # If True, wrap around edges of grid
 
     if len(args): b_wrapGridEdges = args[0]    
 
     # Check for points "less than" grid space
     if b_wrapGridEdges:
-        W = where(A_point<0)
+        W = where(A_point < 0)
         A_point[W] += a_gridSize[W[1]]
     
-    Wbool =  A_point >= 0
+    Wbool = A_point >= 0
     W = Wbool.prod(axis=1)
-    A_point = A_point[where(W>0)]
+    A_point = A_point[where(W > 0)]
 
     # Check for points "more than" grid space
-    A_inGrid    = a_gridSize - A_point
+    A_inGrid = a_gridSize - A_point
     if b_wrapGridEdges:
-        W = where(A_inGrid<=0)
+        W = where(A_inGrid <= 0)
         A_point[W] = -A_inGrid[W]
         A_inGrid = a_gridSize - A_point
 
     Wbool = A_inGrid > 0
     W = Wbool.prod(axis=1)
-    A_point = A_point[where(W>0)]
+    A_point = A_point[where(W > 0)]
 #    A_point = abs(A_point)
     return A_point
     
@@ -430,39 +606,39 @@ def neighbours_find(a_dimension, a_depth, *args, **kwargs):
          o Translated from MatLAB script of same name.
          
     """
-    if (a_depth<1):
-        l_D     = []
-        l_I     = {}
+    if (a_depth < 1):
+        l_D = []
+        l_I = {}
         return l_I, l_D;
 
     # Process *kwargs and behavioural arguments  
-    b_returnUnion               = False # If True, return A = I union D
-    b_wrapGridEdges             = False # If True, wrap around edges of grid
-    b_gridSize                  = False # Helper flag for tracking wrap
+    b_returnUnion = False # If True, return A = I union D
+    b_wrapGridEdges = False # If True, wrap around edges of grid
+    b_gridSize = False # Helper flag for tracking wrap
     
     for key, value in kwargs.iteritems():
-        if key == 'returnUnion':        b_returnUnion           = value
-        if key == 'wrapGridEdges':      b_wrapGridEdges         = value
+        if key == 'returnUnion':        b_returnUnion = value
+        if key == 'wrapGridEdges':      b_wrapGridEdges = value
         if key == 'gridSize':
             a_gridSize = value
             b_gridSize = True           
             if type(a_gridSize).__name__ != "ndarray":
-                error_exit("neighbours_find", 
-                           "checking on passed grid dimesnions", 
+                error_exit("neighbours_find",
+                           "checking on passed grid dimesnions",
                            "grid must be type ndarray.", 2)
     
     if b_wrapGridEdges and not b_gridSize:
-        error_exit(     "neighbours_find", 
-                        "checking call options", 
+        error_exit("neighbours_find",
+                        "checking call options",
                         "no 'gridSize' was specified with 'wrapGridEdges'",
                         1)
 
     # Check on *args, i.e. an optional 'origin' point in N-space
-    v_origin    = zeros( (a_dimension) );
-    b_origin    = 0;
+    v_origin = zeros((a_dimension));
+    b_origin = 0;
     if len(args):
-        av_origin  = args[0];
-        if av_origin.size ==a_dimension:
+        av_origin = args[0];
+        if av_origin.size == a_dimension:
             v_origin = av_origin;
             b_origin = 1;
 
@@ -478,37 +654,37 @@ def neighbours_find(a_dimension, a_depth, *args, **kwargs):
     l_I = [zeros(a_dimension)] * a_depth
 
     # Pre-allocate space for all the possible neighbouring points
-    d                   = 1;
-    hypercube           = pow((2*d+1), a_dimension);
-    hypercubeInner      = 1;
-    orthogonals         = 2*a_dimension;
-    l_D[0]              = zeros( (orthogonals, a_dimension) )
-    l_I[0]              = zeros( (hypercube - orthogonals -1, a_dimension) );
-    for d in arange(2,a_depth+1):
-        hypercubeInner  = hypercube;
-        hypercube       = pow((2*d+1),a_dimension);
-        l_D[d-1]         = zeros( (orthogonals, a_dimension) )
-        l_I[d-1]         = zeros( (hypercube - orthogonals - hypercubeInner, 
+    d = 1;
+    hypercube = pow((2 * d + 1), a_dimension);
+    hypercubeInner = 1;
+    orthogonals = 2 * a_dimension;
+    l_D[0] = zeros((orthogonals, a_dimension))
+    l_I[0] = zeros((hypercube - orthogonals - 1, a_dimension));
+    for d in arange(2, a_depth + 1):
+        hypercubeInner = hypercube;
+        hypercube = pow((2 * d + 1), a_dimension);
+        l_D[d - 1] = zeros((orthogonals, a_dimension))
+        l_I[d - 1] = zeros((hypercube - orthogonals - hypercubeInner,
                                    a_dimension))
     # Offset and "current" vector
-    M_bDoffset      = ones( (a_dimension) ) * -a_depth;
-    M_current       = ones( (a_dimension) );
-    M_currentAbs    = ones( (a_dimension) );
+    M_bDoffset = ones((a_dimension)) * -a_depth;
+    M_current = ones((a_dimension));
+    M_currentAbs = ones((a_dimension));
 
     # Index counters -- one per "layer"
     # These keep track of the number of entries in each layer.
-    M_ii            = [0] * a_depth 
-    M_dd            = [0] * a_depth 
+    M_ii = [0] * a_depth 
+    M_dd = [0] * a_depth 
 
     # Now we loop through *each* element of the last hypercube
     # and assign it to the appropriate matrix in the I,D structures
-    for i in arange(0,hypercube):
-        str_progress    = 'iteration %5d (of %5d) %3.2f' % \
-                                (i, hypercube-1, i/(hypercube-1)*100);
-        M_current       = arr_base10toN(i, (2*a_depth+1), a_dimension);
-        M_current       = M_current + M_bDoffset;
-        M_currentAbs    = abs(M_current);
-        neighbour       = max(M_currentAbs);
+    for i in arange(0, hypercube):
+        str_progress = 'iteration %5d (of %5d) %3.2f' % \
+                                (i, hypercube - 1, i / (hypercube - 1) * 100);
+        M_current = arr_base10toN(i, (2 * a_depth + 1), a_dimension);
+        M_current = M_current + M_bDoffset;
+        M_currentAbs = abs(M_current);
+        neighbour = max(M_currentAbs);
         if b_origin:
             M_current += v_origin
         if b_gridSize:
@@ -517,26 +693,26 @@ def neighbours_find(a_dimension, a_depth, *args, **kwargs):
                 if not b_wrapGridEdges: continue
                 else:
                     Wt = where(M_current < 0)
-                    W  = Wt[0]  # See help on 'where'
+                    W = Wt[0]  # See help on 'where'
                     for el in arange(0, len(W)): 
                         M_current[W[el]] += a_gridSize[W[el]]
             # Check for points "more than" grid space
-            M_inGrid    = a_gridSize - M_current
+            M_inGrid = a_gridSize - M_current
             if min(M_inGrid) <= 0: 
                 if not b_wrapGridEdges: continue
                 else:
                     Wt = where(M_inGrid <= 0)
-                    W  = Wt[0]  # See help on 'where'
+                    W = Wt[0]  # See help on 'where'
                     for el in arange(0, len(W)): 
                         M_current[W[el]] = -M_inGrid[W[el]]
                     M_current = abs(M_current)
         idx = int(neighbour) - 1
         if(sum(M_currentAbs) > neighbour):
-            l_I[idx][M_ii[idx]]         = M_current
+            l_I[idx][M_ii[idx]] = M_current
             M_ii[idx] += 1;
         else: 
             if(sum(M_currentAbs) == neighbour and neighbour):
-                l_D[idx][M_dd[idx]]     = M_current
+                l_D[idx][M_dd[idx]] = M_current
                 M_dd[idx] += 1;
     
     if b_gridSize:
@@ -544,11 +720,11 @@ def neighbours_find(a_dimension, a_depth, *args, **kwargs):
         # to determine how many actual indices were packed into
         # memory, and slice the layer accordingly.
         for layer in arange(0, a_depth, dtype=int):
-            l_I[layer] = l_I[layer][0:M_ii[layer],:]
-            l_D[layer] = l_D[layer][0:M_dd[layer],:]
+            l_I[layer] = l_I[layer][0:M_ii[layer], :]
+            l_D[layer] = l_D[layer][0:M_dd[layer], :]
     
     if b_returnUnion:
-        l_A  = []
+        l_A = []
         l_Al = v_origin
         for layer in arange(0, a_depth, dtype=int):
             # first stack each I and D, per layer
@@ -575,12 +751,12 @@ def arr_base10toN(anum10, aradix, *args):
         an array.
     """
 
-    new_num_arr = array( () )
-    current=anum10
-    while current!=0:
-        remainder=current%aradix
+    new_num_arr = array(())
+    current = anum10
+    while current != 0:
+        remainder = current % aradix
         new_num_arr = r_[remainder, new_num_arr]
-        current=current/aradix
+        current = current / aradix
 
     forcelength = new_num_arr.size
     # Optionally, allow user to specify word length
@@ -592,7 +768,7 @@ def arr_base10toN(anum10, aradix, *args):
 def base10toN(num, n):
     """Change a num to a base-n number.
     Up to base-36 is supported without special notation."""
-    num_rep={10:'a',
+    num_rep = {10:'a',
          11:'b',
          12:'c',
          13:'d',
@@ -618,20 +794,20 @@ def base10toN(num, n):
          33:'x',
          34:'y',
          35:'z'}
-    new_num_string=''
-    new_num_arr = array( () )
-    current=num
-    while current!=0:
-        remainder=current%n
-        if 36>remainder>9:
-            remainder_string=num_rep[remainder]
-        elif remainder>=36:
-            remainder_string='('+str(remainder)+')'
+    new_num_string = ''
+    new_num_arr = array(())
+    current = num
+    while current != 0:
+        remainder = current % n
+        if 36 > remainder > 9:
+            remainder_string = num_rep[remainder]
+        elif remainder >= 36:
+            remainder_string = '(' + str(remainder) + ')'
         else:
-            remainder_string=str(remainder)
-        new_num_string=remainder_string+new_num_string
+            remainder_string = str(remainder)
+        new_num_string = remainder_string + new_num_string
         new_num_arr = r_[remainder, new_num_arr]
-        current=current/n
+        current = current / n
     print new_num_arr
     return new_num_string
 
@@ -671,7 +847,7 @@ def attributes_dictToStr(adict_attrib):
         str_attributes = strIO_attribute.getvalue()
         return str_attributes
         
-def attributes_strToDict(astr_attributes, astr_separator = " "):
+def attributes_strToDict(astr_attributes, astr_separator=" "):
   """
   This is logical inverse of the dictToStr method. The <astr_attributes>
   string *MUST* have <key>=<value> tuples separated by <astr_separator>.
@@ -679,8 +855,8 @@ def attributes_strToDict(astr_attributes, astr_separator = " "):
   adict = {}
   alist = str2lst(astr_attributes, astr_separator)
   for str_pair in alist:
-    alistTuple  = str2lst(str_pair, "=")
-    adict.setdefault(alistTuple[0], alistTuple[1].strip(chr(0x22)+chr(0x27)))
+    alistTuple = str2lst(str_pair, "=")
+    adict.setdefault(alistTuple[0], alistTuple[1].strip(chr(0x22) + chr(0x27)))
   return adict
 
 def str_blockIndent(astr_buf, a_tabs=1, a_tabLength=4):
@@ -691,127 +867,127 @@ def str_blockIndent(astr_buf, a_tabs=1, a_tabLength=4):
     
     Trailing '\n' are *not* replaced.
     """
-    b_trailN    = False
-    length      = len(astr_buf)
-    ch_trailN   = astr_buf[length-1]
+    b_trailN = False
+    length = len(astr_buf)
+    ch_trailN = astr_buf[length - 1]
     if ch_trailN == '\n': 
-      b_trailN  = True
-      astr_buf  = astr_buf[0:length-1]
-    str_ret     = astr_buf
-    str_tab     = ''
-    str_Indent  = ''
+      b_trailN = True
+      astr_buf = astr_buf[0:length - 1]
+    str_ret = astr_buf
+    str_tab = ''
+    str_Indent = ''
     for i in range(a_tabLength):
         str_tab = '%s ' % str_tab
     for i in range(a_tabs):
-        str_Indent  = '%s%s' % (str_Indent, str_tab)
+        str_Indent = '%s%s' % (str_Indent, str_tab)
     str_ret = re.sub('\n', '\n%s' % str_Indent, astr_buf)
     str_ret = '%s%s' % (str_Indent, str_ret)
     if b_trailN: str_ret = str_ret + '\n'
     return str_ret
-			
+                        
 def valuePair_fprint(astr_name, afvalue=None, leftCol=40, rightCol=40):
-	if afvalue != None:
-	    print '%*s:%*f' 	% (leftCol, astr_name, rightCol, afvalue)
-	else:
-	    printf('%*f', leftCol, astr_name)
+        if afvalue != None:
+            print '%*s:%*f' % (leftCol, astr_name, rightCol, afvalue)
+        else:
+            printf('%*f', leftCol, astr_name)
 def valuePair_sprint(astr_name, astr_value, leftCol=40, rightCol=40):
-	if len(astr_value):
-	    print '%*s:%*s' 	% (leftCol, astr_name, rightCol, astr_value)
-	else:
-	    printf('%*s', leftCol, astr_name)
+        if len(astr_value):
+            print '%*s:%*s' % (leftCol, astr_name, rightCol, astr_value)
+        else:
+            printf('%*s', leftCol, astr_name)
 def valuePair_dprint(astr_name, avalue=None, leftCol=40, rightCol=40):
-	if avalue != None:
-	    print '%*s:%*d' 	% (leftCol, astr_name, rightCol, avalue)
-	else:
-	    printf('%*d', leftCol, astr_name)
-	
-def html(astr_string, astr_tag = "p"):	
-	print """
-	<%s>
-	%s
-	</%s>
-	""" % (astr_tag, astr_string, astr_tag)
-	
+        if avalue != None:
+            print '%*s:%*d' % (leftCol, astr_name, rightCol, avalue)
+        else:
+            printf('%*d', leftCol, astr_name)
+        
+def html(astr_string, astr_tag="p"):        
+        print """
+        <%s>
+        %s
+        </%s>
+        """ % (astr_tag, astr_string, astr_tag)
+        
 def PRE(astr_string):
-	print """
-	<pre>
-	%s
-	</pre>
-	""" % astr_string
-	
+        print """
+        <pre>
+        %s
+        </pre>
+        """ % astr_string
+        
 def P(astr_string):
-	print "<p>%s</p>" % astr_string
+        print "<p>%s</p>" % astr_string
 
-def system_eval(str_command, b_echoCommand = 0):
-	if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
-	fp_stdout 	= os.popen(str_command)
-	str_stdout	= ''
-	while(1):
-		str_line = fp_stdout.readline()
-		if str_line:
-			str_stdout = str_stdout + str_line
-		else:
-			break	
-	if b_echoCommand: printf('<p>str_line = %s</p>', str_line)
-	if b_echoCommand: printf('<p>str_stdout = %s</p>', str_stdout)
-	return str_stdout
-	
-def system_pipeRet(str_command, b_echoCommand = 0):
-	if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
-	fp_stdout 	= os.popen(str_command)
-	str_stdout	= ''
-	while(1):
-		str_line = fp_stdout.readline()
-		if str_line:
-			str_stdout = str_stdout + str_line
-		else:
-			break
-	retcode		= fp_stdout.close()	
-	if b_echoCommand: printf('<p>str_line = %s</p>', str_line)
-	if b_echoCommand: printf('<p>str_stdout = %s</p>', str_stdout)
-	return retcode, str_stdout
+def system_eval(str_command, b_echoCommand=0):
+        if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
+        fp_stdout = os.popen(str_command)
+        str_stdout = ''
+        while(1):
+                str_line = fp_stdout.readline()
+                if str_line:
+                        str_stdout = str_stdout + str_line
+                else:
+                        break        
+        if b_echoCommand: printf('<p>str_line = %s</p>', str_line)
+        if b_echoCommand: printf('<p>str_stdout = %s</p>', str_stdout)
+        return str_stdout
+        
+def system_pipeRet(str_command, b_echoCommand=0):
+        if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
+        fp_stdout = os.popen(str_command)
+        str_stdout = ''
+        while(1):
+                str_line = fp_stdout.readline()
+                if str_line:
+                        str_stdout = str_stdout + str_line
+                else:
+                        break
+        retcode = fp_stdout.close()        
+        if b_echoCommand: printf('<p>str_line = %s</p>', str_line)
+        if b_echoCommand: printf('<p>str_stdout = %s</p>', str_stdout)
+        return retcode, str_stdout
 
-def system_procRet(str_command, b_echoCommand = 0):
-	if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
-	str_stdout	= os.popen(str_command).read()
-	retcode		= os.popen(str_command).close()
-	return retcode, str_stdout
-	
-def subprocess_eval(str_command, b_echoCommand = 0):
+def system_procRet(str_command, b_echoCommand=0):
+        if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
+        str_stdout = os.popen(str_command).read()
+        retcode = os.popen(str_command).close()
+        return retcode, str_stdout
+        
+def subprocess_eval(str_command, b_echoCommand=0):
     if b_echoCommand: printf('%s', str_command)
-    b_OK	= True
-    retcode	= -1    
+    b_OK = True
+    retcode = -1    
     p = Popen(string.split(str_command), stdout=PIPE, stderr=PIPE)
     str_stdout, str_stderr = p.communicate()
     try:
-	str_forRet	= str_command + " 2>/dev/null >/dev/null"
-	retcode 	= call(str_forRet, shell=True)
+        str_forRet = str_command + " 2>/dev/null >/dev/null"
+        retcode = call(str_forRet, shell=True)
     except OSError, e:
-	b_OK	= False
+        b_OK = False
     return retcode, str_stdout, str_stderr
     
 def getCommandOutput2(command):
     child = os.popen(command)
-    data = child.read( )
-    err = child.close( )
+    data = child.read()
+    err = child.close()
     if err:
         raise RuntimeError, '%r failed with exit code %d' % (command, err)
-		
+                
 def file_exists(astr_fileName):
     try:
-	fd	= open(astr_fileName)
-	if fd: fd.close()
-	return True
+        fd = open(astr_fileName)
+        if fd: fd.close()
+        return True
     except IOError:
-	return False
+        return False
 
 def exefile_existsOnPath(astr_fileName):
-	try:
-		return open(astr_fileName)
-	except IOError:
-		return None
+        try:
+                return open(astr_fileName)
+        except IOError:
+                return None
 
-def str_dateStrip(astr_datestr, astr_sep = '/'):
+def str_dateStrip(astr_datestr, astr_sep='/'):
   """
   Simple date strip method. Checks if the <astr_datestr>
   contains <astr_sep>. If so, strips these from the string
@@ -826,7 +1002,7 @@ def str_dateStrip(astr_datestr, astr_sep = '/'):
     return astr_datestr.encode('ascii')
   
   try:
-    tm  = time.strptime(astr_datestr, '%d/%M/%Y')
+    tm = time.strptime(astr_datestr, '%d/%M/%Y')
   except:
     try:
       tm = time.strptime(astr_datestr, '%d/%M/%y')
@@ -836,19 +1012,19 @@ def str_dateStrip(astr_datestr, astr_sep = '/'):
   tstr = time.strftime("%d%M%Y", tm)
   return tstr.encode('ascii')
 
-def currentDate_formatted(astr_format = 'US', astr_sep = '/'):
-	str_year 	= time.localtime()[0]
-    	str_month 	= time.localtime()[1]
-    	str_day		= time.localtime()[2]
-	if astr_format	== 'US':
-	    str_date	= '%02d%s%02d%s%s' % \
-	    	(str_month, astr_sep, str_day, astr_sep, str_year)
-	else:
-	    str_date	= '%s%s%02d%s%02d' % \
-	    	(str_year, astr_sep, str_month, astr_sep, str_day)
-	return string.strip(str_date)
+def currentDate_formatted(astr_format='US', astr_sep='/'):
+        str_year = time.localtime()[0]
+        str_month = time.localtime()[1]
+        str_day = time.localtime()[2]
+        if astr_format == 'US':
+            str_date = '%02d%s%02d%s%s' % \
+                    (str_month, astr_sep, str_day, astr_sep, str_year)
+        else:
+            str_date = '%s%s%02d%s%02d' % \
+                    (str_year, astr_sep, str_month, astr_sep, str_day)
+        return string.strip(str_date)
 
-def dict_init(al_key, avalInit = None):
+def dict_init(al_key, avalInit=None):
   adict = {}
   if type(avalInit) is types.ListType:
       adict = dict(zip(al_key, avalInit))
@@ -864,11 +1040,11 @@ def str2lst(astr_input, astr_separator=" "):
 
   The list elements are explicitly ascii encoded.
   """
-  alistI        = astr_input.split(astr_separator)
-  alistJ        = []
+  alistI = astr_input.split(astr_separator)
+  alistJ = []
   for i in range(0, len(alistI)):
-    alistI[i]   = alistI[i].strip()
-    alistI[i]   = alistI[i].encode('ascii')
+    alistI[i] = alistI[i].strip()
+    alistI[i] = alistI[i].encode('ascii')
     if len(alistI[i]):
       alistJ.append(alistI[i])
   return alistJ
@@ -883,7 +1059,7 @@ def make_xlat(*args, **kwds):
   translate(text)
   """
   adict = dict(*args, **kwds)
-  rx    = re.compile("|".join(map(re.escape, adict)))
+  rx = re.compile("|".join(map(re.escape, adict)))
   def one_xlat(match):
     return adict[match.group(0)]
   def xlat(text):
