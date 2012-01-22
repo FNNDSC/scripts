@@ -305,6 +305,7 @@ for SUBJ in $SUBJECTS ; do
                     "${G_LOGDIR}/${STAGE4PROC}-$HEMI-$SURF-$SUBJ.err" \
                     "NOECHO"                                    \
                     || beware $STAGE4PROC
+          done
         done
         statusPrint "$(date) | Processing STAGE 4 - mris_curvature_stats | END" "\n"
         cd $topDir
