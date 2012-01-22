@@ -197,8 +197,8 @@ for str_filePath in lstr_hits:
     print a_cLower, a_cUpper
     print a_d
     print a_dLower, a_dUpper
-    str_c       = '%s.crd'       % str_stem
-    str_d       = '%s.dty'       % str_stem
+    str_c       = '%s-whole.crd' % str_stem
+    str_d       = '%s-whole.dty' % str_stem
     str_cUpper  = '%s-upper.crd' % str_stem
     str_cLower  = '%s-lower.crd' % str_stem
     str_dUpper  = '%s-upper.dty' % str_stem

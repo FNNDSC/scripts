@@ -78,8 +78,9 @@ class GridVisUI( QtGui.QWidget ):
   def __init__( self, 
                 test            = False, 
                 matrix          = None, 
-                maxIterations   = -1, 
-                stopAtCorners   = False, 
+                maxIterations   = -1,
+                updateAmount    = 9, 
+                convergence     = -1, 
                 output          = None, 
                 filestem        = 'matrix' ):
     super( GridVisUI, self ).__init__()
@@ -87,9 +88,9 @@ class GridVisUI( QtGui.QWidget ):
     # args
     self.__test                 = test
     self.__maxIterations        = maxIterations
+    self.__updateAmount         = float(updateAmount)
     self.__output               = output
     self.__filestem             = filestem
-    self.__stopAtCorners        = stopAtCorners
     
     self.__array = None
 
@@ -129,6 +130,18 @@ class GridVisUI( QtGui.QWidget ):
 
     self.setupGrid( matrix )
 
+    if convergence == "corners":
+        self.__b_stopAtCorners = True
+    else:
+        self.__b_stopAtCorners = False
+        convergence = float(convergence)
+        if convergence > 0:
+            f_diaglen   = np.sqrt(self.__world.m_rows**2 + self.__world.m_cols**2)
+            print "world size: %d x %d" % (self.__world.m_rows, self.__world.m_cols)
+            print "diagonal length: %f" % f_diaglen
+            self.__maxIterations = int(convergence * f_diaglen)
+            print "maxIterations: %d" % self.__maxIterations
+
     self.togglePlay()
 
 
@@ -147,6 +160,7 @@ class GridVisUI( QtGui.QWidget ):
       automaton.component_add( 'R', maxEnergy / 3, b_overwriteSpectralValue )
       automaton.component_add( 'G', maxEnergy / 3, b_overwriteSpectralValue )
       automaton.component_add( 'B', maxEnergy / 3, b_overwriteSpectralValue )
+      automaton.updateRule_changeAmount(self.__updateAmount)
 
       world = C_CAE( np.array( ( self.__rows, self.__cols ) ), automaton )
       world.verbosity_set( 1 )
@@ -171,6 +185,8 @@ class GridVisUI( QtGui.QWidget ):
       automaton.component_add( 'R', maxEnergy / 3, b_overwriteSpectralValue )
       automaton.component_add( 'G', maxEnergy / 3, b_overwriteSpectralValue )
       automaton.component_add( 'B', maxEnergy / 3, b_overwriteSpectralValue )
+      print "Update amount = %d" % self.__updateAmount
+      automaton.updateRule_changeAmount(self.__updateAmount)
 
       world = C_CAE( np.array( ( self.__rows, self.__cols ) ), automaton )
       world.verbosity_set( 1 )
@@ -207,17 +223,18 @@ class GridVisUI( QtGui.QWidget ):
     self.draw()
 
     b_cornersDominant = False
-    if self.__stopAtCorners:
+    if self.__b_stopAtCorners:
         b_cornersDominant = self.__world.currentGridCorners_areAllDominant()
 
     if self.__iterations >= int( self.__maxIterations ) and \
        int( self.__maxIterations ) != -1                or \
-       self.__stopAtCorners and b_cornersDominant:
+       self.__b_stopAtCorners and b_cornersDominant:
 
       # max. iterations reached
 
       self.__timer.stop()
-      self.__playButton.setText( 'Max. Iterations reached!' )
+      if self.__b_stopAtCorners: self.__playButton.setText('All corners are active')
+      else: self.__playButton.setText( 'Maximum iterations reached' )
       self.__playButton.setEnabled( False )
 
       if self.__output:
@@ -257,17 +274,17 @@ class GridVisUI( QtGui.QWidget ):
     matrix = self.__world.currentgrid_get( True )
     np.save( dataFile, matrix )
 
-    r_matrix = np.empty( matrix.shape )
-    g_matrix = np.empty( matrix.shape )
-    b_matrix = np.empty( matrix.shape )
+    r_matrix = np.zeros( matrix.shape )
+    g_matrix = np.zeros( matrix.shape )
+    b_matrix = np.zeros( matrix.shape )
 
 
     for i in range( matrix.shape[0] ):
       for j in range( matrix.shape[1] ):
-
-        r_matrix[i, j] = matrix[i, j][0]
-        g_matrix[i, j] = matrix[i, j][1]
-        b_matrix[i, j] = matrix[i, j][2]
+        str_pure = self.__world.spectrum_get(i, j).dominant_harmonic()
+        if str_pure == 'R': r_matrix[i, j] = matrix[i, j][0]
+        if str_pure == 'G': g_matrix[i, j] = matrix[i, j][1]
+        if str_pure == 'B': b_matrix[i, j] = matrix[i, j][2]
 
     np.savetxt( r_dataFile, r_matrix )
     np.savetxt( g_dataFile, g_matrix )
@@ -284,12 +301,6 @@ class GridVisUI( QtGui.QWidget ):
 
         self.__gridWidget.draw( i, j, r, g, b )
 
-
-
-
-
-
-
 #
 # entry point
 #
@@ -299,11 +310,22 @@ if __name__ == "__main__":
   parser.add_argument( '-t', '--test', action='store_true', dest='test', required=False, 
         help='activate a test case (101x101, initialized at 3 points along the diagonal' )
   parser.add_argument( '-i', '--iterations', action='store', dest='iterations', 
-        default= -1, required=False, 
+        default=-1, required=False, 
         help='Optional number of max. iterations.' )
-  parser.add_argument( '-c', '--stopAtCorners', action='store_true', dest='stopAtCorners',
-        required=False, 
-        help='Stop and save data once simulation reaches each grid corner.' )
+  parser.add_argument( '-c', '--convergenceCriteria', action='store', dest='convergence',
+        default=-1, required=False, 
+        help="""
+        Stopping criteria. If "corners", stop when every corner cell of the grid has become
+        active. If a float number, stop once the number of system iterations is equal
+        to the float multiple of the number of elements on the diagonal."
+        """ )
+  parser.add_argument( '-u', '--updateAmount', action='store', dest='updateAmount', 
+        default=-1, required=False, 
+        help='''
+        If specified, set the incremental update amount to the passed value. This
+        controls the 'amount' of spectral energy that is shifted during an 
+        update cycle in a targeted cell.
+        ''' )
   parser.add_argument( '-o', '--output', action='store', dest='output', 
         default=None, required=False, 
         help='''
@@ -323,9 +345,14 @@ if __name__ == "__main__":
     sys.exit( 1 )
 
   options = parser.parse_args()
-
   app = QtGui.QApplication( sys.argv )
-  gui = GridVisUI( options.test, options.matrix, options.iterations, 
-                   options.stopAtCorners, options.output, options.filestem )
+  print options
+  gui = GridVisUI( options.test, 
+                   options.matrix, 
+                   options.iterations,
+                   options.updateAmount, 
+                   options.convergence, 
+                   options.output, 
+                   options.filestem )
   sys.exit( app.exec_() )
 

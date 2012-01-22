@@ -466,6 +466,18 @@ class C_spectrum :
 	    	self = pickle.load(self, open(astr_fileName))
 	    except PickleError: self.fatal('Load')
 		    
+	def dominant_harmonic(self):
+	    """
+	        Returns a single string denoting the dominant harmonic
+	        of the spectrum. If there is no dominant component, 
+	        return None
+	    """
+	    l_max = self.max_harmonics()
+	    if len(l_max) == 1:
+	    	return l_max[0]
+	    else:
+	    	return None	    
+		    
 	def max_harmonics(self):    
 	    """
 	    	Return as standard list the keys of the object that
