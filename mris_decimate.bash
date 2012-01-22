@@ -241,8 +241,8 @@ for SUBJ in $SUBJECTS ; do
             STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
             statusPrint "Processing $HEMI..." "\n"
             stage_run "$STAGE" "$STAGECMD" 			\
-                    "${G_LOGDIR}/${STAGE1PROC}-$HEMI.std"	\
-                    "${G_LOGDIR}/${STAGE1PROC}-$HEMI.err"	\
+                    "${G_LOGDIR}/${STAGE1PROC}-$HEMI-$SUBJ.std"	\
+                    "${G_LOGDIR}/${STAGE1PROC}-$HEMI-$SUBJ.err"	\
                     "NOECHO"				        \
                     || beware $STAGE1PROC
         done
@@ -296,12 +296,13 @@ for SUBJ in $SUBJECTS ; do
         statusPrint "$(date) | Processing STAGE 4 - mris_curvature_stats | START" "\n"
         STAGE=4-$STAGE4PROC
         for HEMI in lh rh ; do
-            STAGECMD="$STAGE4PROC surf/${HEMI}.inflated surf/${HEMI}.sphere"
+          for SURF in smoothwm inflated ; do
+            STAGECMD="$STAGE4PROC -F $SURF -G --writeCurvatureFiles $SUBJ $HEMI"
             STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
-            statusPrint "Processing $HEMI..." "\n"
+            statusPrint "Processing $HEMI $SURF..." "\n"
             stage_run "$STAGE" "$STAGECMD"                      \
-                    "${G_LOGDIR}/${STAGE4PROC}-$HEMI-$SUBJ.std" \
-                    "${G_LOGDIR}/${STAGE4PROC}-$HEMI-$SUBJ.err" \
+                    "${G_LOGDIR}/${STAGE4PROC}-$HEMI-$SURF-$SUBJ.std" \
+                    "${G_LOGDIR}/${STAGE4PROC}-$HEMI-$SURF-$SUBJ.err" \
                     "NOECHO"                                    \
                     || beware $STAGE4PROC
         done
