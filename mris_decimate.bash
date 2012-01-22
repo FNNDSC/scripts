@@ -215,7 +215,7 @@ for SUBJ in $SUBJECTS ; do
 done
 
 DATE=$(date)
-cprint     "date"  "[ $DATE] "
+cprint     "date"  "[ $DATE ]"
 
 for SUBJ in $SUBJECTS ; do
 
