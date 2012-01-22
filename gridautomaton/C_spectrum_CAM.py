@@ -124,6 +124,16 @@ class C_spectrum_CAM_RGB(C_spectrum_CAM):
         for key in kwargs:
             if key == "maxQuanta":
                 self.m_maxQuanta        = kwargs[key]
+
+    def updateRule_changeAmount(self, af_amount, *args):
+        """
+        Change the 'amount' in the updateRule. The optional *args
+        defines the keys to change; default is all
+        """
+        keysToUpdate = self.ml_keys
+        if len(args): keysToUpdate = args[0]
+        for key in keysToUpdate:
+            C_spectrum_CAM_RGB.mdict_updateRule[key]['amount'] = af_amount
      
     def spectrum_init(self, value, *args):
         """

@@ -62,6 +62,46 @@ def arr_normalize(arr, *args, **kwargs):
         if key == 'scale': arr_norm *= value
     return arr_norm
 
+def density(a_M, *args, **kwargs):
+    """
+    ARGS
+        a_M                matrix to analyze
+        
+        *args[0]           optional mask matrix; if passed, calculate
+                           density of a_M using non-zero elements of
+                           args[0] as a mask.
+        
+    DESC
+        Determine the "density" of a passed matrix. Two densities are returned:
+
+            o f_actualDensity -- density of the matrix using matrix values
+                                 as "mass"
+            o f_binaryDensity -- density of the matrix irrespective of actual
+                                 matrix values
+                                 
+        If the passed matrix contains only "ones", the f_binaryDensity will 
+        be equal to the f_actualDensity.
+        
+    """
+
+    rows, cols  = a_M.shape
+    a_Mmask     = ones( (rows, cols) )
+    if len(args):
+        a_Mmask = args[0]
+    
+    a_M *= a_Mmask
+    # The "binary" density determines the density of nonzero elements,
+    # irrespective of their actual value
+    f_binaryMass    = float(size(nonzero(a_M)[0]))
+    f_actualMass    = a_M.sum()
+
+    f_area          = float(size(nonzero(a_Mmask)[0]))
+    
+    f_binaryDensity = f_binaryMass / f_area;
+    f_actualDensity = f_actualMass / f_area;
+    return f_actualDensity, f_binaryDensity
+    
+
 def cdf(arr, **kwargs):
     """
     ARGS
@@ -116,6 +156,63 @@ def cdf_distribution(a_cdf, a_partitions):
         vl.append(v)
         lowerBound += f_rangePart
     return vl    
+       
+def com_find(ar_grid):
+    """
+    Find the center of mass in array grid <ar_grid>. Mass elements
+    are grid index values.
+    
+    Return an array, in format (x, y), i.e. col, row!
+    """
+    f_x = 0
+    f_y = 0
+    f_m = 0
+
+    for i in range(len(ar_grid)):
+       for j in range(len(ar_grid[i])):
+         if ar_grid[i][j]:
+            # Since python arrays are zero indexed, we need to offset
+            # the loop counters by 1 to account for mass in the 1st
+            # column.
+            f_x += (j+1) * ar_grid[i][j]
+            f_y += (i+1) * ar_grid[i][j]
+            f_m += ar_grid[i][j]
+    f_com = array( (float(f_x)/f_m , float(f_y)/f_m) )
+    return f_com
+    
+def com_find2D(ar_grid, **kwargs):           
+    """
+    ARGS
+    **kwargs
+        ordering = 'rc' or 'xy'        order the return either in (x,y)
+                                       or (row, col) order.
+        indexing = 'zero' or 'one'     return positions relative to zero (i.e.
+                                       python addressing) or one (i.e. MatLAB 
+                                       addressing)
+    
+    DESC
+        Find the center of mass in 2D array grid <ar_grid>. Mass elements
+        are grid index values.
+    
+        By using python idioms, his version is MUCH faster than the com_find()
+    """
+    b_reorder   = True
+    b_oneOffset = True
+    
+    for key, value in kwargs.iteritems():
+        if key == 'ordering' and value == 'rc':         b_reorder       = False
+        if key == 'ordering' and value == 'xy':         b_reorder       = True
+        if key == 'indexing' and value == 'zero':       b_oneOffset     = False
+        if key == 'indexing' and value == 'one':        b_oneOffset     = True
+        
+    f_Smass = ar_grid.sum()
+    f_comX = (ar_grid[nonzero(ar_grid)] * (nonzero(ar_grid)[1] + 1)).sum() / f_Smass
+    f_comY = (ar_grid[nonzero(ar_grid)] * (nonzero(ar_grid)[0] + 1)).sum() / f_Smass
+    
+    if b_reorder:       ar_ret = array( (f_comX, f_comY) )
+    if not b_reorder:   ar_ret = array( (f_comY, f_comX) )
+    if not b_oneOffset: ar_ret -= 1.0
+    return ar_ret  
        
 def array2DIndices_enumerate(arr):
         """
