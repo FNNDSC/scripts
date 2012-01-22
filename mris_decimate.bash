@@ -107,6 +107,7 @@ A_noDicomDir="checking on input DICOM directory"
 A_mri_info="running 'mri_info'"
 A_noMrisStats="checking on the 'mris_curvature_stats' binary"
 A_mrisStatsprocess="running the 'mris_curvature_stats' binary"
+A_decimationLevel="checking the decimation level"
 
 # Error messages
 EM_fileCheck="it seems that a dependency is missing."
@@ -121,6 +122,7 @@ EM_noDicomDir="I couldn't access the input DICOM dir. Does it exist?"
 EM_mri_info="some error occurred in the spawned process."
 EM_noMrisStats="I can't find the file on your current path."
 EM_mrisStatsprocess="the program died unexpectedly."
+EM_decimationLevel="no decimation leve was specified! Valid: [0.0 ... 1.0]."
 
 # Error codes
 EC_fileCheck=1
@@ -136,6 +138,7 @@ EC_noDicomDirArg=51
 EC_mri_info=60
 EC_noMrisStats=90
 EC_mrisStatsprocess=100
+EC_decimationLevel=101
 
 # Defaults
 D_whatever=
@@ -149,10 +152,12 @@ D_whatever=
 # Process command options
 ###///
 
-while getopts v:t: option ; do
+while getopts v:t:d:t: option ; do
 	case "$option"
 	in
 		v) 	Gi_verbose=$OPTARG		        ;;
+                t)      G_STAGES=$OPTARG                        ;;
+                d)      G_DECIMATELEVEL=$OPTARG                 ;;
                 t)      G_STAGES=$OPTARG                        ;;
 		\?) synopsis_show 
 		    exit 0;;
@@ -164,6 +169,10 @@ topDir=$(pwd)
 echo ""
 cprint  "hostname"      "[ $(hostname) ]"
 
+statusPrint     "Checking decimation level"
+[[ $G_DECIMATELEVEL == "-x" ]] && fatal decimationLevel 
+rprint "[ $G_DECIMATELEVEL ]"
+
 statusPrint	"Checking for SUBJECTS_DIR env variable"
 b_subjectsDir=$(set | grep SUBJECTS_DIR | wc -l)
 if (( !b_subjectsDir )) ; then
@@ -171,11 +180,13 @@ if (( !b_subjectsDir )) ; then
 fi
 ret_check $?
 
-REQUIREDFILES="common.bash mris_decimate mris_inflate mris_sphere"
+REQUIREDFILES="common.bash mris_decimate mris_inflate mris_sphere mris_curvature_stats"
 for file in $REQUIREDFILES ; do
-        printf "%40s"   "Checking for $file..."
+        printf "%40s"   "Checking for $file"
         file_checkOnPath $file || fatal fileCheck
 done
+
+if [[ $G_LOGDIR == "-x" ]] ; then G_LOGDIR=$(pwd) ; fi
 
 STAMPLOG=${G_LOGDIR}/${G_SELF}.log
 stage_stamp "Init | ($topDir) $G_SELF $*" $STAMPLOG
@@ -188,44 +199,36 @@ if (( b_SUBJECTLIST )) ; then
         SUBJECTS=$SUBJECTLIST
 fi
 
+statusPrint     "Checking which stages to process"
+barr_stage=([0]=0 [1]=0 [2]=0 [3]=0 [4]=0 [5]=0 [6]=0 [7]=0 [8]=0 [9]=0 [10]=0 [11]=0 [12]=0)
+for i in $(seq 0 4) ; do
+        b_test=$(expr index $G_STAGES "$i")
+        if (( b_test )) ; then b_flag="1" ; else b_flag="0" ; fi
+        barr_stage[$i]=$b_flag
+done
+ret_check $?
+
 statusPrint     "Checking <subjectList> in SUBJECTS_DIR" "\n"
 for SUBJ in $SUBJECTS ; do
         statusPrint "$SUBJ"
         dirExist_check ${SUBJECTS_DIR}/$SUBJ/ || fatal noSubjectBase
 done
 
-statusPrint     "Checking for 'mris_curvature_stats' binary"
-dummy=$(type -all $MRIS_CURVATURE_STATS  2>/dev/null)
-b_notExist=$?
-if (( b_notExist )) ; then fatal noMrisStats ; else ret_check $b_notExist ; fi
-
-statusPrint     "Checking which stages to process"
-barr_stage=([1]=0 [2]=0 [3]=0 [4]=0 [5]=0 [6]=0 [7]=0 [8]=0 [9]=0 [10]=0 [11]=0 [12]=0)
-for i in $(seq 0 4) ; do
-        b_test=$(expr index $STAGES "$i")
-        if (( b_test )) ; then b_flag="1" ; else b_flag="0" ; fi
-        barr_stage[$i]=$b_flag
-done
-
 DATE=$(date)
+cprint     "date"  "[ $DATE] "
 
-
-for SUBJ in $SUBECTS ; do
+for SUBJ in $SUBJECTS ; do
 
     if (( ${barr_stage[0]} )) ; then
-        statusPrint "$(date) | Processing STAGE 0 - backup $SUBJ/scripts | START" "\n"
-        if [[ -d ${SUBJECTS_DIR}/surf.bak ]] ; then
-            mv ${SUBECTS_DIR}/surf.bak ${SUBJECTS_DIR}/surf.bak-${G_PID}
+        G_LOGDIR=$(pwd)
+        statusPrint "$(date) | Processing STAGE 0 - backup $SUBJ/surf | START" "\n"
+        if [[ -d ${SUBJECTS_DIR}/${SUBJ}/surf.bak ]] ; then
+            mv ${SUBECTS_DIR}/${SUBJ}/surf.bak ${SUBJECTS_DIR}/${SUBJ}/surf.bak-${G_PID}
         fi
-        mv ${SUBJECTS_DIR}/surf ${SUBJECTS_DIR}/surf.bak
-        mkdir ${SUBJECTS_DIR}/surf
-        statusPrint "$(date) | Processing STAGE 0 - backup $SUBJ/scripts | START" "\n"
+        mv ${SUBJECTS_DIR}/${SUBJ}/surf ${SUBJECTS_DIR}/${SUBJ}/surf.bak
+        mkdir ${SUBJECTS_DIR}/${SUBJ}/surf
+        statusPrint "$(date) | Processing STAGE 0 - backup $SUBJ/surf | END" "\n"
     fi
-
-    if (( ${barr_stage[1]} )) ; then
-        statusPrint "$(date) | Processing STAGE 1 - mris_decimate | START" "\n"
-    fi
-
 
     STAGE1PROC=mris_decimate
     if (( ${barr_stage[1]} )) ; then
@@ -241,7 +244,7 @@ for SUBJ in $SUBECTS ; do
                     "${G_LOGDIR}/${STAGE1PROC}-$HEMI.std"	\
                     "${G_LOGDIR}/${STAGE1PROC}-$HEMI.err"	\
                     "NOECHO"				        \
-                    || beware mris_decimate
+                    || beware $STAGE1PROC
         done
         statusPrint "$(date) | Processing STAGE 1 - mri_info | END" "\n"
         cd $topDir
@@ -250,7 +253,6 @@ for SUBJ in $SUBECTS ; do
     STAGE2PROC=mris_inflate
     if (( ${barr_stage[2]} )) ; then
         cd ${SUBJECTS_DIR}/${SUBJ}
-        G_LOGDIR=$(pwd)/surf
         statusPrint "$(date) | Processing STAGE 2 - mris_inflate | START" "\n"
         STAGE=2-$STAGE2PROC
         for HEMI in lh rh ; do
@@ -258,8 +260,8 @@ for SUBJ in $SUBECTS ; do
             STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
             statusPrint "Processing $HEMI..." "\n"
             stage_run "$STAGE" "$STAGECMD"                      \
-                    "${G_LOGDIR}/${STAGE2PROC}-$HEMI.std"       \
-                    "${G_LOGDIR}/${STAGE2PROC}-$HEMI.err"       \
+                    "${G_LOGDIR}/${STAGE2PROC}-$HEMI-$SUBJ.std" \
+                    "${G_LOGDIR}/${STAGE2PROC}-$HEMI-$SUBJ.err" \
                     "NOECHO"                                    \
                     || beware $STAGE2PROC
         done
@@ -272,21 +274,40 @@ for SUBJ in $SUBECTS ; do
         cd ${SUBJECTS_DIR}/${SUBJ}
         G_LOGDIR=$(pwd)/surf
         statusPrint "$(date) | Processing STAGE 3 - mris_sphere | START" "\n"
-        STAGE=3-$STAGE2PROC
+        STAGE=3-$STAGE3PROC
         for HEMI in lh rh ; do
             STAGECMD="$STAGE3PROC surf/${HEMI}.inflated surf/${HEMI}.sphere"
             STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
             statusPrint "Processing $HEMI..." "\n"
             stage_run "$STAGE" "$STAGECMD"                      \
-                    "${G_LOGDIR}/${STAGE2PROC}-$HEMI.std"       \
-                    "${G_LOGDIR}/${STAGE2PROC}-$HEMI.err"       \
+                    "${G_LOGDIR}/${STAGE3PROC}-$HEMI-$SUBJ.std" \
+                    "${G_LOGDIR}/${STAGE3PROC}-$HEMI-$SUBJ.err" \
                     "NOECHO"                                    \
-                    || beware $STAGE2PROC
+                    || beware $STAGE3PROC
         done
         statusPrint "$(date) | Processing STAGE 3 - mris_sphere | END" "\n"
         cd $topDir
     fi
 
+    STAGE4PROC=mris_curvature_stats
+    if (( ${barr_stage[4]} )) ; then
+        cd ${SUBJECTS_DIR}/${SUBJ}
+        G_LOGDIR=$(pwd)/surf
+        statusPrint "$(date) | Processing STAGE 4 - mris_curvature_stats | START" "\n"
+        STAGE=4-$STAGE4PROC
+        for HEMI in lh rh ; do
+            STAGECMD="$STAGE4PROC surf/${HEMI}.inflated surf/${HEMI}.sphere"
+            STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+            statusPrint "Processing $HEMI..." "\n"
+            stage_run "$STAGE" "$STAGECMD"                      \
+                    "${G_LOGDIR}/${STAGE4PROC}-$HEMI-$SUBJ.std" \
+                    "${G_LOGDIR}/${STAGE4PROC}-$HEMI-$SUBJ.err" \
+                    "NOECHO"                                    \
+                    || beware $STAGE4PROC
+        done
+        statusPrint "$(date) | Processing STAGE 4 - mris_curvature_stats | END" "\n"
+        cd $topDir
+    fi
 
 done
 
