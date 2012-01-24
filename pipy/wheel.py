@@ -12,32 +12,36 @@ class Wheel:
     self.__outputs = outputs
     self.__validate()
 
-  def outputs( self ):
-    return self.__outputs
+  @staticmethod
+  def outputs():
+    return []
 
-  def inputs( self ):
-    return self.__inputs
+  @staticmethod
+  def inputs():
+    return []
 
-  def spin( self ):
+  @staticmethod
+  def spin():
     pass
 
   def __validate( self ):
-
-    for i in self.__inputs:
-
-      # split for default value
-      splittedInput = i.partition( '=' )
-
-      if self.__bucket.get( splittedInput[0] ):
-        # input is in bucket
-        continue
-      else:
-        # input is not in bucket
-        # check if we have a default value
-        if splittedInput[1] == "=":
-          # yes we do!
-          # put the default value in the bucket
-          self.__bucket.put( splittedInput[0], splittedInput[2] )
-        else:
-          # error - information missing to run this wheel!
-          raise WheelValidationException( self, i )
+    pass
+#
+#    for i in self.__inputs:
+#
+#      # split for default value
+#      splittedInput = i.partition( '=' )
+#
+#      if self.__bucket.get( splittedInput[0] ):
+#        # input is in bucket
+#        continue
+#      else:
+#        # input is not in bucket
+#        # check if we have a default value
+#        if splittedInput[1] == "=":
+#          # yes we do!
+#          # put the default value in the bucket
+#          self.__bucket.put( splittedInput[0], splittedInput[2] )
+#        else:
+#          # error - information missing to run this wheel!
+#          raise WheelValidationException( self, i )
