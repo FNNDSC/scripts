@@ -357,7 +357,7 @@ STAGES
 
 ###\\\
 # Globals are in capital letters. Immutable globals are prefixed by 'G'.
-###///cat
+###///
 
 # Actions-
 A_fileCheck="checking for a required file dependency"
@@ -840,7 +840,7 @@ if (( ${barr_stage[3]} )) ; then
     EXOPTS=$(eval expertOpts_parse $STAGE3PROC)
         
     statusPrint "Checking on stage 3 output directory"
-    dirExist_check $G_OUTDIR/$STAGE || mkdir "$G_OUTDIR/$STAGE" || fatal badOutDir
+    dirExist_check $G_OUTDIR/$STAGE "creating" || mkdir "$G_OUTDIR/$STAGE" || fatal badOutDir
     
     
     # Due to an issue with enthought traits, currently the cmt pipeline
@@ -881,16 +881,18 @@ if (( ${barr_stage[3]} )) ; then
     # First write out the pickle so that if needed, the user can use
     # the CMP GUI to pick up working on the data after it is finished
     # processing automatically
-    STAGECMD="connectome_web-db.py $CMTPKLARGS"
+    STAGECMD="connectome_web-dbg.py $CMTPKLARGS"
     STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+    echo $STAGECMD
     stage_run "$STAGE" "$STAGECMD"                      \
                 "${G_LOGDIR}/${STAGE3PROC}.std"         \
                 "${G_LOGDIR}/${STAGE3PROC}.err"         \
           || fatal stageRun
              
-    # First convert input T1 to NII format
-    STAGECMD="connectome_web-db.py $CMTARGS"
+    # Now convert input T1 to NII format
+    STAGECMD="connectome_web-dbg.py $CMTARGS"
     STAGECMD=$(echo $STAGECMD | sed 's/\^/"/g')
+    echo $STAGECMD
     stage_run "$STAGE" "$STAGECMD"                      \
                 "${G_LOGDIR}/${STAGE3PROC}.std"         \
                 "${G_LOGDIR}/${STAGE3PROC}.err"         \

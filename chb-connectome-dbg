@@ -11,7 +11,7 @@ export DTDIR=${PACKAGEDIR}/dtk
 export DSI_PATH=${DTDIR}/matrices
 
 export PYTHONPATH=/chb/users/rudolphpienaar/src/cmp-surfaceDeflate/cmp:/chb/arch/python/cfflib/:/chb/arch/python/nibabel/:/chb/arch/python/connectomeviewer/
-export PATH=$PATH:/chb/users/rudolphpienaar/src/cmp-surfaceDeflate/cmp/scripts:/chb/arch/python/connectomeviewer/scripts
+export PATH=$(pwd):$PATH:/chb/users/rudolphpienaar/src/cmp-surfaceDeflate/cmp/scripts:/chb/arch/python/connectomeviewer/scripts
 
 export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-cmp-dbg]"
 

@@ -3,7 +3,7 @@
 #
 # NAME
 #
-#    connectome_web_db.py
+#    connectome_trk.py
 #
 # DESCRIPTION
 #
@@ -69,9 +69,6 @@ def parseCommandLine(conf):
     parser.add_option("--writePickle",
                       dest="writePickle",
                       help="Filename to write pickle for use with CMT GUI. Exit after writing pickle file.")
-    parser.add_option("-t", "--trkFile",
-                      dest="trkFile",
-                      help="t file")
     (options, args) = parser.parse_args()
     if len(args) != 0:
         parser.error("Wrong number of arguments")
@@ -205,9 +202,6 @@ def main():
     conf.pipeline_status = cmp.pipeline_status.PipelineStatus()
         
     # Execute the 'cmp' pipeline!
-    print "About to execute..!"
-    print conf.get_cffdir();
-    sys.exit(1)
     cmp.connectome.mapit(conf)
         
 if __name__ == '__main__':
