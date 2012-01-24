@@ -21,7 +21,7 @@ class Wheel:
     return []
 
   @staticmethod
-  def spin():
+  def spin( bucket ):
     pass
 
   def __validate( self ):

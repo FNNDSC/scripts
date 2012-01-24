@@ -3,6 +3,21 @@ from wheel import Wheel, WheelValidationException
 import time
 import multiprocessing as m
 
+class PipyProcess( m.Process ):
+
+  def __init__( self, inputs, outputs, t, a ):
+
+    self.__inputs = inputs
+    self.__outputs = outputs
+    m.Process.__init__( self, target=t, args=a )
+
+  def inputs( self ):
+    return self.__inputs
+
+  def outputs( self ):
+    return self.__outputs
+
+
 class Pipeline:
 
   def __init__( self, bucket ):
@@ -44,12 +59,13 @@ class Pipeline:
   def run( self ):
 
     numberOfThreads = 3
+    threads = []
 
     # loop through the wheels (except the __START__) and add them to the threads list
     for w in self.__wheels[1:]:
 
-      threads.append( Process( target=w.spin, args=() ) )
-
+      threads.append( PipyProcess( w.inputs(), w.outputs(), w.spin, ( self.__bucket, ) ) )
+      #threads.append( m.Process( target=w.spin, args=( self.__bucket ) ) )
 
     # the main loop
     while 1:
@@ -65,18 +81,18 @@ class Pipeline:
       if len( finishedThreads ) == len( threads ):
         # we are all done since all threads finished
         # this should be the only valid exit..
-        break
+        break # out of the while loop
 
       if len( runningThreads ) < numberOfThreads:
         # we can start another thread, if possible
-        for t in threads:
-          if t.
-
-
+        #
         # check if inputs are there for any new thread
-        # if YES, start it
-
-        # if NO, continue
-        pass
+        for t in threads:
+          if t in runningThreads or t in finishedThreads:
+            continue
+          if self.__bucket.check( t.inputs() ):
+            # all inputs for this thread are there.. fire it up!
+            t.start()
+            break # out of the for loop
 
     print "All done! Sayonara.."

@@ -1,19 +1,19 @@
 import copy
 import os
 import cPickle as pickle
+import tempfile
+from lockfile import FileLock
 
 class Bucket:
 
-  def __init__( self, directory ):
-
-    if not directory or not os.path.isdir( directory ):
-      raise Exception( "Could not find bucket directory!" )
-
-    self.__directory = directory
+  def __init__( self ):
+    self.__directory = tempfile.mkdtemp( suffix='BUCKET', prefix='pipy' )
 
   def put( self, key, value ):
 
-    filename = os.path.join( self.__directory, key, '._pipy' )
+    #print "PUT: " + str( key ) + ', ' + str( value )
+
+    filename = os.path.join( self.__directory, key + '._pipy' )
 
     lock = FileLock( filename )
     with lock:
@@ -24,15 +24,20 @@ class Bucket:
 
   def get( self, key ):
 
+    #print "GET: " + str( key )
+
     value = None
 
-    # remove default values
-    key = key.split( '=' )[0]
+    # split on default values
+    k = key.split( '=' )
 
-    filename = os.path.join( self.__directory, key, '._pipy' )
+    filename = os.path.join( self.__directory, k[0] + '._pipy' )
 
     if not os.path.isfile( filename ):
       # value is not in bucket
+      # check if there is a default value
+      if len( k ) > 1:
+        return k[1]
       return None
 
     lock = FileLock( filename )
@@ -40,7 +45,7 @@ class Bucket:
       # the file is locked
       # .. read the value
       with open( filename, 'rb' ) as f:
-        value = pickle.load( filename )
+        value = pickle.load( f )
 
     return value
 
@@ -50,7 +55,16 @@ class Bucket:
     '''
     for k in keys:
 
-      filename = os.path.join( self.__directory, k, '._pipy' )
+      # split on default values
+      k = k.split( '=' )
+
+      # check if we have a default value, then we can
+      # skip the check because we will always be able to
+      # get a value for this key from the bucket
+      if len( k ) > 1:
+        continue
+
+      filename = os.path.join( self.__directory, k[0] + '._pipy' )
       if os.path.isfile( filename ):
         lock = FileLock( filename )
         if lock.is_locked():

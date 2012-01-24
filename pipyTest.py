@@ -1,71 +1,110 @@
 # pipelines in python ("pipy Wheels") - simple demo
 import pipy
+import time
+import numpy
 
 class Connectivity( pipy.Wheel ):
 
-  def __init__( self, bucket ):
-    # define inputs and outputs
-    self.__bucket = bucket
-    self.__inputs = ['dtiVolume']
-    self.__outputs = ['trkFile']
-    # .. call wheel constructor
-    pipy.Wheel.__init__( self, bucket, self.__inputs, self.__outputs )
+  @staticmethod
+  def inputs():
+    return ['dtiVolume']
 
-  def spin( self ):
-    pipy.Wheel.spin( self )
+  @staticmethod
+  def outputs():
+    return ['trkFile']
 
-    print "reading dti Volume " + self.__bucket.get( self.__inputs[0] )
+  @staticmethod
+  def spin( BUCKET ):
+
+    print "  CONNECTIVITY1::START"
+
+    print "reading dti Volume " + BUCKET.get( Connectivity.inputs()[0] )
 
     print ">>> performing connectivity *nom*nom*nom*"
 
-    self.__bucket.put( self.__outputs[0], '/tmp/tracks.trk' )
+    a = numpy.zeros( ( 1000, 1000 ) )
+
+    BUCKET.put( Connectivity.outputs()[0], a )
+
+    print "  CONNECTIVITY1::END"
+
+class Connectivity2( pipy.Wheel ):
+
+  @staticmethod
+  def inputs():
+    return ['dtiVolume', 'timeout=10']
+
+  @staticmethod
+  def outputs():
+    return ['trkFile2']
+
+  @staticmethod
+  def spin( BUCKET ):
+
+    print "  CONNECTIVITY2::START"
+
+    print "reading dti Volume " + BUCKET.get( Connectivity2.inputs()[0] )
+
+    print ">>> performing connectivity *nom*nom*nom*"
+    time.sleep( int( BUCKET.get( Connectivity2.inputs()[1] ) ) )
+
+    BUCKET.put( Connectivity2.outputs()[0], '/tmp/tracks.trk' )
+
+    print "  CONNECTIVITY2::END"
 
 
 class RegisterFibers( pipy.Wheel ):
 
-  def __init__( self, bucket ):
-    # define inputs and outputs
-    self.__bucket = bucket
-    self.__inputs = ['trkFile']
-    self.__outputs = ['trkFileRegistered']
-    # .. call wheel constructor
-    pipy.Wheel.__init__( self, bucket, self.__inputs, self.__outputs )
+  @staticmethod
+  def inputs():
+    return ['trkFile']
 
-  def spin( self ):
-    pipy.Wheel.spin( self )
+  @staticmethod
+  def outputs():
+    return ['trkFileRegistered']
 
-    print "reading trk File " + self.__bucket.get( self.__inputs[0] )
+  @staticmethod
+  def spin( BUCKET ):
+
+    print "  REGISTERFIBERS::START"
+
+    print "reading trk File " + str( BUCKET.get( RegisterFibers.inputs()[0] ) )
 
     print ">>> performing trkFile registration"
 
-    self.__bucket.put( 'aaa', '/tmp/tracksRegistered.trk' )
+    BUCKET.put( RegisterFibers.outputs()[0], '/tmp/tracksRegistered.trk' )
 
+    print "  REGISTERFIBERS::END"
 
 
 class FiberProcess( pipy.Wheel ):
 
-  def __init__( self, bucket ):
-    # define inputs and outputs
-    self.__bucket = bucket
-    self.__inputs = ['trkFile', 'trkFileRegistered', 'faVolume', 'adcVolume', 't1Volume', 'type=f1', 'lengthThresholdMin=20', 'lengthThresholdMax=200', 'neighborLevel=2']
-    self.__outputs = ['trkFileProcessed']
-    # .. call wheel constructor
-    pipy.Wheel.__init__( self, bucket, self.__inputs, self.__outputs )
+  @staticmethod
+  def inputs():
+    return ['trkFile', 'trkFileRegistered', 'faVolume', 'adcVolume', 't1Volume', 'type=f1', 'lengthThresholdMin=20', 'lengthThresholdMax=200', 'neighborLevel=2']
 
-  def spin( self ):
-    pipy.Wheel.spin( self )
+  @staticmethod
+  def outputs():
+    return ['trkFileProcessed']
 
-    print "reading trk File " + self.__bucket.get( self.__inputs[0] )
-    print "reading registered trk File " + self.__bucket.get( self.__inputs[1] )
-    print "reading fa Volume " + self.__bucket.get( self.__inputs[2] )
-    print "reading adc Volume " + self.__bucket.get( self.__inputs[3] )
-    print "reading t1 Volume " + self.__bucket.get( self.__inputs[4] )
-    print "reading type " + self.__bucket.get( self.__inputs[5] )
-    print "reading lengthThresholdMin " + self.__bucket.get( self.__inputs[6] )
-    print "reading lengthThresholdMax " + self.__bucket.get( self.__inputs[7] )
-    print "reading neighborLevel " + self.__bucket.get( self.__inputs[8] )
+  @staticmethod
+  def spin( BUCKET ):
+
+    print "  FIBERPROCESS::START"
+
+    print "reading trk File " + str( BUCKET.get( FiberProcess.inputs()[0] ) )
+    print "reading registered trk File " + BUCKET.get( FiberProcess.inputs()[1] )
+    print "reading fa Volume " + BUCKET.get( FiberProcess.inputs()[2] )
+    print "reading adc Volume " + BUCKET.get( FiberProcess.inputs()[3] )
+    print "reading t1 Volume " + BUCKET.get( FiberProcess.inputs()[4] )
+    print "reading type " + BUCKET.get( FiberProcess.inputs()[5] )
+    print "reading lengthThresholdMin " + BUCKET.get( FiberProcess.inputs()[6] )
+    print "reading lengthThresholdMax " + BUCKET.get( FiberProcess.inputs()[7] )
+    print "reading neighborLevel " + BUCKET.get( FiberProcess.inputs()[8] )
 
     print ">>> performing fiber processing"
+
+    print "  FIBERPROCESS::END"
 
 
 def test():
@@ -75,12 +114,14 @@ def test():
   bucket.put( 'faVolume', '/tmp/faVol.mgz' )
   bucket.put( 'adcVolume', '/tmp/adcVol.mgz' )
   bucket.put( 't1Volume', '/tmp/t1Vol.mgz' )
-  bucket.put( 'type', '300' )
+  #bucket.put( 'timeout', 1 )
+  #bucket.put( 'type', '300' )
 
   pipeline = pipy.Pipeline( bucket )
   pipeline.add( Connectivity )
   pipeline.add( RegisterFibers )
   pipeline.add( FiberProcess )
+  pipeline.add( Connectivity2 )
   pipeline.run()
 
 
