@@ -22,18 +22,19 @@
 #
 
 # System imports
-import                 os
-import                 sys
-import                time
-import                string
+import          os
+import          sys
+import          time
+import          string
 import          re
 import          types
 import          commands
-from                 subprocess        import *
+from            subprocess      import *
 from            cStringIO       import StringIO
 from            numpy           import *
 import          time
 import          itertools
+import          popen2, fcntl, select
 
 # For internal timing:
 Gtic_start = 0.0
@@ -948,6 +949,16 @@ def system_pipeRet(str_command, b_echoCommand=0):
         return retcode, str_stdout
 
 def system_procRet(str_command, b_echoCommand=0):
+        """
+        Run the <str_command> on the underlying shell. Any stderr stream
+        is lost.
+        
+        RETURN
+        
+            Tuple (retcode, str_stdout)
+            o retcode: the system return code
+            o str_stdout: the standard output stream
+        """
         if b_echoCommand: printf('<p>str_command = %s</p>', str_command)
         str_stdout = os.popen(str_command).read()
         retcode = os.popen(str_command).close()
@@ -965,14 +976,68 @@ def subprocess_eval(str_command, b_echoCommand=0):
     except OSError, e:
         b_OK = False
     return retcode, str_stdout, str_stderr
+
+## start of http://code.activestate.com/recipes/52296/ }}}
+## Some mods by RP
+def makeNonBlocking(fd):
+    fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+    try:
+        fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NDELAY)
+    except AttributeError:
+        fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NDELAY)
     
-def getCommandOutput2(command):
+
+def shell(command):
+    """
+        Runs 'commands' on the underlying shell and keeps the stdout and
+        stderr stream separate.
+ 
+        Raises a RuntimeException on any shell exec errors.
+    """
+    child = popen2.Popen3(command, 1) # capture stdout and stderr from command
+    child.tochild.close()             # don't need to talk to child
+    outfile = child.fromchild 
+    outfd = outfile.fileno()
+    errfile = child.childerr
+    errfd = errfile.fileno()
+    makeNonBlocking(outfd)            # don't deadlock!
+    makeNonBlocking(errfd)
+    outdata = errdata = ''
+    outeof = erreof = 0
+    while 1:
+        ready = select.select([outfd,errfd],[],[]) # wait for input
+        if outfd in ready[0]:
+            outchunk = outfile.read()
+            if outchunk == '': outeof = 1
+            outdata = outdata + outchunk
+        if errfd in ready[0]:
+            errchunk = errfile.read()
+            if errchunk == '': erreof = 1
+            errdata = errdata + errchunk
+        if outeof and erreof: break
+        select.select([],[],[],.1) # give a little time for buffers to fill
+    err = child.wait()
+    if err != 0: 
+        raise RuntimeError, '%s failed w/ exit code %d\n%s' % (command, err, errdata)
+    return outdata
+
+def shellne(command):
+    """
+        Runs 'commands' on the underlying shell; any stderr is echo'd to the
+        console.
+ 
+        Raises a RuntimeException on any shell exec errors.
+    """
+        
     child = os.popen(command)
     data = child.read()
     err = child.close()
     if err:
-        raise RuntimeError, '%r failed with exit code %d' % (command, err)
-                
+        raise RuntimeError, '%s failed w/ exit code %d' % (command, err)
+    return data
+## end of http://code.activestate.com/recipes/52296/ }}}
+
+    
 def file_exists(astr_fileName):
     try:
         fd = open(astr_fileName)
