@@ -275,7 +275,7 @@ function institution_set
     esac
 }
 
-while getopts M:N:QD:S:a:c:l:P:p:v:Rh: option ; do
+while getopts M:N:m:QD:S:a:c:l:P:p:v:Rh: option ; do
     case "$option" 
     in
         v) Gi_verbose=$OPTARG           ;;
