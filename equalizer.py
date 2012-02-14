@@ -34,7 +34,7 @@ class EqualizerLogic():
     if spacing == 'no':
       newspacing = ( min( oldspacing ), min( oldspacing ), min( oldspacing ) )
     else:
-      newspacing = ( int( spacing.split( ',' )[0] ), int( spacing.split( ',' )[1] ), int( spacing.split( ',' )[2] ) )
+      newspacing = ( float( spacing.split( ',' )[0] ), float( spacing.split( ',' )[1] ), float( spacing.split( ',' )[2] ) )
 
     if dimensions == 'no':
       newdimensions = olddimensions
@@ -50,7 +50,7 @@ class EqualizerLogic():
     R = numpy.diag( numpy.array( newspacing ) / numpy.array( oldspacing ) )
     new_shape = numpy.array( oldspacing ) / numpy.array( newspacing ) * numpy.array( newdimensions )
     new_shape = numpy.round( new_shape ).astype( 'i8' )
-    newImage = affine_transform( input = image, matrix = R, offset = numpy.zeros( 3, ), output_shape = tuple( new_shape ), order = 0 )
+    newImage = affine_transform( input=image, matrix=R, offset=numpy.zeros( 3, ), output_shape=tuple( new_shape ), order=0 )
     Rx = numpy.eye( 4 )
     Rx[:3, :3] = R
     # get the mew world-image matrix
@@ -156,15 +156,15 @@ class EqualizerLogic():
 #
 # entry point
 #
-parser = FNNDSCParser( description = 'Convert dimension, spacing and origin of input images to match a master image which gets converted to isotropic spacing' )
+parser = FNNDSCParser( description='Convert dimension, spacing and origin of input images to match a master image which gets converted to isotropic spacing' )
 
-parser.add_argument( '-m', '--master', action = 'store', dest = 'master', required = True, help = 'master image to use for all input images, f.e. -m image00.img' )
-parser.add_argument( '-i', '--input', action = 'append', dest = 'input', required = True, help = 'input images, f.e. -i ~/files/im01.img -i ~/files/im02.img -i ~/files/im03.img ..' )
-parser.add_argument( '-o', '--output', action = 'store', dest = 'outputdirectory', required = True, help = 'output directory, f.e. -o /tmp/eq' )
-parser.add_argument( '-s', '--spacing', action = 'store', dest = 'spacing', required = False, default = 'no', help = 'normalize image spacings to certain values, f.e. -n 0.5,0.5,0.5' )
-parser.add_argument( '-d', '--dimensions', action = 'store', dest = 'dimensions', required = False, default = 'no', help = 'reshape images to certain dimensions, f.e. -r 512,512,512' )
-parser.add_argument( '-lf', '--likefreesurfer', action = 'store_true', dest = 'likefreesurfer', required = False, default = False, help = 'normalizes and reshapes images to match the freesurfer default: spacing 1,1,1 and dimensions 256,256,256' )
-parser.add_argument( '-n', '--nii', action = 'store_true', dest = 'nii', required = False, default = False, help = 'output in .nii format' )
+parser.add_argument( '-m', '--master', action='store', dest='master', required=True, help='master image to use for all input images, f.e. -m image00.img' )
+parser.add_argument( '-i', '--input', action='append', dest='input', required=True, help='input images, f.e. -i ~/files/im01.img -i ~/files/im02.img -i ~/files/im03.img ..' )
+parser.add_argument( '-o', '--output', action='store', dest='outputdirectory', required=True, help='output directory, f.e. -o /tmp/eq' )
+parser.add_argument( '-s', '--spacing', action='store', dest='spacing', required=False, default='no', help='normalize image spacings to certain values, f.e. -n 0.5,0.5,0.5' )
+parser.add_argument( '-d', '--dimensions', action='store', dest='dimensions', required=False, default='no', help='reshape images to certain dimensions, f.e. -r 512,512,512' )
+parser.add_argument( '-lf', '--likefreesurfer', action='store_true', dest='likefreesurfer', required=False, default=False, help='normalizes and reshapes images to match the freesurfer default: spacing 1,1,1 and dimensions 256,256,256' )
+parser.add_argument( '-n', '--nii', action='store_true', dest='nii', required=False, default=False, help='output in .nii format' )
 
 # always show the help if no arguments were specified
 if len( sys.argv ) == 1:
