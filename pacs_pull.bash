@@ -61,6 +61,7 @@ G_SYNOPSIS="
   SYNOPSIS
   
         pacs_pull.bash  -M <MRN> || -N <PatientsName>                   \\
+			[-m <modality>]					\\
                         [-R]                                            \\
                         [-D <scandate>]                                 \\
                         [-S <seriesDescription>]                        \\
@@ -94,6 +95,9 @@ G_SYNOPSIS="
 	is performed. The name is found only if it exactly matches the
 	name in the PACS.
         
+	-m <modality>
+	The modality to retrieve. This defaults to 'MR'. For CT, use 'CT'.
+
         -R
         By default, the script will only query the PACS and not retrieve
         images. This behaviour is by design and protects the user from
@@ -271,11 +275,12 @@ function institution_set
     esac
 }
 
-while getopts M:N:QD:S:a:c:l:P:p:v:Rh: option ; do
+while getopts M:N:m:QD:S:a:c:l:P:p:v:Rh: option ; do
     case "$option" 
     in
         v) Gi_verbose=$OPTARG           ;;
         M) G_PATIENTID=$OPTARG          ;;
+	m) G_MODALITY=$OPTARG		;;
 	N) G_PATIENTSNAME=$OPTARG	;;
         R) let Gb_queryOnly=0           ;;
         D) G_SCANDATE=$OPTARG           ;;
