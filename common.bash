@@ -718,7 +718,7 @@ function cluster_schedule
     echo "source $FREESURFER_HOME/SetUpFreeSurfer.sh"       >> $CLUSTERSH
     echo "source $FSL_DIR/etc/fslconf/fsl.sh"               >> $CLUSTERSH
     echo "export SUBJECTS_DIR=$SUBJECTS_DIR"                >> $CLUSTERSH
-    echo "export DSI_PATH=$(echo $PATH | tr ":" "\n" | grep dtk)/matrices" >> $CLUSTERSH
+    echo "export DSI_PATH=$(echo $PATH | tr ":" "\n" | grep dtk | head -n 1)/matrices" >> $CLUSTERSH
     echo "export PYTHONPATH=$PYTHONPATH"                    >> $CLUSTERSH
     echo "$STAGECMD"                                        >> $CLUSTERSH
     chmod 755 $CLUSTERSH
