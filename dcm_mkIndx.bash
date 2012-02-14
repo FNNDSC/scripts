@@ -98,7 +98,6 @@ if (( Gi_showAll )) ; then
 	PATIENTSEX=$(mri_probedicom --i $TOPSET --t 10 40)
 	PATIENTBDAY=$(mri_probedicom --i $TOPSET --t 10 30)
 	PATIENTSCANDATE=$(mri_probedicom --i $TOPSET --t 08 23)
-	SCANNERID=$(mri_probedicom --i $TOPSET --t 0018 1000)
 	
 	PATIENTAGE=$(mri_probedicom --i $TOPSET --t 10 1010)
 	# The PatientAge tag (0010, 1010) is an optional tag and may
@@ -147,6 +146,7 @@ fi
 
 MANUFACTURER=$(mri_probedicom --i $TOPSET --t 8 70)
 SCANNER=$(mri_probedicom --i $TOPSET --t 8 1090)
+SCANNERID=$(mri_probedicom --i $TOPSET --t 0018 1000)
 SOFTWAREVER=$(mri_probedicom --i $TOPSET --t 18 1020)
 printf "%40s\t%-20s\n"	"Scanner Manufacturer"  "$MANUFACTURER"
 printf "%40s\t%-20s\n"	"Scanner Model" 	"$SCANNER"

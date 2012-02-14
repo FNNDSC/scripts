@@ -66,6 +66,9 @@ G_SYNOPSIS="
 
         12 March 2010
         o Initial design and coding.
+
+	14 February 2012
+	o Added SCANNERID.
 "
 
 ###\\\
@@ -195,6 +198,7 @@ for DIR in $DCMLIST ; do
                         SCANNER_MANUFACTURER=$(echo -e $DCMMKINDX | grep "Scanner Manufacturer" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
                         SCANNER_MODEL=$(echo -e $DCMMKINDX | grep "Scanner Model" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
                         SOFTWARE_VER=$(echo -e $DCMMKINDX | grep "Software Ver" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
+                        SCANNER_ID=$(echo -e $DCMMKINDX | grep "Scanner ID" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
 						                        
                         echo_stripped "<PatientRecord>"						
                         echo_stripped "    <recordCtime>$(date)</recordCtime>"
@@ -207,6 +211,7 @@ for DIR in $DCMLIST ; do
                         echo_stripped "    <ImageScanDate>$IMAGE_SCAN_DATE</ImageScanDate>"
                         echo_stripped "    <ScannerManufacturer>$SCANNER_MANUFACTURER</ScannerManufacturer>"
                         echo_stripped "    <ScannerModel>$SCANNER_MODEL</ScannerModel>"
+			echo_stripped "	   <ScannerID>$SCANNER_ID</ScannerID>"
                         echo_stripped "    <SoftwareVer>$SOFTWARE_VER</SoftwareVer>"
                         echo_stripped "$DCMMKINDX" | grep "Scan " | sed -e 's/\&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' -e 's/\"/\&quot;/g' -e 's/\x27/\&#39;/g' \
                                            | awk '{ printf "    <Scan>"; for(i=3;i<=NF;i++) printf "%s ",$i; printf "</Scan>\n"} '						
