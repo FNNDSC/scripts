@@ -207,7 +207,7 @@
 SHELL = /bin/sh
 
 # Determine the hosttype and username
-HOSTTYPE	:= $(shell uname)
+HOSTTYPE	:= $(shell uname -a | awk '{print $$14}')-$(shell uname)
 SELF		:= $(shell whoami)
 
 # Output compiling and linking commands
@@ -492,11 +492,11 @@ SHOWINFO:
 	@echo "Binary Install Dir: .... $(bindir)"
 	@echo ""
 ifdef VERBOSE
-	@echo "Project '$(Target)'consists of the following:-"
+	@echo "Project '$(Target)' consists of the following:-"
 	@echo ""
 	@echo "Dependent files:-"
 	@echo "-----------------"
-	@echo -e "$(PROJECTLIST)"
+	@echo "$(PROJECTLIST)"
 	@echo ""
 	@echo "Dependent libraries:-"
 	@echo "---------------------"
