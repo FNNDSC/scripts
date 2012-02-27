@@ -492,11 +492,19 @@ SHOWINFO:
 	@echo "Binary Install Dir: .... $(bindir)"
 	@echo ""
 ifdef VERBOSE
+<<<<<<< HEAD
 	@echo "Project '$(Target)' consists of the following:-"
 	@echo ""
 	@echo "Dependent files:-"
 	@echo "-----------------"
 	@echo "$(PROJECTLIST)"
+=======
+	@echo "Project '$(Target)'consists of the following:-"
+	@echo ""
+	@echo "Dependent files:-"
+	@echo "-----------------"
+	@echo -e "$(PROJECTLIST)"
+>>>>>>> gridautomaton
 	@echo ""
 	@echo "Dependent libraries:-"
 	@echo "---------------------"
