@@ -186,10 +186,32 @@ function updateAndCheckProgress(totalFiles, altStatusText) {
     setTimeout(function() {
       
       $("#upload-box").fadeOut(300);
-      $("#upload-animation").hide();      
-      calculateAndShowResults();},1000);
+      $("#upload-animation").hide();
+      //sendToServer();
+      calculateAndShowResults();
+    
+      },1000);
 	}
 };
+
+function sendToServer() {
+  
+  var jsonData = JSON.stringify(database);
+  
+  var dataString = "dat="+jsonData;
+  
+  $.ajax({
+    url: 'serverside/show.php',
+    cache: false,
+    type: 'POST',
+    async: true,
+    data: dataString,
+    success: function(values){
+      ajaxResponse = values; 
+    }
+  });  
+  
+}
 
 
 function toggleContent(name) {
@@ -238,10 +260,10 @@ function drawSmallDiagramsCols(row,d_title,caze,data,dataId) {
     var diagramDiv = $("<td id='"+d_title.toUpperCase()+d+"_"+caze._name+"_"+dataId+"'  class='diagramCell'>");
     row.append(diagramDiv);
     
-    
-    var diagramData = new google.visualization.DataTable();
-    diagramData.addColumn('number', 'time [ms]');
-    diagramData.addColumn('number', 'intensity [au]');
+//    
+//    var diagramData = new google.visualization.DataTable();
+//    diagramData.addColumn('number', 'time [ms]');
+//    diagramData.addColumn('number', 'intensity [au]');
 
     // grab the data array
     var dataarray = dData._data.slice(1);
@@ -273,29 +295,36 @@ function drawSmallDiagramsCols(row,d_title,caze,data,dataId) {
     });
     
     var values = ajaxResponse.split(',');
+    console.log(values);
     var A = parseFloat(values[0]);
     var B = parseFloat(values[1]);
     var T1star = parseFloat(values[2]);
+    var imgFile = values[3];
     
     var T1 = T1star*((B/A)-1);
        
     // attach T1 for later
     eval('dData._'+dataId+'T1='+T1);    
     
-    for (d2 in dataarray) {
-      
-      d2 = dataarray[d2];
-
-      diagramData.addRow([d2._time, eval('d2._'+dataId)]);   
-      
-    } 
-      
-    var diagramOptions = {title:d_title+' '+d,curveType: "function",legend:'none',backgroundColor:{strokeWidth:'1'},
-      width: 200, height: 100,theme:'maximized',
-      vAxis: {title: '[au]'},hAxis: {title:'[ms]'}}      
+    // inject the img
+    var img = $("<img src='serverside/im.php?img="+imgFile+"' width=200 height=100>");
+    diagramDiv.append(img);
     
-    new google.visualization.LineChart(document.getElementById(d_title.toUpperCase()+d+'_'+caze._name+"_"+dataId)).
-    draw(diagramData, diagramOptions);      
+//    
+//    for (d2 in dataarray) {
+//      
+//      d2 = dataarray[d2];
+//
+//      diagramData.addRow([d2._time, eval('d2._'+dataId)]);   
+//      
+//    } 
+//      
+//    var diagramOptions = {title:d_title+' '+d,curveType: "function",legend:'none',backgroundColor:{strokeWidth:'1'},
+//      width: 200, height: 100,theme:'maximized',
+//      vAxis: {title: '[au]'},hAxis: {title:'[ms]'}, pointSize:1}      
+//    
+//    new google.visualization.ScatterChart(document.getElementById(d_title.toUpperCase()+d+'_'+caze._name+"_"+dataId)).
+//    draw(diagramData, diagramOptions);      
     
   }      
   
@@ -340,21 +369,21 @@ function drawBigDiagrams(table,caze, title) {
   
   var resultcell = $("<td id='RESULTCELL_"+caze._name+"_"+dataId+"' class='resultCell'>");
   row.append(resultcell);
-  
-  var diagramData = new google.visualization.DataTable();
-  diagramData.addColumn('number', 'R1_Blood'); 
-  diagramData.addColumn('number', 'R1_'+title);
 
+  var x = [];
+  var y = [];
+  
   
   // pre contrast
   for (pre in caze._precontrast) {
     
     pre = caze._precontrast[pre];
     
-    x_pre = pre._lvBloodT1;
-    y_pre = eval('pre._'+dataId+'T1');
+    x_pre = pre._lvBloodT1/1000;
+    y_pre = eval('pre._'+dataId+'T1')/1000;
     
-    diagramData.addRow([x_pre,y_pre]); 
+    x.push(1/x_pre);
+    y.push(1/y_pre);
     
   }
   
@@ -363,47 +392,77 @@ function drawBigDiagrams(table,caze, title) {
     
     post = caze._postcontrast[post];
     
-    x_post = post._lvBloodT1;
-    y_post = eval('post._'+dataId+'T1');
+    x_post = post._lvBloodT1/1000;
+    y_post = eval('post._'+dataId+'T1')/1000;
     
-    diagramData.addRow([x_post, y_post ]);     
-    
+    x.push(1/x_post);
+    y.push(1/y_post);
   } 
   
-  var lambda = (y_post - y_pre) / (x_post - x_pre);
+
+  var dataString = 'xs='+x+'&datas='+y;
+  
+  ajaxResponse = "";
+
+  // now query the server for the regression
+  $.ajax({
+    url: 'serverside/reg.php',
+    cache: false,
+    type: 'GET',
+    async: false,
+    data: dataString,
+    success: function(values){
+      ajaxResponse = values; 
+    }
+  });
+  
+  var values = ajaxResponse.split(',');
+  console.log(values);
+  var lambda = parseFloat(values[0]);
+  var imgFile = values[1];
+     
+  // attach lambda for later
   eval('caze._'+dataId+'Lambda='+lambda);
   
   
-  var diagramOptions = {title:'R1_' + title + ' - f(R1_Blood)',curveType: "function",legend:'none',backgroundColor:{strokeWidth:'1'},
-                        width: 200, height: 100,theme:'maximized',
-                        vAxis: {title: 'R1_'+title},hAxis: {title:'R1_Blood'}}      
-                      
-  new google.visualization.ScatterChart(document.getElementById('BIGDIAGRAM_'+caze._name+"_"+dataId)).
-  draw(diagramData, diagramOptions);        
+  // inject the img
+  var img = $("<img src='serverside/im.php?img="+imgFile+"' width=200 height=100>");
+  diagramcell.append(img);    
+  
   
   
 }
 
 function calcResults(caze, title) {
   
-  var vecoutput = "No HCT value!";
+ 
 
-  console.log(caze);
+  //console.log(caze);
   
   
   dataId = title.toLowerCase();  
   
-  if (caze._hct != -1) {
+  var lambda = eval('caze._'+dataId+'Lambda');
+  
+  //var hct = "HCT";
+  
+  if (caze._hct == -1) {
+    
+    var vecoutput = "lambda = "+lambda+"<br>V_e = "+lambda+"*(1 - HCT) - 0.045=";      
+    
+  } else {
      
-    var lambda = eval('caze._'+dataId+'Lambda');
+    var vec = (lambda*(1-caze._hct))-0.045;
     
-    var vec = lambda*(1-caze._hct)-0.045;
+    vecoutput = $('<h6>'+vec+'</h6>');
+  
     
-    vecoutput = $('<h6>vec: '+vec+'</h6>');
     
   }
+ 
   
-  console.log('#RESULTCELL_'+caze._name+'_'+dataId+'::' + vecoutput);
+  
+  //console.log('#RESULTCELL_'+caze._name+'_'+dataId+'::' + vecoutput);
   
   $('#RESULTCELL_'+caze._name+'_'+dataId).append(vecoutput);
   
@@ -445,8 +504,8 @@ function calculateAndShowResults() {
     // create the container
     var cDiv = $("<div id='RESULT_"+c._name+"' class='resultsBox'></div>");
     $("#results").append(cDiv);
-    cDiv.html("&nbsp;"+showToggler(c._name)+"<span class='resultsHeader' onClick='javascript:toggleContent(\""+c._name+"\");'>&nbsp;" + patientName + "</span><span class='smallInputsLabel'>HCT-Value:<input class='smallInputs' onChange=\"updateAndCalc('"+c._name+"')\" type='text' id='HCT_"+c._name+"'></span>");
-    
+    //cDiv.html("&nbsp;"+showToggler(c._name)+"<span class='resultsHeader' onClick='javascript:toggleContent(\""+c._name+"\");'>&nbsp;" + patientName + "</span><span class='smallInputsLabel'>HCT-Value:<input class='smallInputs' onChange=\"updateAndCalc('"+c._name+"')\" type='text' id='HCT_"+c._name+"'></span>");
+    cDiv.html("<table><tr><td align='center' valign='baseline'>"+showToggler(c._name)+"</td><td align='left' valign='middle' width='80%'><span class='resultsHeader' onClick='javascript:toggleContent(\""+c._name+"\");'>&nbsp;" + patientName + "</span></td><td valign='middle' align='right'><span class='smallInputsLabel'>HCT-Value:<input class='smallInputs' onChange=\"updateAndCalc('"+c._name+"')\" type='text' id='HCT_"+c._name+"'></span></td>");
     var contentDiv = $("<div id='CONTENT_"+c._name+"' class='content'></div>");
     cDiv.append(contentDiv);
     
@@ -462,6 +521,9 @@ function calculateAndShowResults() {
     // diagrams
     var firsttable = $("<table>").attr('id','FIRSTTABLE_'+c._name);
     contentDiv.append(firsttable);
+    
+    var row = $("<tr><td></td><td><b>Precontrast</b></td><td><b>Postcontrast 1</b></td><td><b>Postcontrast 2</b></td><td><b>Postcontrast 3</b></td></tr>");
+    firsttable.append(row);    
     
     drawSmallDiagrams(firsttable, c, 'LV Blood');
     drawSmallDiagrams(firsttable, c, 'S1');
