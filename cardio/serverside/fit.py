@@ -1,9 +1,15 @@
 from lmfit import Parameters, minimize
 
+import tempfile
+
 from numpy import *
 from scipy.optimize import leastsq
-
+import os
 import sys
+
+import matplotlib
+# Force matplotlib to not use any Xwindows backend.
+matplotlib.use( 'Agg' )
 
 try:
     import pylab
@@ -51,18 +57,22 @@ fit = residual( p_true, x )
 #print ' N fev = ', out.nfev
 #print out.chisqr, out.redchi, out.nfree
 
+tmpfile = tempfile.NamedTemporaryFile( delete=False )
+
 output = str( p_true['A'].value ) + ','
 output += str( p_true['B'].value ) + ','
-output += str( p_true['T1star'].value )
+output += str( p_true['T1star'].value ) + ','
+output += str( os.path.split( tmpfile.name )[1] )
+
+
+if HASPYLAB:
+    pylab.plot( x, data, 'ro' )
+    pylab.plot( x, fit, 'b' )
+    pylab.savefig( tmpfile )
+    #pylab.show()
+
 
 print output
-
-#if HASPYLAB:
-#    pylab.plot( x, data, 'ro' )
-#    pylab.plot( x, fit, 'b' )
-#    pylab.show()
-
-
 
 
 
