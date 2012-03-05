@@ -1,0 +1,67 @@
+<!-- Thanks to http://imgscalr.com which served as a template for this!! -->
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <title>extracellular volume fraction (Vec) - calculator</title>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="author" content="Daniel Haehn, FNNDSC, Children's Hospital Boston">
+
+    
+    <link rel="stylesheet" href="main.css" media="screen">
+    <link rel="stylesheet" href="main_print.css" media="print">
+    
+    <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>    
+    <script src="http://code.jquery.com/ui/1.8.17/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load('visualization', '1', {packages: ['corechart']});
+    </script>
+    
+    <script src="database.js"></script>
+    <script src="dataset.js"></script>
+    <script src="case.js"></script>
+    <script src="patient.js"></script>
+    <script src="main.js"></script>
+    
+  </head>
+<body id="body">
+	<div><h3 style="text-align:center;">Vec-calculator</h3></div>
+	<div id="root-container">
+  <header>This tool calculates the extracellular volume fraction (Vec) from exported QMass MR RESULTS REPORTs.</header>
+  <div id="body-container">
+    <div id="browser-warning">
+      <img align="left" src="warning.png" />Chrome 8 or Firefox 3.6.8 are Required &nbsp;&nbsp; <span style="font-size: 80%;">(at least for now)</span>
+    </div>
+    <div id="upload-box">
+      <div>
+        <p id="upload-status-text">
+          Drag and Drop files...
+        </p>
+        <p id="upload-details">
+          Uploads are automatically grouped by case.
+        </p>
+      </div>
+      <div id="upload-status-progressbar"></div>
+    </div>
+    <div id="results">
+    </div>
+  </div>
+  <footer>
+    <ul>
+      <li>&copy; 2012 FNNDSC, Children's Hospital Boston</li>
+      <li>&nbsp;</li>
+      <li><a href="http://childrenshospital.org/FNNDSC" target="_blank">FNNDSC Website</a></li>
+      <li><a href="http://github.com/FNNDSC/scripts/cardio/" target="_blank">Sourcecode</a></li>
+      <li><a href="mailto:daniel.haehn@childrens.harvard.edu?subject=you rock!">Contact</a></li>
+    </ul>
+  </footer>
+</div>
+<div id="drop-box-overlay">
+  <h1>Drop files anywhere...</h1>
+</div>
+   
+</body>
+</html>
