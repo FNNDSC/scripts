@@ -1,0 +1,176 @@
+QMass MR RESULTS REPORT
+
+Version:                                      7.2
+Build date:                                   Jun 25 2010
+Generated:                                    8/7/2011 11:14:28 PM
+Login ID:                                     ch131717
+-----------------------------------------------------------------
+
+PATIENT INFORMATION
+
+Patient name:                                 FARRELL^JOSEPH
+Patient ID:                                   4074526
+Patient gender:                               M
+Birth date:                                   8/15/1994
+Patient weight:                               66 kg
+Patient height:                               0 cm
+
+
+STUDY INFORMATION
+
+Study date:                                   9/16/2010
+Series nr:                                    2701
+Acquisition nr:                               27
+Modality:                                     MR
+Manufacturer:                                 Philips Medical Systems
+Institution:                                  Children's Hospital Boston
+Referring physicians name:                    GUNDERSHEIMER^JOSHUA
+Operators name:                               
+Admitting diagnoses description:              
+Study description:                            MR-Cardiac (in Cardiology)
+
+
+SCAN INFORMATION
+
+Series description:                           BH Post 3 Diffuse enhance
+Acquisition type:                             
+Nr slices:                                    1
+Nr phases:                                    16
+Slice thickness:                              8.00 mm
+Field of view:                                256.67x420.00 mm
+Image type:                                   20
+Image resolution:                             256x256 pixels
+Flip angle:                                   12 degrees
+Echo time:                                    1.92 ms
+Rep. time:                                    8.00 ms
+NEX:                                          1.0
+Temp resolution:                              72.00 ms
+Phase 1:                                      46.00 ms
+Heart rate:                                   52 bpm
+Scan duration:                                
+
+
+VOLUMES [ml]
+
+Method: Short-axis/3D*
+
+PHASE TIME [ms] LV ENDO LV EPI BLOODPOOL MYO    ROI1   ROI2   ROI3   ROI4  
+1     46.00     19.86   32.81  19.86     12.95  0.92   0.85   0.00   0.00  
+2     118.00    19.26   31.67  19.26     12.40  0.71   0.71   0.00   0.00  
+3     190.00    16.95   27.23  16.95     10.27  0.71   0.70   0.00   0.00  
+4     262.00    13.26   25.71  13.26     12.46  1.08   1.02   0.00   0.00  
+5     334.00    13.07   23.67  13.07     10.60  0.70   0.79   0.00   0.00  
+6     406.00    15.28   27.04  15.28     11.76  0.95   0.84   0.00   0.00  
+7     478.00    21.80   32.24  21.80     10.44  0.76   0.76   0.00   0.00  
+8     550.00    22.79   33.93  22.79     11.14  0.71   0.70   0.00   0.00  
+9     622.00    23.31   33.92  23.31     10.61  0.71   0.77   0.00   0.00  
+10    694.00    23.82   34.76  23.82     10.94  0.70   0.73   0.00   0.00  
+11    766.00    23.52   35.61  23.52     12.09  0.00   0.00   0.00   0.00  
+12    838.00    23.74   35.08  23.74     11.34  1.14   0.79   0.00   0.00  
+13    910.00    23.00   33.87  23.00     10.87  0.94   0.80   0.00   0.00  
+14    982.00    21.46   32.84  21.46     11.38  0.74   0.71   0.00   0.00  
+15    1,054.00  17.96   28.50  17.96     10.54  1.01   0.95   0.00   0.00  
+16    1,126.00  12.91   25.47  12.91     12.56  0.79   0.81   0.00   0.00  
+
+
+MYOCARDIAL INTENSITY - TIME RESULTS
+
+
+                                                   
+Sampling range (endo-epi):            (0 % - 100 %)
+Points for slope calculation ROI/MYO: (3/5)        
+Baseline phase range:                 (1 - 1)      
+Measurement phase range:              (1 - 16)     
+Calibration method:                   None         
+
+Absolute signal intensities [au]:
+
+Slice number 1
+Phase->       1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+LV Blood  307.8  153.6   45.2   43.7  104.5  158.0  220.5  247.3  257.6  274.0  293.5  322.3  328.6  316.3  326.6  290.8
+S1        284.4  192.7  105.8   51.2   18.5   48.7   84.5  105.3  124.3  129.6  155.9  159.8  209.0  219.2  182.9  200.3
+S2        289.8  185.6  125.2   63.0   16.4   44.2   85.2  100.2  112.7  149.2  173.2  148.7  183.0  194.0  201.6  214.3
+S3        283.8  179.8  116.6   53.6   12.5   49.4   93.2  109.8  116.2  142.8  160.9  156.5  174.2  208.0  214.0  216.8
+S4        271.3  185.4  110.3   51.8   12.0   44.4   70.7   93.0  109.3  120.4  135.2  147.3  162.1  212.0  216.4  213.9
+S5        277.5  190.2  107.2   47.4   11.4   43.0   75.5   97.5  114.4  132.1  154.0  152.9  173.9  215.1  221.9  220.8
+S6        281.9  195.9  109.4   45.8   11.4   44.4   73.9   94.8  117.6  133.5  148.6  159.8  202.6  210.5  216.5  195.6
+mean      281.2  188.5  112.0   51.6   13.3   45.5   79.9  100.2  115.6  134.5  154.2  154.2  184.4  210.1  209.5  210.9
+
+
+SIGNAL INTENSITY RESULTS
+
+Calibration method: None
+
+LV endocardial mean gray values
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            306.2  163.7   61.6   37.8   83.8  126.0  174.1  205.6  222.4  244.3  261.4  263.9  294.9  299.0  296.8  295.1
+
+LV endocardial gray value standard deviations
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1             13.4   17.5   26.5   14.2   37.4   46.0   51.8   50.3   55.6   57.4   52.1   56.7   56.8   49.0   54.5   43.0
+
+LV endocardial min gray value
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            257.0  115.0    2.0    1.0    1.0   18.0   46.0   69.0   85.0  102.0  108.0  105.0  139.0  155.0  152.0  156.0
+
+LV endocardial max gray value
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            353.0  205.0  139.0   88.0  138.0  193.0  252.0  284.0  322.0  355.0  338.0  374.0  408.0  410.0  408.0  387.0
+
+LV epicardial mean gray values
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            296.0  173.3   80.4   44.8   52.7   92.3  144.6  171.2  190.3  210.9  226.1  228.8  258.9  268.0  265.0  252.9
+
+LV epicardial gray value standard deviations
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1             18.6   20.1   33.3   15.5   45.4   53.8   61.7   65.7   67.5   70.6   67.2   70.6   72.8   60.9   63.0   55.6
+
+LV epicardial min gray value
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            238.0  115.0    2.0    1.0    0.0   14.0   41.0   54.0   81.0   81.0   71.0  103.0   89.0   97.0  129.0  149.0
+
+LV epicardial max gray value
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            353.0  231.0  155.0   91.0  138.0  193.0  252.0  284.0  322.0  355.0  338.0  374.0  408.0  410.0  408.0  387.0
+
+ROI1 mean gray values
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            303.6  159.2   61.0   43.8  106.2  161.7  219.3  247.1  266.5  281.1  311.6  329.9  311.4  310.0  303.2       
+
+ROI1 gray value standard deviations
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1              6.1   12.7    5.1    6.3    4.2    7.4    9.9   12.5   13.7   12.4   16.9   18.5   15.3   17.8   18.9       
+
+ROI1 min gray value
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            291.0  133.0   50.0   31.0   95.0  146.0  198.0  219.0  242.0  255.0  276.0  292.0  285.0  274.0  268.0       
+
+ROI1 max gray value
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            316.0  176.0   72.0   58.0  113.0  180.0  239.0  270.0  293.0  301.0  351.0  368.0  341.0  348.0  363.0       
+
+ROI2 mean gray values
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            289.0  140.9   36.6   49.0  106.7  158.1  204.0  230.6  254.4  260.2  299.0  283.5  297.6  277.5  288.8       
+
+ROI2 gray value standard deviations
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1              9.8    7.5    3.4    8.5    5.9    4.3    5.9    9.3    7.0    5.8   10.1   15.2   16.6   18.5   16.1       
+
+ROI2 min gray value
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            265.0  127.0   30.0   35.0   97.0  150.0  193.0  219.0  238.0  249.0  276.0  230.0  264.0  240.0  264.0       
+
+ROI2 max gray value
+Slice\Phase      1      2      3      4      5      6      7      8      9     10     11     12     13     14     15     16
+1            302.0  152.0   44.0   68.0  122.0  168.0  220.0  258.0  270.0  275.0  316.0  307.0  327.0  343.0  332.0       
+
+
+MYOCARDIAL REGION DEFINITION
+
+Number of segments: 6
+Chords order: Counterclockwise
+
+Labels:   S1    S2    S3    S4    S5     S6
+Chords: 1-16 17-33 34-50 51-66 67-83 84-100
+Count:    16    17    17    16    17     17
