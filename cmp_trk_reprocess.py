@@ -44,7 +44,7 @@ import sys
 import os
 import shutil, glob
 from optparse import OptionParser
-import systemMisc as sM
+from _common import systemMisc as sM
 
 def parseCommandLine(conf):
     """Setup and parse command-line options"""

@@ -43,7 +43,7 @@ import	sys
 import	getopt
 import  string
 import  argparse
-import  systemMisc      as misc
+from _common import  systemMisc      as misc
 
 dictErr = {
     'NoArgs'            : {

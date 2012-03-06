@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 # 
 
-import systemMisc as misc
+#import systemMisc as misc
+from _common import systemMisc as misc
 
 Gb_showErr                      = 1
 Gb_silent                       = 0
@@ -68,7 +69,7 @@ import 	os
 import	sys
 import	getopt
 import  string
-import  systemMisc      as misc
+#import  systemMisc      as misc
 
 dictErr = {
     'NoArgs'            : {
