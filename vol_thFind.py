@@ -47,7 +47,7 @@ o Initial development implementation.
 import 	os
 import	sys
 import	getopt
-from	systemMisc	import	*
+from	_common.systemMisc	import	*
 import  subprocess      as sub
 
 dictErr	= {
