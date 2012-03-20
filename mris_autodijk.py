@@ -5,7 +5,10 @@
 Gb_showErr      = 1
 Gb_forceErr     = 0
 Gstr_forceErr   = "<error>"
-Gstr_ageInput   = "-x"
+
+Gstr_surface    = "-x"
+Gstr_hemi       = "-x"
+Gstr_curv       = "-x"
 
 Gstr_synopsis 	= """
 NAME
@@ -14,39 +17,43 @@ NAME
 
 SYNOPSIS
 
-        mris_autodijk.py        -S <SUBJ> -h <hemi> -s <surface> -c <curv>
+        mris_autodijk.py        -e <hemi> -s <surface> -c <curv>        \\
+                                [-t <topDirectory>]                     \\
+                                <SUBJ1> <SUBJ2>... <SUBJn>
 
 DESCRIPTION
 
 	'mris_autodijk.py' is a thin "wrapper" that creates and runs an
- underlying mris_pmake process with an autodijk context.       
+        underlying 'mris_pmake' process with an autodijk context.       
 	
 ARGUMENTS
-
-        -S <SUBJ>
-        If specified, suppress printing output stderr messages. This is useful
-        if the script is called from 'awk' and there is no simple mechanism
-        for filtering to /dev/null.
-
-        -N <forceError> (OPTIONAL)
-        If specified, and if any error has occurred, print <forceError> to
-        <stdout> irrespective of '-n'.
-
-	-i <ageString>
-	The age string to process. 
+        
+        -h <hemi>
+        The hemisphere on the <SUBJ> to process.
+        
+        -s <surface>
+        The surface on <hemi> to process. Typically either 'smoothwm' or
+        'pial'. Sometimes 'sphere'.
+        
+        -c <curv>
+        The curvature overlay to use. It is sufficient to only specify the
+        curvature file "root", i.e. 'H', 'K', 'K1', 'K2', etc.
+        
+        <SUBJ1> <SUBJ2>... <SUBJn>
+        List of subjects to process. Assumes a FREESURFER env context.
 		
 PRECONDITIONS
 
-        o The <ageString> must be of form 'XXXA' as described above.
+        o A FREESURFER env context.
 	
 POSTCONDITIONS
 
-	o The equivalent number of days denoted by the <ageString> is returned.
+	o For each subject, create and run an 'autodijk' instance.
         
 HISTORY
 
-17 July 2009
-o Initial development implementation.
+    13 March 2012
+    o Initial development implementation.
 
 """
 
@@ -55,26 +62,35 @@ import	sys
 import	getopt
 import  string
 
+
+import argparse
+from _common import crun
+
 dictErr = {
-    'ageStringLen'        : {
-        'action'        : 'checking the input <ageString>, ', 
-        'error'         : 'I counted the wrong number of characters.', 
+    'noHemi'            : {
+        'action'        : 'checking for the input <hemi>, ', 
+        'error'         : "it doesn't look like it was specified. Did you use '-h <hemi>'?", 
         'exitCode'      : 10
                             },
-    'ageSpec'           : {
-        'action'        : 'checking the input <ageString>, ', 
-        'error'         : "it doesn't look like it was specified. Did you use '-i <ageString>'?", 
-        'exitCode'      : 10
-                            },
-    'comArgs'          : {
-        'action'        : 'checking command line arguments,', 
-        'error'         : 'it seems that you have wrong number of arguments.', 
+    'noSurface'         : {
+        'action'        : 'checking the input <surface>, ', 
+        'error'         : "it doesn't look like it was specified. Did you use '-s <surface>'?", 
         'exitCode'      : 11
                             },
-    'ageStringF'         : {
-        'action'        : 'checking age modifier, I read an incorrect character.', 
-        'error'         : 'Modifier is either "D" for days, "M" for months, "Y" for years."', 
+   'noCurvature'        : {
+        'action'        : 'checking the input <curvature>, ', 
+        'error'         : "it doesn't look like it was specified. Did you use '-c <curvature>'?", 
         'exitCode'      : 12
+                            },
+   'noFSenv'            : {
+        'action'        : 'checking the environment, ', 
+        'error'         : "it doesn't look like the FREESURFER env has been sourced.", 
+        'exitCode'      : 13
+                            },
+     'comArgs'          : {
+        'action'        : 'checking command line arguments,', 
+        'error'         : 'it seems that you have wrong number of arguments.', 
+        'exitCode'      : 14
                             }
 }
 
@@ -100,55 +116,57 @@ def fatal(astr_key, astr_extraMsg=""):
     if len(astr_extraMsg): print astr_extraMsg
     error_exit( astr_key)
 
-try:
-        
-    opts, remargs   = getopt.getopt(sys.argv[1:], 'xni:N:')
-except getopt.GetoptError:
-    if Gb_showErr: print Gstr_forceErr
-    sys.exit(1)
+Gstr_topDir     = os.getcwd()
+    
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    description=Gstr_synopsis)
 
-verbose         = 0
+parser.add_argument('subjects', metavar='SUBJ', type=str, nargs='+',
+                   help='Subject list to process')
+parser.add_argument('-e', '--hemi', 
+                    dest='Gstr_hemi',
+                    default="-x",
+                    help='the hemisphere to process')
+parser.add_argument('-s', '--surface', 
+                    dest='Gstr_surface',
+                    default="-x",
+                    help='the surface to process')
+parser.add_argument('-t', '--topDir', 
+                    dest='Gstr_topDir',
+                    default="-x",
+                    help='the surface to process')
+parser.add_argument('-c', '--curvature', 
+                    dest='Gstr_curv',
+                    default="-x",
+                    help='the curvature file to process')
 
-for o, a in opts:
-        
-    if (o == '-x'):
-        synopsis_show()
-        sys.exit(1)
-    if (o == '-n'):
-        Gb_showErr      = 0
-    if (o == '-N'):
-        Gb_forceErr     = 1
-        Gstr_forceErr   = a
-    if (o == '-i'):
-        Gstr_ageInput   = a
+args            = parser.parse_args()
+Gstr_hemi       = args.Gstr_hemi
+Gstr_curv       = args.Gstr_curv
+Gstr_surface    = args.Gstr_surface
+Gstr_topDir     = args.Gstr_topDir
 
-if Gstr_ageInput == "-x": fatal('ageSpec')
-if len(Gstr_ageInput) != 4:
-    if Gb_showErr:
-        print >>sys.stderr, "Invalid length of <ageString>. Must be of form 'XXXM' where"
-        print >>sys.stderr, "'X' is a number and 'A' is either 'D', 'W', 'M', or 'Y'."
-        print >>sys.stderr, "\n"
-        print >>sys.stderr, "Examples of valid <ageStrings>: 034D, 002W, 007Y, etc."
-        print >>sys.stderr, "\n"
-    fatal('ageStringLen')
+print len(args.subjects)
 
-Gstr_ageString  = Gstr_ageInput[0:3]
+if Gstr_hemi    == '-x': fatal('noHemi')
+if Gstr_surface == '-x': fatal('noSurface')
+if Gstr_curv    == '-x': fatal('noCurvature')
 
-Gstr_ageFact    = Gstr_ageInput[3]
-if Gstr_ageFact != 'D' and Gstr_ageFact != 'M' and Gstr_ageFact != 'Y' and Gstr_ageFact != 'W':
-    fatal('ageStringF')
+str_curvFile    = '%s.%s.%s.crv' % (Gstr_hemi, Gstr_surface, Gstr_curv)
 
-Gf_ageInput     = string.atof(Gstr_ageString)
-Gf              = Gf_ageInput
-Gf_ageInDays    = {
+print str_curvFile
+print Gstr_topDir
 
-    'D' : lambda Gf:    Gf * 1.0,
-    'W' : lambda Gf:    Gf * 7.0,
-    'M' : lambda Gf:    Gf * 30.42,
-    'Y' : lambda Gf:    Gf * 365.25
+if not os.path.exists(Gstr_topDir):
+    print "Target top directory not found. Creating"
+    os.makedirs(Gstr_topDir)
 
-} [Gstr_ageFact](Gf)
- 
-print "%d" % Gf_ageInDays,
+for str_subj in args.subjects:
+    str_wd      = '%s-%s-%s-%s' % (str_subj, Gstr_hemi, Gstr_surface, Gstr_curv)
+    str_wdFQ    = '%s/%s' % (Gstr_topDir, str_wd)
+    print str_wdFQ
+    
 
+    
 sys.exit(0)

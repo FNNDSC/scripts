@@ -223,6 +223,9 @@ STAGES
 
         10 March 2010
         o Initial design and coding.
+
+        14 March 2012
+        o Updates and re-testing.
 "
 
 ###\\\
@@ -300,7 +303,7 @@ function MRID_find
 ###///
 
 while getoptex "v: D: d: A P L: O: R: o: f S: t: c C: \
-                n: M: m: a: h: p: K:                  \
+                n: M: m: a: h: p: K: x                \
                 migrate-analysis:" "$@" ; do
         case "$OPTOPT"
         in
@@ -333,7 +336,7 @@ while getoptex "v: D: d: A P L: O: R: o: f S: t: c C: \
             n)      G_CLUSTERUSER=$OPTARG           ;;
             migrate-analysis)
                     G_MIGRATEANALYSISDIR=$OPTARG    ;;                    
-            \?)     synopsis_show 
+            x|\?)   synopsis_show 
                     exit 0;;
         esac
 done

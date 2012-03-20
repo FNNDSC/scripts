@@ -72,6 +72,7 @@ G_SYNPOSIS="
 	-R \"entire,region-1,region-2,region-3,region-4,region-5,region-6\" \\
 	-S autodijk
 
+    data_summarize.sh -G 3 -E lh-frontal -S smoothwm -t grid
         
   HISTORY
   
