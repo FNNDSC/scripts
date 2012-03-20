@@ -105,6 +105,8 @@ shift $(($OPTIND - 1))
 SUBJLIST=$*
 b_SUBJLIST=$(echo $SUBJLIST | wc -w)
 
+G_LC=50
+G_RC=30
 if (( b_SUBJLIST )) ; then
     for SUBJ in $SUBJLIST ; do
 	for HEMI in rh lh ; do
