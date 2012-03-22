@@ -253,6 +253,12 @@ G_SYNOPSIS="
 
 	07 May 2008
 	o Design and coding based off 'track_meta.bash' core.
+
+
+        22 March 2012
+        o Fixed bug in recon-all initialize whereby the existing DICOMS
+          were not picked up because the first file in the series ended in
+          *00005.dcm and NOT *00001.dcm!!!!
 "
 
 ###\\\
@@ -543,12 +549,16 @@ if (( ${barr_stage[2]} )) ; then
     statusPrint "Checking stage dependencies"
     dirExist_check $STAGE2IN || fatal dependencyStage
     STAGE="2-$STAGE2PROC-initialize"
-    STAGEINPUTS=$(find . -iname "*0001.dcm" 		|\
+    STAGEINPUTS=$(find . -iname "*.dcm" 		|\
+                 head -n 1                              |\
 		 tr '\n' ' ' 				|\
 		 awk '{for(i=1; i<=NF; i++)		\
 			 {printf("-i %s ", $i);}}')
     EXOPTS=$(eval expertOpts_parse $STAGE2PROC)
     STAGECMD="recon-all $STAGEINPUTS -s $SUBJECT"
+    pwd
+    echo "SUBJECTS_DIR=-->$SUBJECTS_DIR<--"
+    echo $STAGECMD
     stage_run "$STAGE" "$STAGECMD" 			\
                 "${G_LOGDIR}/${STAGE2PROC}-i.std"	\
                 "${G_LOGDIR}/${STAGE2PROC}-i.err"	\
