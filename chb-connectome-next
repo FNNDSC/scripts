@@ -1,0 +1,20 @@
+# First source  freesurfer environment
+source  /chb/arch/scripts/chb-fsdev
+export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-cmp1.2]"
+
+# Set the cmtk tk environment variables
+OS=$(uname -a | awk '{print $1}')
+echo "Host type is $HOSTTYPE-${OS}"
+export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
+
+export DTDIR=${PACKAGEDIR}/dtk/current/dtk
+export DSI_PATH=${DTDIR}/matrices
+
+export PYTHONPATH=:/chb/users/nicolas.rannou/workspace/cmplib/lib/python/:/chb/arch/python/cfflib/:/chb/arch/python/nibabel/:/chb/arch/python/connectomeviewer_2.0.0/
+export PATH=$PATH:/chb/users/nicolas.rannou/gitroot/cmp/src/DTB/build/bin:/chb/arch/python/connectomeviewer_2.0.0/scripts
+
+echo "PYTHONPATH=$PYTHONPATH"
+echo 
+echo "PATH=$PATH"
+echo
+
