@@ -6,5 +6,10 @@ unset TCL_LIBRARY
 unset TK_LIBRARY
 unset TIX_LIBRARY
 
+export PACKAGEDIR=~/arch/${HOSTTYPE}-${OS}/packages
+export FSL_DIR=${PACKAGEDIR}/fsl
+source ${FSL_DIR}/etc/fslconf/fsl.sh
+
+
 OS=$(uname -a | awk '{print $1}')
 export PROMPTPREFIX="[$user@$name:${HOSTTYPE}-$OS-nmr-fsdev]"
