@@ -12,4 +12,4 @@ source ${FSL_DIR}/etc/fslconf/fsl.sh
 
 
 OS=$(uname -a | awk '{print $1}')
-export PROMPTPREFIX="[$user@$name:${HOSTTYPE}-$OS-nmr-fsdev]"
+export PROMPTPREFIX="[${USER}@$name:${HOSTTYPE}-$OS-nmr-fsdev]"
