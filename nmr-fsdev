@@ -1,0 +1,10 @@
+echo "Host type is $HOSTTYPE"
+
+source /usr/local/freesurfer/dev/SetUpFreeSurfer.sh
+unset TCLLIBPATH
+unset TCL_LIBRARY
+unset TK_LIBRARY
+unset TIX_LIBRARY
+
+OS=$(uname -a | awk '{print $1}')
+export PROMPTPREFIX="[$user@$name:${HOSTTYPE}-$OS-nmr-fsdev]"
