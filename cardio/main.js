@@ -301,13 +301,22 @@ function drawSmallDiagramsCols(row,d_title,caze,data,dataId) {
     var T1star = parseFloat(values[2]);
     var imgFile = values[3];
     
+    console.log('A',A);
+    console.log('B',B);
+    console.log('T1*',T1star);
+    
     var T1 = T1star*((B/A)-1);
        
+    console.log(T1);
+    
     // attach T1 for later
     eval('dData._'+dataId+'T1='+T1);    
     
+    var text2 = "A="+A+", B="+B+", T1*="+T1star+", T1 = " + T1;
+    
     // inject the img
-    var img = $("<img src='serverside/im.php?img="+imgFile+"' width=200 height=100>");
+    var url = "serverside/details.php?img="+imgFile+"&text="+Base64.encode(text2);
+    var img = $("<a href='"+url+"' target='_blank'><img src='serverside/im.php?img="+imgFile+"' width=200 height=100 border=0 title='"+text2+"'></a>");
     diagramDiv.append(img);
     
 //    
@@ -424,9 +433,12 @@ function drawBigDiagrams(table,caze, title) {
   // attach lambda for later
   eval('caze._'+dataId+'Lambda='+lambda);
   
+  var text = "lambda (slope): " + lambda;
+  var text2 = "<br>x: " + x + "<br>y: " + y ;
   
   // inject the img
-  var img = $("<img src='serverside/im.php?img="+imgFile+"' width=200 height=100>");
+  var url = "serverside/details.php?img="+imgFile+"&text="+Base64.encode(text+text2);
+  var img = $("<a href='"+url+"' target='_blank'><img src='serverside/im.php?img="+imgFile+"' width=200 height=100 border=0 title='"+text+"'></a>");
   diagramcell.append(img);    
   
   
