@@ -45,7 +45,7 @@ output += str( os.path.split( tmpfile.name )[1] )
 
 pylab.plot( x, y, 'ro' )
 pylab.plot( x, reg, 'b' )
-pylab.plot( x, reg_t, 'g' )
+#pylab.plot( x, reg_t, 'g' )
 pylab.savefig( tmpfile )
 
 
