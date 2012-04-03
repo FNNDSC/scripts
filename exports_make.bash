@@ -65,7 +65,7 @@ done
 G_STYLE=$(string_clean $G_STYLE)
 if [[ $G_STYLE != "Linux" && $G_STYLE != "Darwin" ]] ; then fatal args;   fi
 
-sitenum=15
+sitenum=18
 
 # Format: <label>;<netmask>
 NETMASK[0]="1 Autumn Street, 6th floor;10.17.24.0"
