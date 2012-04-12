@@ -12,9 +12,3 @@ export DSI_PATH=${DTDIR}/matrices
 
 export PYTHONPATH=:/chb/users/nicolas.rannou/workspace/cmplib/lib/python/:/chb/users/nicolas.rannou/workspace/connectomelib/lib/python
 export PATH=$PATH:/chb/users/nicolas.rannou/gitroot/cmp/src/DTB/build/bin:/chb/users/nicolas.rannou/workspace/cmplib/bin:/chb/users/nicolas.rannou/workspace/connectomelib/bin
-
-echo "PYTHONPATH=$PYTHONPATH"
-echo 
-echo "PATH=$PATH"
-echo
-

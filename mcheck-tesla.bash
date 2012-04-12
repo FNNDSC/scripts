@@ -82,6 +82,8 @@ EC_fileCheck=1
 
 DREEV=dreev.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
+H1=173.48.136.14
+
 verbosity_check
 
 REQUIREDFILES="common.bash tunnel.bash pgrep"
@@ -91,7 +93,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=18
+targetList=19
 
 #
 ##
@@ -155,6 +157,9 @@ TARGET_CHECK[16]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 	--to ${G
 TARGETACTION[16]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 	--to ${GATE}:10301"
 TARGET_CHECK[17]="tunnel.bash --reverse --from rudolph@${GATE}:10301 	--to kaos:10401 --isRunning"
 TARGETACTION[17]="tunnel.bash --reverse --from rudolph@${GATE}:10301 	--to kaos:10401"
+
+TARGET_CHECK[18]="tunnel.bash --forward --from 6812 --via rudolph@${H1} --to localhost:22 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[18]="tunnel.bash --forward --from 6812 --via rudolph@${H1} --to localhost:22 --sshArgs '-p 7778'"
 
 # Process command line options
 while getopts h option ; do

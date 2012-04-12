@@ -77,10 +77,8 @@ def parseCommandLine(conf):
     if options.workingDir == None:
         parser.error('You must specify --workingDir')
     else:
-        print 'dir name: ' + os.path.dirname(options.workingDir)
         conf.project_dir = os.path.dirname(options.workingDir)
-        # looks for /RAWDATA/DTI within subject dir
-        conf.subject_workingdir = os.path.dirname(options.workingDir) + '/3-cmt'
+        conf.subject_workingdir = options.workingDir
         conf.subject_name = os.path.basename(options.workingDir) 
                 
     if options.projectName:
@@ -93,11 +91,9 @@ def parseCommandLine(conf):
         conf.gradient_table = 'custom'
         
     if options.b0:
-        print 'b0: ' + options.b0
         conf.nr_of_b0 = options.b0
         
     if options.bValue:
-        print 'bValue: ' + options.bValue
         conf.max_b0_val = options.bValue
 
     if options.skipCompletedStages:
@@ -112,6 +108,7 @@ def parseCommandLine(conf):
     
 def prepForExecution(conf, options):
     """Prepare the files for execution of the cmp pipeline"""
+    """We need to copy the MRIs at the good location"""
     
     # Must specify the T1 and DTI input directories
     if options.t1Dir == None:
@@ -119,34 +116,30 @@ def prepForExecution(conf, options):
 
     if options.dtiDir == None:
         sys.exit('You must specify --dtiDir')        
-
-    print 't1 dir: ' + options.t1Dir
-    print 'dti dir: ' + options.dtiDir
-        
-    # First, setup the pipeline status so we can determine the inputs
-    cmp.connectome.setup_pipeline_status(conf)
+   
+    # might need subject working dir?
+    # T2 and fMRI supported?
     
-    # Get the first stage by number
-    stage = conf.pipeline_status.GetStage(num=1)
+    # Create RAWDATA dirs and copy data inside!
+    if not os.path.exists(conf.subject_workingdir + os.sep + 'RAWDATA'):
+        os.makedirs(conf.subject_workingdir + os.sep + 'RAWDATA')
 
-    # Get the DTI and T1 DICOM input folders
-    dtiInput = conf.pipeline_status.GetStageInput(stage, 'dti-dcm')
-    t1Input = conf.pipeline_status.GetStageInput(stage, 't1-dcm')
+    # Create RAWDATA dirs and copy data inside!
+    if not os.path.exists(conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'DTI'):
+        os.makedirs(conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'DTI')
     
-    # Create the input folders
-    if not os.path.exists(dtiInput.rootDir):
-        os.makedirs(dtiInput.rootDir)
-
-    if not os.path.exists(t1Input.rootDir):        
-        os.makedirs(t1Input.rootDir)
-    
+    # Create RAWDATA dirs and copy data inside!
+    if not os.path.exists(conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'T1'):
+        os.makedirs(conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'T1')
+   
     # Copy the DICOM's
-    for file in glob.glob(os.path.join(options.dtiDir, dtiInput.filePath)):
-        shutil.copy(file, dtiInput.rootDir)
+    for file in glob.glob(os.path.join(options.t1Dir + os.sep + "*.dcm")):
+        print file
+        shutil.copy(file, conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'T1')
                 
-    for file in glob.glob(os.path.join(options.t1Dir, t1Input.filePath)):
-        shutil.copy(file, t1Input.rootDir)
-    
+    for file in glob.glob(os.path.join(options.dtiDir + os.sep + "*.dcm")):
+       
+        shutil.copy(file, conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'DTI')
         
 def main():
     """Main entrypoint for program"""
@@ -171,26 +164,21 @@ def main():
     conf.streamline_param = ''
 
     # Enable all stages
-    conf.active_dicomconverter = False
-    conf.active_registration = False
-    conf.active_segmentation = False
-    conf.active_parcellation = False
-    conf.active_applyregistration = False
-    conf.active_reconstruction = False
-    conf.active_tractography = False
-    conf.active_fiberfilter = False
+    conf.active_dicomconverter = True
+    conf.active_registration = True
+    conf.active_segmentation = True
+    conf.active_parcellation = True
+    conf.active_applyregistration = True
+    conf.active_reconstruction = True
+    conf.active_tractography = True
+    conf.active_fiberfilter = True
     conf.active_connectome = True
     conf.active_statistics = True
     conf.active_cffconverter = True
-    conf.skip_completed_stages = False
+    conf.skip_completed_stages = True
     
     # Setup and parse command-line options
     options = parseCommandLine(conf)
-
-    print 'DEBUG SCRIPTS'
-    print 'proj name: ' + conf.project_name
-    print 'proj dir: ' + conf.project_dir
-    print 'subj work dir: ' + conf.subject_workingdir
 
     # XXX: These are hardcoded for now until I figure out how they
     #      should be set
@@ -210,10 +198,6 @@ def main():
     # Prepare the directory structure for execution
     prepForExecution(conf, options)
     
-    # Before running, reset the pipeline status because it will 
-    # get created in mapit()
-    conf.pipeline_status = cmp.pipeline_status.PipelineStatus()
-        
     # Execute the 'cmp' pipeline!
     cmp.connectome.mapit(conf)
         

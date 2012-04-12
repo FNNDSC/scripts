@@ -7,7 +7,7 @@ OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
 export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
 
-export DTDIR=${PACKAGEDIR}/dtk
+export DTDIR=${PACKAGEDIR}/dtk/current/dtk
 export DSI_PATH=${DTDIR}/matrices
 
 export PYTHONPATH=/chb/arch/python/cmp/:/chb/arch/python/cfflib/:/chb/arch/python/nibabel/:/chb/arch/python/connectomeviewer/
