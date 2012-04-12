@@ -58,7 +58,7 @@ G_SYNOPSIS="
 
  HISTORY
  24 May 2009
-  o OSX1927 integration.
+  o JOHANNESBURG integration.
 
  07 September 2011
   o Re-routed all tunnels through 'dreev' to prevent accidental flooding of tunnel
@@ -85,7 +85,7 @@ EC_badRestart=10
 EC_fileCheck=1
 
 DREEV=dreev.tch.harvard.edu
-OSX1927=osx1927.tch.harvard.edu
+JOHANNESBURG=johannesburg.tch.harvard.edu
 OSX2147=osx2147.tch.harvard.edu
 OSX1476=osx1476.tch.harvard.edu
 DURBAN=durban.tch.harvard.edu
@@ -112,8 +112,8 @@ targetList=23
 ### REVERSE TUNNELS -- from dreev
 ##
 # VNC screen access on osx1927
-TARGET_CHECK[0]="tunnel.bash --reverse 	--from ch137123@${DREEV}:9900 	--to ${OSX1927}:5900 --isRunning"
-TARGETACTION[0]="tunnel.bash --reverse 	--from ch137123@${DREEV}:9900 	--to ${OSX1927}:5900"
+TARGET_CHECK[0]="tunnel.bash --reverse 	--from ch137123@${DREEV}:9900 	--to ${JOHANNESBURG}:5900 --isRunning"
+TARGETACTION[0]="tunnel.bash --reverse 	--from ch137123@${DREEV}:9900 	--to ${JOHANNESBURG}:5900"
 # VNC screen access to osx1476
 TARGET_CHECK[1]="tunnel.bash --reverse	--from ch137123@${DREEV}:1476 	--to ${OSX1476}:5900 --isRunning"
 TARGETACTION[1]="tunnel.bash --reverse	--from ch137123@${DREEV}:1476 	--to ${OSX1476}:5900"
@@ -133,8 +133,8 @@ TARGETACTION[5]="tunnel.bash --reverse 	--from ch137123@${DREEV}:8000 	--to ${DU
 TARGET_CHECK[6]="tunnel.bash --reverse	--from ch137123@${DREEV}:8800	--to ${NATAL}:80 --isRunning"
 TARGETACTION[6]="tunnel.bash --reverse	--from ch137123@${DREEV}:8800	--to ${NATAL}:80"
 # OsiriX listener on 'osx1927'
-TARGET_CHECK[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${OSX1927}:11112 --isRunning"
-TARGETACTION[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${OSX1927}:11112"
+TARGET_CHECK[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${JOHANNESBURG}:11112 --isRunning"
+TARGETACTION[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${JOHANNESBURG}:11112"
 # SVN source code repositories
 TARGET_CHECK[8]="tunnel.bash --reverse	--from ch137123@${DREEV}:5555	--to ${OSX2147}:22 --isRunning"
 TARGETACTION[8]="tunnel.bash --reverse	--from ch137123@${DREEV}:5555	--to ${OSX2147}:22"
@@ -146,8 +146,8 @@ TARGET_CHECK[11]="tunnel.bash --reverse	--from ch137123@${DREEV}:4214	--to ${SHA
 TARGETACTION[11]="tunnel.bash --reverse	--from ch137123@${DREEV}:4214	--to ${SHAKA}:22"
 TARGET_CHECK[12]="tunnel.bash --reverse	--from ch137123@${DREEV}:4216 	--to ${GLACIER}:22 --isRunning"
 TARGETACTION[12]="tunnel.bash --reverse	--from ch137123@${DREEV}:4216 	--to ${GLACIER}:22"
-TARGET_CHECK[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7777 	--to ${OSX1927}:22 --isRunning"
-TARGETACTION[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7777 	--to ${OSX1927}:22"
+TARGET_CHECK[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7777 	--to ${JOHANNESBURG}:22 --isRunning"
+TARGETACTION[13]="tunnel.bash --reverse --from ch137123@${DREEV}:7777 	--to ${JOHANNESBURG}:22"
 TARGET_CHECK[14]="tunnel.bash --reverse	--from ch137123@${DREEV}:4215	--to ${PRETORIA}:22 --isRunning"
 TARGETACTION[14]="tunnel.bash --reverse	--from ch137123@${DREEV}:4215	--to ${PRETORIA}:22"
 # Cluster repository
