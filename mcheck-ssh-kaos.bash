@@ -96,7 +96,7 @@ GLACIER=glacier.tch.harvard.edu
 RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
-H1=173.48.136.14
+H1=98.118.51.235
 
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
