@@ -298,7 +298,7 @@ function niigz2img
     local DIR=$1
 
     # Check for any nii.gz files
-    for NIIGZ in ${DIR}/*nii.gz ; do
+    for NIIGZ in ${DIR}/*nii.gz ${DIR}.nii ; do
 	lprint	"Converting $(basename $NIIGZ)"
 	STEM=$(basename $NIIGZ .nii.gz)
 	mri_convert $NIIGZ ${DIR}/${STEM}.img			\
