@@ -82,7 +82,7 @@ EC_fileCheck=1
 
 DREEV=dreev.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
-H1=173.48.136.14
+H1=98.118.51.235
 
 verbosity_check
 
