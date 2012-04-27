@@ -37,7 +37,10 @@ G_SYNOPSIS="
         
 	12 Dec 2011
 	o Different version handling.
-        
+
+        27 April 2012
+        o Different version handling: R2012
+        o Command line option '-v' used usable everywhere.
 "
 
 HOST=$(hostname -s)
@@ -63,9 +66,9 @@ else
     printf "Using local install of MatLAB...\n"
     case $OSTYPE 
     in 
-        Linux)  export PATH=/opt/MATLAB/R2011b/bin:/chb/arch/x86_64-Linux/packages/matlab/R2011b/bin:$PATH
+        Linux)  export PATH=/opt/MATLAB/R2011b/bin:/chb/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin:$PATH
                 ;;
-        Darwin) export PATH=/chb/arch/x86_64-Darwin/packages/matlab/MATLAB_R2011b.app/bin:$PATH
+        Darwin) export PATH=/chb/arch/x86_64-Darwin/packages/matlab/MATLAB_${G_VERSION}.app/bin:$PATH
     esac
 fi
 
