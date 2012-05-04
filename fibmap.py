@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import os
+import time
 from _common import FNNDSCUtil as u
 from _common import FNNDSCConsole as c
 from _common import FNNDSCFileIO as io
@@ -13,9 +14,92 @@ class FibMapLogic():
     '''
     '''
 
+  def intro( self ):
+
+
+    intro = """
+    
+                        _.--'''--._
+                      .'           `.
+                     /               \\
+                  .-'                 '-.
+                 /                       \\            .----------------.
+                / _.--._           _.--._ \\         __i *FYBORG POWER* |
+               / /      `-._   _.-'      \ \\        '-.________________:
+              : :      .--._) (_.--.      : :
+              | `.    /    / : \    \    .' |
+              :   `-.___.-':/ \:`-.___.-'   :
+               \   _       \:_:/       _   /
+                `.' "`-.           .-'" '.'
+                  :     `-._   _.-'     :
+                  |                     |
+                  :     _.--._.--._     :
+                   \   ^-.__   __.-^   /
+                    `-.     '''     .-'
+                       \           /
+                      /;`-._____.-';\\
+                __..-'/             \\'-..__
+           __.-'  _.-'               '-._  `-.__
+                                             fsc
+
+              FIBMAP v0.1 powered by FYBORG
+                >> Fancy Fiber Mapping <<
+                
+  (c) 2012 FNNDSC / Boston Children's Hospital
+  E-Mail us: dev@babyMRI.org
+
+"""
+
+    print intro
+
+  def outro( self ):
+
+    outro = """
+                            .---.--.       .--.   
+                          ,(     ),.`.   .'.--.`. 
+                          ; \\   / : \\ ;.'.'    \\ ;
+\\                         ; _; :_ :""-/ /-.     ;:
+ \\                        ;'-;":-':"-/ /-._^.   ;:
+\\ \\                       :  : ;  ; / /  / \\ \\  ;:
+\\\\ \\                      :\\  V  / : :  :   ; ;-';
+ \\\\ \\                     ; ;._.':,' ;  ;   : :-' 
+\\ \\\\ \\                   : : ; : ;o /-._;   : :   
+ \\ \\\\ \\                 _;o; : ; '-'.'.-"`. :-^,  
+  \\ \\\\ \\            .-.;:_"  _..--"/ /  _  ;y  ;  
+   \\ \\\\ \\         .' / '-,; ::    : :  (o) ;   :  
+    \\ \\\\ "-.     /  :    ;: ;;    ; ;     /    :  
+bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;  
+     :  \\\\   \\  :  _:    ;: :: /   ; ;  ; ;(o):   
+"-.   \\  \\\\   \\/ Y' '.  // ^ \\Y   / /  :  '._.;   
+\\  \\   \\  ;"-. ;/     7"" / \\ :.-'.' .';  /  /    
+\\\\  \\   \\ :   ":_    :"\\ ;..-^'--" .' /  /  /     
+ \\\\  \\   "+.;-"" )._..^-""        /  / .' .'      
+  ;"+.;_.-" :--=<___)    __..__  /  :-" .'        
+\\ :/_. ;  .-" \\ _____.--""__..--""   ;.-"         
+ ":  '+'  __..-\\/\\  ''''T__..___..-":             
+  :   :\\."      \\/;     ;: () ;  .-" ;            
+   "--q/\\        "      :;    :-"    :            
+       \\/;              ;:    ;   ..-(            
+        "               :-\\__/-+""-. .^.          
+                         ; \\  (     \\;  `.        
+                        /`. `-/\\ ,=. '.   `.      
+                       : \\ \\ :"-:/ .`. \\    \\     
+                       ;  ; ;;"-;\\/ .'`."-.  ;    
+                      :   : ;"-.: \\/ .' j  "-:    
+                      ;   : :"-.;  `: ,' ;    \\   
+                     :    : :"-:     "..':     ;  
+                     ;    ; ;"-;       `=;  ;  :  
+"""
+
+    print outro
+
+
   def run( self, directory, output ):
     '''
     '''
+
+    self.intro()
+    time.sleep( 3 )
 
     cmtDirectory = directory + os.sep + '3-cmt' + os.sep
     output += os.sep
@@ -36,15 +120,20 @@ class FibMapLogic():
     CopyScalars._in_.outputDirectory = output
     FilterLengthFilterCortexMapLabelsWithRadius._in_.cmtDirectory = cmtDirectory
     FilterLengthFilterCortexMapLabelsWithRadius._in_.outputDirectory = output
+    MakeMatrices._in_.cmtDirectory = cmtDirectory
+    MakeMatrices._in_.outputDirectory = output
+
 
     p = Pype()
     p.add( Preprocessing )
     p.add( MapADCandFAvalues )
     p.add( CopyScalars )
     p.add( FilterLengthFilterCortexMapLabelsWithRadius )
+    p.add( MakeMatrices )
     p.run( False )
 
 
+    self.outro()
     c.info( '' )
     c.info( 'ALL DONE! SAYONARA..' )
 
@@ -123,7 +212,7 @@ class CopyScalars( Wheel ):
     import os
 
     trkFileToT1 = outputDirectory + 'streamline-to-T1.trk'
-    finalFibmapTrk = outputDirectory + 'final-fibmap-streamline.trk'
+    finalFibmapTrk = outputDirectory + 'fibmap-final-streamline.trk'
 
     # copy scalars from input trk to trkFileToT1 and save as finalFibmapTrk
     fyborg.copyScalars( inputTrkFile2, trkFileToT1, finalFibmapTrk )
@@ -132,7 +221,7 @@ class CopyScalars( Wheel ):
 
 class FilterLengthFilterCortexMapLabelsWithRadius( Wheel ):
   _in_ = Enum( 'cmtDirectory', 'outputDirectory', 'inputTrkFile3' )
-  _out_ = Enum( 'allDone' )
+  _out_ = Enum( 'inputTrkFile4' )
 
   def spin( cmtDirectory, outputDirectory, inputTrkFile3 ):
 
@@ -149,7 +238,22 @@ class FilterLengthFilterCortexMapLabelsWithRadius( Wheel ):
     actions.append( fyborg.FyLabelMappingWithRadiusAction( 'aparc_aseg_endlabel', freesurferSegmentation, 3 ) )
     fyborg.fyborg( inputTrkFile3, inputTrkFile3, actions )
 
+    return inputTrkFile3
+
+
+class MakeMatrices( Wheel ):
+  _in_ = Enum( 'cmtDirectory', 'outputDirectory', 'inputTrkFile4' )
+  _out_ = Enum( 'allDone' )
+
+  def spin( cmtDirectory, outputDirectory, inputTrkFile4 ):
+
+    import fyborg
+    import os
+
+    fyborg.makeMatrix( inputTrkFile4, outputDirectory )
+
     return True
+
 
 
 #
