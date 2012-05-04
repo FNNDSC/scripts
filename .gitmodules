@@ -4,3 +4,6 @@
 [submodule "wheels"]
 	path = wheels
 	url = git://github.com/FNNDSC/wheels
+[submodule "fyborg"]
+	path = fyborg
+	url = git://github.com/FNNDSC/fyborg
