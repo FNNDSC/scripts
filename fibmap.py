@@ -193,11 +193,17 @@ class MapADCandFAvalues( Wheel ):
 
     dtiFAfile = str( cmtDirectory ) + os.sep + 'CMP/raw_diffusion/dti_0/dti_fa.nii'
     dtiADCfile = str( cmtDirectory ) + os.sep + 'CMP/raw_diffusion/dti_0/dti_adc.nii'
+    dtiE1file = str( cmtDirectory ) + os.sep + 'CMP/raw_diffusion/dti_0/dti_e1.nii'
+    dtiE2file = str( cmtDirectory ) + os.sep + 'CMP/raw_diffusion/dti_0/dti_e2.nii'
+    dtiE3file = str( cmtDirectory ) + os.sep + 'CMP/raw_diffusion/dti_0/dti_e3.nii'
     outputTrkFile = outputDirectory + 'streamline-mapped-adc-fa.trk'
 
     actions = []
     actions.append( fyborg.FyMapAction( 'adc', dtiADCfile ) )
     actions.append( fyborg.FyMapAction( 'fa', dtiFAfile ) )
+    actions.append( fyborg.FyMapAction( 'e1', dtiE1file ) )
+    actions.append( fyborg.FyMapAction( 'e2', dtiE2file ) )
+    actions.append( fyborg.FyMapAction( 'e3', dtiE3file ) )
     fyborg.fyborg( inputTrkFile1, outputTrkFile, actions )
 
     return outputTrkFile
