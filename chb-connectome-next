@@ -1,14 +1,14 @@
 # First source  freesurfer environment
-source  /chb/arch/scripts/chb-fsdev
+source  /chb/users/nicolas.rannou/gitroot/FNNDSC/scripts/chb-fsdev-next
 export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-cmp1.2]"
 
 # Set the cmtk tk environment variables
 OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
-export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
+#export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
 
-export DTDIR=${PACKAGEDIR}/dtk/current/dtk
+export DTDIR=/chb/users/nicolas.rannou/fsdev-next/dtk/
 export DSI_PATH=${DTDIR}/matrices
 
-export PYTHONPATH=:/chb/users/nicolas.rannou/workspace/cmplib/lib/python/:/chb/users/nicolas.rannou/workspace/connectomelib/lib/python
-export PATH=$PATH:/chb/users/nicolas.rannou/gitroot/cmp/src/DTB/build/bin:/chb/users/nicolas.rannou/workspace/cmplib/bin:/chb/users/nicolas.rannou/workspace/connectomelib/bin
+export PYTHONPATH=:/chb/users/nicolas.rannou/workspace/cmplib/lib/python/:/chb/users/nicolas.rannou/workspace/cvwlib/lib/python
+export PATH=$PATH:/chb/users/nicolas.rannou/workspace/cmplib/bin:/chb/users/nicolas.rannou/workspace/cvwlib/bin
