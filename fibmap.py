@@ -162,7 +162,7 @@ class Preprocessing( Wheel ):
     identityXFM = outputDirectory + 'identity.xfm'
 
     cmd = 'ss;'
-    cmd += 'chb-fsdev;'
+    cmd += 'chb-fsstable;'
     cmd += 'mri_convert ' + freesurferMRIfolder + 'T1.mgz ' + T1niiFile + ';'
     cmd += 'gzip -cd ' + SegmentationNiiGzFile + ' > ' + SegmentationNiiFile + ';'
     cmd += 'flirt -in ' + T1niiFile + ' -ref ' + dtiB0file + ' -usesqform -nosearch -dof 6 -cost mutualinfo -omat ' + T1toB0matFile + ';'
