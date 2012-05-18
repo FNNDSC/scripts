@@ -27,7 +27,10 @@ G_RC=50
 # User searchable fields
 # Fields initialised with "-x" must be specified by the user
 # when running this script
+GLST_PATIENTID=""
+GLST_PATIENTSNAME=""
 G_PATIENTID=""
+G_PATIENTSNAME=""
 G_QUERYRETRIEVELEVEL=""
 G_MODALITY="MR"
 G_PATIENTSNAME=""
@@ -94,6 +97,9 @@ G_SYNOPSIS="
 	the <PatientsName> is an *exact* string -- no substring searching
 	is performed. The name is found only if it exactly matches the
 	name in the PACS.
+	
+	Multiple targets can be concatenated with a ',' -- i.e. -M 123,456
+	will search for MRN 123 and then MRN 456.
         
 	-m <modality>
 	The modality to retrieve. This defaults to 'MR'. For CT, use 'CT'.
@@ -279,9 +285,9 @@ while getopts M:N:m:QD:S:a:c:l:P:p:v:Rh: option ; do
     case "$option" 
     in
         v) Gi_verbose=$OPTARG           ;;
-        M) G_PATIENTID=$OPTARG          ;;
+        M) GLST_PATIENTID=$OPTARG       ;;
 	m) G_MODALITY=$OPTARG		;;
-	N) G_PATIENTSNAME=$OPTARG	;;
+	N) GLST_PATIENTSNAME=$OPTARG	;;
         R) let Gb_queryOnly=0           ;;
         D) G_SCANDATE=$OPTARG           ;;
         S) G_SERIESDESCRIPTION=$OPTARG
@@ -301,8 +307,8 @@ if (( Gb_institution )) ; then
     institution_set $G_INSTITUTION
 fi
 
-if (( ! ${#G_PATIENTID} && ! ${#G_PATIENTSNAME} )) ; then fatal noMRNorName; fi
-if (( ${#G_PATIENTID} && ${#G_PATIENTSNAME} )) ; then G_PATIENTSNAME="" ; fi
+if (( ! ${#GLST_PATIENTID} && ! ${#GLST_PATIENTSNAME} )) ; then fatal noMRNorName; fi
+if (( ${#GLST_PATIENTID} && ${#GLST_PATIENTSNAME} )) ; then GLST_PATIENTSNAME="" ; fi
 if (( ${#G_SCANDATE}            )) ; then Gb_dateSpecified=1;   fi
 
 cprint "M: Institution"		"[ $G_INSTITUTION ]"
@@ -310,194 +316,198 @@ cprint "M: AETitle for query"	"[ $G_AETITLE ]"
 cprint "M: PACS IP"		"[ $G_QUERYHOST ]"
 cprint "M: CallTitle for query"	"[ $G_CALLTITLE ]"
 
+if (( ${#GLST_PATIENTID} )) ;   then GLST=$GLST_PATIENTID; fi 
+if (( ${#GLST_PATIENTSNAME}));  then GLST=$GLST_PATIENTSNAME; fi
 
-if (( ${#G_PATIENTID} )) ; then
-    cprint "M: Querying for MRN" "[ $G_PATIENTID ]"
-fi
+for EL in $(echo $GLST | tr , ' '); do
+    if (( ${#GLST_PATIENTID} )) ; then G_PATIENTID=$EL; fi
+    if (( ${#GLST_PATIENTSNAME})) ; then G_PATIENTSNAME=$EL; fi
 
-if (( ${#G_PATIENTSNAME} )) ; then
-    cprint "M: Querying for NAME" "[ $G_PATIENTSNAME ]"
-fi
-
-if (( Gb_dateSpecified )) ; then
-    cprint "M: Querying for SCANDATE" "[ $G_SCANDATE ]" 
-else
-    cprint "M: Querying for SCANDATE" "[ unspecified ]"
-fi
-
-
-
-# We perform two queries off 'findscu'. The first at the STUDY level
-# collects the StudyInstanceUID. The second, at the SERIES level,
-# collects all the SeriesDescriptions.
-
-# First, query the PACS for StudyInstanceUID. This is a unique tag, and
-# in this case the combination of MRN:SCANDATE is a unique specifier. If
-# the date is not specified, then multiple StudyInstanceUIDs are returned.
-if (( ${#G_CALLTITLE} )) ; then
-    CALLSPEC="--call $G_CALLTITLE"
-fi
-QUERYSTUDY="findscu -xi -S --aetitle $G_AETITLE $CALLSPEC               \
-         -k $G_QueryRetrieveLevel=STUDY                                 \
-         -k $G_PatientID=$G_PATIENTID                                   \
-         -k $G_Modality=$G_MODALITY                                     \
-         -k $G_StudyDate=$G_SCANDATE                                    \
-         -k $G_PatientsName=$G_PATIENTSNAME                             \
-         -k $G_StudyInstanceUID=                                        \
-         $G_QUERYHOST $G_QUERYPORT 2> $G_FINDSCUSTUDYSTD"
-
-QUERY="$QUERYSTUDY"
-lprint "I: Results of 'findscu'"
-eval "$QUERY"
-ret_check $? || fatal studyFindFail
-#echo "$QUERY"
-UILINE=$(cat $G_FINDSCUSTUDYSTD| grep StudyInstanceUID)
-#echo "UILINE=$UILINE"
-UI=$(echo "$UILINE" | awk '{print $4}')
-#echo "UI=$UI"
-
-statusPrint "" "\n"
-
-# Now collect the Series information
-rm -f $G_FINDSCUSERIESSTD
-#rm -f $G_FINDSCUSERIESERR
-if (( ${#UI} )) ; then
-  printf "I: StudyInstanceUID hits:\n"
-  for currentUIb in $UI ; do
-    currentUI=$(bracket_find $currentUIb)
-    statusPrint "I: Collecting series information for $currentUI" "\n"
-    QUERYSERIES="findscu -v -S --aetitle $G_AETITLE $CALLSPEC		\
-         -k $G_QueryRetrieveLevel=SERIES                                \
-         -k $G_PatientID=$G_PATIENTID                                   \
-         -k $G_Modality=$G_MODALITY                                     \
-         -k $G_StudyDate=$G_SCANDATE                                    \
-         -k $G_PatientsName=$G_PATIENTSNAME                             \
-         -k $G_PatientBirthDate=                                        \
-         -k $G_StudyInstanceUID=$currentUI                              \
-         -k $G_SeriesInstanceUID=                                       \
-         -k $G_SeriesDescription=                                       \
-         $G_QUERYHOST $G_QUERYPORT 2>> $G_FINDSCUSERIESSTD"
-    eval "$QUERYSERIES"
-    #echo "$QUERYSERIES"
-  done
-  echo ""
-  PACSdata_size    
-else
-  echo ""
-  statusPrint "No hits returned for MRN $G_PATIENTID."
-  echo ""
-  shut_down 1
-fi
-
-lprint "I: Cleaning Series MetaInfo"
-cp $G_FINDSCUSERIESSTD $G_FINDSCUSERIESSTD.bak
-blockFilter.py -f $G_FINDSCUSERIESSTD.bak -s Unknown -u Dicom-Data > $G_FINDSCUSERIESSTD
-rm $G_FINDSCUSERIESSTD.bak
-rprint "[ ok ]"
-lprint "I: Filtering down UI list"
-UILINE=$(cat $G_FINDSCUSERIESSTD| grep StudyInstanceUID | uniq)
-UI=$(echo "$UILINE" | awk '{print $4}')
-rprint "[ ok ]"
-lprint "I: Sorting UI series files"
-blockSort.py -f $G_FINDSCUSERIESSTD -s Dicom-Data -u ---- -S StudyInstanceUID -C 4
-rprint "[ ok ]"
-lprint "I: Reordering UI series files"
-HITS=$(/bin/ls -1 $G_FINDSCUSERIESSTD.* 2>/dev/null | wc -l)
-if (( !HITS )) ; then fatal noBlockSort ; fi
-for FILE in $G_FINDSCUSERIESSTD.* ; do
-    LINE="lineAfter.py -f $FILE -s StudyInstance -u SeriesInstance > ${FILE}.reordered"
-    #echo "$LINE"
-    eval "$LINE"
-    mv ${FILE}.reordered $FILE
-done
-rprint "[ ok ]"
-PACSdata_size
-echo ""
-
-if (( Gi_verbose == 10 )) ; then
-    echo -e "QUERYSERIES: "
-    echo $QUERYSERIES
-    cat $G_FINDSCUSERIESSTD
-fi
-Gb_final=$(( Gb_final || $? ))
-
-b_dateHit=0
-for currentUIb in $UI ; do
-  currentUI=$(bracket_find $currentUIb)
-  echo ""
-  statusPrint "I: StudyInstanceUID = $currentUI:" "\n"
-  Gb_metaInfoPrinted=0
-  SERIESFILE=${G_FINDSCUSERIESSTD}.${currentUI}
-  IFS=$'\n'
-  while read line ; do
-    DA=$(echo "$line" | grep "0008,0020")
-    if (( ${#DA} )) ; then
-        STUDYDATE=$(bracket_find "$DA")
-        if (( !Gb_dateSpecified )) ; then
-            b_dateHit=1
-        elif [[ $G_SCANDATE == $STUDYDATE ]] ; then
-            b_dateHit=1
-        fi
-    fi
-    UILINE=$(echo "$line"       | grep "$G_StudyInstanceUID")
-    STUDYUID=$(bracket_find "${UILINE}")
-
-    tBIRTHDATE=$(echo "$line"   | grep "$G_PatientBirthDate")
-    if (( ${#tBIRTHDATE} )) ; then BIRTHDATE=$(bracket_find "$tBIRTHDATE"); fi
-
-    tNAME=$(echo "$line"        | grep "$G_PatientsName")
-    if (( ${#tNAME} )) ; then   NAME=$(bracket_find "$tNAME");    fi
-
-    tMRID=$(echo "$line"        | grep "$G_PatientID")
-    if (( ${#tMRID} )) ; then   G_PATIENTID=$(bracket_find "$tMRID");    fi
-    
-    tSERIESUID=$(echo "$line"   | grep "$G_SeriesInstanceUID")
-    if (( ${#tSERIESUID} )) ; then
-        SERIESUID=$(bracket_find "$tSERIESUID");
-        b_seriesUIDOK=1
+    if (( ${#G_PATIENTID} )) ; then
+        cprint "M: Querying for MRN" "[ $G_PATIENTID ]"
     fi
 
-    tSERIES=$(echo "$line"      | grep "$G_SeriesDescription")
-    if (( ${#tSERIES} )) ; then
-        SERIES=$(bracket_find "$tSERIES")
-        b_seriesOK=$(echo "$SERIES" | grep -v "no value" | wc -l)
-        if (( Gb_seriesRetrieve )) ; then
-            b_seriesOK=$(echo "$SERIES" | grep "$G_SERIESDESCRIPTION" | wc -l)
-        fi
+    if (( ${#G_PATIENTSNAME} )) ; then
+        cprint "M: Querying for NAME" "[ $G_PATIENTSNAME ]"
     fi
-    if [[   ${STUDYUID} == $currentUI   &&              \
-            $b_dateHit == 1             &&              \
-            $b_seriesOK == 1            &&              \
-            $b_seriesUIDOK == 1 ]] ; then
-        if (( !Gb_metaInfoPrinted )) ; then
-            cprint "Scan Date"          "$STUDYDATE"
-            cprint "Patient Name"       "$NAME"
-            cprint "Patient MRN"        "$G_PATIENTID"
-            cprint "Patient Birthdate"  "$BIRTHDATE"
-            cprint "Patient Age"        "$(age_calc.py $BIRTHDATE $STUDYDATE 2>/dev/null)"
-            echo ""
-            Gb_metaInfoPrinted=1
-            if (( !Gb_queryOnly && !Gb_seriesRetrieve )) ; then
-                moveSTUDY_cmd $STUDYUID;
+
+    if (( Gb_dateSpecified )) ; then
+        cprint "M: Querying for SCANDATE" "[ $G_SCANDATE ]" 
+    else
+        cprint "M: Querying for SCANDATE" "[ unspecified ]"
+    fi
+
+    # We perform two queries off 'findscu'. The first at the STUDY level
+    # collects the StudyInstanceUID. The second, at the SERIES level,
+    # collects all the SeriesDescriptions.
+
+    # First, query the PACS for StudyInstanceUID. This is a unique tag, and
+    # in this case the combination of MRN:SCANDATE is a unique specifier. If
+    # the date is not specified, then multiple StudyInstanceUIDs are returned.
+    if (( ${#G_CALLTITLE} )) ; then
+        CALLSPEC="--call $G_CALLTITLE"
+    fi
+    QUERYSTUDY="findscu -xi -S --aetitle $G_AETITLE $CALLSPEC               \
+             -k $G_QueryRetrieveLevel=STUDY                                 \
+             -k $G_PatientID=$G_PATIENTID                                   \
+             -k $G_Modality=$G_MODALITY                                     \
+             -k $G_StudyDate=$G_SCANDATE                                    \
+             -k $G_PatientsName=$G_PATIENTSNAME                             \
+             -k $G_StudyInstanceUID=                                        \
+             $G_QUERYHOST $G_QUERYPORT 2> $G_FINDSCUSTUDYSTD"
+
+    QUERY="$QUERYSTUDY"
+    lprint "I: Results of 'findscu'"
+    eval "$QUERY"
+    ret_check $? || fatal studyFindFail
+    #echo "$QUERY"
+    UILINE=$(cat $G_FINDSCUSTUDYSTD| grep StudyInstanceUID)
+    #echo "UILINE=$UILINE"
+    UI=$(echo "$UILINE" | awk '{print $4}')
+    #echo "UI=$UI"
+
+    statusPrint "" "\n"
+
+    # Now collect the Series information
+    rm -f $G_FINDSCUSERIESSTD
+    #rm -f $G_FINDSCUSERIESERR
+    if (( ${#UI} )) ; then
+      printf "I: StudyInstanceUID hits:\n"
+      for currentUIb in $UI ; do
+        currentUI=$(bracket_find $currentUIb)
+        statusPrint "I: Collecting series information for $currentUI" "\n"
+        QUERYSERIES="findscu -v -S --aetitle $G_AETITLE $CALLSPEC		\
+             -k $G_QueryRetrieveLevel=SERIES                                \
+             -k $G_PatientID=$G_PATIENTID                                   \
+             -k $G_Modality=$G_MODALITY                                     \
+             -k $G_StudyDate=$G_SCANDATE                                    \
+             -k $G_PatientsName=$G_PATIENTSNAME                             \
+             -k $G_PatientBirthDate=                                        \
+             -k $G_StudyInstanceUID=$currentUI                              \
+             -k $G_SeriesInstanceUID=                                       \
+             -k $G_SeriesDescription=                                       \
+             $G_QUERYHOST $G_QUERYPORT 2>> $G_FINDSCUSERIESSTD"
+        eval "$QUERYSERIES"
+        #echo "$QUERYSERIES"
+      done
+      echo ""
+      PACSdata_size    
+    else
+      echo ""
+      statusPrint "No hits returned for MRN $G_PATIENTID."
+      echo ""
+      shut_down 1
+    fi
+
+    lprint "I: Cleaning Series MetaInfo"
+    cp $G_FINDSCUSERIESSTD $G_FINDSCUSERIESSTD.bak
+    blockFilter.py -f $G_FINDSCUSERIESSTD.bak -s Unknown -u Dicom-Data > $G_FINDSCUSERIESSTD
+    rm $G_FINDSCUSERIESSTD.bak
+    rprint "[ ok ]"
+    lprint "I: Filtering down UI list"
+    UILINE=$(cat $G_FINDSCUSERIESSTD| grep StudyInstanceUID | uniq)
+    UI=$(echo "$UILINE" | awk '{print $4}')
+    rprint "[ ok ]"
+    lprint "I: Sorting UI series files"
+    blockSort.py -f $G_FINDSCUSERIESSTD -s Dicom-Data -u ---- -S StudyInstanceUID -C 4
+    rprint "[ ok ]"
+    lprint "I: Reordering UI series files"
+    HITS=$(/bin/ls -1 $G_FINDSCUSERIESSTD.* 2>/dev/null | wc -l)
+    if (( !HITS )) ; then fatal noBlockSort ; fi
+    for FILE in $G_FINDSCUSERIESSTD.* ; do
+        LINE="lineAfter.py -f $FILE -s StudyInstance -u SeriesInstance > ${FILE}.reordered"
+        #echo "$LINE"
+        eval "$LINE"
+        mv ${FILE}.reordered $FILE
+    done
+    rprint "[ ok ]"
+    PACSdata_size
+    echo ""
+
+    if (( Gi_verbose == 10 )) ; then
+        echo -e "QUERYSERIES: "
+        echo $QUERYSERIES
+        cat $G_FINDSCUSERIESSTD
+    fi
+    Gb_final=$(( Gb_final || $? ))
+
+    b_dateHit=0
+    for currentUIb in $UI ; do
+      currentUI=$(bracket_find $currentUIb)
+      echo ""
+      statusPrint "I: StudyInstanceUID = $currentUI:" "\n"
+      Gb_metaInfoPrinted=0
+      SERIESFILE=${G_FINDSCUSERIESSTD}.${currentUI}
+      IFS=$'\n'
+      while read line ; do
+        DA=$(echo "$line" | grep "0008,0020")
+        if (( ${#DA} )) ; then
+            STUDYDATE=$(bracket_find "$DA")
+            if (( !Gb_dateSpecified )) ; then
+                b_dateHit=1
+            elif [[ $G_SCANDATE == $STUDYDATE ]] ; then
+                b_dateHit=1
             fi
         fi
-        cprint "SeriesDescription" "$SERIES"
-        #cprint "SeriesUID" "$SERIESUID"
-        if (( !Gb_queryOnly && Gb_seriesRetrieve )) ; then
-            moveSERIES_cmd $STUDYUID "$SERIESUID";
-        fi
-        b_dateHit=0
-        b_seriesUIDOK=0
-    fi
-    done < ${G_FINDSCUSERIESSTD}.${currentUI}
-done
-printf "\n"
-# rm $G_FINDSCUSTUDYERR
-rm $G_FINDSCUSTUDYSTD
-# rm $G_FINDSCUSERIESERR
-rm $G_FINDSCUSERIESSTD
-rm $G_FINDSCUSERIESSTD.*
+        UILINE=$(echo "$line"       | grep "$G_StudyInstanceUID")
+        STUDYUID=$(bracket_find "${UILINE}")
 
+        tBIRTHDATE=$(echo "$line"   | grep "$G_PatientBirthDate")
+        if (( ${#tBIRTHDATE} ));then BIRTHDATE=$(bracket_find "$tBIRTHDATE"); fi
+
+        tNAME=$(echo "$line"        | grep "$G_PatientsName")
+        if (( ${#tNAME} )) ; then NAME=$(bracket_find "$tNAME");    fi
+
+        tMRID=$(echo "$line"        | grep "$G_PatientID")
+        if (( ${#tMRID} )) ; then G_PATIENTID=$(bracket_find "$tMRID");    fi
+        
+        tSERIESUID=$(echo "$line"   | grep "$G_SeriesInstanceUID")
+        if (( ${#tSERIESUID} )) ; then
+            SERIESUID=$(bracket_find "$tSERIESUID");
+            b_seriesUIDOK=1
+        fi
+
+        tSERIES=$(echo "$line"      | grep "$G_SeriesDescription")
+        if (( ${#tSERIES} )) ; then
+            SERIES=$(bracket_find "$tSERIES")
+            b_seriesOK=$(echo "$SERIES" | grep -v "no value" | wc -l)
+            if (( Gb_seriesRetrieve )) ; then
+                b_seriesOK=$(echo "$SERIES"|grep "$G_SERIESDESCRIPTION"|wc -l)
+            fi
+        fi
+        if [[   ${STUDYUID} == $currentUI   &&              \
+                $b_dateHit == 1             &&              \
+                $b_seriesOK == 1            &&              \
+                $b_seriesUIDOK == 1 ]] ; then
+            if (( !Gb_metaInfoPrinted )) ; then
+                cprint "Scan Date"          "$STUDYDATE"
+                cprint "Patient Name"       "$NAME"
+                cprint "Patient MRN"        "$G_PATIENTID"
+                cprint "Patient Birthdate"  "$BIRTHDATE"
+                cprint "Patient Age"        "$(age_calc.py $BIRTHDATE $STUDYDATE 2>/dev/null)"
+                echo ""
+                Gb_metaInfoPrinted=1
+                if (( !Gb_queryOnly && !Gb_seriesRetrieve )) ; then
+                    moveSTUDY_cmd $STUDYUID;
+                fi
+            fi
+            cprint "SeriesDescription" "$SERIES"
+            #cprint "SeriesUID" "$SERIESUID"
+            if (( !Gb_queryOnly && Gb_seriesRetrieve )) ; then
+                moveSERIES_cmd $STUDYUID "$SERIESUID";
+            fi
+            b_dateHit=0
+            b_seriesUIDOK=0
+        fi
+        done < ${G_FINDSCUSERIESSTD}.${currentUI}
+    done
+    printf "\n"
+    # rm $G_FINDSCUSTUDYERR
+    rm $G_FINDSCUSTUDYSTD
+    # rm $G_FINDSCUSERIESERR
+    rm $G_FINDSCUSERIESSTD
+    rm $G_FINDSCUSERIESSTD.*
+done
 exit $Gb_final
 
 
