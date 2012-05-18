@@ -311,15 +311,15 @@ if (( ! ${#GLST_PATIENTID} && ! ${#GLST_PATIENTSNAME} )) ; then fatal noMRNorNam
 if (( ${#GLST_PATIENTID} && ${#GLST_PATIENTSNAME} )) ; then GLST_PATIENTSNAME="" ; fi
 if (( ${#G_SCANDATE}            )) ; then Gb_dateSpecified=1;   fi
 
-cprint "M: Institution"		"[ $G_INSTITUTION ]"
-cprint "M: AETitle for query"	"[ $G_AETITLE ]"
-cprint "M: PACS IP"		"[ $G_QUERYHOST ]"
-cprint "M: CallTitle for query"	"[ $G_CALLTITLE ]"
-
 if (( ${#GLST_PATIENTID} )) ;   then GLST=$GLST_PATIENTID; fi 
 if (( ${#GLST_PATIENTSNAME}));  then GLST=$GLST_PATIENTSNAME; fi
 
 for EL in $(echo $GLST | tr , ' '); do
+    cprint "M: Institution"		    "[ $G_INSTITUTION ]"
+    cprint "M: AETitle for query"	"[ $G_AETITLE ]"
+    cprint "M: PACS IP"		        "[ $G_QUERYHOST ]"
+    cprint "M: CallTitle for query"	"[ $G_CALLTITLE ]"
+
     if (( ${#GLST_PATIENTID} )) ; then G_PATIENTID=$EL; fi
     if (( ${#GLST_PATIENTSNAME})) ; then G_PATIENTSNAME=$EL; fi
 
