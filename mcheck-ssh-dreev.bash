@@ -130,8 +130,8 @@ TARGETACTION[4]="tunnel.bash --reverse 	--from ch137123@${DREEV}:10402 	--to ${P
 TARGET_CHECK[5]="tunnel.bash --reverse 	--from ch137123@${DREEV}:8000 	--to ${DURBAN}:80 --isRunning"
 TARGETACTION[5]="tunnel.bash --reverse 	--from ch137123@${DREEV}:8000 	--to ${DURBAN}:80"
 # Web access to 'natal'
-TARGET_CHECK[6]="tunnel.bash --reverse	--from ch137123@${DREEV}:8800	--to ${NATAL}:80 --isRunning"
-TARGETACTION[6]="tunnel.bash --reverse	--from ch137123@${DREEV}:8800	--to ${NATAL}:80"
+TARGET_CHECK[6]="tunnel.bash --reverse	--from ch137123@${DREEV}:8800	--to ${JOHANNESBURG}:80 --isRunning"
+TARGETACTION[6]="tunnel.bash --reverse	--from ch137123@${DREEV}:8800	--to ${JOHANNESBURG}:80"
 # OsiriX listener on 'osx1927'
 TARGET_CHECK[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${JOHANNESBURG}:11112 --isRunning"
 TARGETACTION[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${JOHANNESBURG}:11112"
