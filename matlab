@@ -66,9 +66,10 @@ else
     printf "Using local install of MatLAB...\n"
     case $OSTYPE 
     in 
-        Linux)  export PATH=/opt/MATLAB/R2011b/bin:/chb/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin:$PATH
+        Linux)  export PATH=/chb/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin:$PATH
                 ;;
         Darwin) export PATH=/chb/arch/x86_64-Darwin/packages/matlab/MATLAB_${G_VERSION}.app/bin:$PATH
+		;;
     esac
 fi
 
