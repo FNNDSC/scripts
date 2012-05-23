@@ -76,8 +76,8 @@ fi
 
 echo "matlab $MARGS"
 
-# The following filter is to remove an annoying "bug" that affects only Lion.
-matlab $MARGS 2>&1 | grep -v "exclude an item from Time Machine"
+matlab $MARGS 
+
 
 
 
