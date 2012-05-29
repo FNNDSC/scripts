@@ -143,6 +143,27 @@ Database.prototype.parseAndAddFile = function(fileName, data) {
     
   }
   
+  // now some changes requested by susan
+  var roi2meanGrayValuesStartLine = this.jumpToLine('ROI2 mean gray values', dataAsArray);
+  
+  if (roi2meanGrayValuesStartLine == -1) {
+    
+    error('Could not parse file: ' + fileName);
+    return;
+    
+  }
+  
+  l=0;
+  var line = dataAsArray[roi2meanGrayValuesStartLine+2+l];
+  
+  while (jQuery.trim(line) != "") {
+    
+    dataset.parseRoi2MeanGrayValues(line);
+    line = dataAsArray[roi2meanGrayValuesStartLine+2+(l++)];
+    
+  }
+  
+  
   if (caseType == "postcontrast") {
     
     caze._postcontrast[caseNumber] = dataset; 

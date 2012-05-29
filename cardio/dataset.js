@@ -9,7 +9,8 @@ Dataset = function() {
   this._s4T1 = 0;
   this._s5T1 = 0;
   this._s6T1 = 0;
-  this._meanT1 = 0;    
+  this._meanT1 = 0;
+  this._roi2meanT1 = 0;
   
   
 }
@@ -114,6 +115,18 @@ Dataset.prototype.parseAndAddSignalIntensities = function(line) {
   
 }
 
+Dataset.prototype.parseRoi2MeanGrayValues = function(line) {
+  
+  var lineAsArray = jQuery.trim(line).split(' ').filter(function(a){if (a!="") return true;})
+  
+  for (var k=1;k<lineAsArray.length;k++) {
+    
+    this._data[k]._roi2mean = Dataset.toFloat(lineAsArray[k]);
+    
+  }
+  
+}
+
 
 Data = function() {
   
@@ -134,6 +147,7 @@ Data = function() {
   this._s5 = 0;
   this._s6 = 0;
   this._mean = 0;  
+  this._roi2mean = 0; // requested by susan May 2012
 
   
 }
