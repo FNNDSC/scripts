@@ -177,8 +177,12 @@ def main():
     conf.active_cffconverter = True
     conf.skip_completed_stages = True
     
+    print 'Parse command line'    
+
     # Setup and parse command-line options
     options = parseCommandLine(conf)
+    
+    print 'Command line parsed'    
 
     # XXX: These are hardcoded for now until I figure out how they
     #      should be set
@@ -197,7 +201,8 @@ def main():
 
     # Prepare the directory structure for execution
     prepForExecution(conf, options)
-    
+
+    print 'Start the cmp pipeline'        
     # Execute the 'cmp' pipeline!
     cmp.connectome.mapit(conf)
         
