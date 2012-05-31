@@ -7,8 +7,8 @@ OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
 #export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
 
-export DTDIR=/chb/users/nicolas.rannou/fsdev-next/dtk/
+export DTDIR=/chb/users/nicolas.rannou/workspace/dtk/
 export DSI_PATH=${DTDIR}/matrices
 
-export PYTHONPATH=:/chb/users/nicolas.rannou/workspace/cmplib/lib/python/:/chb/users/nicolas.rannou/workspace/cvwlib/lib/python
-export PATH=$PATH:/chb/users/nicolas.rannou/workspace/cmplib/bin:/chb/users/nicolas.rannou/workspace/cvwlib/bin
+export PYTHONPATH=:/chb/users/nicolas.rannou/workspace/cmp120/lib/python/:/chb/users/nicolas.rannou/workspace/cv210/lib/python
+export PATH=$PATH:/chb/users/nicolas.rannou/workspace/cmp120/bin:/chb/users/nicolas.rannou/workspace/cv210/bin
