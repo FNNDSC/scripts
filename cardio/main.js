@@ -388,7 +388,8 @@ function drawBigDiagrams(table,caze, title) {
     
     pre = caze._precontrast[pre];
     
-    x_pre = pre._lvBloodT1/1000;
+    //x_pre = pre._lvBloodT1/1000;
+    x_pre = pre._roi2meanT1/1000;
     y_pre = eval('pre._'+dataId+'T1')/1000;
     
     x.push(1/x_pre);
@@ -401,7 +402,8 @@ function drawBigDiagrams(table,caze, title) {
     
     post = caze._postcontrast[post];
     
-    x_post = post._lvBloodT1/1000;
+    //x_post = post._lvBloodT1/1000;
+    x_post = post._roi2meanT1/1000;
     y_post = eval('post._'+dataId+'T1')/1000;
     
     x.push(1/x_post);
@@ -545,6 +547,7 @@ function calculateAndShowResults() {
     drawSmallDiagrams(firsttable, c, 'S5');
     drawSmallDiagrams(firsttable, c, 'S6');
     drawSmallDiagrams(firsttable, c, 'Mean');
+    drawSmallDiagrams(firsttable, c, 'ROI2Mean');
     contentDiv.append('<br><br>');    
 
     contentDiv.append('<h5>Extracellular Volume Fraction</h5>')
