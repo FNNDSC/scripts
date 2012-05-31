@@ -48,7 +48,7 @@ OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
 
 export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
-export FSL_DIR=${PACKAGEDIR}/fsl
+export FSL_DIR=${PACKAGEDIR}/fsl419
 export SUBJECTS_DIR=$(pwd)
 
 source ${PACKAGEDIR}/freesurfer/${G_VERSION}-${G_REVISION}/SetUpFreeSurfer.sh
@@ -61,6 +61,9 @@ unset TIX_LIBRARY
 OS=$(uname -a | awk '{print $1}')
 export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fs-${G_VERSION}-${G_REVISION}]"
 
-export PATH=$PATH:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/mricron:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/Slicer/current/:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/dtk
+# why Sliceri?
+export PATH=$PATH:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/mricron:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/dtk
+#:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/Slicer/current/
 
-export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp
+# why cmp?
+#export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp
