@@ -152,7 +152,7 @@ else
 
   # just on pretoria
   ssh toor@pretoria -t sudo chmod 770 $HOMEFOLDER
-  ssh toor@pretoria -t sudo chmod -R $USERID:$GROUPID $HOMEFOLDER
+  ssh toor@pretoria -t sudo chown -R $USERID:$GROUPID $HOMEFOLDER
 
 fi;
 
