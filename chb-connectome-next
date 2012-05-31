@@ -1,5 +1,8 @@
+#ensure 'getopts' works with 'source' command
+OPTIND=1
+
 # First source  freesurfer environment
-source  /chb/arch/scripts/chb-fs -v dev -r 05082012
+source /chb/arch/scripts/chb-fs -v dev -r 05082012
 export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-cmp1.2]"
 
 # Set the cmtk tk environment variables
