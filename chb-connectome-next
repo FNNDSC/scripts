@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # First source  freesurfer environment
 source  /chb/arch/scripts/chb-fs -v dev -r 05082012
 export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-cmp1.2]"
