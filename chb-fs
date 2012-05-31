@@ -1,0 +1,72 @@
+#!/bin/bash
+
+#ensure 'getopts' works with 'source' command
+OPTIND=1
+
+G_VERSION="stable"
+G_REVISION="5.0.0"
+G_SYNOPSIS="
+
+    NAME
+    
+        chb-fs
+        
+    SYNOPSIS
+    
+        chb-fs [-v <version>] [-r <revision>]
+        
+    ARGS
+    
+        -v <version> (Default 'stable')
+        Source the FreeSurfer environment for the given version.
+
+	-r <revision> (Default '5.0.0')
+	Select a specific revision. 
+        
+    DESCRIPTION
+    
+        'chb-fs' is a simple script to easily source different environments for freesurfer
+        
+        
+    HISTORY
+    
+        May 30 2012
+        o Initial development.
+"
+
+while getopts v:r: option ; do
+    case "$option" 
+    in
+        v) G_VERSION="$OPTARG"          ;;
+        r) G_REVISION="$OPTARG"          ;;
+        *) echo "$G_SYNOPSIS"
+           exit 1                       ;;
+    esac
+done
+
+echo "Version: $G_VERSION"
+echo "Revision: $G_REVISION"
+
+OS=$(uname -a | awk '{print $1}')
+echo "Host type is $HOSTTYPE-${OS}"
+
+export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
+export FSL_DIR=${PACKAGEDIR}/fsl419
+export SUBJECTS_DIR=$(pwd)
+
+source ${PACKAGEDIR}/freesurfer/${G_VERSION}-${G_REVISION}/SetUpFreeSurfer.sh
+source ${FSL_DIR}/etc/fslconf/fsl.sh
+unset TCLLIBPATH
+unset TCL_LIBRARY
+unset TK_LIBRARY
+unset TIX_LIBRARY
+
+OS=$(uname -a | awk '{print $1}')
+export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fs-${G_VERSION}-${G_REVISION}]"
+
+# why Sliceri?
+export PATH=$PATH:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/mricron:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/dtk
+#:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/Slicer/current/
+
+# why cmp?
+#export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp
