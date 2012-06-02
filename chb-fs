@@ -13,19 +13,23 @@ G_SYNOPSIS="
         
     SYNOPSIS
     
-        chb-fs [-v <version>] [-r <revision>]
+        chb-fs [<version>] [<revision>]
         
     ARGS
     
-        -v <version> (Default 'stable')
+        <version> (Default \"$G_VERSION\")
         Source the FreeSurfer environment for the given version.
 
-	-r <revision> (Default '5.0.0')
-	Select a specific revision. 
+	<revision> (Default \"$G_REVISION\")
+	Select a specific revision of the version.
         
     DESCRIPTION
     
-        'chb-fs' is a simple script to easily source different environments for freesurfer
+        'chb-fs' is a simple script to easily source different environments 
+        for FreeSurfer.
+        
+        If called without any arguments, it will default to the stable
+        version of FreeSurfer, currently \"$G_VERSION-$G_REVISION\".
         
         
     HISTORY
@@ -33,19 +37,31 @@ G_SYNOPSIS="
         May 30 2012
         o Initial development.
 "
+function synopsis_show
+{
+        # ARGS
+        # $1            in (opt)                if passed, exit to shell
+        #                                       passing code $1.
+        echo "USAGE:"
+        echo "$G_SYNOPSIS"
+        if (( $# == 1 )) ; then exit $1 ; fi
+}
 
-while getopts v:r: option ; do
-    case "$option" 
-    in
-        v) G_VERSION="$OPTARG"          ;;
-        r) G_REVISION="$OPTARG"          ;;
-        *) echo "$G_SYNOPSIS"
-           exit 1                       ;;
-    esac
-done
+# This handles the following:
+#       -x                      : show help and exit
+#       1st command ling arg    : set G_VERSION
+#       if exist 2nd arg        : set G_REVISION
+#       additional args         : show help and exit
+if (( $# <= 2 )) ; then
+    if [[ $1 == "-x" ]] ; then synopsis_show 1; fi
+    if (( ${#1} )) ; then G_VERSION=$1;  fi
+    if (( $#==2 )) ; then G_REVISION=$2; fi
+else
+    synopsis_show 1
+fi
 
-echo "Version: $G_VERSION"
-echo "Revision: $G_REVISION"
+echo "version:  $G_VERSION"
+echo "revision: $G_REVISION"
 
 OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
@@ -64,7 +80,7 @@ unset TIX_LIBRARY
 OS=$(uname -a | awk '{print $1}')
 export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fs-${G_VERSION}-${G_REVISION}]"
 
-# why Sliceri?
+# why Slicer?
 export PATH=$PATH:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/mricron:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/dtk
 #:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/Slicer/current/
 
