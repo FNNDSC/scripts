@@ -22,9 +22,10 @@ G_SYNOPSIS="
         Source the FreeSurfer environment for the given version.
 
 	<revision> (No default)
-	Specify a revision of the version. This is only necessary when multiple
-	revisions exist, for example in the case of the 'stable' version there
-	might be revision '5.0.0' and '5.1.0' installed on the system. If not
+	Specify an optional revision of the version. This is only necessary when 
+	multiple revisions of a given version exist, for example in the case of 
+	the 'stable' version there might be revision '5.0.0' and '5.1.0' 
+	installed concurrently on the system. If the <revision> is not 
 	specified, the environment will default to whatever has been configured
 	as the default revsion for a given version. This default will have been
 	setup by the system administrator.
@@ -34,9 +35,24 @@ G_SYNOPSIS="
         'chb-fs' is a simple script to easily source different environments 
         for FreeSurfer.
         
-        If called without any arguments, it will default to the stable
-        version of FreeSurfer, currently \"$G_VERSION$G_REVISION\".
+        If called without any arguments, it will setup the current default
+        version of FreeSurfer for this system, which has been 
+        configured here as \"$G_VERSION$G_REVISION\".
         
+    NB!
+        
+        To have variables set by this script to be valid in the caller (i.e.
+        parent's scope), this script *must* be sourced and not executed. That 
+        means instead of typing:
+        
+                $>chb-fs stable
+                
+        to setup the FreeSurfer stable enviroment, you have to type:
+        
+                $>. chb-fs stable
+                
+        note the dot '.' at the beginning! Without this dot, the specified
+        FreeSurfer environment will NOT be initialized.
         
     HISTORY
     
