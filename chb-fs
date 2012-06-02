@@ -4,7 +4,8 @@
 OPTIND=1
 
 G_VERSION="stable"
-G_REVISION="5.0.0"
+G_REVISION=""
+Gb_revisionSet=0
 G_SYNOPSIS="
 
     NAME
@@ -20,8 +21,13 @@ G_SYNOPSIS="
         <version> (Default \"$G_VERSION\")
         Source the FreeSurfer environment for the given version.
 
-	<revision> (Default \"$G_REVISION\")
-	Select a specific revision of the version.
+	<revision> (No default)
+	Specify a revision of the version. This is only necessary when multiple
+	revisions exist, for example in the case of the 'stable' version there
+	might be revision '5.0.0' and '5.1.0' installed on the system. If not
+	specified, the environment will default to whatever has been configured
+	as the default revsion for a given version. This default will have been
+	setup by the system administrator.
         
     DESCRIPTION
     
@@ -29,7 +35,7 @@ G_SYNOPSIS="
         for FreeSurfer.
         
         If called without any arguments, it will default to the stable
-        version of FreeSurfer, currently \"$G_VERSION-$G_REVISION\".
+        version of FreeSurfer, currently \"$G_VERSION$G_REVISION\".
         
         
     HISTORY
@@ -61,7 +67,13 @@ else
 fi
 
 echo "version:  $G_VERSION"
-echo "revision: $G_REVISION"
+if (( ${#G_REVISION} )) ; then
+    echo "revision: $G_REVISION"
+    G_REVISION="-$G_REVISION"   # This is because installs on the filesystem
+                                # are <version>-<revision>.
+else
+    echo "revision: -system default-"
+fi
 
 OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
@@ -70,7 +82,7 @@ export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
 export FSL_DIR=${PACKAGEDIR}/fsl419
 export SUBJECTS_DIR=$(pwd)
 
-source ${PACKAGEDIR}/freesurfer/${G_VERSION}-${G_REVISION}/SetUpFreeSurfer.sh
+source ${PACKAGEDIR}/freesurfer/${G_VERSION}${G_REVISION}/SetUpFreeSurfer.sh
 source ${FSL_DIR}/etc/fslconf/fsl.sh
 unset TCLLIBPATH
 unset TCL_LIBRARY
@@ -78,7 +90,7 @@ unset TK_LIBRARY
 unset TIX_LIBRARY
 
 OS=$(uname -a | awk '{print $1}')
-export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fs-${G_VERSION}-${G_REVISION}]"
+export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fs-${G_VERSION}${G_REVISION}]"
 
 # why Slicer?
 export PATH=$PATH:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/mricron:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/dtk
