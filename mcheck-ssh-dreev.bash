@@ -86,7 +86,7 @@ EC_fileCheck=1
 
 DREEV=dreev.tch.harvard.edu
 JOHANNESBURG=johannesburg.tch.harvard.edu
-OSX2147=osx2147.tch.harvard.edu
+BERLIN=berlin.tch.harvard.edu
 OSX1476=osx1476.tch.harvard.edu
 DURBAN=durban.tch.harvard.edu
 NATAL=natal.tch.harvard.edu
@@ -136,8 +136,8 @@ TARGETACTION[6]="tunnel.bash --reverse	--from ch137123@${DREEV}:8800	--to ${JOHA
 TARGET_CHECK[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${JOHANNESBURG}:11112 --isRunning"
 TARGETACTION[7]="tunnel.bash --reverse 	--from ch137123@${DREEV}:11112	--to ${JOHANNESBURG}:11112"
 # SVN source code repositories
-TARGET_CHECK[8]="tunnel.bash --reverse	--from ch137123@${DREEV}:5555	--to ${OSX2147}:22 --isRunning"
-TARGETACTION[8]="tunnel.bash --reverse	--from ch137123@${DREEV}:5555	--to ${OSX2147}:22"
+TARGET_CHECK[8]="tunnel.bash --reverse	--from ch137123@${DREEV}:5555	--to ${BERLIN}:22 --isRunning"
+TARGETACTION[8]="tunnel.bash --reverse	--from ch137123@${DREEV}:5555	--to ${BERLIN}:22"
 TARGET_CHECK[9]="tunnel.bash --reverse	--from ch137123@${DREEV}:5556	--to ${NATAL}:22 --isRunning"
 TARGETACTION[9]="tunnel.bash --reverse	--from ch137123@${DREEV}:5556	--to ${NATAL}:22"
 TARGET_CHECK[10]="tunnel.bash --reverse	--from ch137123@${DREEV}:4212	--to ${PARIS}:22 --isRunning"
