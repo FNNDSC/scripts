@@ -2,11 +2,11 @@ OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
 
 export PACKAGEDIR=/chb/pices/arch/${HOSTTYPE}-${OS}/packages
-export FSL_DIR=${PACKAGEDIR}/fsl
+export FSLDIR=${PACKAGEDIR}/fsl
 export SUBJECTS_DIR=$(pwd)
 
 source ${PACKAGEDIR}/freesurfer/stable/SetUpFreeSurfer.sh
-source ${FSL_DIR}/etc/fslconf/fsl.sh
+source ${FSLDIR}/etc/fslconf/fsl.sh
 unset TCLLIBPATH
 unset TCL_LIBRARY
 unset TK_LIBRARY
