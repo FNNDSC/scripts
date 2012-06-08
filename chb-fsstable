@@ -17,4 +17,4 @@ export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fsstable]"
 
 export PATH=$PATH:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/mricron:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/Slicer/current/:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/dtk
 
-export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp
+export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp/lib/python
