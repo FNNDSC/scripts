@@ -19,4 +19,4 @@ export PATH=$PATH:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/mricron:/chb/freesu
 
 export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp/lib/python
 
-export LD_LIBRARY_PATH=/chb/arch/x86_64-Linux/packages/vtk/5.6.0_sshpatch/lib/vtk-5.6/:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/chb/arch/x86_64-Linux/packages/vtk/5.6.0_sshpatch/lib/vtk-5.6/:/chb/arch/x86_64-Linux/packages/qwt420/lib/:$LD_LIBRARY_PATH
