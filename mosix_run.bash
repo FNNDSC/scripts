@@ -114,7 +114,7 @@ ret_check $?
 FS_MB_REQ="2500"
 FS_PROC_REQ="4"
 CLUSTER_SCRIPT=$(echo ${G_CMD} | awk '{print $1}' | xargs basename)
-MOSIX_ARGS="-e -q -M"
+MOSIX_ARGS="-e -q"
 case "$CLUSTER_SCRIPT" in
     tract-cluster.sh)
         MOSIX_ARGS="$MOSIX_ARGS -b"
