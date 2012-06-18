@@ -76,7 +76,6 @@ def parseCommandLine(conf):
         parser.error('You must specify --workingDir')
     else:
         conf.project_dir = os.path.dirname(options.workingDir)
-        conf.subject_workingdir = options.workingDir
         conf.subject_name = os.path.basename(options.workingDir) 
                 
     if options.projectName:
@@ -113,54 +112,30 @@ def prepForExecution(conf, options):
 
     if options.dtiDir == None:
         sys.exit('You must specify --dtiDir')        
-    # might need subject working dir?
-    # T2 and fMRI supported?
-    
-    # Create RAWDATA dirs and copy data inside!
-    if not os.path.exists(conf.subject_workingdir + os.sep + 'RAWDATA'):
-        os.makedirs(conf.subject_workingdir + os.sep + 'RAWDATA')
-
-    # Create RAWDATA dirs and copy data inside!
-    if not os.path.exists(conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'DTI'):
-        os.makedirs(conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'DTI')
-    
-    # Create RAWDATA dirs and copy data inside!
-    if not os.path.exists(conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'T1'):
-        os.makedirs(conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'T1')
-   
-    # Copy the DICOM's
-    for file in glob.glob(os.path.join(options.t1Dir + os.sep + "*.dcm")):
-        print file
-        shutil.copy(file, conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'T1')
-                
-    for file in glob.glob(os.path.join(options.dtiDir + os.sep + "*.dcm")):
-       
-        shutil.copy(file, conf.subject_workingdir + os.sep + 'RAWDATA' + os.sep + 'DTI')
- 
-
-   # First, setup the pipeline status so we can determine the inputs
-#    cmp.connectome.setup_pipeline_status(conf)
+        
+    # First, setup the pipeline status so we can determine the inputs
+    cmp.connectome.setup_pipeline_status(conf)
     
     # Get the first stage by number
-#    stage = conf.pipeline_status.GetStage(num=1)
+    stage = conf.pipeline_status.GetStage(num=1)
     
     # Get the DTI and T1 DICOM input folders
-#    dtiInput = conf.pipeline_status.GetStageInput(stage, 'dti-dcm')
-#    t1Input = conf.pipeline_status.GetStageInput(stage, 't1-dcm')
+    dtiInput = conf.pipeline_status.GetStageInput(stage, 'dti-dcm')
+    t1Input = conf.pipeline_status.GetStageInput(stage, 't1-dcm')
     
     # Create the input folders
-#    if not os.path.exists(dtiInput.rootDir):
-#        os.makedirs(dtiInput.rootDir)
+    if not os.path.exists(dtiInput.rootDir):
+        os.makedirs(dtiInput.rootDir)
 
-#    if not os.path.exists(t1Input.rootDir):        
-#        os.makedirs(t1Input.rootDir)
+    if not os.path.exists(t1Input.rootDir):        
+        os.makedirs(t1Input.rootDir)
     
     # Copy the DICOM's
-#    for file in glob.glob(os.path.join(options.dtiDir, dtiInput.filePath)):
-#        shutil.copy(file, dtiInput.rootDir)
+    for file in glob.glob(os.path.join(options.dtiDir, dtiInput.filePath)):
+        shutil.copy(file, dtiInput.rootDir)
                 
-#    for file in glob.glob(os.path.join(options.t1Dir, t1Input.filePath)):
-#        shutil.copy(file, t1Input.rootDir)
+    for file in glob.glob(os.path.join(options.t1Dir, t1Input.filePath)):
+        shutil.copy(file, t1Input.rootDir)
     
         
 def main():
@@ -221,7 +196,7 @@ def main():
     
     # Before running, reset the pipeline status because it will 
     # get created in mapit()
-#    conf.pipeline_status = cmp.pipeline_status.PipelineStatus()
+    conf.pipeline_status = cmp.pipeline_status.PipelineStatus()
         
     # Execute the 'cmp' pipeline!
     cmp.connectome.mapit(conf)
