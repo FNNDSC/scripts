@@ -41,11 +41,11 @@ def parseCommandLine(conf):
                       help="Subject Working Directory")
     parser.add_option("--b0",
                       dest="b0",
-                      type="string",
+                      type="int",
                       help="Number of B0 volumes")
     parser.add_option("--bValue",
                       dest="bValue",
-                      type="string",
+                      type="int",
                       help="B Value")
     parser.add_option("--gm",
                       dest="gradientMatrix",                      
