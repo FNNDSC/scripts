@@ -101,10 +101,9 @@ ret_check $?
 #
 # For now, invoke MOSIX with the following options:
 # -b = best node
-# outdated / -E = non-migratable Linux
-# -e = unsupported system calls fail
+# outdated: use mosbatch / -E = non-migratable Linux
+# outdated: default in mosbatch / -e = unsupported system calls fail
 # -q = add to the queue
-# -M = run on a different home node
 #
 # Other options to consider:
 # -m<mb> = we might want to use this to request a large number of MB be available for a freesurfer job
@@ -114,7 +113,7 @@ ret_check $?
 FS_MB_REQ="2500"
 FS_PROC_REQ="4"
 CLUSTER_SCRIPT=$(echo ${G_CMD} | awk '{print $1}' | xargs basename)
-MOSIX_ARGS="-e -q"
+MOSIX_ARGS="-q"
 case "$CLUSTER_SCRIPT" in
     tract-cluster.sh)
         MOSIX_ARGS="$MOSIX_ARGS -b"
@@ -133,7 +132,7 @@ esac
 if [[ "$G_JOBID" != "-x" ]] ; then
 	MOSIX_ARGS="$MOSIX_ARGS -J${G_JOBID}"
 fi
-CMD="mosrun $MOSIX_ARGS ${G_CMD} &"
+CMD="mosbatch $MOSIX_ARGS ${G_CMD} &"
 eval $CMD
 shut_down $?
 
