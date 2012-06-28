@@ -128,7 +128,7 @@ DESCRIPTION
 # o        Added -force to all file delete references
 #
 
-lappend auto_path       ~/src/devel/tcl_packages.devel
+lappend auto_path       /chb/users/rudolphpienaar/src/devel/tcl_packages.devel
 package require         misc
 package require         parval
 
