@@ -212,7 +212,7 @@ set child                        "${listFileDir}/archive.sh"
 switch -- [exec uname] {
     Linux               { append tarcmd "/bin/tar " }
     FreeBSD             { append tarcmd "/usr/bin/tar " }
-    Darwin              { append tarcmd "/sw/bin/tar " }
+    Darwin              { append tarcmd "/opt/local/bin/tar " }
     default             { append tarcmd "/bin/tar " }
 }
 append tarcmd "--create --file - --totals --gzip "
