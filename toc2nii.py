@@ -14,7 +14,7 @@ class TocParserLogic():
     '''
 
     # create output folder
-    os.mkdir( 'mgz_export' )
+    os.mkdir( 'nii_export' )
 
     with open( fileName, 'r' ) as f:
 
@@ -34,8 +34,8 @@ class TocParserLogic():
 
           outputFile = l_array[1].split( ' ' )[0] + '-' + os.path.splitext( fileNameSplitted[1] )[0]
 
-          print "Converting " + fileNameSplitted[1] + ' to ' + outputFile + '.mgz'
-          print os.system( "mri_convert " + fileNameSplitted[1] + ' mgz_export/' + outputFile + '.mgz' )
+          print "Converting " + fileNameSplitted[1] + ' to ' + outputFile + '.nii'
+          print os.system( "mri_convert " + fileNameSplitted[1] + ' nii_export/' + outputFile + '.nii' )
 
 
     print "All done."
@@ -46,7 +46,7 @@ class TocParserLogic():
 def print_help( scriptName ):
   '''
   '''
-  description = 'Parse a toc.txt file and create .mgz files for each series in a sub-folder mgz_export/.'
+  description = 'Parse a toc.txt file and create .nii files for each series in a sub-folder nii_export/.'
   print description
   print
   print 'Usage: python ' + scriptName
