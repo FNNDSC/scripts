@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+import os
+import sys
+
+def _mkdir(newdir):
+    """works the way a good mkdir should :)
+        - already exists, silently complete
+        - regular file in the way, raise an exception
+        - parent directory(ies) does not exist, make them as well
+    """
+    if os.path.isdir(newdir):
+        pass
+    elif os.path.isfile(newdir):
+        raise OSError("a file with the same name as the desired " \
+                      "dir, '%s', already exists." % newdir)
+    else:
+        head, tail = os.path.split(newdir)
+        if head and not os.path.isdir(head):
+            _mkdir(head)
+        #print "_mkdir %s" % repr(newdir)
+        if tail:
+            os.mkdir(newdir)
+
+class TocParserLogic():
+
+  def __init__( self, str_outputFormat = 'mgz'):
+    '''
+    '''
+    self._str_outputType = str_outputFormat
+    self._str_outputDir = '%s_export' % self._str_outputType
+
+  def run( self, fileName ):
+    '''
+    '''
+
+    # create output folder
+    _mkdir( '%s_export' % self._str_outputType)
+
+    with open( fileName, 'r' ) as f:
+
+      data = f.readlines()
+
+
+      for l in data:
+
+        l_without_spaces = l.strip()
+        l_array = l_without_spaces.split( '\t' )
+
+        # l_array will have two elements, like this: 
+        # ['Scan 777000-000007-000001.dcm', 'PCASL (DO NOT NEED XTRA SLICES/NO NEED TO SCAN BELOW EYELINE)']
+        fileNameSplitted = l_array[0].split( ' ' )
+
+        if fileNameSplitted[0] == "Scan":
+
+          outputFile = l_array[1].split( ' ' )[0] + '-' + os.path.splitext( fileNameSplitted[1] )[0]
+
+          print "Converting " + fileNameSplitted[1] + ' to ' + outputFile + '.%s' % self._str_outputType
+          print os.system( "mri_convert " + fileNameSplitted[1] + ' ' + self._str_outputDir + "/" + outputFile + '.' + self._str_outputType )
+
+
+    print "All done."
+
+
+
+
+def print_help( scriptName ):
+  description =  '''
+  SYNOPSIS
+  
+        %s <outputFormat>
+        
+  DESCRIPTION
+  
+        This script converts DICOMS as indexed in a table-of-contents file
+        to a desired <outputFormat>, for example 'mgz'. 
+        
+        Converted outputs are stored in a directory called 
+        
+                '<outputFormat>_export'
+        
+  ARGS
+  
+        <outputFormat>
+        The output format to use. Since this script uses the FreeSurfer
+        'mri_convert' to perform the conversion, all types understood 
+        by 'mri_convert' are valid.
+        
+  EXAMPLE
+  
+        %s mgz
+        Converts all the DICOMS in toc.txt to mgz format.
+        
+        %s nii
+        Converts all the DICOMS in toc.txt to nii format.
+        
+  ''' % (scriptName, scriptName, scriptName)
+  print description
+
+
+#
+# entry point
+#
+if __name__ == "__main__":
+
+  # always show the help if no arguments were specified
+  if len( sys.argv ) != 2:
+    print_help( sys.argv[0] )
+    sys.exit( 1 )
+
+  outputFormat = sys.argv[1];
+  logic = TocParserLogic(outputFormat)
+  logic.run( 'toc.txt' )
+
