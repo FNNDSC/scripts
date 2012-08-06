@@ -128,7 +128,7 @@ DESCRIPTION
 # o        Added -force to all file delete references
 #
 
-lappend auto_path       ~/src/devel/tcl_packages.devel
+lappend auto_path       /chb/users/rudolphpienaar/src/devel/tcl_packages.devel
 package require         misc
 package require         parval
 
@@ -212,7 +212,7 @@ set child                        "${listFileDir}/archive.sh"
 switch -- [exec uname] {
     Linux               { append tarcmd "/bin/tar " }
     FreeBSD             { append tarcmd "/usr/bin/tar " }
-    Darwin              { append tarcmd "/sw/bin/tar " }
+    Darwin              { append tarcmd "/opt/local/bin/tar " }
     default             { append tarcmd "/bin/tar " }
 }
 append tarcmd "--create --file - --totals --gzip "

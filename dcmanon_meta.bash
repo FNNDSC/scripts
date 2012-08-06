@@ -94,9 +94,7 @@ G_SYNOPSIS="
 
  PRECONDITIONS
 	
-	o nde
-	o MatLAB -- the actual anonymization is performed in MatLAB. This
-	  script is merely a thin wrapper that drives the MatLAB process.
+	o FreeSurfer env -- in particular mri_probedicom 
 
  POSTCONDITIONS
 
@@ -116,6 +114,11 @@ G_SYNOPSIS="
 	08 December 2011
 	o An update in output format of openssl library necessitated a
 	  sed post-filter.
+
+	03 August 2012
+	o Updated help: removed mention of MatLAB since this is no longer
+	  used.
+
 "
 
 ###\\\

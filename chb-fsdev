@@ -5,7 +5,7 @@ export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
 export FSL_DIR=${PACKAGEDIR}/fsl
 export SUBJECTS_DIR=$(pwd)
 
-source ${PACKAGEDIR}/freesurfer/dev/SetUpFreeSurfer.sh
+source ${PACKAGEDIR}/freesurfer/dev-July2012/SetUpFreeSurfer.sh
 source ${FSL_DIR}/etc/fslconf/fsl.sh
 unset TCLLIBPATH
 unset TCL_LIBRARY
@@ -17,4 +17,6 @@ export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fsdev]"
 
 export PATH=$PATH:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/mricron:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/Slicer/current/:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/dtk
 
-export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp
+export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp/lib/python
+
+export LD_LIBRARY_PATH=/chb/arch/${HOSTTYPE}-${OS}/packages/vtk/vtk542/lib/vtk-5.4/:/chb/arch/${HOSTTYPE}-${OS}/packages/vtk/5.6.0_sshpatch/lib/vtk-5.6/:/chb/arch/${HOSTTYPE}-${OS}/packages/qwt420/lib/:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/boost/boost1420/lib:$LD_LIBRARY_PATH

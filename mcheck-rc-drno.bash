@@ -12,7 +12,7 @@
 source common.bash
 
 G_REPORTLOG=/tmp/${G_SELF}.reportLog.$G_PID
-G_ADMINUSERS=daniel.ginsburg@childrens.harvard.edu
+G_ADMINUSERS=nicolas.rannou@childrens.harvard.edu
 
 declare -i targetList
 
@@ -54,6 +54,8 @@ G_SYNOPSIS="
     	  returns false (0).
 
  HISTORY
+ 05 June 2012
+  o move filewatch to /home/toor, email to nicolas.rannnou@childrens.harvard.edu
  24 May 2009
   o OSX2147 integration.
 
@@ -75,7 +77,7 @@ EC_badRestart=10
 targetList=1
 
 TARGETCHECK[0]="psa filewatch.bash | grep $(whoami) | grep -v grep |  wc -l"
-TARGETACTION[0]="(exec /home/fnndsc/filewatch.bash)"
+TARGETACTION[0]="(exec /home/toor/filewatch.bash)"
 
 # Process command line options
 while getopts h option ; do

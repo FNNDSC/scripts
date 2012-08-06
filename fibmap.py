@@ -127,7 +127,7 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     p = Pype()
     p.add( Preprocessing )
     p.add( MapADCandFAvalues )
-    p.add( CopyScalars )
+    #p.add( CopyScalars )
     p.add( FilterLengthFilterCortexMapLabelsWithRadius )
     p.add( MakeMatrices )
     p.run( False )
@@ -153,20 +153,30 @@ class Preprocessing( Wheel ):
     freesurferMRIfolder = freesurferFolder + 'mri' + os.sep
     freesurferSURFfolder = freesurferFolder + 'surf' + os.sep
     dtiB0file = str( cmtDirectory ) + os.sep + 'CMP/raw_diffusion/dti_0/dti_b0.nii'
+    dtiB0ResampledFile = str( cmtDirectory ) + os.sep + 'NIFTI/Diffusion_b0_resampled.nii.gz'
     trkFile = str( cmtDirectory ) + os.sep + 'CMP/fibers/streamline.trk'
     trkFileToT1 = outputDirectory + os.path.splitext( os.path.split( trkFile )[1] )[0] + '-to-T1.trk'
+    trkFileResampled = outputDirectory + os.path.splitext( os.path.split( trkFile )[1] )[0] + '-resampled.trk'
     T1niiFile = outputDirectory + 'T1.nii'
     SegmentationNiiGzFile = freesurferMRIfolder + 'aparc+aseg.nii.gz'
-    SegmentationNiiFile = outputDirectory + 'aparc+aseg.nii'
+    ResampledSegmentationNiiGz = outputDirectory + 'aparc+aseg_resampled.nii.gz'
+    ResampledSegmentationNii = outputDirectory + 'aparc+aseg_resampled.nii'
+    #SegmentationNiiFile = outputDirectory + 'aparc+aseg.nii'
     T1toB0matFile = outputDirectory + 'T1-to-b0.mat'
     identityXFM = outputDirectory + 'identity.xfm'
 
     cmd = 'ss;'
     cmd += 'chb-fsstable;'
     cmd += 'mri_convert ' + freesurferMRIfolder + 'T1.mgz ' + T1niiFile + ';'
-    cmd += 'gzip -cd ' + SegmentationNiiGzFile + ' > ' + SegmentationNiiFile + ';'
+
+    #cmd += 'gzip -cd ' + SegmentationNiiGzFile + ' > ' + SegmentationNiiFile + ';'
+
     cmd += 'flirt -in ' + T1niiFile + ' -ref ' + dtiB0file + ' -usesqform -nosearch -dof 6 -cost mutualinfo -omat ' + T1toB0matFile + ';'
-    cmd += 'track_transform ' + trkFile + ' ' + trkFileToT1 + ' -src ' + dtiB0file + ' -ref ' + T1niiFile + ' -reg ' + T1toB0matFile + ' -invert_reg' + ';'
+    cmd += 'flirt -applyxfm -init ' + T1toB0matFile + ' -in ' + SegmentationNiiGzFile + ' -ref ' + dtiB0ResampledFile + ' -interp nearestneighbour -o ' + ResampledSegmentationNiiGz + ';'
+    cmd += 'gzip -cd ' + ResampledSegmentationNiiGz + ' > ' + ResampledSegmentationNii + ';'
+    #cmd += 'track_transform ' + trkFile + ' ' + trkFileToT1 + ' -src ' + dtiB0file + ' -ref ' + T1niiFile + ' -reg ' + T1toB0matFile + ' -invert_reg' + ';'
+    cmd += 'resample_trk.py -v 2 2 2 ' + trkFile + ' ' + trkFileResampled + ';'
+
 
     # write the identity XFM matrix
     with open( identityXFM, 'w' ) as f:
@@ -180,7 +190,7 @@ class Preprocessing( Wheel ):
     sp = subprocess.Popen( ["/bin/bash", "-i", "-c", cmd] )
     sp.communicate()
 
-    return trkFile
+    return trkFileResampled
 
 class MapADCandFAvalues( Wheel ):
   _in_ = Enum( 'cmtDirectory', 'outputDirectory', 'inputTrkFile1' )
@@ -196,7 +206,7 @@ class MapADCandFAvalues( Wheel ):
     dtiE1file = str( cmtDirectory ) + os.sep + 'CMP/raw_diffusion/dti_0/dti_e1.nii'
     dtiE2file = str( cmtDirectory ) + os.sep + 'CMP/raw_diffusion/dti_0/dti_e2.nii'
     dtiE3file = str( cmtDirectory ) + os.sep + 'CMP/raw_diffusion/dti_0/dti_e3.nii'
-    outputTrkFile = outputDirectory + 'streamline-mapped-adc-fa.trk'
+    outputTrkFile = outputDirectory + 'streamline-resampled-mapped.trk'
 
     actions = []
     actions.append( fyborg.FyMapAction( 'adc', dtiADCfile ) )
@@ -226,25 +236,26 @@ class CopyScalars( Wheel ):
     return finalFibmapTrk
 
 class FilterLengthFilterCortexMapLabelsWithRadius( Wheel ):
-  _in_ = Enum( 'cmtDirectory', 'outputDirectory', 'inputTrkFile3' )
+  _in_ = Enum( 'cmtDirectory', 'outputDirectory', 'inputTrkFile2' )
   _out_ = Enum( 'inputTrkFile4' )
 
-  def spin( cmtDirectory, outputDirectory, inputTrkFile3 ):
+  def spin( cmtDirectory, outputDirectory, inputTrkFile2 ):
 
     import fyborg
     import os
 
-    freesurferFolder = str( cmtDirectory ) + os.sep + 'FREESURFER' + os.sep
-    freesurferMRIfolder = freesurferFolder + 'mri' + os.sep
-    freesurferSegmentation = outputDirectory + 'aparc+aseg.nii'
+    #freesurferFolder = str( cmtDirectory ) + os.sep + 'FREESURFER' + os.sep
+    #freesurferMRIfolder = freesurferFolder + 'mri' + os.sep
+    freesurferSegmentation = outputDirectory + 'aparc+aseg_resampled.nii'
+    labelMappedTrkFile = outputDirectory + 'streamline-resampled-mapped-labels.trk'
 
     actions = []
-    actions.append( fyborg.FyFilterLengthAction( 20, 200 ) )
-    actions.append( fyborg.FyFilterCortexAction( freesurferSegmentation ) )
-    actions.append( fyborg.FyLabelMappingWithRadiusAction( 'aparc_aseg_endlabel', freesurferSegmentation, 3 ) )
-    fyborg.fyborg( inputTrkFile3, inputTrkFile3, actions )
+    actions.append( fyborg.FyLengthAction() )
+    #actions.append( fyborg.FyFilterCortexAction( freesurferSegmentation ) )
+    actions.append( fyborg.FyLabelMappingWithRadiusAction( 'aparc_aseg_endlabel', freesurferSegmentation, 10 ) )
+    fyborg.fyborg( inputTrkFile2, labelMappedTrkFile, actions )
 
-    return inputTrkFile3
+    return labelMappedTrkFile
 
 
 class MakeMatrices( Wheel ):
