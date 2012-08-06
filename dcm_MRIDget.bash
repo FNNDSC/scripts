@@ -136,6 +136,7 @@ let hitCount=0
 let b_hit=0
 exec 1>&6 6>&-
 for DIR in $DCMLIST ; do
+    echo "$DIR"
     dirExist_check $DIR >/dev/null
     if (( !$? )) ; then     
 	cd "$DIR" >/dev/null 2>/dev/null; 
