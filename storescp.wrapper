@@ -25,10 +25,12 @@ CMD="$CHRIS_STORESCP -id -aet $CHRIS_AETITLE \
 	-ss RX
 	-tos 120
 "
-echo "$(date) $(whoami)@$(hostname) | RUN $(echo $CMD | tr '\n' ' ')" > ${LOGWRAP}
+echo "$(date) $(whoami)@$(hostname) | RUN $(echo $CMD | tr '\n' ' ')" >> ${LOGWRAP}
 echo "$CMD" > ${LOGDIR}/storescp.cmd
 eval $CMD > $LOGSCP 2> $LOGSCP.err
 
+echo "$(date) $(whoami)$(hostname) | Scan log file = $SCANLOGFILE" >> ${LOGWRAP}
+echo "$(date) $(whoami)$(hostname) | Unique scan log file = $UNIQSCANLOGFILE" >> ${LOGWRAP}
 # Get a list of the unique directories that were written
 sort -t \| -k 3,3 -u $SCANLOGFILE > $UNIQSCANLOGFILE
 while read line

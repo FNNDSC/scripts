@@ -65,7 +65,7 @@ done
 G_STYLE=$(string_clean $G_STYLE)
 if [[ $G_STYLE != "Linux" && $G_STYLE != "Darwin" ]] ; then fatal args;   fi
 
-sitenum=19
+sitenum=20
 
 # Format: <label>;<netmask>
  NETMASK[0]="1 Autumn Street, 6th floor;10.17.24.0"
@@ -87,6 +87,7 @@ NETMASK[15]="1 Autumn Street, TCHpeap subnet 7;10.23.133.0"
 NETMASK[16]="1 Autumn Street, TCHpeap subnet 8;10.23.134.0"
 NETMASK[17]="1 Autumn Street, TCHpeap subnet 9;10.23.135.0"
 NETMASK[18]="Main CHB Campus, 3D Lab;10.3.2.0"
+NETMASK[19]="Engels Lab;10.32.72.0"
 
 shift $(($OPTIND - 1))
 EXPORTLIST=$*
@@ -122,7 +123,8 @@ if (( ${#EXPORTLIST} )) ; then
         for MOUNTPOINT in $EXPORTLIST ; do
             printf "%-45s" "$MOUNTPOINT"
             for SUBNET in $lst_SUBNET ; do
-                echo -n "${SUBNET}/24(rw,insecure,root_squash,async,no_subtree_check) "
+                #echo -n "${SUBNET}/24(rw,insecure,root_squash,async,no_subtree_check) "
+                echo -n "${SUBNET}/24(rw,insecure,no_root_squash,async,no_subtree_check) "
             done
             echo ""
         done
