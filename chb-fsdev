@@ -2,7 +2,7 @@ OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
 
 export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
-export FSL_DIR=${PACKAGEDIR}/fsl
+export FSL_DIR=${PACKAGEDIR}/fsl419
 export SUBJECTS_DIR=$(pwd)
 
 source ${PACKAGEDIR}/freesurfer/dev/SetUpFreeSurfer.sh
