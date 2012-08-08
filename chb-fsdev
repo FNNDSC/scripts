@@ -5,7 +5,7 @@ export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
 export FSL_DIR=${PACKAGEDIR}/fsl419
 export SUBJECTS_DIR=$(pwd)
 
-source ${PACKAGEDIR}/freesurfer/dev/SetUpFreeSurfer.sh
+source ${PACKAGEDIR}/freesurfer/dev-July2012/SetUpFreeSurfer.sh
 source ${FSL_DIR}/etc/fslconf/fsl.sh
 unset TCLLIBPATH
 unset TCL_LIBRARY

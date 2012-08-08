@@ -250,9 +250,9 @@ class FilterLengthFilterCortexMapLabelsWithRadius( Wheel ):
     labelMappedTrkFile = outputDirectory + 'streamline-resampled-mapped-labels.trk'
 
     actions = []
-    actions.append( fyborg.FyFilterLengthAction( 20, 200 ) )
-    actions.append( fyborg.FyFilterCortexAction( freesurferSegmentation ) )
-    actions.append( fyborg.FyLabelMappingWithRadiusAction( 'aparc_aseg_endlabel', freesurferSegmentation, 3 ) )
+    actions.append( fyborg.FyLengthAction() )
+    #actions.append( fyborg.FyFilterCortexAction( freesurferSegmentation ) )
+    actions.append( fyborg.FyLabelMappingWithRadiusAction( 'aparc_aseg_endlabel', freesurferSegmentation, 10 ) )
     fyborg.fyborg( inputTrkFile2, labelMappedTrkFile, actions )
 
     return labelMappedTrkFile
