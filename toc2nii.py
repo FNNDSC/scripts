@@ -28,11 +28,13 @@ class TocParserLogic():
 
         # l_array will have two elements, like this: 
         # ['Scan 777000-000007-000001.dcm', 'PCASL (DO NOT NEED XTRA SLICES/NO NEED TO SCAN BELOW EYELINE)']
-        fileNameSplitted = l_array[0].split( ' ' )
+        fileNameSplitted = l_array[0].split( ' ', 1 )
 
         if fileNameSplitted[0] == "Scan":
 
-          outputFile = l_array[1].split( ' ' )[0] + '-' + os.path.splitext( fileNameSplitted[1] )[0]
+          outputFile = l_array[1] + '-' + os.path.splitext( fileNameSplitted[1] )[0]
+
+          outputFile = outputFile.replace(' ','_')
 
           print "Converting " + fileNameSplitted[1] + ' to ' + outputFile + '.nii'
           print os.system( "mri_convert " + fileNameSplitted[1] + ' nii_export/' + outputFile + '.nii' )
