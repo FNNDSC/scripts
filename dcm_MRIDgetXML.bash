@@ -190,15 +190,15 @@ for DIR in $DCMLIST ; do
                         b_hit=$(echo "$DCMLIST" | grep $DIR | wc -l)
                 fi
                 if (( b_hit )) ; then
-                        PATIENT_NAME=$(echo -e $DCMMKINDX | grep "Patient Name" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')			
-                        PATIENT_AGE=$(echo -e $DCMMKINDX | grep "Patient Age" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-                        PATIENT_SEX=$(echo -e $DCMMKINDX | grep "Patient Sex" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-                        PATIENT_BIRTHDAY=$(echo -e $DCMMKINDX | grep "Patient Birthday" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-                        IMAGE_SCAN_DATE=$(echo -e $DCMMKINDX | grep "Image Scan-Date" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-                        SCANNER_MANUFACTURER=$(echo -e $DCMMKINDX | grep "Scanner Manufacturer" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-                        SCANNER_MODEL=$(echo -e $DCMMKINDX | grep "Scanner Model" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-                        SOFTWARE_VER=$(echo -e $DCMMKINDX | grep "Software Ver" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
-                        SCANNER_ID=$(echo -e $DCMMKINDX | grep "Scanner ID" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//')
+                        PATIENT_NAME=$(echo -e $DCMMKINDX | grep "Patient Name" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' -e 's/\&/and/g')			
+                        PATIENT_AGE=$(echo -e $DCMMKINDX | grep "Patient Age" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' -e 's/\&/and/g')
+                        PATIENT_SEX=$(echo -e $DCMMKINDX | grep "Patient Sex" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' -e 's/\&/and/g')
+                        PATIENT_BIRTHDAY=$(echo -e $DCMMKINDX | grep "Patient Birthday" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' -e 's/\&/and/g')
+                        IMAGE_SCAN_DATE=$(echo -e $DCMMKINDX | grep "Image Scan-Date" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' -e 's/\&/and/g')
+                        SCANNER_MANUFACTURER=$(echo -e $DCMMKINDX | grep "Scanner Manufacturer" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' -e 's/\&/and/g')
+                        SCANNER_MODEL=$(echo -e $DCMMKINDX | grep "Scanner Model" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' -e 's/\&/and/g')
+                        SOFTWARE_VER=$(echo -e $DCMMKINDX | grep "Software Ver" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' -e 's/\&/and/g')
+                        SCANNER_ID=$(echo -e $DCMMKINDX | grep "Scanner ID" | awk '{$1="";$2="";print}' | sed -e 's/^[ \t]*//' -e 's/\&/and/g')
 						                        
                         echo_stripped "<PatientRecord>"						
                         echo_stripped "    <recordCtime>$(date)</recordCtime>"
