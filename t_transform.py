@@ -54,12 +54,13 @@ class TrackvisTransformLogic( object ):
     # WARNING: this matrix is actually never used by TrackVis (see email from Ruopeng).
     # We still modify it to keep it in sync with the transformations which we apply point wise.
     #
-    oldMatrix = header['vox_to_ras']
-    c.info( 'Old transformation matrix:' )
-    c.info( '    ' + str( oldMatrix[0] ) )
-    c.info( '    ' + str( oldMatrix[1] ) )
-    c.info( '    ' + str( oldMatrix[2] ) )
-    c.info( '    ' + str( oldMatrix[3] ) )
+    if hasattr( header, 'vox_to_ras' ):
+      oldMatrix = header['vox_to_ras']
+      c.info( 'Old transformation matrix:' )
+      c.info( '    ' + str( oldMatrix[0] ) )
+      c.info( '    ' + str( oldMatrix[1] ) )
+      c.info( '    ' + str( oldMatrix[2] ) )
+      c.info( '    ' + str( oldMatrix[3] ) )
 
     #
     # load our transformation Matrix
@@ -89,7 +90,7 @@ class TrackvisTransformLogic( object ):
       # fire the thread and give it a filename based on the number
       tmpFile = tempfile.mkstemp( '.trk', 't_transform' )[1]
       f[n] = tmpFile
-      t[n] = Process( target = TrackvisTransformLogic.transform, args = ( splittedOutputTracks[n][:], newMatrix, tmpFile, False, 'Thread-' + str( n + 1 ) ) )
+      t[n] = Process( target=TrackvisTransformLogic.transform, args=( splittedOutputTracks[n][:], newMatrix, tmpFile, False, 'Thread-' + str( n + 1 ) ) )
       c.info( "Starting Thread-" + str( n + 1 ) + "..." )
       t[n].start()
 
@@ -128,13 +129,14 @@ class TrackvisTransformLogic( object ):
     #
     # replace the matrix in the header with a transformed one even if it will never be used by TrackVis
     #
-    result = numpy.dot( oldMatrix, newMatrix )
-    c.info( 'New transformation matrix:' )
-    c.info( '    ' + str( result[0] ) )
-    c.info( '    ' + str( result[1] ) )
-    c.info( '    ' + str( result[2] ) )
-    c.info( '    ' + str( result[3] ) )
-    newHeader['vox_to_ras'] = result
+    if hasattr( header, 'vox_to_ras' ):
+      result = numpy.dot( oldMatrix, newMatrix )
+      c.info( 'New transformation matrix:' )
+      c.info( '    ' + str( result[0] ) )
+      c.info( '    ' + str( result[1] ) )
+      c.info( '    ' + str( result[2] ) )
+      c.info( '    ' + str( result[3] ) )
+      newHeader['vox_to_ras'] = result
 
     # write
     c.info( 'Saving ' + output + '..' )
@@ -144,7 +146,7 @@ class TrackvisTransformLogic( object ):
 
 
   @staticmethod
-  def transform( tracks, matrix, outputFile = None, verbose = False, threadName = 'Global' ):
+  def transform( tracks, matrix, outputFile=None, verbose=False, threadName='Global' ):
     '''
     '''
     # O(Tracks x Points)
@@ -184,13 +186,13 @@ class TrackvisTransformLogic( object ):
 # entry point
 #
 if __name__ == "__main__":
-  parser = FNNDSCParser( description = 'Transform TrackVis (*.trk) files.' )
+  parser = FNNDSCParser( description='Transform TrackVis (*.trk) files.' )
 
 
-  parser.add_argument( '-i', '--input', action = 'store', dest = 'input', required = True, help = 'input trackvis file, f.e. -i ~/files/f01.trk' )
-  parser.add_argument( '-o', '--output', action = 'store', dest = 'output', required = True, help = 'output trackvis file, f.e. -o /tmp/f_out.trk' )
-  parser.add_argument( '-m', '--matrix', action = 'store', dest = 'matrix', required = True, help = 'transformation matrix file, f.e. -m ~/files/f01.mat - a 4x4 matrix is required.' )
-  parser.add_argument( '-j', '--jobs', action = 'store', dest = 'jobs', default = multiprocessing.cpu_count(), help = 'number of parallel computations, f.e. -j 10' )
+  parser.add_argument( '-i', '--input', action='store', dest='input', required=True, help='input trackvis file, f.e. -i ~/files/f01.trk' )
+  parser.add_argument( '-o', '--output', action='store', dest='output', required=True, help='output trackvis file, f.e. -o /tmp/f_out.trk' )
+  parser.add_argument( '-m', '--matrix', action='store', dest='matrix', required=True, help='transformation matrix file, f.e. -m ~/files/f01.mat - a 4x4 matrix is required.' )
+  parser.add_argument( '-j', '--jobs', action='store', dest='jobs', default=multiprocessing.cpu_count(), help='number of parallel computations, f.e. -j 10' )
 
   # always show the help if no arguments were specified
   if len( sys.argv ) == 1:
