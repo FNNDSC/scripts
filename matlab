@@ -16,9 +16,9 @@ G_SYNOPSIS="
         -c
         Run MatLAB with '-nosplash -nodesktop'
 
-	-v <version> (Default '2011b')
+	-v <version> (Default: $G_VERSION )
 	Force a specific version of MatLAB to run. Currently supported
-	are '2010a' and '2011b'. 
+	are '2010a', '2011b', '2012a'. 
         
     DESCRIPTION
     
@@ -59,24 +59,29 @@ while getopts cv: option ; do
     esac
 done
 
+printf "Setting version to R$G_VERSION...\n"
+
 if [[ $HOST_PREFIX == "rc" ]] ; then
     printf "Using 'pices' local install of MatLAB...\n"
-    export PATH=/chb/pices/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin:$PATH
+    export MPATH=/chb/pices/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin
+    export PATH=$MPATH:$PATH
 else
     printf "Using local install of MatLAB...\n"
     case $(uname) 
     in 
-        Linux)  export PATH=/chb/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin:$PATH
+        Linux)  export MPATH=/chb/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin
+          	export PATH=$MPATH:$PATH
                 ;;
-        Darwin) export PATH=/chb/arch/x86_64-Darwin/packages/matlab/MATLAB_R${G_VERSION}.app/bin:$PATH
+        Darwin) export MPATH=/chb/arch/x86_64-Darwin/packages/matlab/MATLAB_R${G_VERSION}.app/bin
+                export PATH=$MPATH:$PATH
 		;;
     esac
 fi
 
 
-echo "matlab $MARGS"
+echo "$MPATH/matlab $MARGS"
 
-matlab $MARGS 
+$MPATH/matlab $MARGS 
 
 
 
