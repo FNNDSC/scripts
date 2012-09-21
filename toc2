@@ -51,6 +51,8 @@ class TocParserLogic():
         fileNameSplitted = l_array[0].split( ' ' )
 
         if fileNameSplitted[0] == "Scan":
+          # We need to preserve all the components of the protocol name:
+          l_array[1] = l_array[1].replace(' ', '_')
 
           outputFile = l_array[1].split( ' ' )[0] + '-' + os.path.splitext( fileNameSplitted[1] )[0]
 
