@@ -57,7 +57,7 @@ class TocParserLogic():
           outputFile = l_array[1].split( ' ' )[0] + '-' + os.path.splitext( fileNameSplitted[1] )[0]
 
           print "Converting " + fileNameSplitted[1] + ' to ' + outputFile + '.%s' % self._str_outputType
-          print os.system( "mri_convert " + fileNameSplitted[1] + ' ' + self._str_outputDir + "/" + outputFile + '.' + self._str_outputType )
+#          print os.system( "mri_convert " + fileNameSplitted[1] + ' ' + self._str_outputDir + "/" + outputFile + '.' + self._str_outputType )
 
 
     print "All done."
