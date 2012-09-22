@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+import string
 
 def _mkdir(newdir):
     """works the way a good mkdir should :)
@@ -33,6 +34,11 @@ class TocParserLogic():
     '''
     '''
 
+    # Protocol names often contain bad characters. These need to be removed
+    # for the converted filename
+    bad_chars = '/\+(){}<> \t'
+    convertCount = 0
+
     # create output folder
     _mkdir( '%s_export' % self._str_outputType)
 
@@ -52,16 +58,20 @@ class TocParserLogic():
 
         if fileNameSplitted[0] == "Scan":
           # We need to preserve all the components of the protocol name:
-          l_array[1] = l_array[1].replace(' ', '_')
+          l_array[1] = l_array[1].translate(string.maketrans("", "", ), bad_chars)
 
           outputFile = l_array[1].split( ' ' )[0] + '-' + os.path.splitext( fileNameSplitted[1] )[0]
 
           print "Converting " + fileNameSplitted[1] + ' to ' + outputFile + '.%s' % self._str_outputType
-          print os.system( "mri_convert " + fileNameSplitted[1] + ' ' + self._str_outputDir + "/" + outputFile + '.' + self._str_outputType )
-          raw_input("Press ANY key to continue...")
+	  str_mri_convert = "mri_convert " + fileNameSplitted[1] + ' ' + \
+		self._str_outputDir + "/" + outputFile + '.' + self._str_outputType
+	  str_stdout = ' > ' + self._str_outputDir + '/' + outputFile + '-mri_convert.stdout'
+	  str_stderr = ' 2> ' + self._str_outputDir + '/' + outputFile + '-mri_convert.stderr'
+          str_ret = os.system( str_mri_convert + str_stdout + str_stderr)
+          # raw_input("Press ANY key to continue...")
+	  convertCount += 1
 
-    print "All done."
-
+    print "Converted %d DICOM series" % convertCount
 
 
 
