@@ -71,6 +71,10 @@ G_SYNOPSIS="
  11 May 2009
  o Changed lookup method for Age, Sex, etc. from original dcm_dump_file
    to mri_probedicom.
+
+ 27 September 2012
+ o Dummy changes to force permission update on git.
+
 "
 
 TOPSET=$(/bin/ls -1 *1.dcm 2>/dev/null | head -n 1)
