@@ -1,0 +1,330 @@
+#!/usr/bin/env python
+import  os
+import  sys
+import  string
+import  getopt
+import  csv
+from    _common import systemMisc       as misc
+from    _common import crun
+
+
+class ZRS():
+
+    # 
+    # Class member variables -- if declared here are shared
+    # across all instances of this class
+    #
+    _dictErr = {
+        'CSVLoad'          : {
+            'action'        : 'loading CSV file, ',
+            'error'         : 'an IOerror occured. Does the file exist?',
+            'exitCode'      : 10},
+        'CSVSpec'           : {
+            'action'        : 'examining command line arguments, ',
+            'error'         : 'the <CSVfile> was not specified.',
+            'exitCode'      : 12},
+        'collectDirSpec'    : {
+            'action'        : 'creating directory entries, ',
+            'error'         : 'the <subjectDir> collection directory was not specifed.',
+            'exitCode'      : 13},
+        'Load'              : {
+            'action'        : 'attempting to pickle load object, ',
+            'error'         : 'a PickleError occured.',
+            'exitCode'      : 14}
+    }
+
+    def error_exit( self,
+                            astr_key,
+                            ab_exitToOs=1
+                            ):
+        print "\tSorry, some error seems to have occurred in <%s>" \
+                    % ( self.__name__)
+        print "\tWhile %s"           % ZRS._dictErr[astr_key]['action']
+        print "\t%s"                 % ZRS._dictErr[astr_key]['error']
+        print ""
+        if ab_exitToOs:
+            print "Returning to system with error code %d" % \
+                                        ZRS._dictErr[astr_key]['exitCode']
+            sys.exit( ZRS._dictErr[astr_key]['exitCode'] )
+        return ZRS._dictErr[astr_key]['exitCode']
+
+    def fatal( self, astr_key, astr_extraMsg="" ):
+        print synopsis(True)
+        if len( astr_extraMsg ): print astr_extraMsg
+        self.error_exit( astr_key )
+
+    def warn( self, astr_key, astr_extraMsg="" ):
+        b_exitToOS = 0
+        if len( astr_extraMsg ): print astr_extraMsg
+        self.error_exit( astr_key, b_exitToOS )  
+    
+    def __init__(self, **kwargs):
+        '''
+        Basic constructor. Checks on named input args, checks that files
+        exist and creates directories.
+        '''
+        self.__name__                   = 'zrs'
+        self._verbosity                 = 0
+        self._str_CSVfile               = ''
+        self._str_subjectDir            = ''
+        self._b_strictCheck             = False
+        self._b_query                   = False
+        self._b_debugMode               = False
+        self._duplicateCount            = 0
+        self._entryCreatedCount         = 0
+        self._entryReadCount            = 0
+        
+        for key, value in kwargs.iteritems():
+            if key == 'CSVfile':        self._str_CSVfile       = value
+            if key == 'subjectDir':     self._str_subjectDir    = value
+            if key == 'strictCheck':    self._b_strictCheck     = value
+            if key == 'query':          self._b_query           = value
+            
+    def initialize(self):
+        '''
+        This method provides some "post-constructor" initialization. It is
+        typically called after the constructor and after other class flags
+        have been set (or reset)
+        '''
+        if not len(self._str_subjectDir) and not self._b_query: 
+            self.fatal('collectDirSpec')
+        if not self._b_query and not self._b_debugMode:
+            misc.mkdir(self._str_subjectDir)
+            
+    def run(self):
+        '''
+        '''
+        csvReader = csv.DictReader(file(self._str_CSVfile, "rb"))
+        FSOKcurvFileCount = 0
+        FSOKstrict = 0
+        for entry in csvReader:
+            self._entryReadCount += 1
+            if self._b_query:
+                if self._entryReadCount == 1:
+                    print "%s,%s,%s" % ('SubjectID', 'Curv Check', 'FS Check') 
+                # First force strict query OFF
+                self.strictCheck(False)
+                b_FSOKcrvFile = self.entry_FSoutputCheck(entry)
+                if b_FSOKcrvFile: FSOKcurvFileCount+=1
+                # Now turn it back ON
+                self.strictCheck(True)
+                b_FSOKstrict = self.entry_FSoutputCheck(entry)
+                if b_FSOKstrict: FSOKstrict+=1
+                print "%s,%s,%s" % (entry['SubjectID'].strip(), 
+                                    'curv OK' if b_FSOKcrvFile else 'curv BAD', 
+                                    'FS OK' if b_FSOKstrict  else 'FS BAD')
+            else:
+                if self.entry_FSoutputCheck(entry): self.entry_create(entry)
+        if self._b_query:
+            print "%d,%d,%d" % (self._entryReadCount, FSOKcurvFileCount, FSOKstrict)
+
+    def entry_FSoutputCheck(self, entry):
+        '''
+        Check on the FREESURFER directory, and pending the self._b_strictCheck
+        flag, return a boolean on whether or not the FREESURFER directory
+        is "ok".
+
+        We perform a rudimentary set of checks on the FREESURFER
+        directory:
+            - Is its name even defined?
+            +--> If so and strictCheck, check that the 
+                <FREESURFER>/script/recon-all-status.log file contains
+                "finished without error"
+                If so and NOT strictCheck, check that the 
+                <FREESURFER>/surf/lh.smoothwm.BE.crv AND rh.smoothwm.BE.crv
+                files exist
+        '''
+        b_ret = False
+        if len(entry['Directory_File_Name']):
+            if self._b_strictCheck:
+                str_recon_all_status = "%s/scripts/recon-all-status.log" % \
+                    entry['Directory_File_Name']
+                if misc.file_exists(str_recon_all_status):
+                    pFILE = open(str_recon_all_status, "rb")
+                    str_lastline = misc.tail(pFILE, 1)
+                    if "finished without error" in str_lastline:
+                        b_ret = True
+                    pFILE.close()
+            else:
+                str_lhBEFile = "%s/surf/lh.smoothwm.BE.crv" % \
+                    entry['Directory_File_Name']
+                str_rhBEFile = "%s/surf/rh.smoothwm.BE.crv" % \
+                    entry['Directory_File_Name']
+                if misc.file_exists(str_lhBEFile) and \
+                    misc.file_exists(str_rhBEFile):
+                        b_ret = True
+        return b_ret
+                           
+    def entry_create(self, entry):
+        '''
+        Create a human friendly directory name for the passed entry
+        '''
+        str_dirName = "%s-%s-%s-%s-%s" % \
+            (entry['Group1'].strip(), entry['Group2'].strip(), 
+                entry['Group3'].strip(), entry['T1_Type'].strip(),
+                entry['SubjectID'].strip())
+        if self._verbosity > 1:
+            print "%-50s --> %s" % (str_dirName, entry['Directory_File_Name'].strip())
+        self._entryCreatedCount += 1
+        try:
+            ret = os.symlink(entry['Directory_File_Name'].strip(), 
+                   self._str_subjectDir + '/' + str_dirName)
+        except:
+            self._duplicateCount += 1
+        
+    def verbosity(self, *args):
+        if len(args):
+            self._verbosity             = args[0] 
+        else:
+            return self._verbosity
+
+    def entriesRead(self, *args):
+        if len(args):
+            self._entryReadCount        = args[0] 
+        else:
+            return self._entryReadCount
+
+    def entriesCreated(self, *args):
+        if len(args):
+            self._entryCreatedCount     = args[0] 
+        else:
+            return self._entryCreatedCount
+
+    def duplicateCount(self, *args):
+        if len(args):
+            self._duplicateCount        = args[0]
+        else:
+            return self._duplicateCount
+
+    def strictCheck(self, *args):
+        if len(args):
+            self._b_strictCheck         = args[0]
+        else:
+            return self._b_strictCheck
+
+    def query(self, *args):
+        if len(args):
+            self._b_query               = args[0]
+        else:
+            return self._b_query
+            
+    def debugMode(self, *args):
+        if len(args):
+            self._b_debugMode           = args[0]
+        else:
+            return self._b_debugMode
+            
+def synopsis(ab_shortOnly = False):
+  scriptName = os.path.basename(sys.argv[0])
+  shortSynopsis =  '''
+  SYNOPSIS
+  
+        %s                                              \\
+                        -f|--CSVfile <CSVfile>          \\
+                        -s|--subjectDir <subjectDir>    \\
+                        [--strict]                      \\
+                        [--query]                       \\
+                        [-v|--verbosity <verboseLevel>]
+  ''' % scriptName
+  
+  description =  '''
+  DESCRIPTION
+  
+        `%s' processes a CSV file specific to the Gaab lab's Dyslexia project
+        and creates a set of links to all the processed subjects in 
+        <subjectDir>.
+        
+  ARGS
+  
+        -f|--CSVfile <CSVfile>
+        The CSVfile file to analyze. This CSV file must be a google doc export 
+        of the master project spreadsheet.
+        
+        -s|--subjectDir <subjectDir>
+        The directory in which to "collect" all the parsed links.
+        
+        --strict
+        If specified, the script performs a "strict" check on processed 
+        FREESURFER directory and only create a link in <subjectDir> iff the
+        recon-all-status.log indicates no error.
+        
+        Otherwise, the script performs a less strict check on the existence of
+        lh.smoothwm.BE.crv and rh.smoothwm.BE.crv curvature files.
+        
+        --query
+        If specified, the script will only check on the FREESURFER output
+        directory, dumping to stdout a "mini spreadheet" indicating for
+        each subject its FREESURFER status.
+        
+        -v, --verbosity <verboseLevel>
+        If specified, set the verbosity of the script. This mostly affects
+        whether or not to display the symbolic link source and targets
+        during link creation.
+        
+  EXAMPLE
+          
+  ''' % (scriptName)
+  if ab_shortOnly:
+      return shortSynopsis
+  else:
+      return shortSynopsis + description
+
+
+#
+# entry point
+#
+if __name__ == "__main__":
+
+  # always show the help if no arguments were specified
+  if len( sys.argv ) == 1:
+      print synopsis()
+      sys.exit( 1 )
+
+  try:
+    opts, remargs   = getopt.getopt(sys.argv[1:], 'f:s:v:',
+                                    [   'strict',
+                                        'query',
+                                        'verbosity=',
+                                        'CSVfile=',
+                                        'subjectDir='])
+  except getopt.GetoptError:
+    print synopsis()
+    sys.exit(1)
+   
+  str_CSVfile           = ''
+  str_subjectDir        = ''
+  b_strictCheck         = False
+  b_query               = False
+  verbosity             = 0
+
+  for o, a in opts:
+    if o == '--strict':
+        b_strictCheck           = True
+    if o == '--query':
+        b_query                 = True
+    if o in ('-f', '--CSVfile'):
+        str_CSVfile             = a
+    if o in ('-s', '--subjectDir'):
+        str_subjectDir          = a
+    if o in ('-v', '--verbosity'):
+        verbosity               = int(a)
+      
+  parser = ZRS( CSVfile         = str_CSVfile, 
+                subjectDir      = str_subjectDir, 
+                strictCheck     = b_strictCheck,
+                query           = b_query)
+  #parser.query(b_query)
+  #parser.debugMode(True)
+  parser.verbosity(verbosity)
+  parser.initialize()
+  parser.run()
+  
+  if not b_query and verbosity:
+      print "Read %d entries and created symlinks for %d (%5.2f%s good, %d dups)" % \
+        (parser.entriesRead(), parser.entriesCreated()-parser.duplicateCount(),
+         float(parser.entriesCreated()-parser.duplicateCount())/
+         float(parser.entriesRead()) * 100,
+         '%',
+         parser.duplicateCount())
+         
+
