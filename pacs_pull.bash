@@ -183,6 +183,10 @@ G_Modality="0008,0060"
 G_StudyDate="0008,0020"
 G_PatientAge="0010,1010"
 G_PatientBirthDate="0010,0030"
+G_RetrieveAETitle="0008,0054"
+G_ScheduledStudyLocationAETitle="0032,1021"
+G_ScheduledStationAETitle="0040,0001"
+G_PerformedStationAETitle="0040,0241"
 
 function bracket_find
 {
@@ -315,7 +319,7 @@ if (( ${#GLST_PATIENTID} )) ;   then GLST=$GLST_PATIENTID; fi
 if (( ${#GLST_PATIENTSNAME}));  then GLST=$GLST_PATIENTSNAME; fi
 
 for EL in $(echo $GLST | tr , ' '); do
-    cprint "M: Institution"		    "[ $G_INSTITUTION ]"
+    cprint "M: Institution"		"[ $G_INSTITUTION ]"
     cprint "M: AETitle for query"	"[ $G_AETITLE ]"
     cprint "M: PACS IP"		        "[ $G_QUERYHOST ]"
     cprint "M: CallTitle for query"	"[ $G_CALLTITLE ]"
