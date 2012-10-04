@@ -4,6 +4,7 @@ import  sys
 import  string
 import  getopt
 import  csv
+import  stack
 from    _common import systemMisc       as misc
 from    _common import crun
 
@@ -73,6 +74,7 @@ class ZRS():
         self._duplicateCount            = 0
         self._entryCreatedCount         = 0
         self._entryReadCount            = 0
+        self._stack                     = stack.Stack()
         
         for key, value in kwargs.iteritems():
             if key == 'CSVfile':        self._str_CSVfile       = value
@@ -110,7 +112,8 @@ class ZRS():
                 self.strictCheck(True)
                 b_FSOKstrict = self.entry_FSoutputCheck(entry)
                 if b_FSOKstrict: FSOKstrict+=1
-                print "%s,%s,%s" % (entry['SubjectID'].strip(), 
+                if len(entry['SubjectID']):
+                    print "%s,%s,%s" % (entry['SubjectID'].strip(),
                                     'curv OK' if b_FSOKcrvFile else 'curv BAD', 
                                     'FS OK' if b_FSOKstrict  else 'FS BAD')
             else:
@@ -135,7 +138,7 @@ class ZRS():
                 files exist
         '''
         b_ret = False
-        if len(entry['Directory_File_Name']):
+        if len(entry['Directory_File_Name']) and len(entry['SubjectID']):
             if self._b_strictCheck:
                 str_recon_all_status = "%s/scripts/recon-all-status.log" % \
                     entry['Directory_File_Name']
@@ -159,18 +162,20 @@ class ZRS():
         '''
         Create a human friendly directory name for the passed entry
         '''
-        str_dirName = "%s-%s-%s-%s-%s" % \
+        str_dirName = "%s-%s-%s-%s" % \
             (entry['Group1'].strip(), entry['Group2'].strip(), 
-                entry['Group3'].strip(), entry['T1_Type'].strip(),
-                entry['SubjectID'].strip())
-        if self._verbosity > 1:
+                entry['Group3'].strip(), entry['SubjectID'].strip())
+        if self._verbosity and self._verbosity < 10:
             print "%-50s --> %s" % (str_dirName, entry['Directory_File_Name'].strip())
         self._entryCreatedCount += 1
+        self._stack.push(entry['SubjectID'])
         try:
             ret = os.symlink(entry['Directory_File_Name'].strip(), 
                    self._str_subjectDir + '/' + str_dirName)
         except:
             self._duplicateCount += 1
+            self._stack.push(entry['SubjectID'])
+        self._stack.pop()
         
     def verbosity(self, *args):
         if len(args):
@@ -178,6 +183,14 @@ class ZRS():
         else:
             return self._verbosity
 
+    def stack(self, *args):
+        if len(args):
+            for e in args:
+                self._stack.push(e)
+        else:
+            return self._stack
+
+            
     def entriesRead(self, *args):
         if len(args):
             self._entryReadCount        = args[0] 
@@ -260,8 +273,35 @@ def synopsis(ab_shortOnly = False):
         If specified, set the verbosity of the script. This mostly affects
         whether or not to display the symbolic link source and targets
         during link creation.
+
+        The following verbosity levels are understood:
+
+            <none>:     print nothing on the terminal
+            10:         print only the final summary line
+             5:         print a complete report, i.e.
+                            SubjectID --> Directory
+                            Summary report
         
-  EXAMPLE
+  EXAMPLES
+
+  o To generate a Q/A report, suitable for insertion back into master
+    spreadsheet:
+
+        zrs -f <csvFile> --query
+
+  o To collect subjects in a collection directory
+
+        zrs -f <csvFile> -s <collectionDir>
+
+  o To collect subjects in a collection directory, printing only a final
+    report
+
+        zrs -f <csvFile> -s <collectionDir> -v 10
+
+  o To collect subjects and print a complete report
+  
+        zrs -f <csvFile> -s <collectionDir> -v 5
+    
           
   ''' % (scriptName)
   if ab_shortOnly:
@@ -326,5 +366,10 @@ if __name__ == "__main__":
          float(parser.entriesRead()) * 100,
          '%',
          parser.duplicateCount())
-         
+      if parser.verbosity() < 2:
+          if not parser.stack().empty():
+              print "The following entries are possible duplicates"
+          while not parser.stack().empty():
+            print parser.stack().pop()
+      
 
