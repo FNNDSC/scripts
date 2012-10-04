@@ -232,7 +232,7 @@ def synopsis(ab_shortOnly = False):
   shortSynopsis =  '''
   SYNOPSIS
   
-        %s                                              \\
+        %s                                             \\
                         -f|--CSVfile <CSVfile>          \\
                         -s|--subjectDir <subjectDir>    \\
                         [--strict]                      \\
