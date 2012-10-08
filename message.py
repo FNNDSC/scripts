@@ -166,6 +166,7 @@ if __name__ == "__main__":
     log1.tee(True)
 
     log1('hello world!\n')
+
     log2.to('/tmp/log2.log')
     log2('hello, too!\n')
 
