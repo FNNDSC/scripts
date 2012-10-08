@@ -303,7 +303,7 @@ def synopsis(ab_shortOnly = False):
         zrs -f <csvFile> -s <collectionDir> -v 5
     
           
-  ''' % (scriptName)
+  ''' % (scriptName.strip())
   if ab_shortOnly:
       return shortSynopsis
   else:
