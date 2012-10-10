@@ -1,3 +1,4 @@
+#test
 from nipy.core.image import image
 from nipy.io.api import load_image, save_image
 import numpy as np
