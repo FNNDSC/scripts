@@ -73,7 +73,7 @@ A_noSubjectsDirVar="checking environment"
 EM_noSubjectsDirVar="it seems that the SUBJECTS_DIR environment var is not set."
 
 # Error codes
-EC_noSubjectsDir=10
+EC_noSubjectsDirVar=10
 
 while getopts d:v:SM: option ; do
         case "$option"
