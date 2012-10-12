@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import sys
-import types
+import  sys
+import  types
 
 from    _common         import crun
 from    _common._colors import Colors
@@ -32,9 +32,30 @@ class Pipeline:
         'stageNotFound'     : {
             'action'        : 'searching for a stage in the pipeline, ',
             'error'         : 'the stage was not found!',
-            'exitCode'      : 12}
+            'exitCode'      : 12},
+        'stageError'        : {
+            'action'        : 'executing a stage in the pipeline, ',
+            'error'         : 'the stage reported an error condition',
+            'exitCode'      : 13}
     }
 
+
+    def verbosity(self, *args):
+        '''
+        get/set the verbosity level.
+
+        The verbosity level is passed down to the log object.
+
+        verbosity():    returns the current level
+        verbosity(<N>): sets the verbosity to <N>
+
+        '''
+        if len(args):
+            self._verbosity             = args[0]
+            self.log().verbosity(args[0])
+        else:
+            return self._verbosity
+    
     
     def pipeline(self):
         '''
@@ -53,7 +74,7 @@ class Pipeline:
 
     def name(self, *args):
         '''
-        get/set the descriptive name text of this stage object.
+        get/set the descriptive name text of this pipeline object.
         '''
         if len(args):
             self.__name = args[0]
@@ -61,20 +82,28 @@ class Pipeline:
             return self.__name
         
         
-    def __init__(self):
+    def __init__(self, **kwargs):
         '''
         Constructor
         '''
-        self.__name             = 'unnamed'
+        self.__name             = 'unnamed pipeline'
         self._log               = message.Message()
         self._pipeline          = []
+        self._verbosity         = 0
+        for key, value in kwargs.iteritems():
+            if key == 'name':               self.name(value)
+            if key == 'fatalConditions':    self.fatalConditions(value)
+            if key == 'syslog':             self.log().syslog(value)
+            if key == 'verbosity':          self.verbosity(value)
+            if key == 'logTo':              self.log().to(value)
+            if key == 'logTee':             self.log().tee(value)
 
 
-    def stage_add(self, element):
+    def stage_add(self, stage):
         '''
         Add a stage to the pipeline.
         '''
-        self._pipeline.append(element)
+        self._pipeline.append(stage)
 
 
     def stage_get(self, index):
@@ -110,11 +139,35 @@ class Pipeline:
         '''
         Run the pipeline, stage by stage.
         '''
+        self._log('Executing pipeline <%s>...\n' % self.name())
         for stage in self._pipeline:
             stage()
+            print stage.exitCode()
+            print stage.stdout()
+            print stage.stderr()
+            if stage.exitCode():
+                error.fatal(self, 'stageError')
+        self._log('Terminating pipeline <%s>\n' % self.name())
         
 
+    def fatalConditions(self, *args):
+        '''
+        get/set the fatalConditions flag.
 
+        The fatalConditions flag toggles the handling of errors in stage
+        pre- and post-conditions. If True, the Stage will exit to the
+        system. If False, processing continues but with a warning.
+
+        fatalConditions():              returns the current fatalConditions flag
+        fatalConditions(True|False):    sets the flag to True|False
+
+        '''
+        if len(args):
+            self._b_fatalConditions = args[0]
+        else:
+            return self._b_fatalConditions
+
+            
 class Stage:
     '''
     A simple 'stage' class used for constructing serialized pipeline
@@ -141,6 +194,21 @@ class Stage:
             'exitCode'      : 12}
     }
 
+
+    def verbosity(self, *args):
+        '''
+        get/set the verbosity level.
+
+        verbosity():    returns the current level
+        verbosity(<N>): sets the verbosity to <N>
+
+        '''
+        if len(args):
+            self._verbosity             = args[0]
+            self.log().verbosity(args[0])
+        else:
+            return self._verbosity
+    
     
     def vprint(self, alevel, astr_msg):
         '''
@@ -187,14 +255,18 @@ class Stage:
 
         self._str_cmd           = ''
         
-        self._f_preconditions           = lambda x: True
-        self._f_preconditionsArgs       = None
-        self._f_postconditions          = lambda x: True
-        self._f_postconditionsArgs      = None
+        self._f_preconditions           = lambda **x: True
+        self._f_preconditionsArgs       = {'val': True}
+        self._f_postconditions          = lambda **x: True
+        self._f_postconditionsArgs      = {'val': True}
         for key, value in kwargs.iteritems():
             if key == 'name':               self.name(value)
             if key == 'fatalConditions':    self.fatalConditions(value)
             if key == 'syslog':             self.log().syslog(value)
+            if key == 'verbosity':          self.verbosity(value)
+            if key == 'cmd':                self.cmd(value)
+            if key == 'logTo':              self.log().to(value)
+            if key == 'logTee':             self.log().tee(value)
 
         
     def def_preconditions(self, *args, **kwargs):
@@ -319,6 +391,7 @@ class Stage_crun(Stage):
     A Stage class that uses crun as its execute engine.
     '''
 
+    
     def cmd(self, *args):
         '''
         get/set the shell command to execute.
@@ -445,5 +518,6 @@ if __name__ == "__main__":
     pipeline.stage_add(stage2)
     pipeline.execute()
 
-    print pipeline.stage_get(3).stdout()
+    print pipeline.stage_get('Stage 2').stdout()
+    print pipeline.stage_get(1).stdout()
     
