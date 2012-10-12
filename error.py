@@ -10,7 +10,7 @@ The module assumes that the callingClass provides these methods:
     o callingClass.log()        -- returns a Message() object member that
                                    is used a 'log' destination
 
-Also, the callingClass has a class dictionary, _dictErr, in which each
+Also, the callingClass must have a class dictionary, _dictErr, in which each
 key has a dictionary of 'action', 'error', 'exitCode':
 
     callingClass._dictErr = {
@@ -23,8 +23,10 @@ key has a dictionary of 'action', 'error', 'exitCode':
 
 '''
 
-from    _common._colors import Colors
 import  inspect
+import  sys
+
+from    _common._colors import Colors
 
 def report(     callingClass,
                 astr_key,
@@ -43,8 +45,8 @@ def report(     callingClass,
     log         = callingClass.log()
     b_syslog    = log.syslog()
     log.syslog(False)
-    if ab_exitToOs: log( Colors.RED + ":: FATAL ERROR ::\n" + Colors.NO_COLOUR )
-    else:           log( Colors.YELLOW + ":: WARNING ::\n" + Colors.NO_COLOUR )
+    if ab_exitToOs: log( Colors.RED +    ":: FATAL ERROR ::\n" + Colors.NO_COLOUR )
+    else:           log( Colors.YELLOW + "::   WARNING   ::\n" + Colors.NO_COLOUR )
     log( "\tSorry, some error seems to have occurred in:\n\t<" )
     log( Colors.LIGHT_GREEN + ("%s" % callingClass.name()) + Colors.NO_COLOUR + "::")
     log( Colors.LIGHT_CYAN + ("%s" % inspect.stack()[2][4][0].strip()) + Colors.NO_COLOUR)
