@@ -35,7 +35,7 @@ class Pipeline:
             'exitCode'      : 12},
         'stageError'        : {
             'action'        : 'executing a stage in the pipeline, ',
-            'error'         : 'the stage reported an error condition',
+            'error'         : 'the stage reported an error condition.',
             'exitCode'      : 13}
     }
 
@@ -142,9 +142,10 @@ class Pipeline:
         self._log('Executing pipeline <%s>...\n' % self.name())
         for stage in self._pipeline:
             stage()
-            print stage.exitCode()
-            print stage.stdout()
-            print stage.stderr()
+            self._log('stage stdout:\n')
+            self._log(stage.stdout())
+            self._log('stage stderr:\n')
+            self._log(stage.stderr())
             if stage.exitCode():
                 error.fatal(self, 'stageError')
         self._log('Terminating pipeline <%s>\n' % self.name())

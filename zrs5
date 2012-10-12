@@ -79,7 +79,7 @@ class ZRS5():
         self._verbosity                 = 0
         self._log                       = message.Message()
 
-        self._pipeline                  = stage.Pipeline()
+        self._pipeline                  = stage.Pipeline(name = 'zrs')
 
         self._l_subject                 = []
         
@@ -88,6 +88,7 @@ class ZRS5():
         
         for key, value in kwargs.iteritems():
             if key == 'subjectList':    self._l_subject         = value
+            if key == 'syslog':         self.log().syslog(value)
             if key == 'logTo':          self.log().to(value)
             if key == 'logTee':         self.log().tee(value)
 
@@ -196,9 +197,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    zrs5 = ZRS5(        subjectList = args.l_subj,
-                        logTo = 'zrs.log',
-                        logTee = True)
+    zrs5 = ZRS5(        subjectList     = args.l_subj,
+                        logTo           = 'zrs5.log',
+                        syslog          = True,
+                        logTee          = True)
     zrs5.verbosity(verbosity)
 
     stage1 = stage.Stage_crun(
