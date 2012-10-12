@@ -88,13 +88,16 @@ class Pipeline:
         
         '''
         if type(index) is types.IntType:
+            if index >= len(self._pipeline):
+                error.fatal(self, 'stageNotFound')
             return self._pipeline[index]
         if type(index) is types.StringType:
             for stage in self._pipeline:
                 if stage.name() == index:
                     return stage
-                
+            error.fatal(self, 'stageNotFound')    
 
+            
     def pop(self):
         '''
         Pop a stage from the pipeline stack.
@@ -188,6 +191,10 @@ class Stage:
         self._f_preconditionsArgs       = None
         self._f_postconditions          = lambda x: True
         self._f_postconditionsArgs      = None
+        for key, value in kwargs.iteritems():
+            if key == 'name':               self.name(value)
+            if key == 'fatalConditions':    self.fatalConditions(value)
+            if key == 'syslog':             self.log().syslog(value)
 
         
     def def_preconditions(self, *args, **kwargs):
@@ -388,11 +395,12 @@ class Stage_crun(Stage):
                     % (self.name(), misc.toc()))
 
 
-def crun_factory(astr_name):
+def crun_factory(**kwargs):
     stage = Stage_crun()
-    stage.name(astr_name)
-    stage.fatalConditions(True)
-    stage.log().syslog(True)
+    for key, value in kwargs.iteritems():
+        if key == 'name':               stage.name(value)
+        if key == 'fatalConditions':    stage.fatalConditions(value)
+        if key == 'syslog':             stage.log().syslog(value)
     return stage
                     
 if __name__ == "__main__":
@@ -417,16 +425,16 @@ if __name__ == "__main__":
             if key == 'ret':    ret = value
         return ret
 
-    stage1 = crun_factory('Stage 1')
+    stage1 = Stage_crun(name='Stage 1', fatalConditions=True, syslog=True)
         
     # Set the stage pre- and post-conditions callbacks.
     stage1.def_preconditions(    stage_preconditions,    ret=True)
     stage1.def_postconditions(   stage_postconditions,   ret=True)
     stage1_postconditions, stage1_args = stage1.def_postconditions()
     #stage1.def_postconditions(   stage.def_preconditions()[0], **stage.def_preconditions()[1] )
-    stage1(cmd='sleep 5')
+    stage1(cmd='sleep 1')
     
-    stage2 = crun_factory('Stage 2')
+    stage2 = crun_factory(name='Stage 2', fatalConditions=True, syslog=True)
     stage2.def_preconditions(   stage1_postconditions,  **stage1_args)
     stage2.def_postconditions(  stage_postconditions,   ret=True)
     stage2(cmd='ls *py')
@@ -437,6 +445,5 @@ if __name__ == "__main__":
     pipeline.stage_add(stage2)
     pipeline.execute()
 
-    error.warn(pipeline, 'preconditions')
-    print pipeline.stage_get(1).stdout()
+    print pipeline.stage_get(3).stdout()
     
