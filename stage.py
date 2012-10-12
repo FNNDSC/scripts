@@ -1,12 +1,116 @@
 #!/usr/bin/env python
 
 import sys
+import types
 
-from    _common import crun
+from    _common         import crun
 from    _common._colors import Colors
-from    _common import systemMisc       as misc
+from    _common         import systemMisc       as misc
+
 import  message
 import  inspect
+
+import  error
+
+class Pipeline:
+    '''
+    A thin wrapper that essentially strings several stages together
+    in a pipeline, using the venerable python list as organizing container.
+    The main advantage to using a pipeline as stage container is the
+    simplification afforded to running stages selectively.
+    '''
+
+    _dictErr = {
+        'preconditions'     : {
+            'action'        : 'executing preconditions, ',
+            'error'         : 'a failure state was detected.',
+            'exitCode'      : 10},
+        'postconditions'    : {
+            'action'        : 'executing postconditions, ',
+            'error'         : 'a failure state was detected.',
+            'exitCode'      : 11},
+        'stageNotFound'     : {
+            'action'        : 'searching for a stage in the pipeline, ',
+            'error'         : 'the stage was not found!',
+            'exitCode'      : 12}
+    }
+
+    
+    def pipeline(self):
+        '''
+        Get the pipeline.
+        '''
+        return self._pipeline
+
+        
+    def log(self):
+        '''
+        Returns the internal pipeline log message object. Caller can further 
+        manipulate the log object with object-specific calls.
+        '''
+        return self._log
+
+
+    def name(self, *args):
+        '''
+        get/set the descriptive name text of this stage object.
+        '''
+        if len(args):
+            self.__name = args[0]
+        else:
+            return self.__name
+        
+        
+    def __init__(self):
+        '''
+        Constructor
+        '''
+        self.__name             = 'unnamed'
+        self._log               = message.Message()
+        self._pipeline          = []
+
+
+    def stage_add(self, element):
+        '''
+        Add a stage to the pipeline.
+        '''
+        self._pipeline.append(element)
+
+
+    def stage_get(self, index):
+        '''
+        Return the stage referenced by <index>.
+
+        The <index> can be specified in several ways:
+
+        o an integer offset into the pipeline list.
+        o a string "name" of a particular stage.
+        
+        '''
+        if type(index) is types.IntType:
+            return self._pipeline[index]
+        if type(index) is types.StringType:
+            for stage in self._pipeline:
+                if stage.name() == index:
+                    return stage
+                
+
+    def pop(self):
+        '''
+        Pop a stage from the pipeline stack.
+        '''
+        ret = self._pipeline.pop()
+        return ret
+
+        
+    def execute(self):
+        '''
+        Run the pipeline, stage by stage.
+        '''
+        for stage in self._pipeline:
+            stage()
+        
+
 
 class Stage:
     '''
@@ -33,64 +137,8 @@ class Stage:
             'error'         : 'no shell command has been specified.',
             'exitCode'      : 12}
     }
+
     
-    def error_exit( self,   astr_key,
-                            ab_exitToOs=1
-                            ):
-        '''
-        Error handling.
-
-        Based on the <astr_key>, error information is extracted from
-        _dictErr and sent to log object.
-
-        If <ab_exitToOs> is False, error is considered non-fatal and
-        processing can continue, otherwise processing terminates.
-        
-        '''
-        b_syslog        = self._log.syslog()
-        self._log.syslog(False)
-        if ab_exitToOs: self._log( Colors.RED + ":: FATAL ERROR ::\n" + Colors.NO_COLOUR )
-        else:           self._log( Colors.YELLOW + ":: WARNING ::\n" + Colors.NO_COLOUR )
-        self._log( "\tSorry, some error seems to have occurred in:\n\t<" )
-        self._log( Colors.LIGHT_GREEN + ("%s" % self.__name) + Colors.NO_COLOUR + "::")
-        self._log( Colors.LIGHT_CYAN + ("%s" % inspect.stack()[2][4][0].strip()) + Colors.NO_COLOUR)
-        self._log( "> called by <")
-        self._log( Colors.LIGHT_GREEN + ("%s" % self.__name) + Colors.NO_COLOUR + "::")
-        self._log( Colors.LIGHT_CYAN + ("%s" % inspect.stack()[3][4][0].strip()) + Colors.NO_COLOUR)
-        self._log( ">\n")
-        
-        self._log( "\tWhile %s\n" % Stage._dictErr[astr_key]['action'] )
-        self._log( "\t%s\n" % Stage._dictErr[astr_key]['error'] )
-        self._log( "\n" )
-        if ab_exitToOs:
-            self._log( "Returning to system with error code %d\n" % \
-                            Stage._dictErr[astr_key]['exitCode'] )
-            sys.exit( Stage._dictErr[astr_key]['exitCode'] )
-        self._log.syslog(b_syslog)
-        return Stage._dictErr[astr_key]['exitCode']
-
-        
-    def fatal( self, astr_key, astr_extraMsg="" ):
-        '''
-        Convenience dispatcher to the error_exit() method.
-
-        Will raise "fatal" error, i.e. terminate script.
-        '''
-        if len( astr_extraMsg ): print astr_extraMsg
-        self.error_exit( astr_key )
-
-        
-    def warn( self, astr_key, astr_extraMsg="" ):
-        '''
-        Convenience dispatcher to the error_exit() method.
-
-        Will raise "warning" error, i.e. script processing continues.
-        '''
-        b_exitToOS = 0
-        if len( astr_extraMsg ): print astr_extraMsg
-        self.error_exit( astr_key, b_exitToOS )
-
-        
     def vprint(self, alevel, astr_msg):
         '''
         A verbosity-aware print.
@@ -209,17 +257,17 @@ class Stage:
                     return True
                 else:
                     if self._b_fatalConditions:
-                        self.fatal('preconditions')
+                        error.fatal(self, 'preconditions')
                     else:
-                        self.warn('preconditions')
+                        error.warn(self, 'preconditions')
             if key == 'checkpostconditions':
                 if self.postconditions():
                     return True
                 else:
                     if self._b_fatalConditions:
-                        self.fatal('postconditions')
+                        error.fatal(self, 'postconditions')
                     else:
-                        self.warn('postconditions')
+                        error.warn(self, 'postconditions')
                         
 
     def postconditions(self):
@@ -263,6 +311,23 @@ class Stage_crun(Stage):
     '''
     A Stage class that uses crun as its execute engine.
     '''
+
+    def cmd(self, *args):
+        '''
+        get/set the shell command to execute.
+
+        Setting the command to execute is useful mainly when constructing
+        a pipeline of stages.
+
+        cmd():          returns the current fatalConditions flag
+        cmd(<str_cmd>): sets the command to execute but does NOT actually
+                        trigger the execution. 
+
+        '''
+        if len(args):
+            self._str_cmd = args[0]
+        else:
+            return self._str_cmd
     
     def stdout(self):
         '''
@@ -310,7 +375,6 @@ class Stage_crun(Stage):
         Stage.__call__(self, checkpreconditions=True)
         
         self._log('Executing stage...\n')
-        self._str_cmd = ''
         for key, value in kwargs.iteritems():
             if key == 'cmd':    self._str_cmd   = value
         if len(self._str_cmd):
@@ -323,6 +387,13 @@ class Stage_crun(Stage):
         self._log('<%s> END. Elapsed time = %f seconds\n' \
                     % (self.name(), misc.toc()))
 
+
+def crun_factory(astr_name):
+    stage = Stage_crun()
+    stage.name(astr_name)
+    stage.fatalConditions(True)
+    stage.log().syslog(True)
+    return stage
                     
 if __name__ == "__main__":
 
@@ -346,14 +417,7 @@ if __name__ == "__main__":
             if key == 'ret':    ret = value
         return ret
 
-    def stage_factory(astr_name):
-        stage = Stage_crun()
-        stage.name(astr_name)
-        stage.fatalConditions(True)
-        stage.log().syslog(True)
-        return stage
-
-    stage1 = stage_factory('Stage 1')
+    stage1 = crun_factory('Stage 1')
         
     # Set the stage pre- and post-conditions callbacks.
     stage1.def_preconditions(    stage_preconditions,    ret=True)
@@ -361,16 +425,18 @@ if __name__ == "__main__":
     stage1_postconditions, stage1_args = stage1.def_postconditions()
     #stage1.def_postconditions(   stage.def_preconditions()[0], **stage.def_preconditions()[1] )
     stage1(cmd='sleep 5')
-
-    print "stdout -->%s<--" % stage1.stdout()
-    print "stderr -->%s<--" % stage1.stderr()
-    print "exitCode -->%s<--" % stage1.exitCode()
     
-    stage2 = stage_factory('Stage 2')
+    stage2 = crun_factory('Stage 2')
     stage2.def_preconditions(   stage1_postconditions,  **stage1_args)
     stage2.def_postconditions(  stage_postconditions,   ret=True)
     stage2(cmd='ls *py')
+
+    pipeline    = Pipeline()
+    pipeline.name('testPipeline')
+    pipeline.stage_add(stage1)
+    pipeline.stage_add(stage2)
+    pipeline.execute()
+
+    error.warn(pipeline, 'preconditions')
+    print pipeline.stage_get(1).stdout()
     
-    print "stdout -->%s<--" % stage2.stdout()
-    print "stderr -->%s<--" % stage2.stderr()
-    print "exitCode -->%s<--" % stage2.exitCode()
