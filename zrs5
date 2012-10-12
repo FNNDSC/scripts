@@ -5,9 +5,12 @@ import  string
 import  getopt
 import  argparse
 import  csv
-import  stack
 from    _common import systemMisc       as misc
 from    _common import crun
+
+import  error
+import  message
+import  stage
 
 
 class ZRS5():
@@ -38,38 +41,33 @@ class ZRS5():
             'exitCode'      : 14}
     }
 
-    def error_exit( self,
-                            astr_key,
-                            ab_exitToOs=1
-                            ):
-        print "\tSorry, some error seems to have occurred in <%s>" \
-                    % ( self.__name__)
-        print "\tWhile %s"           % ZRS5._dictErr[astr_key]['action']
-        print "\t%s"                 % ZRS5._dictErr[astr_key]['error']
-        print ""
-        if ab_exitToOs:
-            print "Returning to system with error code %d" % \
-                                        ZRS5._dictErr[astr_key]['exitCode']
-            sys.exit( ZRS5._dictErr[astr_key]['exitCode'] )
-        return ZRS5._dictErr[astr_key]['exitCode']
 
-    def fatal( self, astr_key, astr_extraMsg="" ):
-        print synopsis(True)
-        if len( astr_extraMsg ): print astr_extraMsg
-        self.error_exit( astr_key )
+    def log(self):
+        '''
+        Returns the internal pipeline log message object. Caller can further
+        manipulate the log object with object-specific calls.
+        '''
+        return self._log
 
-    def warn( self, astr_key, astr_extraMsg="" ):
-        b_exitToOS = 0
-        if len( astr_extraMsg ): print astr_extraMsg
-        self.error_exit( astr_key, b_exitToOS )  
 
+    def name(self, *args):
+        '''
+        get/set the descriptive name text of this pipeline object.
+        '''
+        if len(args):
+            self.__name = args[0]
+        else:
+            return self.__name
+
+    
     def vprintf(self, alevel, format, *args):
         '''
         A verbosity-aware print.
         
         '''
-        if self._verbosity and self._verbosity < alevel:
+        if self._verbosity and self._verbosity <= alevel:
             sys.stdout.write(format % args)
+            
         
     def __init__(self, **kwargs):
         '''
@@ -77,23 +75,21 @@ class ZRS5():
         exist and creates directories.
 
         '''
-        self.__name__                   = 'zrs'
+        self.__name                     = 'zrs'
         self._verbosity                 = 0
+        self._log                       = message.Message()
 
-        self._l_subject                  = []
+        self._pipeline                  = stage.Pipeline()
+
+        self._l_subject                 = []
         
         self._str_subjectDir            = ''
-        self._b_strictCheck             = False
-        self._b_query                   = False
         self._b_debugMode               = False
-        self._duplicateCount            = 0
-        self._entryCreatedCount         = 0
-        self._entryReadCount            = 0
-        self._stack                     = stack.Stack()
         
         for key, value in kwargs.iteritems():
             if key == 'subjectList':    self._l_subject         = value
-            if key == 'query':          self._b_query           = value
+            if key == 'logTo':          self.log().to(value)
+            if key == 'logTee':         self.log().tee(value)
 
 
     def initialize(self):
@@ -114,73 +110,58 @@ class ZRS5():
         The main 'engine' of the class.
 
         '''
+        self._log('Starting zrs5...\n')
+        self._pipeline.execute()
+        self._log('Finished zrs5\n')
 
-    def lobes_annot(self):
-        '''
-        Run the lobar annotation stage.
         
-        '''
-        shell = crun()
-        
-        
-    def stages(self, *args):
+    def pipeline(self, *args):
         if len(args):
-            self._stages                = args[0]
+            self._pipeline              = args[0]
         else:
-            return self._stages
+            return self._pipeline
 
-            
+
+    def stage_add(self, stage):
+        self._pipeline.stage_add(stage)
+
+        
     def verbosity(self, *args):
         if len(args):
             self._verbosity             = args[0] 
         else:
             return self._verbosity
-
             
-    def stack(self, *args):
-        if len(args):
-            for e in args:
-                self._stack.push(e)
-        else:
-            return self._stack
-
             
-    def entriesRead(self, *args):
-        if len(args):
-            self._entryReadCount        = args[0] 
-        else:
-            return self._entryReadCount
+def synposis(ab_shortOnly = False):
+    scriptName = os.path.basename(sys.argv[0])
+    shortSynopsis =  '''
+    SYNOPSIS
 
-            
-def synopsis(ab_shortOnly = False):
-  scriptName = os.path.basename(sys.argv[0])
-  shortSynopsis =  '''
-  SYNOPSIS
+            %s                                            \\
+                            [--stages <stages>]             \\
+                            [--query]                       \\
+                            [-v|--verbosity <verboseLevel>] \\
+                            <Subj1> <Subj2> ... <SubjN>
+    ''' % scriptName
   
-        %s                                            \\
-                        [--stages <stages>]             \\
-                        [--query]                       \\
-                        [-v|--verbosity <verboseLevel>] \\
-                        <Subj1> <Subj2> ... <SubjN>
-  ''' % scriptName
-  
-  description =  '''
-  DESCRIPTION
-  
-        `%s' is a meta-controller for setting up and analyzing a set of Dyslexia
-        experiments.
-        
-  ARGS
-  
-        
-  EXAMPLES
+    description =  '''
+    DESCRIPTION
 
-          
-  ''' % (scriptName)
-  if ab_shortOnly:
-      return shortSynopsis
-  else:
-      return shortSynopsis + description
+            `%s' is a meta-controller for setting up and analyzing a set of Dyslexia
+            experiments.
+
+    ARGS
+
+
+    EXAMPLES
+
+
+    ''' % (scriptName)
+    if ab_shortOnly:
+        return shortSynopsis
+    else:
+        return shortSynopsis + description
 
 
 #
@@ -197,7 +178,7 @@ if __name__ == "__main__":
     b_query     = False
     verbosity   = 0
 
-    parser = argparse.ArgumentParser(description = 'Dyslexia Curvature Analysis')
+    parser = argparse.ArgumentParser(description = synposis(True))
     
     parser.add_argument('l_subj',
                         metavar='SUBJECT', nargs='+',
@@ -215,9 +196,22 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    parser = ZRS5(subjectList = args.l_subj)
-    parser.verbosity(verbosity)
-    parser.stages(stages)
-    parser.initialize()
-    parser.run()
+    zrs5 = ZRS5(        subjectList = args.l_subj,
+                        logTo = 'zrs.log',
+                        logTee = True)
+    zrs5.verbosity(verbosity)
+
+    stage1 = stage.Stage_crun(
+                        name            = 'Lobes_annotate',
+                        fatalConditions = True,
+                        syslog          = True,
+                        logTo           = 'zrs-lobes_annotate.log',
+                        logTee          = True,
+                        cmd             ='lobe_annot.sh -S ' + ' '.join(args.l_subj)
+                        )
+    
+    
+    zrs5.stage_add(stage1)
+#    print stage1.cmd()
+    zrs5.run()
   
