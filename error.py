@@ -30,7 +30,8 @@ from    _common._colors import Colors
 
 def report(     callingClass,
                 astr_key,
-                ab_exitToOs=1
+                ab_exitToOs=1,
+                astr_header=""
                 ):
     '''
     Error handling.
@@ -45,8 +46,10 @@ def report(     callingClass,
     log         = callingClass.log()
     b_syslog    = log.syslog()
     log.syslog(False)
-    if ab_exitToOs: log( Colors.RED +    ":: FATAL ERROR ::\n" + Colors.NO_COLOUR )
-    else:           log( Colors.YELLOW + "::   WARNING   ::\n" + Colors.NO_COLOUR )
+    if ab_exitToOs: log( Colors.RED +    ":: FATAL ERROR ::" + Colors.NO_COLOUR )
+    else:           log( Colors.YELLOW + "::   WARNING   ::" + Colors.NO_COLOUR )
+    if len(astr_header): log( Colors.BROWN + astr_header + Colors.NO_COLOUR )
+    log( "\n" )
     log( "\tSorry, some error seems to have occurred in:\n\t<" )
     log( Colors.LIGHT_GREEN + ("%s" % callingClass.name()) + Colors.NO_COLOUR + "::")
     log( Colors.LIGHT_CYAN + ("%s" % inspect.stack()[2][4][0].strip()) + Colors.NO_COLOUR)
@@ -76,8 +79,8 @@ def fatal( callingClass, astr_key, astr_extraMsg="" ):
 
     Will raise "fatal" error, i.e. terminate script.
     '''
-    if len( astr_extraMsg ): print astr_extraMsg
-    report( callingClass, astr_key )
+    b_exitToOS  = True
+    report( callingClass, astr_key, b_exitToOS, astr_extraMsg )
 
 
 def warn( callingClass, astr_key, astr_extraMsg="" ):
@@ -86,8 +89,7 @@ def warn( callingClass, astr_key, astr_extraMsg="" ):
 
     Will raise "warning" error, i.e. script processing continues.
     '''
-    b_exitToOS = 0
-    if len( astr_extraMsg ): print astr_extraMsg
-    report( callingClass, astr_key, b_exitToOS )
+    b_exitToOS = False
+    report( callingClass, astr_key, b_exitToOS, astr_extraMsg )
 
     
