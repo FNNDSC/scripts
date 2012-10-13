@@ -78,8 +78,8 @@ class ZRS5():
         self.__name                     = 'zrs'
         self._verbosity                 = 0
         self._log                       = message.Message()
-
-        self._pipeline                  = stage.Pipeline(name = 'zrs')
+        self._log.tee(True)
+        self._log.syslog(True)
 
         self._l_subject                 = []
         
@@ -88,9 +88,12 @@ class ZRS5():
         
         for key, value in kwargs.iteritems():
             if key == 'subjectList':    self._l_subject         = value
-            if key == 'syslog':         self.log().syslog(value)
-            if key == 'logTo':          self.log().to(value)
-            if key == 'logTee':         self.log().tee(value)
+            if key == 'syslog':         self._log.syslog(value)
+            if key == 'logTo':          self._log.to(value)
+            if key == 'logTee':         self._log.tee(value)
+
+        self._pipeline                  = stage.Pipeline(name = 'zrs')
+        self._pipeline.log(self._log)
 
 
     def initialize(self):
@@ -134,7 +137,7 @@ class ZRS5():
             return self._verbosity
             
             
-def synposis(ab_shortOnly = False):
+def synopsis(ab_shortOnly = False):
     scriptName = os.path.basename(sys.argv[0])
     shortSynopsis =  '''
     SYNOPSIS
@@ -170,6 +173,7 @@ def synposis(ab_shortOnly = False):
 #
 if __name__ == "__main__":
 
+
     # always show the help if no arguments were specified
     if len( sys.argv ) == 1:
         print synopsis()
@@ -179,7 +183,7 @@ if __name__ == "__main__":
     b_query     = False
     verbosity   = 0
 
-    parser = argparse.ArgumentParser(description = synposis(True))
+    parser = argparse.ArgumentParser(description = synopsis(True))
     
     parser.add_argument('l_subj',
                         metavar='SUBJECT', nargs='+',
@@ -209,11 +213,10 @@ if __name__ == "__main__":
                         syslog          = True,
                         logTo           = 'zrs-lobes_annotate.log',
                         logTee          = True,
-                        cmd             ='lobe_annot.sh -S ' + ' '.join(args.l_subj)
+                        cmd             ='lobe_annot.sh -v 10 -S ' + ' '.join(args.l_subj)
                         )
     
     
     zrs5.stage_add(stage1)
-#    print stage1.cmd()
     zrs5.run()
   
