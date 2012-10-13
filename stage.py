@@ -64,12 +64,17 @@ class Pipeline:
         return self._pipeline
 
         
-    def log(self):
+    def log(self, *args):
         '''
-        Returns the internal pipeline log message object. Caller can further 
-        manipulate the log object with object-specific calls.
+        get/set the internal pipeline log message object.
+        
+        Caller can further manipulate the log object with object-specific 
+        calls.
         '''
-        return self._log
+        if len(args):
+            self._log = args[0]
+        else:
+            return self._log
 
 
     def name(self, *args):
@@ -141,13 +146,15 @@ class Pipeline:
         '''
         self._log('Executing pipeline <%s>...\n' % self.name())
         for stage in self._pipeline:
+            self._log('Stage: %s\n' % stage.name())
             stage()
-            self._log('stage stdout:\n')
-            self._log(stage.stdout())
-            self._log('stage stderr:\n')
-            self._log(stage.stderr())
+            log = stage.log()
+            log('stage stdout:\n')
+            log('\n' + stage.stdout())
+            log('stage stderr:\n')
+            log('\n' + stage.stderr())
             if stage.exitCode():
-                error.fatal(self, 'stageError')
+                error.fatal(self, 'stageError', '%s' % stage.name())
         self._log('Terminating pipeline <%s>\n' % self.name())
         
 
@@ -460,6 +467,7 @@ class Stage_crun(Stage):
             if key == 'cmd':    self._str_cmd   = value
         if len(self._str_cmd):
             str_stdout, str_stderr, exitCode = self._shell(self._str_cmd)
+            if exitCode: return
         else:
             self.fatal('NoCmd')
 
