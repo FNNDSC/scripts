@@ -2,9 +2,7 @@
 import  os
 import  sys
 import  string
-import  getopt
 import  argparse
-import  csv
 from    _common import systemMisc       as misc
 from    _common import crun
 
@@ -49,6 +47,8 @@ class FNNDSC_ZRS5(base.FNNDSC):
         '''
         base.FNNDSC.__init__(self, **kwargs)
 
+        self._lw                        = 60
+        self._rw                        = 20
         self._l_subject                 = []
         
         self._str_subjectDir            = ''
@@ -65,9 +65,15 @@ class FNNDSC_ZRS5(base.FNNDSC):
         
         '''
         for str_subj in self._l_subject:
-            self.vprintf(9, '%30s', ('Checking on subjectDir <%s>' % str_subj))
+            self._log('Checking on subjectDir <%s>' % str_subj,
+                        debug=9, lw=self._lw)
             if os.path.isdir(str_subj):
-                self.vprintf(9, '%30s\n', '[ ok ]')
+                self._log('[ ok ]\n', debug=9, rw=self._rw)
+            else:
+                self._log('[ not found ]\n', debug=9, rw=self._rw,
+                            syslog=False)
+                error.fatal(self, 'subjectDirnotExist')
+            
 
                 
     def run(self):
@@ -131,8 +137,8 @@ if __name__ == "__main__":
                         help='SubjectIDs to process')
     parser.add_argument('--verbosity', '-v',
                         dest='verbosity', 
-                        action='store_const',
-                        const=0, default=0,
+                        action='store',
+                        default=0,
                         help='verbosity level')
     parser.add_argument('--stages', '-s',
                         dest='stages',
@@ -144,9 +150,11 @@ if __name__ == "__main__":
 
     zrs5 = FNNDSC_ZRS5( subjectList     = args.l_subj,
                         logTo           = 'zrs5.log',
+#                        logTo           = sys.stdout,
                         syslog          = True,
                         logTee          = True)
-    zrs5.verbosity(verbosity)
+    zrs5.verbosity(args.verbosity)
+    zrs5.initialize()
 
     stage1 = stage.Stage_crun(
                         name            = 'Lobes_annotate',
