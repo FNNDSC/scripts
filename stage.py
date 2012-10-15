@@ -147,7 +147,7 @@ class Pipeline:
         self._log('Executing pipeline <%s>...\n' % self.name())
         for stage in self._pipeline:
             self._log('Stage: %s\n' % stage.name())
-            stage()
+            stage(runstage=True)
             log = stage.log()
             log('stage stdout:\n')
             log('\n' + stage.stdout())
@@ -180,6 +180,18 @@ class Stage:
     '''
     A simple 'stage' class used for constructing serialized pipeline
     processing streams.
+
+    A stage represents a single processing operation comprising:
+
+        - preconditions check
+        - stage execution
+        - postconditions check
+
+    Each of these components are defined as callbacks that are
+    assigned by the caller, and conform to the following:
+
+        - each callback must return boolean
+        - each callback arguments are **kwargs
     
     '''
 
@@ -201,6 +213,47 @@ class Stage:
             'error'         : 'no shell command has been specified.',
             'exitCode'      : 12}
     }
+    
+    def stdout(self, *args):
+        '''
+        get/set the stdout analog level.
+
+        stdout():       returns the current stdout buffer
+        stdout(<str>):  sets the stdout to <str>
+
+        '''
+        if len(args):
+            self._str_stdout    = args[0]
+        else:
+            return self._str_stdout
+
+
+    def stderr(self, *args):
+        '''
+        get/set the stderr analog level.
+
+        stderr():       returns the current stderr buffer
+        stderr(<str>):  sets the stderr to <str>
+
+        '''
+        if len(args):
+            self._str_stderr    = args[0]
+        else:
+            return self._str_stderr
+
+
+    def exitCode(self, *args):
+        '''
+        get/set the exitCode analog level.
+
+        exitCode():     returns the current exitCode buffer
+        exitCode(<i>):  sets the exitCode to <i>
+
+        '''
+        if len(args):
+            self._str_exitCode  = args[0]
+        else:
+            return self._str_exitCode
 
 
     def verbosity(self, *args):
@@ -262,9 +315,14 @@ class Stage:
         self._verbosity         = 1
 
         self._str_cmd           = ''
+        self._str_stdout        = ''
+        self._str_stderr        = ''
+        self._str_exitCode      = ''
         
         self._f_preconditions           = lambda **x: True
         self._f_preconditionsArgs       = {'val': True}
+        self._f_stage                   = lambda **x: True
+        self._f_stageArgs               = {'val': True}
         self._f_postconditions          = lambda **x: True
         self._f_postconditionsArgs      = {'val': True}
         for key, value in kwargs.iteritems():
@@ -299,6 +357,22 @@ class Stage:
             return self._f_preconditions, self._f_preconditionsArgs
 
 
+    def def_stage(self, *args, **kwargs):
+        '''
+        get/set the 'stage' function
+
+        This method assigns the internal 'stage' function to
+        args[0], and passes the optional named keyword arguments to
+        this external function.
+
+        '''
+        if len(args):
+            self._f_stage               = args[0]
+            self._f_stageArgs           = kwargs
+        else:
+            return self._f_preconditions, self._f_preconditionsArgs
+
+            
     def def_postconditions(self, *args, **kwargs):
         '''
         set the 'postconditions' function
@@ -331,11 +405,25 @@ class Stage:
         ret = self._f_preconditions(**self._f_preconditionsArgs)
         return ret
 
+
+    def stage(self):
+        '''
+        Evaluates the internal stage callback, and returns
+        a boolean result.
+
+        '''
+        self._log('Calling stage...\n')
+        ret = self._f_stage(**self._f_stageArgs)
+        return ret
+        
         
     def __call__(self, **kwargs):
         '''
-        The base class __call__ functor essentially only dispatches the
+        The base class __call__ functor essentially dispatches the
         pre- and/or post-conditions checking.
+
+        If called with (stage=True) will execute the externally defined
+        stage callback.
 
         '''
         for key, value in kwargs.iteritems():
@@ -347,6 +435,14 @@ class Stage:
                         error.fatal(self, 'preconditions')
                     else:
                         error.warn(self, 'preconditions')
+            if key == 'runstage':
+                if self.stage():
+                    return True
+                else:
+                    if self._b_fatalConditions:
+                        error.fatal(self, 'stage')
+                    else:
+                        error.warn(self, 'stage')
             if key == 'checkpostconditions':
                 if self.postconditions():
                     return True
