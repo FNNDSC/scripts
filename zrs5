@@ -12,13 +12,12 @@ import  error
 import  message
 import  stage
 
+import  fnndsc  as base
 
-class ZRS5():
+class FNNDSC_ZRS5(base.FNNDSC):
     '''
-    This is the main 'controller' class for the dyslexia curvature analysis.
-
-    There are several 'modules' that are executed in pipeline-order. The
-    actual modules to run can be specified before running the pipeline.
+    This class is a specialization of the FNNDSC base and geared to dyslexia
+    curvature analysis.
     
     '''
 
@@ -41,59 +40,21 @@ class ZRS5():
             'exitCode'      : 14}
     }
 
-
-    def log(self):
-        '''
-        Returns the internal pipeline log message object. Caller can further
-        manipulate the log object with object-specific calls.
-        '''
-        return self._log
-
-
-    def name(self, *args):
-        '''
-        get/set the descriptive name text of this pipeline object.
-        '''
-        if len(args):
-            self.__name = args[0]
-        else:
-            return self.__name
-
-    
-    def vprintf(self, alevel, format, *args):
-        '''
-        A verbosity-aware print.
-        
-        '''
-        if self._verbosity and self._verbosity <= alevel:
-            sys.stdout.write(format % args)
-            
-        
+                    
     def __init__(self, **kwargs):
         '''
         Basic constructor. Checks on named input args, checks that files
         exist and creates directories.
 
         '''
-        self.__name                     = 'zrs'
-        self._verbosity                 = 0
-        self._log                       = message.Message()
-        self._log.tee(True)
-        self._log.syslog(True)
+        base.FNNDSC.__init__(self, **kwargs)
 
         self._l_subject                 = []
         
         self._str_subjectDir            = ''
-        self._b_debugMode               = False
         
         for key, value in kwargs.iteritems():
             if key == 'subjectList':    self._l_subject         = value
-            if key == 'syslog':         self._log.syslog(value)
-            if key == 'logTo':          self._log.to(value)
-            if key == 'logTee':         self._log.tee(value)
-
-        self._pipeline                  = stage.Pipeline(name = 'zrs')
-        self._pipeline.log(self._log)
 
 
     def initialize(self):
@@ -114,27 +75,7 @@ class ZRS5():
         The main 'engine' of the class.
 
         '''
-        self._log('Starting zrs5...\n')
-        self._pipeline.execute()
-        self._log('Finished zrs5\n')
-
-        
-    def pipeline(self, *args):
-        if len(args):
-            self._pipeline              = args[0]
-        else:
-            return self._pipeline
-
-
-    def stage_add(self, stage):
-        self._pipeline.stage_add(stage)
-
-        
-    def verbosity(self, *args):
-        if len(args):
-            self._verbosity             = args[0] 
-        else:
-            return self._verbosity
+        base.FNNDSC.run(self)
             
             
 def synopsis(ab_shortOnly = False):
@@ -201,7 +142,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    zrs5 = ZRS5(        subjectList     = args.l_subj,
+    zrs5 = FNNDSC_ZRS5( subjectList     = args.l_subj,
                         logTo           = 'zrs5.log',
                         syslog          = True,
                         logTee          = True)
@@ -213,10 +154,29 @@ if __name__ == "__main__":
                         syslog          = True,
                         logTo           = 'zrs-lobes_annotate.log',
                         logTee          = True,
-                        cmd             ='lobe_annot.sh -v 10 -S ' + ' '.join(args.l_subj)
+                        cmd             = 'lobe_annot.sh -v 10 -S ' + ' '.join(args.l_subj)
                         )
-    
-    
+
+
+    stage2 = stage.Stage(
+                        name            = 'Callback',
+                        fatalConditions = True,
+                        syslog          = True,
+                        logTo           = 'zrs-callback.log',
+                        logTee          = True
+                        )
+    def f_stage2callback(**kwargs):
+        f_sum = 0
+        for i in range(0, 10000):
+            f_sum = f_sum+i
+        stage2.stdout('f_sum = %d\n' % f_sum)
+        return True
+
+      
+    stage2.def_stage(f_stage2callback)
+      
     zrs5.stage_add(stage1)
+    zrs5.stage_add(stage2)
+
     zrs5.run()
   
