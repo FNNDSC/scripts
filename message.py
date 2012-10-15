@@ -66,9 +66,8 @@ class Message:
         get/set the tee flag.
 
         The tee flag toggles any output that is directed to non-console
-        destinations to also appear on the console. Since non-console
-        destinations are not subject to verbosity filtering, the tee()
-        flag will output to console irrespective of verbosity level.
+        destinations to also appear on the console. Tee'd console output
+        is still verbosity filtered
         
         tee():                  returns the current syslog flag
         tee(True|False):        sets the flag to True|False
@@ -138,6 +137,9 @@ class Message:
         '''
         if self._verbosity and self._verbosity >= alevel:
             sys.stdout.write(format % args)
+
+    def canPrintVerbose(self, alevel):
+        return int(self._verbosity) and int(alevel) <= int(self._verbosity)
         
 
     @staticmethod
@@ -234,14 +236,17 @@ class Message:
         if rw: str_msg  = '%*s' % (rw, str_msg)
         if self._logHandle == sys.stdout:
             if verbosity:
-                if self._verbosity and verbosity <= self._verbosity:
+                if self.canPrintVerbose(verbosity):
                     self._sys_stdout.write(str_msg)
             else:
                 self._sys_stdout.write(str_msg)
         else:
             self._sys_stdout.write(Colors.strip(str_msg))
         if self._b_tee and self._logHandle != sys.stdout:
-            sys.stdout.write(str_msg)
+            if verbosity:
+                if self.canPrintVerbose(verbosity):
+                    sys.stdout.write(str_msg)
+            else: sys.stdout.write(str_msg)
         self.syslog(b_syslog)    
 
         
