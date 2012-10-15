@@ -57,6 +57,8 @@ class FNNDSC():
     def verbosity(self, *args):
         if len(args):
             self._verbosity             = args[0]
+            self._log.verbosity(args[0])
+            self._pipeline._log.verbosity(args[0])
         else:
             return self._verbosity
 
