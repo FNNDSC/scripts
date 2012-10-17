@@ -673,10 +673,10 @@ if __name__ == "__main__":
 
   parser.add_argument( '-i', '--input', action='store', dest='input', required=True, help='The input folder which gets scanned automatically for usable volume- and track-files.' )
   parser.add_argument( '-o', '--output', action='store', dest='output', required=True, help='The output folder which gets created if it does not exit' )
-  parser.add_argument( '-r', '--radius', action='store', dest='radius', default=3, help='The look-a-round radius in voxels. E.g. --radius 10, DEFAULT: 3' )
+  parser.add_argument( '-r', '--radius', action='store', dest='radius', default=3, type=int, help='The look-a-round radius in voxels. E.g. --radius 10, DEFAULT: 3' )
   parser.add_argument( '-l', '--length', action='store', dest='length', default="20 200", help='The lower and upper borders for length thresholding in mm. E.g. --length "60 100", DEFAULT "20 200" ' )
   parser.add_argument( '-co', '--cortex_only', action='store_true', dest='cortex_only', help='Perform filtering for cortex specific analysis and skip sub-cortical structures.' )
-  parser.add_argument( '-s', '--stage', action='store', dest='stage', default=0, help='Start with a specific stage while skipping the ones before. E.g. --stage 3 directly starts the mapping without preprocessing, --stage 4 starts with the filtering' )
+  parser.add_argument( '-s', '--stage', action='store', dest='stage', default=0, type=int, help='Start with a specific stage while skipping the ones before. E.g. --stage 3 directly starts the mapping without preprocessing, --stage 4 starts with the filtering' )
   parser.add_argument( '-overwrite', '--overwrite', action='store_true', dest='overwrite', help='Overwrite any existing output. DANGER!!' )
   parser.add_argument( '-v', '--verbose', action='store_true', dest='verbose', help='Show verbose output' )
 
