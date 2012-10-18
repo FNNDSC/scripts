@@ -90,23 +90,23 @@ done
 verbosity_check
 topDir=$(pwd)
 
+G_LC=80
+G_RC=10
 
-printf "%40s"   "Checking for SUBJECTS_DIR env variable"
+statusPrint "Checking for SUBJECTS_DIR env variable"
 b_subjectsDir=${SUBJECTS_DIR+1}
 if (( !b_subjectsDir )) ; then
         fatal noSubjectsDirVar
 fi
 ret_check $?   
 
-printf "%40s"	"Checking on mri_annot2label"
+statusPrint	"Checking on mri_annot2label"
 file_checkOnPath $MRIANNOT2LABEL
 
 shift $(($OPTIND - 1))
 SUBJLIST=$*
 b_SUBJLIST=$(echo $SUBJLIST | wc -w)
 
-G_LC=50
-G_RC=30
 if (( b_SUBJLIST )) ; then
     for SUBJ in $SUBJLIST ; do
 	for HEMI in rh lh ; do
