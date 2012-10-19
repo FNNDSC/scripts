@@ -28,6 +28,10 @@ class FNNDSC_ZRS5(base.FNNDSC):
             'action'        : 'examining command line arguments, ',
             'error'         : 'it seems that no subjects were specified.',
             'exitCode'      : 10},
+        'noFreeSurferEnv'   : {
+            'action'        : 'examining environment, ',
+            'error'         : 'it seems that the FreeSurfer environment has not been sourced.',
+            'exitCode'      : 11},
         'subjectDirnotExist': {
             'action'        : 'examining the <subjectDirectories>, ',
             'error'         : 'the directory does not exist.',
@@ -47,14 +51,16 @@ class FNNDSC_ZRS5(base.FNNDSC):
         '''
         base.FNNDSC.__init__(self, **kwargs)
 
-        self._lw                        = 60
+        self._lw                        = 120
         self._rw                        = 20
         self._l_subject                 = []
         
         self._str_subjectDir            = ''
+        self._stageslist                = '12'
         
         for key, value in kwargs.iteritems():
             if key == 'subjectList':    self._l_subject         = value
+            if key == 'stages':         self._stageslist        = value
 
 
     def initialize(self):
@@ -64,11 +70,25 @@ class FNNDSC_ZRS5(base.FNNDSC):
         have been set (or reset).
         
         '''
+
+        # Set the stages
+        self._pipeline.stages_canRun(False)
+        lst_stages = list(self._stageslist)
+        for index in lst_stages:
+            stage = self._pipeline.stage_get(int(index))
+            stage.canRun(True)
+
+        # Check for FS env variable
+        self._log('Checking on FREESURFER_HOME', debug=9, lw=self._lw)
+        if not os.environ.get('FREESURFER_HOME'):
+            error.fatal(self, 'noFreeSurferEnv')
+        self._log('[ ok ]\n', debug=9, rw=self._rw, syslog=False)
+        
         for str_subj in self._l_subject:
             self._log('Checking on subjectDir <%s>' % str_subj,
                         debug=9, lw=self._lw)
             if os.path.isdir(str_subj):
-                self._log('[ ok ]\n', debug=9, rw=self._rw)
+                self._log('[ ok ]\n', debug=9, rw=self._rw, syslog=False)
             else:
                 self._log('[ not found ]\n', debug=9, rw=self._rw,
                             syslog=False)
@@ -99,10 +119,16 @@ def synopsis(ab_shortOnly = False):
     description =  '''
     DESCRIPTION
 
-            `%s' is a meta-controller for setting up and analyzing a set of Dyslexia
-            experiments.
+        `%s' is a meta-controller for setting up and analyzing a set of 
+        Dyslexia experiments.
 
     ARGS
+
+       --stages <stages>
+       The stages to execute. This is specified in a string, such as '1234'
+       which would imply stages 1, 2, 3, and 4.
+
+       The special keyword 'all' can be used to turn on all stages.
 
 
     EXAMPLES
@@ -142,49 +168,55 @@ if __name__ == "__main__":
                         help='verbosity level')
     parser.add_argument('--stages', '-s',
                         dest='stages',
-                        action='store_const',
-                        const=1, default=1,
+                        action='store',
+                        default='0',
                         help='analysis stages')
 
     args = parser.parse_args()
 
     zrs5 = FNNDSC_ZRS5( subjectList     = args.l_subj,
+                        stages          = args.stages,
                         logTo           = 'zrs5.log',
 #                        logTo           = sys.stdout,
                         syslog          = True,
                         logTee          = True)
     zrs5.verbosity(args.verbosity)
-    zrs5.initialize()
+    pipeline    = zrs5.pipeline()
+    pipeline.poststdout(True)
+    pipeline.poststderr(True)
 
-    stage1 = stage.Stage_crun(
+    stage0 = stage.Stage_crun(
                         name            = 'Lobes_annotate',
                         fatalConditions = True,
                         syslog          = True,
-                        logTo           = 'zrs-lobes_annotate.log',
+                        logTo           = 'zrs5-lobes_annotate.log',
                         logTee          = True,
                         cmd             = 'lobe_annot.sh -v 10 -S ' + ' '.join(args.l_subj)
                         )
+                        
 
-
-    stage2 = stage.Stage(
+    stageX = stage.Stage(
                         name            = 'Callback',
                         fatalConditions = True,
                         syslog          = True,
                         logTo           = 'zrs-callback.log',
                         logTee          = True
                         )
-    def f_stage2callback(**kwargs):
+    def f_stageXcallback(**kwargs):
         f_sum = 0
         for i in range(0, 10000):
             f_sum = f_sum+i
-        stage2.stdout('f_sum = %d\n' % f_sum)
+        stageX.stdout('f_sum = %d\n' % f_sum)
         return True
 
       
-    stage2.def_stage(f_stage2callback)
-      
-    zrs5.stage_add(stage1)
-    zrs5.stage_add(stage2)
+    stageX.def_stage(f_stageXcallback)
+
+    zrs5log = zrs5.log()
+    zrs5log('INIT: %s\n' % ' '.join(sys.argv))
+    zrs5.stage_add(stage0)
+    zrs5.stage_add(stageX)
+    zrs5.initialize()
 
     zrs5.run()
   
