@@ -1,0 +1,246 @@
+#!/usr/bin/env python
+import  os
+import  sys
+import  string
+import  argparse
+from    _common import systemMisc       as misc
+from    _common import crun
+
+import  error
+import  message
+import  stage
+
+import  fnndsc  as base
+
+class FNNDSC_labelsROI(base.FNNDSC):
+    '''
+    This class is a specialization of the FNNDSC base and generates
+    MOSIX cluster scheduled runs of label dilation across passed
+    FreeSurfer subjects.
+    
+    '''
+
+    # 
+    # Class member variables -- if declared here are shared
+    # across all instances of this class
+    #
+    _dictErr = {
+        'subjectSpecFail'   : {
+            'action'        : 'examining command line arguments, ',
+            'error'         : 'it seems that no subjects were specified.',
+            'exitCode'      : 10},
+        'subjectDirnotExist': {
+            'action'        : 'examining the <subjectDirectories>, ',
+            'error'         : 'the directory does not exist.',
+            'exitCode'      : 13},
+        'Load'              : {
+            'action'        : 'attempting to pickle load object, ',
+            'error'         : 'a PickleError occured.',
+            'exitCode'      : 14}
+    }
+
+                    
+    def __init__(self, **kwargs):
+        '''
+        Basic constructor. Checks on named input args, checks that files
+        exist and creates directories.
+
+        '''
+        base.FNNDSC.__init__(self, **kwargs)
+
+        self._lw                        = 60
+        self._rw                        = 20
+        self._l_subject                 = []
+        
+        self._str_subjectDir            = ''
+        self._stageslist                = '12'
+        
+        for key, value in kwargs.iteritems():
+            if key == 'subjectList':    self._l_subject         = value
+            if key == 'stages':         self._stageslist        = value
+
+
+    def initialize(self):
+        '''
+        This method provides some "post-constructor" initialization. It is
+        typically called after the constructor and after other class flags
+        have been set (or reset).
+        
+        '''
+
+        # Set the stages
+        self._pipeline.stages_canRun(False)
+        lst_stages = list(self._stageslist)
+        for index in lst_stages:
+            stage = self._pipeline.stage_get(int(index))
+            stage.canRun(True)
+        
+        for str_subj in self._l_subject:
+            self._log('Checking on subjectDir <%s>' % str_subj,
+                        debug=9, lw=self._lw)
+            if os.path.isdir(str_subj):
+                self._log('[ ok ]\n', debug=9, rw=self._rw)
+            else:
+                self._log('[ not found ]\n', debug=9, rw=self._rw,
+                            syslog=False)
+                error.fatal(self, 'subjectDirnotExist')
+            
+
+                
+    def run(self):
+        '''
+        The main 'engine' of the class.
+
+        '''
+        base.FNNDSC.run(self)
+            
+            
+def synopsis(ab_shortOnly = False):
+    scriptName = os.path.basename(sys.argv[0])
+    shortSynopsis =  '''
+    SYNOPSIS
+
+            %s                                            \\
+                            [--radius <dilationRadius>]    \\
+                            [--stages <stages>]             \\
+                            [--query]                       \\
+                            [-v|--verbosity <verboseLevel>] \\
+                            <Subj1> <Subj2> ... <SubjN>
+    ''' % scriptName
+  
+    description =  '''
+    DESCRIPTION
+
+        `%s' performs a lobar region dilation for each of its passed
+        <Subj> arguments.
+
+    ARGS
+
+      --radius <dilationRadius>
+      The border size: from the edge of the lobar region, a border region
+      of depth <dilationRadius> will be generated.
+    
+       --stages <stages>
+       The stages to execute. This is specified in a string, such as '1234'
+       which would imply stages 1, 2, 3, and 4.
+
+       The special keyword 'all' can be used to turn on all stages.
+
+
+    EXAMPLES
+
+
+    ''' % (scriptName)
+    if ab_shortOnly:
+        return shortSynopsis
+    else:
+        return shortSynopsis + description
+
+
+#
+# entry point
+#
+if __name__ == "__main__":
+
+
+    # always show the help if no arguments were specified
+    if len( sys.argv ) == 1:
+        print synopsis()
+        sys.exit( 1 )
+
+    l_subj      = []
+    b_query     = False
+    verbosity   = 0
+
+    parser = argparse.ArgumentParser(description = synopsis(True))
+    
+    parser.add_argument('l_subj',
+                        metavar='SUBJECT', nargs='+',
+                        help='SubjectIDs to process')
+    parser.add_argument('--verbosity', '-v',
+                        dest='verbosity', 
+                        action='store',
+                        default=0,
+                        help='verbosity level')
+    parser.add_argument('--stages', '-s',
+                        dest='stages',
+                        action='store',
+                        default='01',
+                        help='analysis stages')
+    parser.add_argument('--radius', '-r',
+                        dest='radius',
+                        action='store',
+                        default=20,
+                        help='dilation radius')
+
+    args = parser.parse_args()
+
+    # First, define the container pipeline
+    labelsROI = FNNDSC_labelsROI(
+                        subjectList     = args.l_subj,
+                        stages          = args.stages,
+                        logTo           = 'zrs5-labelsROI.log',
+                        syslog          = True,
+                        logTee          = True
+                        )
+    labelsROI.verbosity(args.verbosity)
+    pipeline    = labelsROI.pipeline()
+    pipeline.poststdout(True)
+    pipeline.poststderr(True)
+
+    # Now define each stage...
+
+    # Stage 0
+    # This is a callback stage, demonstrating how python logic is used
+    # to create multiple cluster-based processing instances of the same
+    # core FreeSurfer command, each with slightly different operating
+    # flags.
+    # 
+    # In some ways, the stage0.def_stage(...) is vaguely reminiscent
+    # of javascript, in as much as the f_stage0callback is a 
+    # callback function.
+    # 
+    stage0 = stage.Stage(
+                        name            = 'Lobes_dilate',
+                        fatalConditions = True,
+                        syslog          = True,
+                        logTo           = 'zrs5-labelsROI-lobes_dilate.log',
+                        logTee          = True,
+                        )
+    def f_stage0callback(**kwargs):
+        str_cwd         =  os.getcwd()
+        lst_subj        = []
+        pmakePort       = 1701
+        for key, val in kwargs.iteritems():
+            if key == 'subj':   lst_subj        = val
+            if key == 'obj':    stage           = val
+        for subj in lst_subj:
+            str_prefixCmd = '( cd %s/%s/label ; ' % (str_cwd, subj)
+            for hemi in ['lh', 'rh']:
+                for lobe in ['frontal', 'parietal', 'temporal', 'occipital']:
+                    log = stage.log()
+                    log('Scheduling %s-%s-%s\n' % (subj, hemi, lobe))
+                    str_cmd = 'mris_pmake --port %d --subj %s --hemi %s \
+                        --mpmProg ROI \
+                        --mpmArgs radius:%s,plySaveStaggered:1,borderOnly:1,labelFile:%s.%s.label \
+                        --mpmOverlay euclidean )' % \
+                        (pmakePort, subj, hemi, args.radius, hemi, lobe)
+                    #str_cmd = 'sleep 10 )'
+                    cluster = crun.crun_mosix(cmdPrefix=str_prefixCmd)
+                    cluster.echo()
+                    cluster.echoStdOut()
+                    cluster.detach()
+                    cluster(str_cmd, waitForChild=False)
+                    pmakePort += 1
+        return True
+    stage0.def_stage(f_stage0callback, subj=args.l_subj, obj=stage0)
+    # A pre-condition for a subsequent stage could be a check on 
+    # 'mosq listall | grep mris_pmake | wc -l' evaluating to zero
+
+    # Add all the stages to the pipeline  
+    labelsROI.stage_add(stage0)
+
+    # Initialize the pipeline and ... run!
+    labelsROI.initialize()
+    labelsROI.run()
+  
