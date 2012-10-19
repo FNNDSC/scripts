@@ -64,6 +64,30 @@ class Pipeline:
         return self._pipeline
 
         
+    def poststdout(self, *args):
+        '''
+        get/set the poststdout flag. This flag toggles outputing the stdout
+        buffer of a stage after the stage has completed processing.
+
+        '''
+        if len(args):
+            self._b_poststdout = args[0]
+        else:
+            return self._b_poststdout
+
+
+    def poststderr(self, *args):
+        '''
+        get/set the poststdout flag. This flag toggles outputing the stderr
+        buffer of a stage after the stage has completed processing.
+
+        '''
+        if len(args):
+            self._b_poststderr = args[0]
+        else:
+            return self._b_poststderr
+
+
     def log(self, *args):
         '''
         get/set the internal pipeline log message object.
@@ -95,6 +119,8 @@ class Pipeline:
         self._log               = message.Message()
         self._pipeline          = []
         self._verbosity         = 0
+        self._b_poststdout      = False
+        self._b_poststderr      = False
         for key, value in kwargs.iteritems():
             if key == 'name':               self.name(value)
             if key == 'fatalConditions':    self.fatalConditions(value)
@@ -139,6 +165,13 @@ class Pipeline:
         ret = self._pipeline.pop()
         return ret
 
+
+    def stages_canRun(self, value):
+        '''
+        Sets the 'canRun' flag of each stage in the pipeline to <value>
+        '''
+        for stage in self._pipeline:
+            stage.canRun(value)
         
     def execute(self):
         '''
@@ -146,13 +179,16 @@ class Pipeline:
         '''
         self._log('Executing pipeline <%s>...\n' % self.name())
         for stage in self._pipeline:
+          if stage.canRun():
             self._log('Stage: %s\n' % stage.name())
             stage(runstage=True)
             log = stage.log()
-            log('stage stdout:\n')
-            log('\n' + stage.stdout())
-            log('stage stderr:\n')
-            log('\n' + stage.stderr())
+            if self._b_poststdout:
+                log('stage stdout:\n')
+                log('\n' + stage.stdout())
+            if self._b_poststderr:
+                log('stage stderr:\n')
+                log('\n' + stage.stderr())
             if stage.exitCode():
                 error.fatal(self, 'stageError', '%s' % stage.name())
         self._log('Terminating pipeline <%s>\n' % self.name())
@@ -310,7 +346,15 @@ class Stage:
         self.__name             = 'Stage'
         self._log               = message.Message()
 
+        # The fatalConditions flag controls behaviour while checking pre- and
+        # post and shell exect conditions. If True, failed pre-, post- or shell 
+        # conditions will result in a fatal failure. Processing will otherwise
+        # continue.
         self._b_fatalConditions = True
+
+        # The canRun flag is a simple toggle that can be controlled by a caller
+        # to either turn a stage off or on, but leave it otherwise intact.
+        self._b_canRun          = True  
 
         self._verbosity         = 1
 
@@ -370,7 +414,7 @@ class Stage:
             self._f_stage               = args[0]
             self._f_stageArgs           = kwargs
         else:
-            return self._f_preconditions, self._f_preconditionsArgs
+            return self._f_stage, self._f_stageArgs
 
             
     def def_postconditions(self, *args, **kwargs):
@@ -426,7 +470,8 @@ class Stage:
         stage callback.
 
         '''
-        for key, value in kwargs.iteritems():
+        if self._b_canRun:
+          for key, value in kwargs.iteritems():
             if key == 'checkpreconditions':
                 if self.preconditions():
                     return True
@@ -472,6 +517,24 @@ class Stage:
         return self._log
 
         
+    def canRun(self, *args):
+        '''
+        get/set the canRun flag.
+
+        The canRun flag toggles an 'kill switch' condition on the stage.
+        If an external caller sets the flag to False, the stage will run
+        even if explicitly called. It allows streams of stages to be
+        externally toggled on or off.
+
+        canRun():               returns the current fatalConditions flag
+        canRun(True|False):     sets the flag to True|False
+
+        '''
+        if len(args):
+            self._b_canRun = args[0]
+        else:
+            return self._b_canRun
+            
     def fatalConditions(self, *args):
         '''
         get/set the fatalConditions flag.
@@ -512,7 +575,15 @@ class Stage_crun(Stage):
             self._str_cmd = args[0]
         else:
             return self._str_cmd
-    
+
+            
+    def shell(self):
+        '''
+        Returns the shell object.
+        '''
+        return self._shell
+
+            
     def stdout(self):
         '''
         Returns the stdout data from the shell. This reflects the most
@@ -541,9 +612,18 @@ class Stage_crun(Stage):
         Sub-class constuctor. Currently sets an internal sub-class
         _shell object, and then calls the super-class constructor.
         '''
-        self._shell     = crun.crun()
+        self._shell             = crun.crun()
         Stage.__init__(self, **kwargs)
 
+        # The following flags force flushing of stdout/stderr streams
+        # while executing shell command. These are useful for "slow"
+        # shell operations that take a long time to return but still
+        # generate output to stdout/stderr.
+        self._b_stdoutflush     = True
+        self._b_stderrflush     = True
+        for key, value in kwargs.iteritems():
+            if key == 'stdoutflush':    self._b_stdoutflush = value
+            if key == 'stderrflush':    self._b_stderrflush = value
         
     def __call__(self, **kwargs):
         '''
@@ -562,7 +642,9 @@ class Stage_crun(Stage):
         for key, value in kwargs.iteritems():
             if key == 'cmd':    self._str_cmd   = value
         if len(self._str_cmd):
-            str_stdout, str_stderr, exitCode = self._shell(self._str_cmd)
+            str_stdout, str_stderr, exitCode = self._shell(self._str_cmd,
+                                    stdoutflush = self._b_stdoutflush,
+                                    stderrflush = self._b_stderrflush)
             if exitCode: return
         else:
             self.fatal('NoCmd')
@@ -572,6 +654,33 @@ class Stage_crun(Stage):
         self._log('<%s> END. Elapsed time = %f seconds\n' \
                     % (self.name(), misc.toc()))
 
+
+class Stage_crun_mosix(Stage_crun):
+    '''
+    A Stage class that uses crun_mosix as its execute engine.
+    '''
+    def __init__(self, **kwargs):
+        '''
+        Sub-class constuctor. Currently sets an internal sub-class
+        _shell object, and then calls the super-class constructor.
+        '''
+        # First, filter out any args pertinent to the crun_mosix object
+        crun_kwargs     = {}
+        for key, value in kwargs.iteritems():
+            if 'crun' in key: crun_kwargs[key[4:]] = value
+        self._shell     = crun.crun_mosix(**crun_kwargs)
+        Stage.__init__(self, **kwargs)
+
+
+    def __call__(self, **kwargs):
+        '''
+        The actual stage innards.
+
+        '''
+        self._log('Scheduling to cluster...\n')
+        Stage_crun.__call__(self, **kwargs)
+
+                    
 
 def crun_factory(**kwargs):
     stage = Stage_crun()
