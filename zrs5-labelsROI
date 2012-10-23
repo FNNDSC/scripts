@@ -3,14 +3,19 @@ import  os
 import  sys
 import  string
 import  argparse
+import  time
+
 from    _common import systemMisc       as misc
 from    _common import crun
+from    _common._colors import Colors
 
 import  error
 import  message
 import  stage
 
+
 import  fnndsc  as base
+import  socket
 
 class FNNDSC_labelsROI(base.FNNDSC):
     '''
@@ -29,6 +34,14 @@ class FNNDSC_labelsROI(base.FNNDSC):
             'action'        : 'examining command line arguments, ',
             'error'         : 'it seems that no subjects were specified.',
             'exitCode'      : 10},
+        'noFreeSurferEnv'   : {
+            'action'        : 'examining environment, ',
+            'error'         : 'it seems that the FreeSurfer environment has not been sourced.',
+            'exitCode'      : 11},
+        'notClusterNode'    : {
+            'action'        : 'checking the execution environemt, ',
+            'error'         : 'script can only run on a cluster node.',
+            'exitCode'      : 12},
         'subjectDirnotExist': {
             'action'        : 'examining the <subjectDirectories>, ',
             'error'         : 'the directory does not exist.',
@@ -68,18 +81,31 @@ class FNNDSC_labelsROI(base.FNNDSC):
         
         '''
 
+        # First, this script should only be run on cluster nodes.
+        lst_clusterNodes = ['rc-drno', 'rc-russia', 'rc-thunderball',
+                            'rc-goldfinger', 'rc-twice']
+        str_hostname    = socket.gethostname()
+        if str_hostname not in lst_clusterNodes:
+            error.fatal(self, 'notClusterNode', 'Current hostname = %s' % str_hostname)
+
         # Set the stages
         self._pipeline.stages_canRun(False)
         lst_stages = list(self._stageslist)
         for index in lst_stages:
             stage = self._pipeline.stage_get(int(index))
             stage.canRun(True)
-        
+
+        # Check for FS env variable
+        self._log('Checking on FREESURFER_HOME', debug=9, lw=self._lw)
+        if not os.environ.get('FREESURFER_HOME'):
+            error.fatal(self, 'noFreeSurferEnv')
+        self._log('[ ok ]\n', debug=9, rw=self._rw, syslog=False)
+            
         for str_subj in self._l_subject:
             self._log('Checking on subjectDir <%s>' % str_subj,
                         debug=9, lw=self._lw)
             if os.path.isdir(str_subj):
-                self._log('[ ok ]\n', debug=9, rw=self._rw)
+                self._log('[ ok ]\n', debug=9, rw=self._rw, syslog=False)
             else:
                 self._log('[ not found ]\n', debug=9, rw=self._rw,
                             syslog=False)
@@ -100,11 +126,12 @@ def synopsis(ab_shortOnly = False):
     shortSynopsis =  '''
     SYNOPSIS
 
-            %s                                            \\
-                            [--radius <dilationRadius>]    \\
-                            [--stages <stages>]             \\
-                            [--query]                       \\
-                            [-v|--verbosity <verboseLevel>] \\
+            %s                                      \\
+                            [--radius <dilationRadius>]         \\
+                            [--intersection <plyDepth>          \\
+                            [--stages <stages>]                 \\
+                            [--query]                           \\
+                            [-v|--verbosity <verboseLevel       \\
                             <Subj1> <Subj2> ... <SubjN>
     ''' % scriptName
   
@@ -119,7 +146,11 @@ def synopsis(ab_shortOnly = False):
       --radius <dilationRadius>
       The border size: from the edge of the lobar region, a border region
       of depth <dilationRadius> will be generated.
-    
+
+      --intersection <plyDepth>
+      When creating label intersections, this specifies the ply depth of the
+      intersection.
+      
        --stages <stages>
        The stages to execute. This is specified in a string, such as '1234'
        which would imply stages 1, 2, 3, and 4.
@@ -172,6 +203,11 @@ if __name__ == "__main__":
                         action='store',
                         default=20,
                         help='dilation radius')
+    parser.add_argument('--intersection', '-i',
+                        dest='intersection',
+                        action='store',
+                        default=20,
+                        help='intersection ply level')
 
     args = parser.parse_args()
 
@@ -190,6 +226,7 @@ if __name__ == "__main__":
 
     # Now define each stage...
 
+    #
     # Stage 0
     # This is a callback stage, demonstrating how python logic is used
     # to create multiple cluster-based processing instances of the same
@@ -199,13 +236,16 @@ if __name__ == "__main__":
     # In some ways, the stage0.def_stage(...) is vaguely reminiscent
     # of javascript, in as much as the f_stage0callback is a 
     # callback function.
+    #
+    # PRECONDITIONS:
+    # o Check that script is running on a cluster node.
     # 
     stage0 = stage.Stage(
                         name            = 'Lobes_dilate',
                         fatalConditions = True,
                         syslog          = True,
                         logTo           = 'zrs5-labelsROI-lobes_dilate.log',
-                        logTee          = True,
+                        logTee          = True
                         )
     def f_stage0callback(**kwargs):
         str_cwd         =  os.getcwd()
@@ -219,7 +259,7 @@ if __name__ == "__main__":
             for hemi in ['lh', 'rh']:
                 for lobe in ['frontal', 'parietal', 'temporal', 'occipital']:
                     log = stage.log()
-                    log('Scheduling %s-%s-%s\n' % (subj, hemi, lobe))
+                    log('Scheduling %s-%s-%s' % (subj, hemi, lobe))
                     str_cmd = 'mris_pmake --port %d --subj %s --hemi %s \
                         --mpmProg ROI \
                         --mpmArgs radius:%s,plySaveStaggered:1,borderOnly:1,labelFile:%s.%s.label \
@@ -227,18 +267,88 @@ if __name__ == "__main__":
                         (pmakePort, subj, hemi, args.radius, hemi, lobe)
                     #str_cmd = 'sleep 10 )'
                     cluster = crun.crun_mosix(cmdPrefix=str_prefixCmd)
-                    cluster.echo()
+                    cluster.echo(False)
                     cluster.echoStdOut()
                     cluster.detach()
                     cluster(str_cmd, waitForChild=False)
                     pmakePort += 1
         return True
     stage0.def_stage(f_stage0callback, subj=args.l_subj, obj=stage0)
-    # A pre-condition for a subsequent stage could be a check on 
-    # 'mosq listall | grep mris_pmake | wc -l' evaluating to zero
+
+    #
+    # Stage 1
+    # This is a callback stage, creating multiple runs of 'mris_label_calc'
+    # to create intersection regions.
+    #
+    # PRECONDITIONS:
+    # o 'mosq listall | grep mris_pmake | wc -l' evaluating to zero
+    # 
+    stage1 = stage.Stage(
+                        name            = 'border_intersect',
+                        fatalConditions = True,
+                        syslog          = True,
+                        logTo           = 'zrs5-labelsROI-border_intersect.log',
+                        logTee          = True
+                        )
+    def f_stage1preconditions(**kwargs):
+        for key, val in kwargs.iteritems():
+            if key == 'obj':    stage           = val
+        timepoll        = 10
+        str_shellCmd    = 'mosq listall | grep mris_pmake | wc -l'
+        str_shellReturn = "0"
+        str_blockMsg    = '''\n
+        It seems that a precondition is still running: 'mris_pmake' detected in MOSIX scheduler.
+        Script will block until all scheduled jobs are completed.
+        \n'''
+        str_loopMsg     = 'Still waiting for scheduled jobs to complete... ' +\
+                          '(hit <ctrl>-c to kill this script).'
+        stage.blockOnShellCmd(str_shellCmd, str_shellReturn,
+                            str_blockMsg, str_loopMsg, timepoll)
+        return True
+    stage1.def_preconditions(f_stage1preconditions, obj=stage1)
+        
+    def f_stage1callback(**kwargs):
+        str_cwd         =  os.getcwd()
+        lst_subj        = []
+
+        for key, val in kwargs.iteritems():
+            if key == 'subj':   lst_subj        = val
+            if key == 'obj':    stage           = val
+        lst_lobe        = ['frontal', 'parietal', 'temporal', 'occipital']
+        lst_intersect   = []
+        for i in range(0, len(lst_lobe)):
+            for j in range(i+1, len(lst_lobe)):
+                str_intersection = '%s-%s' % (lst_lobe[i], lst_lobe[j])
+                if str_intersection != 'frontal-occipital':
+                    lst_intersect.append(str_intersection)
+        for subj in lst_subj:
+            str_prefixCmd = '( cd %s/%s/label ; ' % (str_cwd, subj)
+            for hemi in ['lh.', 'rh.']:
+                for intersection in lst_intersect:
+                    log = stage.log()
+                    log('Scheduling %s-%s%s' % (subj, hemi, intersection))
+                    lst_lobes   = intersection.split('-')
+                    # Add hemi to each intersection target
+                    lst_lobesHemi  = [prefix+elt for elt in lst_lobes for prefix in [hemi]]
+                    # Add suffix to each intersection target
+                    lst_lobesFull  = [elt+suffix for elt in lst_lobesHemi \
+                        for suffix in ['-r%s-ply%s.label' % (args.radius, args.intersection)]] 
+                    str_cmd = 'mris_label_calc intersect %s %s %s )' % \
+                        (lst_lobesFull[0], lst_lobesFull[1], \
+                        '%sintersect-%s-r%s-ply%s.label' % \
+                        (hemi, intersection, args.radius, args.intersection))
+                    #str_cmd = 'sleep 10 )'
+                    cluster = crun.crun_mosix(cmdPrefix=str_prefixCmd)
+                    cluster.echo(False)
+                    cluster.echoStdOut()
+                    cluster.detach()
+                    cluster(str_cmd, waitForChild=False)
+        return True
+    stage1.def_stage(f_stage1callback, subj=args.l_subj, obj=stage0)
 
     # Add all the stages to the pipeline  
     labelsROI.stage_add(stage0)
+    labelsROI.stage_add(stage1)
 
     # Initialize the pipeline and ... run!
     labelsROI.initialize()
