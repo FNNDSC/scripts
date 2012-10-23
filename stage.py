@@ -2,6 +2,7 @@
 
 import  sys
 import  types
+import  time
 
 from    _common         import crun
 from    _common._colors import Colors
@@ -181,7 +182,7 @@ class Pipeline:
         for stage in self._pipeline:
           if stage.canRun():
             self._log('Stage: %s\n' % stage.name())
-            stage(runstage=True)
+            stage(checkpreconditions=True, runstage=True, checkpostconditions=True)
             log = stage.log()
             if self._b_poststdout:
                 log('stage stdout:\n')
@@ -377,6 +378,7 @@ class Stage:
             if key == 'cmd':                self.cmd(value)
             if key == 'logTo':              self.log().to(value)
             if key == 'logTee':             self.log().tee(value)
+            if key == 'def_stage':          self._f_stage = value
 
         
     def def_preconditions(self, *args, **kwargs):
@@ -463,7 +465,14 @@ class Stage:
         
     def __call__(self, **kwargs):
         '''
-        The base class __call__ functor essentially dispatches the
+        The base class __call__ functor "runs" the stage. Each stage
+        consists of three components:
+
+            o preconditions
+            o stage
+            o postconditions
+
+        By default, all three componets are executed in order    
         pre- and/or post-conditions checking.
 
         If called with (stage=True) will execute the externally defined
@@ -471,31 +480,24 @@ class Stage:
 
         '''
         if self._b_canRun:
-          for key, value in kwargs.iteritems():
-            if key == 'checkpreconditions':
-                if self.preconditions():
-                    return True
-                else:
-                    if self._b_fatalConditions:
-                        error.fatal(self, 'preconditions')
-                    else:
-                        error.warn(self, 'preconditions')
-            if key == 'runstage':
-                if self.stage():
-                    return True
-                else:
-                    if self._b_fatalConditions:
-                        error.fatal(self, 'stage')
-                    else:
-                        error.warn(self, 'stage')
-            if key == 'checkpostconditions':
-                if self.postconditions():
-                    return True
-                else:
-                    if self._b_fatalConditions:
-                        error.fatal(self, 'postconditions')
-                    else:
-                        error.warn(self, 'postconditions')
+            b_preconditionsRun  = True
+            b_stageRun          = True
+            b_postconditionsRun = True
+
+            for key, value in kwargs.iteritems():
+                if key == 'checkpreconditions':   b_preconditionsRun    = value
+                if key == 'runstage':             b_stageRun            = value
+                if key == 'checkpostconditions':  b_postconditionsRun   = value
+
+            if b_preconditionsRun:
+                if not self.preconditions():
+                    error.report(self, 'preconditions', self._b_fatalConditions)
+            if b_stageRun:
+                if not self.stage():
+                    error.report(self, 'stage', self._b_fatalConditions)
+            if b_postconditionsRun:
+                if not self.postconditions():
+                    error.report(self, 'postconditions', self._b_fatalConditions)
                         
 
     def postconditions(self):
@@ -534,6 +536,51 @@ class Stage:
             self._b_canRun = args[0]
         else:
             return self._b_canRun
+
+
+    def blockOnShellCmd(self, astr_shellCmd, astr_shellReturn,
+                        astr_blockMsg,
+                        astr_loopMsg,
+                        atimeout = 10):
+        '''
+        Block on a shell command.
+
+        This method will repeatedly poll a given <str_shellCmd> every
+        <atimeout> seconds until the command evaluates to <astr_shellReturn>.
+        The <astr_shellCmd> itself should not block, but simply evaluate a
+        condition and return a status.
+
+        It is typically used as either a pre- or post-condition filter.
+
+        ARGS
+            astr_shellCmd               shell command to evaluate
+            astr_shellReturn            the return from the shell command
+                                        indicating success
+            astr_blockMsg               log message when block starts
+            astr_loopMsg                log message while blocking
+            atimeout                    how long between checking astr_shellCmd
+                                        while blocking
+        RETURN
+            o True
+        
+        '''
+        shell           = crun.crun()
+        shell(astr_shellCmd)
+        if shell.stdout().strip() != astr_shellReturn:
+            self._log(Colors.CYAN + astr_blockMsg + Colors.NO_COLOUR)
+            while 1:
+                time.sleep(atimeout)
+                shell(astr_shellCmd)
+                if shell.stdout().strip() == astr_shellReturn:
+                    self._log('\n', syslog=False)
+                    break
+                else:
+                    self._log(Colors.YELLOW + astr_loopMsg + Colors.NO_COLOUR)
+                    loopMsgLen          = len(astr_loopMsg)
+                    syslogLen           = len(self._log.str_syslog())
+                    for i in range(0, loopMsgLen+syslogLen): self._log('\b', syslog=False)
+        return True
+        
             
     def fatalConditions(self, *args):
         '''
