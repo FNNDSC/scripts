@@ -61,6 +61,21 @@ class Message:
             return self._b_syslog
 
 
+    def str_syslog(self, *args):
+        '''
+        get/set the str_syslog, i.e. the current value of the
+        syslog prepend string.
+
+        str_syslog():           returns the current syslog string
+        str_syslog(<astr>):     sets the syslog string to <astr>
+
+        '''
+        if len(args):
+            self._str_syslog = args[0]
+        else:
+            return self._str_syslog
+            
+
     def tee(self, *args):
         '''
         get/set the tee flag.
@@ -222,11 +237,12 @@ class Message:
             if key == 'debug' or key == 'verbose':      verbosity       = value
             if key == 'lw':                             lw              = -value
             if key == 'rw':                             rw              = value
-            if key == 'syslog':                         self.syslog(int(value))
+            if key == 'syslog':                         self._b_syslog  = value
 
         if self._b_syslog:
-            str_prepend = '%s: ' % self.syslog_generate(
+            self._str_syslog = '%s: ' % self.syslog_generate(
                                         self._processName, self._pid)
+            str_prepend = self._str_syslog
         if len(args):
             str_msg = '%s%s' % (str_prepend, args[0])
 	else:
@@ -242,11 +258,13 @@ class Message:
                 self._sys_stdout.write(str_msg)
         else:
             self._sys_stdout.write(Colors.strip(str_msg))
+        self._sys_stdout.flush()
         if self._b_tee and self._logHandle != sys.stdout:
             if verbosity:
                 if self.canPrintVerbose(verbosity):
                     sys.stdout.write(str_msg)
             else: sys.stdout.write(str_msg)
+            sys.stdout.flush()
         self.syslog(b_syslog)    
 
         
@@ -286,6 +304,7 @@ class Message:
         
         self._verbosity         = 1
         self._b_syslog          = False
+        self._str_syslog        = ''
         self._b_tee             = False
 
         self._b_isSocket        = False
