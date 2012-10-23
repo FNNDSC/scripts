@@ -46,8 +46,8 @@ def report(     callingClass,
     log         = callingClass.log()
     b_syslog    = log.syslog()
     log.syslog(False)
-    if ab_exitToOs: log( Colors.RED +    ":: FATAL ERROR ::" + Colors.NO_COLOUR )
-    else:           log( Colors.YELLOW + "::   WARNING   ::" + Colors.NO_COLOUR )
+    if ab_exitToOs: log( Colors.RED +    "\n:: FATAL ERROR :: " + Colors.NO_COLOUR )
+    else:           log( Colors.YELLOW + "\n::   WARNING   :: " + Colors.NO_COLOUR )
     if len(astr_header): log( Colors.BROWN + astr_header + Colors.NO_COLOUR )
     log( "\n" )
     log( "\tSorry, some error seems to have occurred in:\n\t<" )
@@ -92,4 +92,5 @@ def warn( callingClass, astr_key, astr_extraMsg="" ):
     b_exitToOS = False
     report( callingClass, astr_key, b_exitToOS, astr_extraMsg )
 
+    
     
