@@ -72,12 +72,16 @@ while getopts h:r:s:S:G: option ; do
     esac
 done
 
+# To find the combinations, in MatLAB use:
+#       C = combnk(1:5,2)
+# for all the combinations of 5 groups.
 case "$G_GROUPNUM"
 in 
         1) G_GROUPS="1-1"                       ;; # This is actually meaningless
         2) G_GROUPS="1-2"                       ;;
         3) G_GROUPS="1-2 2-3 1-3"               ;;
         4) G_GROUPS="1-2 1-3 1-4 2-3 2-4 3-4"   ;;
+        5) G_GROUPS="1-2 1-3 1-4 1-5 2-3 2-4 2-5 3-4 3-5 4-5" ;;
 esac
 
 printf "%15s%s" "curv" "$G_SEPSTRING"
