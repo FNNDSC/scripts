@@ -464,6 +464,32 @@ class Stage:
         ret = self._f_stage(**self._f_stageArgs)
         return ret
         
+       
+    def callPreconditionsOnly(self):
+        '''
+        This is a convenience function that calls the main stage
+        functor, but only executes the precondition check.
+        '''
+        Stage.__call__( self,
+                        checkpreconditions=True, 
+                        runstage=False, 
+                        checkpostconditions=False,
+                        preamble=True,
+                        postamble=False)
+
+
+    def callPostconditionsOnly(self):
+        '''
+        This is a convenience function that calls the main stage
+        functor, but only executes the precondition check.
+        '''
+        Stage.__call__( self,
+                        checkpreconditions=False, 
+                        runstage=False, 
+                        checkpostconditions=True,
+                        preamble=False,
+                        postamble=True)
+        
         
     def __call__(self, **kwargs):
         '''
@@ -485,11 +511,20 @@ class Stage:
             b_preconditionsRun  = True
             b_stageRun          = True
             b_postconditionsRun = True
+            b_preamble          = True
+            b_postamble         = True
 
             for key, value in kwargs.iteritems():
                 if key == 'checkpreconditions':   b_preconditionsRun    = value
                 if key == 'runstage':             b_stageRun            = value
                 if key == 'checkpostconditions':  b_postconditionsRun   = value
+                if key == 'preamble':             b_preamble            = value
+                if key == 'postamble':            b_postamble           = value
+            
+            if b_preamble:
+                misc.tic() ; self._log(Colors.GREEN + \
+                                       '<%s> START' % self.name() + \
+                                       Colors.NO_COLOUR +'...\n' )
 
             if b_preconditionsRun:
                 if not self.preconditions():
@@ -500,7 +535,13 @@ class Stage:
             if b_postconditionsRun:
                 if not self.postconditions():
                     error.report(self, 'postconditions', self._b_fatalConditions)
-                        
+
+            if b_postamble:
+                self._log(Colors.GREEN      + '<%s> END' % self.name()      + \
+                        Colors.NO_COLOUR  + '. Elapsed time = '           + \
+                        Colors.CYAN       + '%f' % misc.toc()             + \
+                        Colors.NO_COLOUR  + ' seconds.\n') 
+                    
 
     def postconditions(self):
         '''
@@ -687,10 +728,13 @@ class Stage_crun(Stage):
 
         '''
 
-        misc.tic() ; self._log('<%s> START...\n' % self.name())
+        #misc.tic() ; self._log('<%s> START...\n' % self.name())
 
-        Stage.__call__(self, checkpreconditions=True)
-        
+        # Here we call the base-class stage handler and only execute the
+        # precondition check.
+        self.callPreconditionsOnly()
+
+        # The Stage_crun has a specialized stage execution.
         self._log('Executing stage...\n')
         for key, value in kwargs.iteritems():
             if key == 'cmd':    self._str_cmd   = value
@@ -702,12 +746,11 @@ class Stage_crun(Stage):
         else:
             self.fatal('NoCmd')
 
-        Stage.__call__(self, checkpostconditions=True)
+        # Now we again call the base-class stage handler and only execute 
+        # the postconditions
+        self.callPostconditionsOnly()
 
-        self._log('<%s> END. Elapsed time = %f seconds\n' \
-                    % (self.name(), misc.toc()))
-
-
+        
 class Stage_crun_mosix(Stage_crun):
     '''
     A Stage class that uses crun_mosix as its execute engine.
