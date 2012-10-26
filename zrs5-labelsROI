@@ -1,4 +1,32 @@
 #!/usr/bin/env python
+
+'''
+
+    This "pipeline" demonstrates a SIMD (single-instruction-multiple-data)
+    architecture implementation within the context of the CHB PICES MOSIX
+    cluster.
+
+    Each stage of the pipeline essentially runs the same command (single
+    instruction) on multiple subjects and hemispheres (multiple-data).
+
+    Organizationally, each stage constructs for each of its data targets
+    a single command string and then schedules this command on each data
+    target on the PICES cluster.
+
+    Stages are completely "fire-and-forget". Once scheduled, the stage has
+    no direct mechanism of communicating with each job. Since each stage
+    schedules multiple hundreds of jobs, it attempts in its postconditions
+    check to query the MOSIX scheduler and count the instances of the
+    job it has fired. When this count falls to zero, the jobs are all
+    considered complete and the stage postconditions are satisfied.
+
+    Stage postconditions are responsible for blocking processing. Only when
+    these postconditions are satisfied does the main "thread" continue.
+    Subsequent stages define their precondition check as a direct
+    predecessor's postconditions.
+
+'''
+
 import  os
 import  sys
 import  string
@@ -110,8 +138,6 @@ class FNNDSC_labelsROI(base.FNNDSC):
                 self._log('[ not found ]\n', debug=9, rw=self._rw,
                             syslog=False)
                 error.fatal(self, 'subjectDirnotExist')
-            
-
                 
     def run(self):
         '''
@@ -120,6 +146,8 @@ class FNNDSC_labelsROI(base.FNNDSC):
         '''
         base.FNNDSC.run(self)
             
+
+### Non-class methods
             
 def synopsis(ab_shortOnly = False):
     scriptName = os.path.basename(sys.argv[0])
@@ -168,6 +196,35 @@ def synopsis(ab_shortOnly = False):
         return shortSynopsis + description
 
 
+def f_blockOnScheduledJobs(**kwargs):
+    '''
+    
+    '''
+    str_blockCondition  = 'mosq listall | wc -l'
+    str_blockProcess    = 'undefined'
+    str_blockUntil      = "0"
+    timepoll            = 10
+    for key, val in kwargs.iteritems():
+        if key == 'obj':                stage                   = val
+        if key == 'blockCondition':     str_blockCondition      = val
+        if key == 'blockUntil':         str_blockUntil          = val
+        if key == 'blockProcess':
+            str_blockProcess            = val
+            str_blockCondition          = 'mosq listall | grep %s | wc -l' % str_blockProcess
+        if key == 'timepoll':           timepoll                = val
+    str_blockMsg    = '''\n
+    Postconditions are still running: multiple '%s' instances
+    detected in MOSIX scheduler. Blocking until all scheduled jobs are
+    completed. Block interval = %s seconds.
+    \n''' % (str_blockProcess, timepoll)
+    str_loopMsg     = 'Waiting for scheduled jobs to complete... ' +\
+                      '(hit <ctrl>-c to kill this script).'
+                        
+    stage.blockOnShellCmd(  str_blockCondition, str_blockUntil,
+                            str_blockMsg, str_loopMsg, timepoll)
+    return True
+
+        
 #
 # entry point
 #
@@ -221,6 +278,7 @@ if __name__ == "__main__":
                         )
     labelsROI.verbosity(args.verbosity)
     pipeline    = labelsROI.pipeline()
+    pipeline.name('labelsROI')
     pipeline.poststdout(True)
     pipeline.poststderr(True)
 
@@ -274,7 +332,9 @@ if __name__ == "__main__":
                     pmakePort += 1
         return True
     stage0.def_stage(f_stage0callback, subj=args.l_subj, obj=stage0)
-
+    stage0.def_postconditions(f_blockOnScheduledJobs, obj=stage0,
+                              blockProcess    = 'mris_pmake')
+    
     #
     # Stage 1
     # This is a callback stage, creating multiple runs of 'mris_label_calc'
@@ -290,23 +350,7 @@ if __name__ == "__main__":
                         logTo           = 'zrs5-labelsROI-border_intersect.log',
                         logTee          = True
                         )
-    def f_stage1preconditions(**kwargs):
-        for key, val in kwargs.iteritems():
-            if key == 'obj':    stage           = val
-        timepoll        = 10
-        str_shellCmd    = 'mosq listall | grep mris_pmake | wc -l'
-        str_shellReturn = "0"
-        str_blockMsg    = '''\n
-        It seems that a precondition is still running: 'mris_pmake' detected in MOSIX scheduler.
-        Script will block until all scheduled jobs are completed.
-        \n'''
-        str_loopMsg     = 'Still waiting for scheduled jobs to complete... ' +\
-                          '(hit <ctrl>-c to kill this script).'
-        stage.blockOnShellCmd(str_shellCmd, str_shellReturn,
-                            str_blockMsg, str_loopMsg, timepoll)
-        return True
-    stage1.def_preconditions(f_stage1preconditions, obj=stage1)
-        
+    stage1.def_preconditions(stage0.def_postconditions()[0], **stage0.def_postconditions()[1])
     def f_stage1callback(**kwargs):
         str_cwd         =  os.getcwd()
         lst_subj        = []
@@ -344,11 +388,65 @@ if __name__ == "__main__":
                     cluster.detach()
                     cluster(str_cmd, waitForChild=False)
         return True
-    stage1.def_stage(f_stage1callback, subj=args.l_subj, obj=stage0)
+    stage1.def_stage(f_stage1callback, subj=args.l_subj, obj=stage1)
+    stage1.def_postconditions(f_blockOnScheduledJobs, obj=stage1,
+                              blockProcess    = 'mris_label_calc')
 
+    #
+    # Stage 2
+    # This is a callback stage, creating multiple runs of 'mris_label2annot'
+    # to build and annotation structure that will be used in the curvature 
+    # analysis.
+    #
+    # PRECONDITIONS:
+    # o 'mosq listall | grep mris_label_calc | wc -l' evaluating to zero
+    #
+    stage2 = stage.Stage(
+                        name            = 'annotation_create',
+                        fatalConditions = True,
+                        syslog          = True,
+                        logTo           = 'zrs5-labelsROI-annotation_create.log',
+                        logTee          = True
+                        )
+    
+    stage2.def_preconditions(stage1.def_postconditions()[0], **stage1.def_postconditions()[1])
+    def f_stage2callback(**kwargs):
+        str_cwd         =  os.getcwd()
+        lst_subj        = []
+        str_subjectDir  = os.environ['SUBJECTS_DIR']
+
+        for key, val in kwargs.iteritems():
+            if key == 'subj':   lst_subj        = val
+            if key == 'obj':    stage           = val
+        shell   = crun.crun()
+        log     = stage.log()
+        for subj in lst_subj:
+            str_prefixCmd = '( cd %s/%s/label ; ' % (str_cwd, subj)
+            for hemi in ['lh', 'rh']:
+                shell('cd %s/%s/label ; ls %s.intersect*r%s-ply%s*label' % \
+                    (str_cwd, subj, hemi, args.radius, args.intersection))
+                lst_intersect = shell.stdout().split()
+                lst_intersectLbl = [prefix+elt for elt in lst_intersect for prefix in ['--l ']]
+                str_cmd = 'rm %s.intersect-r%s-ply%s.annot; ' % (hemi, args.radius, args.intersection) + \
+                          'mris_label2annot --s %s --hemi %s ' % (subj, hemi) + \
+                          '--ctab %s/../annot/colortable_intersect.txt ' % str_subjectDir + \
+                          ' '.join(lst_intersectLbl) + \
+                          ' --a intersect-r%s-ply%s )' % (args.radius, args.intersection)
+                log('Scheduling %s-%s-intersection annotation' % (subj, hemi))
+                cluster = crun.crun_mosix(cmdPrefix=str_prefixCmd)
+                cluster.echo(False)
+                cluster.echoStdOut()
+                cluster.detach()
+                cluster(str_cmd, waitForChild=False)
+        return True
+    stage2.def_stage(f_stage2callback, subj=args.l_subj, obj=stage2)
+    stage2.def_postconditions(f_blockOnScheduledJobs, obj=stage2,
+                              blockProcess    = 'mris_label2annot')
+    
     # Add all the stages to the pipeline  
     labelsROI.stage_add(stage0)
     labelsROI.stage_add(stage1)
+    labelsROI.stage_add(stage2)
 
     # Initialize the pipeline and ... run!
     labelsROI.initialize()
