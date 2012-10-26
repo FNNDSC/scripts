@@ -242,7 +242,7 @@ class Message:
         if self._b_syslog:
             self._str_syslog = '%s: ' % self.syslog_generate(
                                         self._processName, self._pid)
-            str_prepend = self._str_syslog
+            str_prepend = Colors.LIGHT_GRAY + self._str_syslog + Colors.NO_COLOUR
         if len(args):
             str_msg = '%s%s' % (str_prepend, args[0])
 	else:
