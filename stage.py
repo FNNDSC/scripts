@@ -178,21 +178,23 @@ class Pipeline:
         '''
         Run the pipeline, stage by stage.
         '''
-        self._log('Executing pipeline <%s>...\n' % self.name())
+        self._log(  Colors.CYAN + 'Executing pipeline ' +
+                    Colors.PURPLE +  '<'+self.name()+'>' + Colors.NO_COLOUR + '...\n')
         for stage in self._pipeline:
           if stage.canRun():
-            self._log('Stage: %s\n' % stage.name())
+            self._log(Colors.YELLOW + 'Stage: ' + stage.name() + '\n' + Colors.NO_COLOUR)
             stage(checkpreconditions=True, runstage=True, checkpostconditions=True)
             log = stage.log()
             if self._b_poststdout:
-                log('stage stdout:\n')
-                log('\n' + stage.stdout())
+                log(Colors.LIGHT_GREEN + 'stage stdout:\n' + Colors.NO_COLOUR)
+                log('\n' + Colors.LIGHT_GREEN + stage.stdout() + Colors.NO_COLOUR)
             if self._b_poststderr:
-                log('stage stderr:\n')
-                log('\n' + stage.stderr())
+                log(Colors.LIGHT_RED + 'stage stderr:\n' + Colors.NO_COLOUR)
+                log('\n' + Colors.LIGHT_RED + stage.stderr() + Colors.NO_COLOUR)
             if stage.exitCode():
                 error.fatal(self, 'stageError', '%s' % stage.name())
-        self._log('Terminating pipeline <%s>\n' % self.name())
+        self._log(  Colors.CYAN + 'Terminating pipeline ' +
+                    Colors.PURPLE +  '<'+self.name()+'>' + Colors.NO_COLOUR + '\n')
         
 
     def fatalConditions(self, *args):
@@ -566,6 +568,7 @@ class Stage:
         '''
         shell           = crun.crun()
         shell(astr_shellCmd)
+        blockLoop       = 1
         if shell.stdout().strip() != astr_shellReturn:
             self._log(Colors.CYAN + astr_blockMsg + Colors.NO_COLOUR)
             while 1:
@@ -575,10 +578,13 @@ class Stage:
                     self._log('\n', syslog=False)
                     break
                 else:
-                    self._log(Colors.YELLOW + astr_loopMsg + Colors.NO_COLOUR)
-                    loopMsgLen          = len(astr_loopMsg)
+                    str_loopMsg         = Colors.BROWN + '(block duration = %ds) ' % (blockLoop * atimeout) + \
+                                          Colors.YELLOW + astr_loopMsg + Colors.NO_COLOUR
+                    self._log(str_loopMsg)
+                    loopMsgLen          = len(str_loopMsg)
                     syslogLen           = len(self._log.str_syslog())
                     for i in range(0, loopMsgLen+syslogLen): self._log('\b', syslog=False)
+                    blockLoop           += 1
         return True
         
             
