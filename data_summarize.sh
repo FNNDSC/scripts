@@ -7,6 +7,7 @@ G_SURFACE="smoothwm pial"
 G_REPORTDIR="reports"
 
 let Gb_groupOverride=0
+let Gb_annotationSpec=0
 let Gb_surfaceSpec=0
 let Gb_regionSpec=0
 
@@ -93,7 +94,8 @@ G_SYNPOSIS="
 while getopts sE:t:G:a:S:R: option ; do
     case "$option" 
     in
-	a)	ANNOTATIONSTEM=$OPTARG				;;
+	a)	Gb_annotationSpec=1
+                ANNOTATIONSTEM=$OPTARG				;;
 	S)	Gb_surfaceSpec=1
 		G_SURFACE=$OPTARG	
 		G_SURFACE=$(echo "$G_SURFACE" | tr ',' ' ')	;;
@@ -111,7 +113,7 @@ while getopts sE:t:G:a:S:R: option ; do
     esac
 done
 
-starDir=$(pwd)
+startDir=$(pwd)
 cd $G_EXPDIR >/dev/null
 G_EXPDIR=$(pwd)
 
@@ -120,7 +122,13 @@ if [[ $G_TYPE == "-x" ]] ; then
     exit 1
 fi
 
-cd $starDir
+cd $startDir
+
+if (( Gb_annotationSpec && Gb_expDirSpecified && !Gb_regionSpec )) ; then
+    cd $G_EXPDIR/groupCurvAnalysis/${ANNOTATIONSTEM}.annot
+    G_REGION=$(/bin/ls)
+    cd $startDir
+fi
 
 case "$G_TYPE"
 in
