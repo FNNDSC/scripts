@@ -317,7 +317,7 @@ if __name__ == "__main__":
             for hemi in ['lh', 'rh']:
                 for lobe in ['frontal', 'parietal', 'temporal', 'occipital']:
                     log = stage.log()
-                    log('Scheduling %s-%s-%s' % (subj, hemi, lobe))
+                    log('Scheduling %s-%s-%s...\n' % (subj, hemi, lobe))
                     str_cmd = 'mris_pmake --port %d --subj %s --hemi %s \
                         --mpmProg ROI \
                         --mpmArgs radius:%s,plySaveStaggered:1,borderOnly:1,labelFile:%s.%s.label \
@@ -370,13 +370,13 @@ if __name__ == "__main__":
             for hemi in ['lh.', 'rh.']:
                 for intersection in lst_intersect:
                     log = stage.log()
-                    log('Scheduling %s-%s%s' % (subj, hemi, intersection))
+                    log('Scheduling %s-%s%s...\n' % (subj, hemi, intersection))
                     lst_lobes   = intersection.split('-')
                     # Add hemi to each intersection target
                     lst_lobesHemi  = [prefix+elt for elt in lst_lobes for prefix in [hemi]]
                     # Add suffix to each intersection target
                     lst_lobesFull  = [elt+suffix for elt in lst_lobesHemi \
-                        for suffix in ['-r%s-ply%s.label' % (args.radius, args.intersection)]] 
+                        for suffix in ['-r%s-ply%s.label' % (args.radius, args.intersection)]]
                     str_cmd = 'mris_label_calc intersect %s %s %s )' % \
                         (lst_lobesFull[0], lst_lobesFull[1], \
                         '%sintersect-%s-r%s-ply%s.label' % \
@@ -432,7 +432,7 @@ if __name__ == "__main__":
                           '--ctab %s/../annot/colortable_intersect.txt ' % str_subjectDir + \
                           ' '.join(lst_intersectLbl) + \
                           ' --a intersect-r%s-ply%s )' % (args.radius, args.intersection)
-                log('Scheduling %s-%s-intersection annotation' % (subj, hemi))
+                log('Scheduling %s-%s-intersection annotation...\n' % (subj, hemi))
                 cluster = crun.crun_mosix(cmdPrefix=str_prefixCmd)
                 cluster.echo(False)
                 cluster.echoStdOut()
