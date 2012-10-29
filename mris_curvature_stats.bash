@@ -610,7 +610,8 @@ while getopts e:v:t:fm:w:i:scS:p:WNF option ; do
 	esac
 done
 
-
+G_LC=90
+G_RC=10
 verbosity_check
 topDir=$(pwd)
 
