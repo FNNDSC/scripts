@@ -96,6 +96,7 @@ GLACIER=glacier.tch.harvard.edu
 RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
+CHRIS=chris.tch.harvard.edu
 H1=98.118.51.235
 
 verbosity_check
@@ -106,7 +107,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=24
+targetList=25
 #
 ##
 ### REVERSE TUNNELS -- from dreev
@@ -158,6 +159,9 @@ TARGET_CHECK[16]="tunnel.bash --reverse	--from ch137123@${DREEV}:3204	--to ${RCD
 TARGETACTION[16]="tunnel.bash --reverse	--from ch137123@${DREEV}:3204	--to ${RCDRNO}:22"
 TARGET_CHECK[17]="tunnel.bash --reverse	--from ch137123@${DREEV}:2121   --to ${PRETORIA}:21 --isRunning"
 TARGETACTION[17]="tunnel.bash --reverse	--from ch137123@${DREEV}:2121   --to ${PRETORIA}:21"
+# ChRIS VM
+TARGET_CHECK[18]="tunnel.bash --reverse	--from ch137123@${DREEV}:8888	--to ${CHRIS}:80 --isRunning"
+TARGETACTION[18]="tunnel.bash --reverse	--from ch137123@${DREEV}:8888	--to ${CHRIS}:80"
 
 #
 ##
@@ -166,27 +170,27 @@ TARGETACTION[17]="tunnel.bash --reverse	--from ch137123@${DREEV}:2121   --to ${P
 ##
 # 
 # tesla VNC
-TARGET_CHECK[18]="tunnel.bash --forward	--from 4900 --via ch137123@${DREEV} --to localhost:4900 --isRunning"
-TARGETACTION[18]="tunnel.bash --forward	--from 4900 --via ch137123@${DREEV} --to localhost:4900"
+TARGET_CHECK[19]="tunnel.bash --forward	--from 4900 --via ch137123@${DREEV} --to localhost:4900 --isRunning"
+TARGETACTION[19]="tunnel.bash --forward	--from 4900 --via ch137123@${DREEV} --to localhost:4900"
 # kaos login
-TARGET_CHECK[19]="tunnel.bash --forward --from 7776 --via ch137123@${DREEV} --to localhost:7776 --isRunning"
-TARGETACTION[19]="tunnel.bash --forward --from 7776 --via ch137123@${DREEV} --to localhost:7776"
+TARGET_CHECK[20]="tunnel.bash --forward --from 7776 --via ch137123@${DREEV} --to localhost:7776 --isRunning"
+TARGETACTION[20]="tunnel.bash --forward --from 7776 --via ch137123@${DREEV} --to localhost:7776"
 # tesla login
-TARGET_CHECK[20]="tunnel.bash --forward	--from 7775 --via ch137123@${DREEV} --to localhost:7775 --isRunning"
-TARGETACTION[20]="tunnel.bash --forward	--from 7775 --via ch137123@${DREEV} --to localhost:7775"
+TARGET_CHECK[21]="tunnel.bash --forward	--from 7775 --via ch137123@${DREEV} --to localhost:7775 --isRunning"
+TARGETACTION[21]="tunnel.bash --forward	--from 7775 --via ch137123@${DREEV} --to localhost:7775"
 # kaos -- DICOM listener
-TARGET_CHECK[21]="tunnel.bash --forward --from 10301 --via ch137123@${DREEV} --to localhost:10301 --isRunning"
-TARGETACTION[21]="tunnel.bash --forward --from 10301 --via ch137123@${DREEV} --to localhost:10301"
+TARGET_CHECK[22]="tunnel.bash --forward --from 10301 --via ch137123@${DREEV} --to localhost:10301 --isRunning"
+TARGETACTION[22]="tunnel.bash --forward --from 10301 --via ch137123@${DREEV} --to localhost:10301"
 
 #
 ##
 ### FORWARD TUNNELS -- to site H1
 ##
 #
-TARGET_CHECK[22]="tunnel.bash --forward	--from 9000 --via rudolph@${H1} --to localhost:80 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[22]="tunnel.bash --forward	--from 9000 --via rudolph@${H1} --to localhost:80 --sshArgs '-p 7778'"
-TARGET_CHECK[23]="tunnel.bash --forward	--from 6812 --via rudolph@${H1} --to localhost:22 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[23]="tunnel.bash --forward	--from 6812 --via rudolph@${H1} --to localhost:22 --sshArgs '-p 7778'"
+TARGET_CHECK[23]="tunnel.bash --forward	--from 9000 --via rudolph@${H1} --to localhost:80 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[23]="tunnel.bash --forward	--from 9000 --via rudolph@${H1} --to localhost:80 --sshArgs '-p 7778'"
+TARGET_CHECK[24]="tunnel.bash --forward	--from 6812 --via rudolph@${H1} --to localhost:22 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[24]="tunnel.bash --forward	--from 6812 --via rudolph@${H1} --to localhost:22 --sshArgs '-p 7778'"
 
 # Process command line options
 while getopts hv: option ; do
