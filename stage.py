@@ -280,7 +280,25 @@ class Stage:
         else:
             return self._str_stderr
 
+    def callCount(self, *args):
+        '''
+        get/set the callCount value.
 
+        The callCount is usually incremented by 1 each time
+        the __call__() method is executed. It also provides
+        an external caller a simple mechanism for checking
+        if a stage has been "executed".
+
+        callCount():     returns the current callCount
+        callCount(<i>):  sets the callCount to <i>
+
+        '''
+        if len(args):
+            self._callCount  = args[0]
+        else:
+            return self._callCount
+
+            
     def exitCode(self, *args):
         '''
         get/set the exitCode analog level.
@@ -357,7 +375,8 @@ class Stage:
 
         # The canRun flag is a simple toggle that can be controlled by a caller
         # to either turn a stage off or on, but leave it otherwise intact.
-        self._b_canRun          = True  
+        self._b_canRun          = True
+        self._callCount         = 0
 
         self._verbosity         = 1
 
@@ -530,6 +549,7 @@ class Stage:
                 if not self.preconditions():
                     error.report(self, 'preconditions', self._b_fatalConditions)
             if b_stageRun:
+                self._callCount += 1
                 if not self.stage():
                     error.report(self, 'stage', self._b_fatalConditions)
             if b_postconditionsRun:
