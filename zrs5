@@ -1,4 +1,18 @@
 #!/usr/bin/env python
+
+'''
+
+    This "pipeline" demonstrates how to string together several console-
+    based "apps" in the pipeline/stage framework.
+    
+    Pre- and post-condition checking is based on the underlying stage exit
+    code values, assuming a stage has exewcuted. If a pre-stage has not
+    been run, the subsequent stage check will return True (otherwise
+    the pipeline would require all stages be run for each analysis).
+    
+'''
+
+
 import  os
 import  sys
 import  string
@@ -32,6 +46,10 @@ class FNNDSC_ZRS5(base.FNNDSC):
             'action'        : 'examining environment, ',
             'error'         : 'it seems that the FreeSurfer environment has not been sourced.',
             'exitCode'      : 11},
+        'noStagePostConditions' : {
+            'action'        : 'querying a stage for its exitCode, ',
+            'error'         : 'it seems that the stagehas not been specified.',
+            'exitCode'      : 12},
         'subjectDirnotExist': {
             'action'        : 'examining the <subjectDirectories>, ',
             'error'         : 'the directory does not exist.',
@@ -140,7 +158,27 @@ def synopsis(ab_shortOnly = False):
     else:
         return shortSynopsis + description
 
+def f_stageShellExitCode(**kwargs):
+    '''
+    A simple function that returns a conditional based on the
+    exitCode of the passed stage object. It assumes global access
+    to the <pipeline> object.
 
+    **kwargs:
+
+        obj=<stage>
+        The stage to query for exitStatus.
+    
+    '''
+    stage = None
+    for key, val in kwargs.iteritems():
+        if key == 'obj':                stage                   = val
+    if not stage: error.fatal(pipeline, "noStagePostConditions")
+    if not stage.callCount(): then return True
+    if stage.exitCode() == "0": then return True
+    else: return False
+
+        
 #
 # entry point
 #
@@ -193,13 +231,24 @@ if __name__ == "__main__":
                         logTee          = True,
                         cmd             = 'lobe_annot.sh -v 10 -S ' + ' '.join(args.l_subj)
                         )
-                        
+    stage0.def_postconditions(f_stageShellExitCode, obj=stage0)
 
+    stage1.def_preconditions(stage0.def_postconditions()[0], **stage0.def_postconditions()[1])
+    stage1 = stage.Stage_crun(
+                        name            = 'pial_curvatures',
+                        fatalConditions = True,
+                        syslog          = True,
+                        logTo           = 'zrs5-pial_curvatures.log',
+                        logTee          = True,
+                        cmd             = 'mris_curvature_stats.bash -v 10 -f -t 12 -w 0 -s -S pial ' + ' '.join(args.l_subj)
+                        )                        
+    stage0.def_postconditions(f_stageShellExitCode, obj=stage1)
+                        
     stageX = stage.Stage(
                         name            = 'Callback',
                         fatalConditions = True,
                         syslog          = True,
-                        logTo           = 'zrs-callback.log',
+                        logTo           = 'zrs5-callback.log',
                         logTee          = True
                         )
     def f_stageXcallback(**kwargs):
@@ -215,6 +264,7 @@ if __name__ == "__main__":
     zrs5log = zrs5.log()
     zrs5log('INIT: %s\n' % ' '.join(sys.argv))
     zrs5.stage_add(stage0)
+    zrs5.stage_add(stage1)
     zrs5.stage_add(stageX)
     zrs5.initialize()
 
