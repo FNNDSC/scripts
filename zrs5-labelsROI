@@ -198,7 +198,8 @@ def synopsis(ab_shortOnly = False):
 
 def f_blockOnScheduledJobs(**kwargs):
     '''
-    
+    A simple wrapper around a stage.blockOnShellCmd(...)
+    call.
     '''
     str_blockCondition  = 'mosq listall | wc -l'
     str_blockProcess    = 'undefined'
