@@ -174,8 +174,8 @@ def f_stageShellExitCode(**kwargs):
     for key, val in kwargs.iteritems():
         if key == 'obj':                stage                   = val
     if not stage: error.fatal(pipeline, "noStagePostConditions")
-    if not stage.callCount(): then return True
-    if stage.exitCode() == "0": then return True
+    if not stage.callCount():   return True
+    if stage.exitCode() == "0": return True
     else: return False
 
         
@@ -233,7 +233,6 @@ if __name__ == "__main__":
                         )
     stage0.def_postconditions(f_stageShellExitCode, obj=stage0)
 
-    stage1.def_preconditions(stage0.def_postconditions()[0], **stage0.def_postconditions()[1])
     stage1 = stage.Stage_crun(
                         name            = 'pial_curvatures',
                         fatalConditions = True,
@@ -242,7 +241,8 @@ if __name__ == "__main__":
                         logTee          = True,
                         cmd             = 'mris_curvature_stats.bash -v 10 -f -t 12 -w 0 -s -S pial ' + ' '.join(args.l_subj)
                         )                        
-    stage0.def_postconditions(f_stageShellExitCode, obj=stage1)
+    stage1.def_preconditions(stage0.def_postconditions()[0], **stage0.def_postconditions()[1])
+    stage1.def_postconditions(f_stageShellExitCode, obj=stage1)
                         
     stageX = stage.Stage(
                         name            = 'Callback',
