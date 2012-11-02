@@ -10,6 +10,7 @@ G_SEPSTRING=""
 
 G_LEFTLABEL=/tmp/leftlabel.txt
 G_RIGHTLABEL=/tmp/rightlabel.txt
+G_RIGHTBORDER=/tmp/rightBorder.txt
 
 let Gb_extraLines=0
 G_EXTRALINES=""
@@ -75,6 +76,27 @@ G_SYNPOSIS="
 
 "
 
+function boxBorder_draw
+{
+    printf "%10s" " "
+    printf "+"
+    for cols in $(seq 2 $(expr $G_GROUPNUM \* 3)) ; do
+        printf "-"
+    done
+    printf "+"
+    for cols in $(seq 2 $(expr $G_GROUPNUM \* 3)) ; do
+        printf "-"
+    done
+    printf "+"
+    printf "%10s" " "
+    printf "+"
+    for cols in $(seq 2 $(expr $G_GROUPNUM \* 3)) ; do
+        printf "-"
+    done
+    printf "+"
+    printf "\n"
+}
+
 while getopts h:r:s:S:G:T option ; do
     case "$option" 
     in
@@ -82,6 +104,7 @@ while getopts h:r:s:S:G:T option ; do
         r) REGION=$OPTARG       ;;
         s) SURFACE=$OPTARG      ;;
         S) G_SEPSTRING=$OPTARG  ;;
+        G) G_GROUPNUM=$OPTARG   ;;
     esac
 done
 
@@ -91,18 +114,24 @@ if (( Gb_extraLines )) ; then G_EXTRALINES="|" ; fi
 for group in $G_TABLE ; do
     rm -f $G_LEFTLABEL
     rm -f $G_RIGHTLABEL
+    rm -f $G_RIGHTBORDER
     LEFT=$(echo $group  | awk -F \, '{print $1}')
     RIGHT=$(echo $group | awk -F \, '{print $2}')
+    
     for rows in $(seq 1 $G_GROUPNUM) ; do
-      printf "%10s\n" $LEFT >> $G_LEFTLABEL
-      printf "%10s\n" $RIGHT >> $G_RIGHTLABEL
+      printf "%10s\n"   $LEFT           >> $G_LEFTLABEL
+      printf "%10s\n"   $RIGHT          >> $G_RIGHTLABEL
+      printf "%s\n"     " "             >> $G_RIGHTBORDER
     done
 
-    vcat -d " " $G_LEFTLABEL     \
+    boxBorder_draw
+    vcat -d "$G_SEPSTRING" $G_LEFTLABEL     \
       neg-centroids-analyze-${HEMI}.${LEFT}.${REGION}.${SURFACE}.txt.grid       \
       pos-centroids-analyze-${HEMI}.${LEFT}.${REGION}.${SURFACE}.txt.grid       \
       $G_RIGHTLABEL                                                             \
       pos-centroids-analyze-${HEMI}.${RIGHT}.${REGION}.${SURFACE}.txt.grid      \
+      $G_RIGHTBORDER
+    boxBorder_draw
 
 done
 
