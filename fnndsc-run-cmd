@@ -14,7 +14,7 @@ G_HOSTLIST="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
 
 G_HOSTLISTPICES="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
 G_HOSTLISTMEG="pandora,mario,saggfire,megdaq,glacier,iceberg"
-G_HOSTLISTFNNDSC_LINUX="natal,durban,berea,ipmi,vuka,shaka,sparks,moja"
+G_HOSTLISTFNNDSC_LINUX="shaka,paris,pretoria,natal,sparks, capetown,vuka"
 G_HOSTLISTFNNDSC_MAC="osx2147,osx1927,osx1999,mosel,maracuja,newcastle,osaka,quebec"
 
 G_LOG=fnndsc-run-cmd.log
