@@ -14,7 +14,7 @@ G_HOSTLIST="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
 
 G_HOSTLISTPICES="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
 G_HOSTLISTMEG="pandora,mario,saggfire,glacier,iceberg"
-G_HOSTLISTFNNDSC="shaka,ipmi,pretoria,moja,sparks"
+G_HOSTLISTFNNDSC="shaka,paris,pretoria,natal,sparks, capetown,vuka"
 
 G_LOG=/chb/install/ubuntu/setup/fnndsc-apt-get.packages
 
