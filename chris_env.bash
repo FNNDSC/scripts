@@ -61,8 +61,7 @@ export CHRIS_NAME=CHRIS
 
 # Admin user(s) of the CHRIS deployment -- comma separated if multiple
 # admins
-export CHRIS_ADMINUSERS=Nicolas.Rannou@childrens.harvard.edu
-#export CHRIS_ADMINUSERS=rudolph.pienaar@childrens.harvard.edu,Borjan.Gagoski@childrens.harvard.edu,Nicolas.Rannou@childrens.harvard.edu
+export CHRIS_ADMINUSERS=rudolph.pienaar@childrens.harvard.edu,Borjan.Gagoski@childrens.harvard.edu,Nicolas.Rannou@childrens.harvard.edu
 
 # Mail binary location
 export CHRIS_MAIL=/usr/bin/mail
