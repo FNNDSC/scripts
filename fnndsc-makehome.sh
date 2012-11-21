@@ -35,7 +35,10 @@ G_SYNOPSIS="
         e.g. ellengp || sheridangp || gaapgp
         
  HISTORY
- 
+
+        21 Nov 2012
+        remove the toor username for ssh
+        should run the script as root to take advantage of the passwordless ssh 
         30 May 2012
         o First version.
 "
@@ -122,21 +125,21 @@ if [[ "$USE_KHAN" -eq 1 ]]; then
   echo "And linking "$LINKFOLDER" to "/chb/$LABNAME/users/$G_USERNAME/
   
   # and link from pretoria
-  ssh toor@pretoria -t sudo ln -s /chb/$LABNAME/users/$G_USERNAME/ $LINKFOLDER
+  ssh pretoria -t sudo ln -s /chb/$LABNAME/users/$G_USERNAME/ $LINKFOLDER
 
 else
 
   # just create the folder on pretoria
-  ssh toor@pretoria -t sudo mkdir $LINKFOLDER
-  ssh toor@pretoria -t sudo chmod 777 $LINKFOLDER
+  ssh pretoria -t sudo mkdir $LINKFOLDER
+  ssh pretoria -t sudo chmod 777 $LINKFOLDER
 
 fi;
 
 echo "Copying .bash* and .git* over.."
-ssh toor@pretoria -t cp /chb/install/ubuntu/setup/customize_shells/.bash* $LINKFOLDER/
-ssh toor@pretoria -t cp /chb/install/ubuntu/setup/customize_shells/.git* $LINKFOLDER/
+ssh pretoria -t cp /chb/install/ubuntu/setup/customize_shells/.bash* $LINKFOLDER/
+ssh pretoria -t cp /chb/install/ubuntu/setup/customize_shells/.git* $LINKFOLDER/
 echo "Linking /chb/arch/"
-ssh toor@pretoria -t ln -s /chb/arch/ $LINKFOLDER/arch
+ssh pretoria -t ln -s /chb/arch/ $LINKFOLDER/arch
 
 #
 # Now reset the permissions 
@@ -151,8 +154,8 @@ if [[ "$USE_KHAN" -eq 1 ]]; then
 else
 
   # just on pretoria
-  ssh toor@pretoria -t sudo chmod 770 $HOMEFOLDER
-  ssh toor@pretoria -t sudo chown -R $USERID:$GROUPID $HOMEFOLDER
+  ssh pretoria -t sudo chmod 770 $HOMEFOLDER
+  ssh pretoria -t sudo chown -R $USERID:$GROUPID $HOMEFOLDER
 
 fi;
 
