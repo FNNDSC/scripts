@@ -150,7 +150,6 @@ class FNNDSC_labelsROI(base.FNNDSC):
 ### Non-class methods
             
 def synopsis(ab_shortOnly = False):
-    scriptName = os.path.basename(sys.argv[0])
     shortSynopsis =  '''
     SYNOPSIS
 
@@ -158,7 +157,6 @@ def synopsis(ab_shortOnly = False):
                             [--radius <dilationRadius>]         \\
                             [--intersection <plyDepth>          \\
                             [--stages <stages>]                 \\
-                            [--query]                           \\
                             [-v|--verbosity <verboseLevel       \\
                             <Subj1> <Subj2> ... <SubjN>
     ''' % scriptName
@@ -231,14 +229,13 @@ def f_blockOnScheduledJobs(**kwargs):
 #
 if __name__ == "__main__":
 
-
+    scriptName = os.path.basename(sys.argv[0])
     # always show the help if no arguments were specified
     if len( sys.argv ) == 1:
         print synopsis()
         sys.exit( 1 )
 
     l_subj      = []
-    b_query     = False
     verbosity   = 0
 
     parser = argparse.ArgumentParser(description = synopsis(True))
@@ -280,6 +277,7 @@ if __name__ == "__main__":
     labelsROI.verbosity(args.verbosity)
     pipeline    = labelsROI.pipeline()
     pipeline.name('labelsROI')
+    pipeline.log()('INIT: %s %s\n' % (scriptName, ' '.join(sys.argv[1:])))
     pipeline.poststdout(True)
     pipeline.poststderr(True)
 
@@ -428,8 +426,8 @@ if __name__ == "__main__":
                     (str_cwd, subj, hemi, args.radius, args.intersection))
                 lst_intersect = shell.stdout().split()
                 lst_intersectLbl = [prefix+elt for elt in lst_intersect for prefix in ['--l ']]
-                str_cmd = 'rm %s.intersect-r%s-ply%s.annot; ' % (hemi, args.radius, args.intersection) + \
-                          'mris_label2annot --s %s --hemi %s ' % (subj, hemi) + \
+                shell('rm %s.intersect-r%s-ply%s.annot; ' % (hemi, args.radius, args.intersection))
+                str_cmd = 'mris_label2annot --s %s --hemi %s ' % (subj, hemi) + \
                           '--ctab %s/../annot/colortable_intersect.txt ' % str_subjectDir + \
                           ' '.join(lst_intersectLbl) + \
                           ' --a intersect-r%s-ply%s )' % (args.radius, args.intersection)
