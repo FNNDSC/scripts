@@ -141,7 +141,7 @@ class ZRS():
         if len(entry['Directory_File_Name']) and len(entry['SubjectID']):
             if self._b_strictCheck:
                 str_recon_all_status = "%s/scripts/recon-all-status.log" % \
-                    entry['Directory_File_Name']
+                    entry['Directory_File_Name'].strip()
                 if misc.file_exists(str_recon_all_status):
                     pFILE = open(str_recon_all_status, "rb")
                     str_lastline = misc.tail(pFILE, 1)
@@ -150,12 +150,14 @@ class ZRS():
                     pFILE.close()
             else:
                 str_lhBEFile = "%s/surf/lh.smoothwm.BE.crv" % \
-                    entry['Directory_File_Name']
+                    entry['Directory_File_Name'].strip()
                 str_rhBEFile = "%s/surf/rh.smoothwm.BE.crv" % \
-                    entry['Directory_File_Name']
+                    entry['Directory_File_Name'].strip()
+                #print("%s" % str_lhBEFile)
                 if misc.file_exists(str_lhBEFile) and \
                     misc.file_exists(str_rhBEFile):
                         b_ret = True
+                #print(b_ret)
         return b_ret
                            
     def entry_create(self, entry):
