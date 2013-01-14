@@ -100,10 +100,10 @@ class ZRS():
         FSOKcurvFileCount = 0
         FSOKstrict = 0
         for entry in csvReader:
-            self._entryReadCount += 1
             if self._b_query:
+                if len(entry['SubjectID']): self._entryReadCount += 1
                 if self._entryReadCount == 1:
-                    print "%s,%s,%s" % ('SubjectID', 'Curv Check', 'FS Check') 
+                    print "%s,%s,%s" % ('SubjectID', 'Curv Check', 'FS Check')
                 # First force strict query OFF
                 self.strictCheck(False)
                 b_FSOKcrvFile = self.entry_FSoutputCheck(entry)
@@ -113,7 +113,7 @@ class ZRS():
                 b_FSOKstrict = self.entry_FSoutputCheck(entry)
                 if b_FSOKstrict: FSOKstrict+=1
                 if len(entry['SubjectID']):
-                    print "%s,%s,%s" % (entry['SubjectID'].strip(),
+                    print "%d:%s,%s,%s" % (self._entryReadCount, entry['SubjectID'].strip(),
                                     'curv OK' if b_FSOKcrvFile else 'curv BAD', 
                                     'FS OK' if b_FSOKstrict  else 'FS BAD')
             else:
