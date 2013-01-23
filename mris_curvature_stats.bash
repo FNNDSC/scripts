@@ -370,7 +370,7 @@ function principalMaps_process
 			$WRITECURVATUREFILES			\
 			$CONTINUOUSFORM				\
 			$VERTEXAREA				\
-			-m -h 11 -G -F $SURFACE			\
+			-m -G -F $SURFACE			\
 			$SUBJ $hemi 		        	\
 			2>error.log"
                 stage_stamp "RUN $(echo $CMD | tr '\n' ' ')" ${G_SELF}.log
