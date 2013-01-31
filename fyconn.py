@@ -140,29 +140,32 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     # the input data
     _inputs = {'adc':[ '*adc.nii', None],
               'b0':[ '*b0.nii', None],
+              'b0_resampled':[ '*_b0_resampled.nii.gz', None],
               'e1':['*e1.nii', None],
               'e2':[ '*e2.nii', None],
               'e3':[ '*e3.nii', None],
               'fa':[ '*fa.nii', None],
               'fibers':['*streamline.trk', '*/final-trackvis/*.trk', None],
-              'segmentation': ['*aparc+aseg.mgz', None],
-              'T1':['*/mri/brain.mgz', None]
+              'segmentation': ['*aparc+aseg.nii.gz', None],
+              'T1':['*T1.mgz', None]
+              #'T1':['*T1-TO-b0.nii.gz', None],
+              #'T1toB0matrix':['*T1-TO-b0.mat', None]
               }
 
     # the output data
-    _outputs = {'T1':os.path.join( output, 'T1.nii' ),
-                'segmentation':os.path.join( output, 'aparc+aseg.nii' ),
-                'b0_T1_space':os.path.join( output, 'dti_b0_T1_space.nii' ),
-                'adc_T1_space':os.path.join( output, 'dti_adc_T1_space.nii' ),
-                'fa_T1_space':os.path.join( output, 'dti_fa_T1_space.nii' ),
-                'e1_T1_space':os.path.join( output, 'dti_e1_T1_space.nii' ),
-                'e2_T1_space':os.path.join( output, 'dti_e2_T1_space.nii' ),
-                'e3_T1_space':os.path.join( output, 'dti_e3_T1_space.nii' ),
-                'B0toT1matrix':os.path.join( output, 'B0-to-T1.mat' ),
-                'fibers':os.path.join( output, 'fybers_T1_space.trk' ),
-                'fibers_mapped':os.path.join( output, 'fybers_T1_space_mapped.trk' ),
-                'fibers_mapped_length_filtered':os.path.join( output, 'fybers_T1_space_mapped_length_filtered.trk' ),
-                'fibers_mapped_length_filtered_cortex_only':os.path.join( output, 'fybers_T1_space_mapped_length_filtered_cortex_only.trk' ),
+    _outputs = {'T1':os.path.join( output, 'T1-to-b0.nii' ),
+                'segmentation':os.path.join( output, 'aparc+aseg-to-b0.nii' ),
+                'T1toB0matrix':os.path.join( output, 'T1-to-b0.mat' ),
+                'b0':os.path.join( output, 'dti_b0.nii' ),
+                'adc':os.path.join( output, 'dti_adc.nii' ),
+                'fa':os.path.join( output, 'dti_fa.nii' ),
+                'e1':os.path.join( output, 'dti_e1.nii' ),
+                'e2':os.path.join( output, 'dti_e2.nii' ),
+                'e3':os.path.join( output, 'dti_e3.nii' ),
+                'fibers':os.path.join( output, 'fybers.trk' ),
+                'fibers_mapped':os.path.join( output, 'fybers_mapped.trk' ),
+                'fibers_mapped_length_filtered':os.path.join( output, 'fybers_mapped_length_filtered.trk' ),
+                'fibers_mapped_length_filtered_cortex_only':os.path.join( output, 'fybers_mapped_length_filtered_cortex_only.trk' ),
                 'fibers_final':os.path.join( output, 'fybers_final.trk' ),
                 'matrix_all': os.path.join( output, 'matrix_all.mat' ),
                 'matrix_fibercount': os.path.join( output, 'matrix_fibercount.csv' ),
@@ -239,6 +242,13 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     Co-Register the input files using Flirt.
     '''
 
+    # copy T1-to-b0 and segmentation
+    #shutil.copyfile(inputs['T1'][-1], outputs['T1']+'.gz')
+
+    # copy transformation matrix
+    #shutil.copyfile(inputs['T1toB0matrix'][-1], outputs['T1toB0matrix'])
+
+
     # convert the T1.mgz to T1.nii
     cmd = 'ss;'
     cmd += 'chb-fsstable;'
@@ -247,51 +257,40 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     sp = subprocess.Popen( ["/bin/bash", "-i", "-c", cmd], stdout=sys.stdout )
     sp.communicate()
 
-    # convert the aparc+aseg.mgz to aparc+aseg.nii
+    # register T1 to B0
     cmd = 'ss;'
     cmd += 'chb-fsstable;'
-    cmd += 'mri_convert ' + inputs['segmentation'][-1] + ' ' + outputs['segmentation']
-    c.info( Colors.YELLOW + '  Converting ' + Colors.PURPLE + 'aparc+aseg.mgz' + Colors.YELLOW + ' to ' + Colors.PURPLE + 'aparc+aseg.nii' + Colors.YELLOW + '!' + Colors._CLEAR )
-    sp = subprocess.Popen( ["/bin/bash", "-i", "-c", cmd], stdout=sys.stdout )
-    sp.communicate()
-
-    # register B0 to T1
-    cmd = 'ss;'
-    cmd += 'chb-fsstable;'
-    flirtcmd = 'flirt -in ' + inputs['b0'][-1] + ' -ref ' + outputs['T1'] + ' -usesqform -nosearch -dof 6 -cost mutualinfo -out ' + outputs['b0_T1_space'] + '.gz -omat ' + outputs['B0toT1matrix'] + ';'
+    flirtcmd = 'flirt -in ' + outputs['T1'] + ' -ref ' + inputs['b0'][-1] + ' -usesqform -nosearch -dof 6 -cost mutualinfo -out ' + outputs['T1'] + '.gz -omat ' + outputs['T1toB0matrix'] + ';'
     cmd += flirtcmd
-    cmd += 'gzip -d -f ' + outputs['b0_T1_space'] + '.gz;'
     self.__logger.debug( flirtcmd )
-    c.info( Colors.YELLOW + '  Registering ' + Colors.PURPLE + os.path.split( inputs['b0'][-1] )[1] + Colors.YELLOW + ' to ' + Colors.PURPLE + 'T1.nii' + Colors.YELLOW + ' and storing ' + Colors.PURPLE + os.path.split( outputs['B0toT1matrix'] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )
+    c.info( Colors.YELLOW + '  Registering ' + Colors.PURPLE + 'T1.nii' + Colors.YELLOW + ' to ' + Colors.PURPLE + os.path.split( outputs['T1'] )[1] + Colors.YELLOW + ' and storing ' + Colors.PURPLE + os.path.split( outputs['T1toB0matrix'] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )
     sp = subprocess.Popen( ["/bin/bash", "-i", "-c", cmd], stdout=sys.stdout )
     sp.communicate()
 
-    # resample all other DTI volumes to T1 space
+    # resample aparc+aseg to DTI space
+    cmd = 'ss;'
+    cmd += 'chb-fsstable;'
+    flirtcmd = 'flirt -in ' + inputs['segmentation'][-1] + ' -ref ' + inputs['b0_resampled'][-1] + ' -out ' + outputs['segmentation'] + '.gz -init ' + outputs['T1toB0matrix'] + ' -applyxfm -interp nearestneighbour;'
+    cmd += flirtcmd
+    self.__logger.debug( flirtcmd )
+    c.info( Colors.YELLOW + '  Resampling ' + Colors.PURPLE + os.path.split( outputs['segmentation'] )[1] + Colors.YELLOW + ' as ' + Colors.PURPLE + os.path.split( outputs['segmentation'] )[1] + Colors.YELLOW + ' using ' + Colors.PURPLE + os.path.split( outputs['T1toB0matrix'] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )
+    sp = subprocess.Popen( ["/bin/bash", "-i", "-c", cmd], stdout=sys.stdout )
+    sp.communicate()
+
+    # unzip T1-to-b0 and segmentation
+    cmd = 'gzip -d -f ' + outputs['T1'] + '.gz;'
+    cmd += 'gzip -d -f ' + outputs['segmentation'] + '.gz;'
+    sp = subprocess.Popen( ["/bin/bash", "-i", "-c", cmd], stdout=sys.stdout )
+    sp.communicate()
+
+    # copy all dti volumes and fibers
     for i in inputs:
 
-      if i == 'fibers' or i == 'segmentation' or i == 'T1' or i == 'b0':
+      if i == 'segmentation' or i == 'T1' or i == 'T1toB0matrix' or i == 'b0_resampled':
         # we do not map these
-        continue
-
-      cmd = 'ss;'
-      cmd += 'chb-fsstable;'
-      flirtcmd = 'flirt -in ' + inputs[i][-1] + ' -ref ' + outputs['T1'] + ' -out ' + outputs[i + '_T1_space'] + '.gz -init ' + outputs['B0toT1matrix'] + ' -applyxfm;'
-      cmd += flirtcmd
-      cmd += 'gzip -d -f ' + outputs[i + '_T1_space'] + '.gz;'
-      self.__logger.debug( flirtcmd )
-      c.info( Colors.YELLOW + '  Resampling ' + Colors.PURPLE + os.path.split( inputs[i][-1] )[1] + Colors.YELLOW + ' as ' + Colors.PURPLE + os.path.split( outputs[i + '_T1_space'] )[1] + Colors.YELLOW + ' using ' + Colors.PURPLE + os.path.split( outputs['B0toT1matrix'] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )
-      sp = subprocess.Popen( ["/bin/bash", "-i", "-c", cmd], stdout=sys.stdout )
-      sp.communicate()
-
-    # resample the fibers to T1 space
-    cmd = 'ss;'
-    cmd += 'chb-fsstable;'
-    transformcmd = 'track_transform ' + inputs['fibers'][-1] + ' ' + outputs['fibers'] + ' -src ' + inputs['b0'][-1] + ' -ref ' + outputs['T1'] + ' -reg ' + outputs['B0toT1matrix'] + ';'
-    cmd += transformcmd
-    self.__logger.debug( transformcmd )
-    c.info( Colors.YELLOW + '  Transforming ' + Colors.PURPLE + os.path.split( inputs['fibers'][-1] )[1] + Colors.YELLOW + ' to ' + Colors.PURPLE + os.path.split( outputs['fibers'] )[1] + Colors.YELLOW + ' using ' + Colors.PURPLE + os.path.split( outputs['B0toT1matrix'] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )
-    sp = subprocess.Popen( ["/bin/bash", "-i", "-c", cmd], stdout=sys.stdout )
-    sp.communicate()
+        continue    
+      c.info( Colors.YELLOW + '  Copying ' + Colors.PURPLE + os.path.split( inputs[i][-1] )[1] + Colors.YELLOW + ' to ' + Colors.PURPLE + os.path.split( outputs[i] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )        
+      shutil.copyfile(inputs[i][-1], outputs[i])
 
 
   def mapping( self, inputs, outputs, radius ):
@@ -314,18 +313,18 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
 
     for i in inputs:
 
-      if i == 'fibers' or i == 'segmentation' or i == 'T1' or i == 'b0':
+      if i == 'fibers' or i == 'segmentation' or i == 'T1' or i == 'b0' or i == 'T1toB0matrix' or i == 'b0_resampled':
         # we do not map these
         continue
 
-      if not os.path.exists( outputs[i + '_T1_space'] ):
+      if not os.path.exists( outputs[i] ):
         # we can't map this since we didn't find the file
         continue
 
       # for normal scalars: append it to the actions
-      actions.append( fyborg.FyMapAction( i, outputs[i + '_T1_space'] ) )
+      actions.append( fyborg.FyMapAction( i, outputs[i] ) )
 
-      c.info( Colors.YELLOW + '  Configuring mapping of ' + Colors.PURPLE + os.path.split( outputs[i + '_T1_space'] )[1] + Colors.YELLOW + ' to ' + Colors.PURPLE + os.path.split( outputs['fibers'] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )
+      c.info( Colors.YELLOW + '  Configuring mapping of ' + Colors.PURPLE + os.path.split( outputs[i] )[1] + Colors.YELLOW + ' to ' + Colors.PURPLE + os.path.split( outputs['fibers'] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )
 
     # now the segmentation with the lookaround radius
     actions.append( fyborg.FyRadiusMapAction( 'segmentation', outputs['segmentation'], radius ) )
