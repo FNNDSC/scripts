@@ -96,7 +96,7 @@ GLACIER=glacier.tch.harvard.edu
 RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
-CHRIS=chris2.tch.harvard.edu
+CHRIS=chris.tch.harvard.edu
 H1=98.118.51.235
 
 verbosity_check
