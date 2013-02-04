@@ -48,7 +48,7 @@ class FNNDSC_ZRS5(base.FNNDSC):
             'exitCode'      : 11},
         'noStagePostConditions' : {
             'action'        : 'querying a stage for its exitCode, ',
-            'error'         : 'it seems that the stagehas not been specified.',
+            'error'         : 'it seems that the stage has not been specified.',
             'exitCode'      : 12},
         'subjectDirnotExist': {
             'action'        : 'examining the <subjectDirectories>, ',
