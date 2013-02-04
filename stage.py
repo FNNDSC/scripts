@@ -639,7 +639,8 @@ class Stage:
                     self._log('\n', syslog=False)
                     break
                 else:
-                    str_loopMsg         = Colors.BROWN + '(block duration = %ds) ' % (blockLoop * atimeout) + \
+                    str_loopMsg         = Colors.BROWN + '(block duration = %ds; block processCount = %s) '% \
+                                          (blockLoop * atimeout, shell.stdout().strip()) + \
                                           Colors.YELLOW + astr_loopMsg + Colors.NO_COLOUR
                     self._log(str_loopMsg)
                     loopMsgLen          = len(str_loopMsg)
