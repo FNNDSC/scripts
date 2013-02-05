@@ -484,34 +484,36 @@ if __name__ == "__main__":
             misc.mkdir(_str_HBWMdir)
             for pipeline._str_hemi in lst_hemi:
                 for pipeline._str_surface in lst_surface:
-                    for pipeline._str_curv in lst_curv:
-                        # find the relevant input files in each <subj> dir
-                        os.chdir(pipeline.subjDir())
+                    # find the relevant input files in each <subj> dir
+                    os.chdir(pipeline.subjDir())
 #                        os.chdir(str_cwd); os.chdir(subj)
-                        str_surfaceFile = '%s.%s' % (pipeline.hemi(), pipeline.surface())
-                        str_surfDir = 'surf'
-                        log = stage.log()
-                        log('Processing %s: %s...\n' % (pipeline.hemi(), str_surfaceFile))
-                        log('Checking on number of vertices... ')
-                        str_cmd = "mris_info %s/%s 2>/dev/null | grep nvertices | awk '{print $2}'" % \
-                            (str_surfDir, str_surfaceFile)
-                        shell = crun.crun()
-                        shell.echo(False)
-                        shell.echoStdOut(False)
-                        shell.detach(False)
-                        shell(str_cmd, waitForChild=True, stdoutflush=False, stderrflush=False)
-                        if shell.exitCode():
-                            error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
-                        str_nvertices = shell.stdout().strip()
-                        # Subtrack 1 from the number of vertices since indices start from 0.
-                        nvertices = int(str_nvertices) - 1
-                        d_v = pipeline.d_vertices()
-                        d_v[pipeline._str_subj][pipeline._str_hemi][pipeline._str_surface] = nvertices
-                        log('[ %s ]\n' % str_nvertices, syslog=False)
-                        # Now, setup the subdirs to house the sub-partitioning
-                        nparts = int(args.partitions)
-                        partitionSize = nvertices / nparts
-                        rem = nvertices % nparts
+                    str_surfaceFile = '%s.%s' % (pipeline.hemi(), pipeline.surface())
+                    str_surfDir = 'surf'
+                    log = stage.log()
+                    log('Processing %s: %s...\n' % (pipeline.subj(), str_surfaceFile))
+                    log('Checking on number of vertices... ')
+                    str_cmd = "mris_info %s/%s 2>/dev/null | grep nvertices | awk '{print $2}'" % \
+                        (str_surfDir, str_surfaceFile)
+                    shell = crun.crun()
+                    shell.echo(False)
+                    shell.echoStdOut(False)
+                    shell.detach(False)
+                    shell(str_cmd, waitForChild=True, stdoutflush=False, stderrflush=False)
+                    if shell.exitCode():
+                        error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
+                    str_nvertices = shell.stdout().strip()
+                    # Subtrack 1 from the number of vertices since indices start from 0.
+                    nvertices = int(str_nvertices) - 1
+                    d_v = pipeline.d_vertices()
+                    d_v[pipeline._str_subj][pipeline._str_hemi][pipeline._str_surface] = nvertices
+                    log('[ %s ]\n' % str_nvertices, syslog=False)
+                    # Now, setup the subdirs to house the sub-partitioning
+                    nparts = int(args.partitions)
+                    partitionSize = nvertices / nparts
+                    rem = nvertices % nparts
+                    for pipeline._str_curv in lst_curv:
+                        log('Building analysis dir for %s-%s-%s' % \
+                                (pipeline.hemi(), pipeline.surface(), pipeline.curv()))
                         misc.mkdir(pipeline.analysisDir())
                         os.chdir(pipeline.analysisDir())
                         for subpart in range(nparts):
