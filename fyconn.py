@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# 
-#   ___         __                        
+#
+#   ___         __
 # .'  _|.--.--.|  |--..-----..----..-----.
 # |   _||  |  ||  _  ||  _  ||   _||  _  |
 # |__|  |___  ||_____||_____||__|  |___  |
@@ -11,13 +11,13 @@
 #
 #
 #
-# (c) 2012 FNNDSC, Children's Hospital Boston 
+# (c) 2012 FNNDSC, Children's Hospital Boston
 #
 #
 
 import fnmatch
 import matplotlib
-matplotlib.use( 'Agg' ) # switch to offscreen rendering
+matplotlib.use( 'Agg' )  # switch to offscreen rendering
 import matplotlib.pyplot as plot
 from matplotlib.colors import LogNorm
 import multiprocessing
@@ -146,10 +146,10 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
               'e3':[ '*e3.nii', None],
               'fa':[ '*fa.nii', None],
               'fibers':['*streamline.trk', '*/final-trackvis/*.trk', None],
-              'segmentation': ['*aparc+aseg.nii.gz', None],
+              'segmentation': ['*aparc+aseg.mgz', None],
               'T1':['*T1.mgz', None]
-              #'T1':['*T1-TO-b0.nii.gz', None],
-              #'T1toB0matrix':['*T1-TO-b0.mat', None]
+              # 'T1':['*T1-TO-b0.nii.gz', None],
+              # 'T1toB0matrix':['*T1-TO-b0.mat', None]
               }
 
     # the output data
@@ -184,12 +184,12 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     # 4 x beep
     print '\a\a\a\a\a\a\a'
 
-    #time.sleep( 3 )
+    # time.sleep( 3 )
 
     # stage 1
     c.info( Colors.YELLOW + '>> STAGE [' + Colors.PURPLE + '1' + Colors.YELLOW + ']: ' + Colors.YELLOW + ' ANALYZING INPUT DATA' + Colors._CLEAR )
 
-    if stage <= 2: # we can never skip stage 1 without skipping stage 2
+    if stage <= 2:  # we can never skip stage 1 without skipping stage 2
       _inputs = self.analyze_input_data( input, _inputs )
     else:
       c.info( Colors.PURPLE + '  skipping it..' + Colors._CLEAR )
@@ -243,10 +243,10 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     '''
 
     # copy T1-to-b0 and segmentation
-    #shutil.copyfile(inputs['T1'][-1], outputs['T1']+'.gz')
+    # shutil.copyfile(inputs['T1'][-1], outputs['T1']+'.gz')
 
     # copy transformation matrix
-    #shutil.copyfile(inputs['T1toB0matrix'][-1], outputs['T1toB0matrix'])
+    # shutil.copyfile(inputs['T1toB0matrix'][-1], outputs['T1toB0matrix'])
 
 
     # convert the T1.mgz to T1.nii
@@ -254,6 +254,14 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     cmd += 'chb-fsstable;'
     cmd += 'mri_convert ' + inputs['T1'][-1] + ' ' + outputs['T1']
     c.info( Colors.YELLOW + '  Converting ' + Colors.PURPLE + 'T1.mgz' + Colors.YELLOW + ' to ' + Colors.PURPLE + 'T1.nii' + Colors.YELLOW + '!' + Colors._CLEAR )
+    sp = subprocess.Popen( ["/bin/bash", "-i", "-c", cmd], stdout=sys.stdout )
+    sp.communicate()
+
+    # convert aparc+aseg.mgz to aparc+aseg.nii.gz
+    cmd = 'ss;'
+    cmd += 'chb-fsstable;'
+    cmd += 'mri_convert ' + inputs['segmentation'][-1] + ' ' + outputs['segmentation']
+    c.info( Colors.YELLOW + '  Converting ' + Colors.PURPLE + 'aparc+aseg.mgz' + Colors.YELLOW + ' to ' + Colors.PURPLE + 'aparc+aseg.nii' + Colors.YELLOW + '!' + Colors._CLEAR )
     sp = subprocess.Popen( ["/bin/bash", "-i", "-c", cmd], stdout=sys.stdout )
     sp.communicate()
 
@@ -268,9 +276,15 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     sp.communicate()
 
     # resample aparc+aseg to DTI space
+
+    # ideally use the b0_resampled but only if it exists
+    if not inputs['b0_resampled'][-1]:
+      inputs['b0_resampled'][-1] = inputs['b0'][-1]
+      c.info( Colors.YELLOW + '  Using ' + Colors.PURPLE + ' original b0 and *NOT* the resampled version.' + Colors._CLEAR )
+
     cmd = 'ss;'
     cmd += 'chb-fsstable;'
-    flirtcmd = 'flirt -in ' + inputs['segmentation'][-1] + ' -ref ' + inputs['b0_resampled'][-1] + ' -out ' + outputs['segmentation'] + '.gz -init ' + outputs['T1toB0matrix'] + ' -applyxfm -interp nearestneighbour;'
+    flirtcmd = 'flirt -in ' + outputs['segmentation'] + ' -ref ' + inputs['b0_resampled'][-1] + ' -out ' + outputs['segmentation'] + '.gz -init ' + outputs['T1toB0matrix'] + ' -applyxfm -interp nearestneighbour;'
     cmd += flirtcmd
     self.__logger.debug( flirtcmd )
     c.info( Colors.YELLOW + '  Resampling ' + Colors.PURPLE + os.path.split( outputs['segmentation'] )[1] + Colors.YELLOW + ' as ' + Colors.PURPLE + os.path.split( outputs['segmentation'] )[1] + Colors.YELLOW + ' using ' + Colors.PURPLE + os.path.split( outputs['T1toB0matrix'] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )
@@ -288,9 +302,9 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
 
       if i == 'segmentation' or i == 'T1' or i == 'T1toB0matrix' or i == 'b0_resampled':
         # we do not map these
-        continue    
-      c.info( Colors.YELLOW + '  Copying ' + Colors.PURPLE + os.path.split( inputs[i][-1] )[1] + Colors.YELLOW + ' to ' + Colors.PURPLE + os.path.split( outputs[i] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )        
-      shutil.copyfile(inputs[i][-1], outputs[i])
+        continue
+      c.info( Colors.YELLOW + '  Copying ' + Colors.PURPLE + os.path.split( inputs[i][-1] )[1] + Colors.YELLOW + ' to ' + Colors.PURPLE + os.path.split( outputs[i] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )
+      shutil.copyfile( inputs[i][-1], outputs[i] )
 
 
   def mapping( self, inputs, outputs, radius ):
@@ -299,7 +313,7 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     '''
 
     # check if we have all required input data
-    # we need at least: 
+    # we need at least:
     #  - outputs['fibers'] == Track file in T1 space
     #  - outputs['segmentation'] == Label Map
     if not os.path.exists( outputs['fibers'] ):
@@ -348,7 +362,7 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     '''
 
     # check if we have all required input data
-    # we need at least: 
+    # we need at least:
     #  - outputs['fibers_mapped'] == Track file in T1 space with mapped scalars
     if not os.path.exists( outputs['fibers_mapped'] ):
       c.error( Colors.RED + 'Could not find ' + Colors.YELLOW + outputs['fibers_mapped'] + Colors.RED + ' but we really need it to start with stage 4!!' + Colors._CLEAR )
@@ -407,7 +421,7 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     Generate connectivity matrices using mapped values.
     '''
     # check if we have all required input data
-    # we need at least: 
+    # we need at least:
     #  - outputs['fibers_mapped'] == Track file in T1 space with mapped scalars
     if not os.path.exists( outputs['fibers_final'] ):
       c.error( Colors.RED + 'Could not find ' + Colors.YELLOW + outputs['fibers_final'] + Colors.RED + ' but we really need it to start with stage 5!!' + Colors._CLEAR )
@@ -500,7 +514,7 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
 
     # fiber loop is done, all values are stored
     # now normalize the matrices
-    np.seterr( all='ignore' ) # avoid div by 0 warnings
+    np.seterr( all='ignore' )  # avoid div by 0 warnings
     cbar = None
     for m in matrix:
       if not m == 'fibercount':
@@ -526,7 +540,7 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
       cbar.set_ticks( [] )
       plot.savefig( os.path.join( os.path.split( outputs['matrix_' + m] )[0], picture_path ) )
 
-    np.seterr( all='warn' ) # reactivate div by 0 warnings
+    np.seterr( all='warn' )  # reactivate div by 0 warnings
 
     # now store the matlab version as well
     c.info( Colors.YELLOW + '  Storing ' + Colors.PURPLE + 'matlab data bundle' + Colors.YELLOW + ' containing ' + Colors.PURPLE + 'all matrices' + Colors.YELLOW + ' as ' + Colors.PURPLE + os.path.split( outputs['matrix_all'] )[1] + Colors.YELLOW + '!' + Colors._CLEAR )
@@ -537,7 +551,7 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
     '''
     '''
     # check if we have all required input data
-    # we need at least: 
+    # we need at least:
     #  - outputs['fibers_mapped'] == Track file in T1 space with mapped scalars
     if not os.path.exists( outputs['fibers_final'] ):
       c.error( Colors.RED + 'Could not find ' + Colors.YELLOW + outputs['fibers_final'] + Colors.RED + ' but we really need it to start with stage 6!!' + Colors._CLEAR )
@@ -650,7 +664,7 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
               c.info( Colors.YELLOW + '  Found ' + Colors.PURPLE + f + Colors.YELLOW + '!' + Colors._CLEAR )
               self.__logger.debug( 'Full path: ' + fullpath )
               inputs[_f][-1] = fullpath
-              #time.sleep( 1 )
+              # time.sleep( 1 )
               # don't consider any other option
               break
 
@@ -662,7 +676,7 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
 if __name__ == "__main__":
 
   # 1) scan input directory
-  # 2) preform preprocessing 
+  # 2) preform preprocessing
   # 3) perform mapping
   # 4) perform filtering
   # 5) create connectivity matrices
