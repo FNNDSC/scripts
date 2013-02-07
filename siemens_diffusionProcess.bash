@@ -284,7 +284,7 @@ cd $G_DICOMINPUTDIR >/dev/null
 G_DICOMINPUTDIR=$(pwd)
 cd $topDir
 statusPrint	"Checking on <dicomInputDir>/<dcm> file"
-DICOMTOPFILE=$(ls -1 ${G_DICOMINPUTDIR}/*1.dcm 2>/dev/null | head -n 1)
+DICOMTOPFILE=$(ls -1 ${G_DICOMINPUTDIR}/*.dcm 2>/dev/null | head -n 1)
 fileExist_check $DICOMTOPFILE || fatal noDicomFile
 
 if (( !Gb_useOverrideOut )) ; then
