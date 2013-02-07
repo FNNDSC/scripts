@@ -87,11 +87,13 @@ NETMASK[15]="1 Autumn Street, TCHpeap subnet 6;10.23.132.0"
 NETMASK[16]="1 Autumn Street, TCHpeap subnet 7;10.23.133.0"
 NETMASK[17]="1 Autumn Street, TCHpeap subnet 8;10.23.134.0"
 NETMASK[18]="1 Autumn Street, TCHpeap subnet 9;10.23.135.0"
-NETMASK[19]="1 Autumn Street, TCHpeap subnet 9;10.23.136.0"
-NETMASK[20]="Main CHB Campus, 3D Lab;10.3.2.0"
-NETMASK[21]="Engels Lab;10.32.72.0"
-NETMASK[22]="Main CHB Campus, Sanjay 1;10.6.60.0"
-NETMASK[23]="Main CHB Campus, Sanjay 2;10.211.55.0"
+NETMASK[19]="1 Autumn Street, TCHpeap subnet 10;10.23.136.0"
+NETMASK[20]="1 Autumn Street, TCHpeap subnet 11;10.23.137.0"
+NETMASK[21]="1 Autumn Street, TCHpeap subnet 12;10.23.138.0"
+NETMASK[22]="Main CHB Campus, 3D Lab;10.3.2.0"
+NETMASK[23]="Engels Lab;10.32.72.0"
+NETMASK[24]="Main CHB Campus, Sanjay 1;10.6.60.0"
+NETMASK[25]="Main CHB Campus, Sanjay 2;10.211.55.0"
 
 shift $(($OPTIND - 1))
 EXPORTLIST=$*
