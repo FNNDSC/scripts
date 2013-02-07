@@ -512,7 +512,7 @@ if __name__ == "__main__":
                     partitionSize = nvertices / nparts
                     rem = nvertices % nparts
                     for pipeline._str_curv in lst_curv:
-                        log('Building analysis dir for %s-%s-%s' % \
+                        log('Building analysis dir for %s-%s-%s\n' % \
                                 (pipeline.hemi(), pipeline.surface(), pipeline.curv()))
                         misc.mkdir(pipeline.analysisDir())
                         os.chdir(pipeline.analysisDir())
