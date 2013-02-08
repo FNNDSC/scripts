@@ -25,8 +25,13 @@ import  message
 import  stage
 
 import  fnndsc  as base
+import  socket
 
-class FNNDSC_ZRS5(base.FNNDSC):
+_str_curv       = 'H'
+_partitions     = 100
+
+
+class FNNDSC_HBWMmeta(base.FNNDSC):
     '''
     This class is a specialization of the FNNDSC base and geared to dyslexia
     curvature analysis.
@@ -60,6 +65,44 @@ class FNNDSC_ZRS5(base.FNNDSC):
             'exitCode'      : 14}
     }
 
+
+    def l_hemisphere(self):
+        return self._l_hemi
+
+    def l_surface(self):
+        return self._l_surface
+
+    def l_curv(self):
+        return self._l_curv
+
+    def d_vertices(self):
+        return self._d_vertices
+
+    def subj(self):
+        return self._str_subj
+
+    def surface(self):
+        return self._str_surface
+
+    def hemi(self):
+        return self._str_hemi
+
+    def curvList(self):
+        return self._curvList
+
+    def curv(self):
+        return self._str_curv
+
+    def subjDir(self):
+        return "%s/%s" % (self._str_workingDir, self._str_subj)
+
+    def analysisDir(self):
+        return "%s/%s/%s/%s/%s" % \
+            (self.subjDir(), _str_HBWMdir, self._str_hemi, self._str_surface, self._str_curv)
+
+    def startDir(self):
+        return self._str_workingDir
+
                     
     def __init__(self, **kwargs):
         '''
@@ -69,16 +112,37 @@ class FNNDSC_ZRS5(base.FNNDSC):
         '''
         base.FNNDSC.__init__(self, **kwargs)
 
-        self._lw                        = 120
+        self._lw                        = 60
         self._rw                        = 20
-        self._l_subject                 = []
-        
+
         self._str_subjectDir            = ''
-        self._stageslist                = '12'
-        
+        self._stageslist                = '0'
+        self._hemiList                  = 'lh,rh'
+        self._surfaceList               = 'smoothwm,pial'
+        self._curvList                  = 'H,K'
+
+        self._l_subject                 = []
+        self._l_hemi                    = []
+        self._l_surface                 = []
+        self._l_curv                    = []
+
+        # Internal tracking vars
+        self._str_subj                  = ''
+        self._str_hemi                  = ''
+        self._str_surface               = ''
+        self._str_curv                  = ''
+
+
+        self._str_workingDir            = os.getcwd()
+
         for key, value in kwargs.iteritems():
             if key == 'subjectList':    self._l_subject         = value
             if key == 'stages':         self._stageslist        = value
+            if key == 'hemiList':       self._l_hemi            = value.split(',')
+            if key == 'surfaceList':    self._l_surface         = value.split(',')
+            if key == 'curvList':
+                self._l_curv            = value.split(',')
+                self._curvList          = value
 
 
     def initialize(self):
@@ -88,6 +152,12 @@ class FNNDSC_ZRS5(base.FNNDSC):
         have been set (or reset).
         
         '''
+
+        # First, this script should only be run on cluster nodes.
+        lst_clusterNodes = ['rc-drno', 'rc-russia', 'rc-thunderball',
+                            'rc-goldfinger', 'rc-twice']
+        str_hostname    = socket.gethostname()
+
 
         # Set the stages
         self._pipeline.stages_canRun(False)
@@ -129,8 +199,11 @@ def synopsis(ab_shortOnly = False):
 
             %s                                            \\
                             [--stages <stages>]             \\
-                            [--query]                       \\
                             [-v|--verbosity <verboseLevel>] \\
+                            [--hemi|-h <hemisphere>]            \\
+                            [--surface|-f <surface>]            \\
+                            [--curv|-c <curvType>               \\
+                            [--partitions|-p <numberOfSurfacePartitions>] \\
                             <Subj1> <Subj2> ... <SubjN>
     ''' % scriptName
   
@@ -138,9 +211,41 @@ def synopsis(ab_shortOnly = False):
     DESCRIPTION
 
         `%s' is a meta-controller for setting up and analyzing a set of 
-        Dyslexia experiments.
+        HBWM experiments. Its main purpose is to stagger a set of cluster
+        jobs so as to not overwhelm the scheduler. For a single subject, a
+        full run of 100 partitions on all surfaces, hemispheres, and curvature
+        values is:
+
+            parts x hemi x surface x curv
+              101 x   2  x    2    x  8     = 3232
+
+        This script will loop over each hemi and surface argument and only
+        schedule the parts x curv analysis
 
     ARGS
+
+        --reset
+        If specified, remove the output directory tree.
+
+        --hemi <hemisphere>
+        The hemisphere to process. For both 'left' and 'right', pass
+        'lh,rh'.
+
+        --surface <surface>
+        The surface to process. One of 'pial' or 'smoothwm'.
+
+        --curv <curvType> (default: '%s')
+        The curvature map function to use in constructing the worldmap.
+
+        --partitions <numberOfSurfacePartitions> (default: '%d')
+        The number of spawned parallel instances of 'mris_pmake' -- each
+        will process a sub-set of the original dataset and recombine once
+        complete.
+
+        --stages|-s <stages>
+        The stages to execute. This is specified in a string, such as '1234'
+        which would imply stages 1, 2, 3, and 4.
+
 
        --stages <stages>
        The stages to execute. This is specified in a string, such as '1234'
@@ -152,7 +257,7 @@ def synopsis(ab_shortOnly = False):
     EXAMPLES
 
 
-    ''' % (scriptName)
+    ''' % (scriptName, _str_curv, _partitions)
     if ab_shortOnly:
         return shortSynopsis
     else:
@@ -178,6 +283,37 @@ def f_stageShellExitCode(**kwargs):
     if stage.exitCode() == "0": return True
     else: return False
 
+
+def f_blockOnScheduledJobs(**kwargs):
+    '''
+    A simple wrapper around a stage.blockOnShellCmd(...)
+    call.
+    '''
+    str_blockCondition  = 'mosq listall | wc -l'
+    str_blockProcess    = 'undefined'
+    str_blockUntil      = "0"
+    timepoll            = 10
+    for key, val in kwargs.iteritems():
+        if key == 'obj':                stage                   = val
+        if key == 'blockCondition':     str_blockCondition      = val
+        if key == 'blockUntil':         str_blockUntil          = val
+        if key == 'blockProcess':
+            str_blockProcess            = val
+            str_blockCondition          = 'mosq listall | grep %s | wc -l' % str_blockProcess
+        if key == 'timepoll':           timepoll                = val
+    str_blockMsg    = '''\n
+    Postconditions are still running: multiple '%s' instances
+    detected in MOSIX scheduler. Blocking until all scheduled jobs are
+    completed. Block interval = %s seconds.
+    \n''' % (str_blockProcess, timepoll)
+    str_loopMsg     = 'Waiting for scheduled jobs to complete... ' +\
+                      '(hit <ctrl>-c to kill this script).    '
+
+    stage.blockOnShellCmd(  str_blockCondition, str_blockUntil,
+                            str_blockMsg, str_loopMsg, timepoll)
+    return True
+
+
         
 #
 # entry point
@@ -200,73 +336,107 @@ if __name__ == "__main__":
                         metavar='SUBJECT', nargs='+',
                         help='SubjectIDs to process')
     parser.add_argument('--verbosity', '-v',
-                        dest='verbosity', 
+                        dest='verbosity',
                         action='store',
                         default=0,
                         help='verbosity level')
     parser.add_argument('--stages', '-s',
                         dest='stages',
                         action='store',
-                        default='0',
+                        default='01',
                         help='analysis stages')
-
+    parser.add_argument('--hemi', '-m',
+                        dest='hemi',
+                        action='store',
+                        default='lh,rh',
+                        help='hemisphere to process')
+    parser.add_argument('--surface', '-f',
+                        dest='surface',
+                        action='store',
+                        default='smoothwm,pial',
+                        help='surface to process')
+    parser.add_argument('--reset', '-r',
+                        dest='b_reset',
+                        action="store_true",
+                        default=False)
+    parser.add_argument('--curv', '-c',
+                        dest='curv',
+                        action='store',
+                        default='H',
+                        help='curvature map to use for worldmap')
+    parser.add_argument('--partitions', '-p',
+                        dest='partitions',
+                        action='store',
+                        default='100',
+                        help='number of partitions to split problem into')
     args = parser.parse_args()
 
-    zrs5 = FNNDSC_ZRS5( subjectList     = args.l_subj,
+    OSshell = crun.crun()
+    OSshell.echo(False)
+    OSshell.echoStdOut(False)
+    OSshell.detach(False)
+
+    hbwm = FNNDSC_HBWMmeta(
+                        subjectList     = args.l_subj,
                         stages          = args.stages,
-                        logTo           = 'zrs5.log',
-#                        logTo           = sys.stdout,
+                        hemiList        = args.hemi,
+                        surfaceList     = args.surface,
+                        curvList        = args.curv,
+                        logTo           = 'HBWM_meta.log',
                         syslog          = True,
-                        logTee          = True)
-    zrs5.verbosity(args.verbosity)
-    pipeline    = zrs5.pipeline()
+                        logTee          = True
+                        )
+
+    hbwm.verbosity(args.verbosity)
+    pipeline    = hbwm.pipeline()
     pipeline.poststdout(True)
     pipeline.poststderr(True)
 
-    stage0 = stage.Stage_crun(
-                        name            = 'Lobes_annotate',
+    stage0 = stage.Stage(
+                        name            = 'HBWMmeta',
                         fatalConditions = True,
                         syslog          = True,
-                        logTo           = 'zrs5-lobes_annotate.log',
+                        logTo           = 'HBWMmeta.log',
                         logTee          = True,
-                        cmd             = 'lobe_annot.sh -v 10 -S ' + ' '.join(args.l_subj)
                         )
-    stage0.def_postconditions(f_stageShellExitCode, obj=stage0)
+    def f_stage0callback(**kwargs):
+        lst_subj        = []
+        for key, val in kwargs.iteritems():
+            if key == 'subj':   lst_subj        = val
+            if key == 'obj':    stage           = val
+            if key == 'pipe':   pipeline        = val
+        lst_hemi        = pipeline.l_hemisphere()
+        lst_surface     = pipeline.l_surface()
+        lst_curv        = pipeline.l_curv()
 
-    stage1 = stage.Stage_crun(
-                        name            = 'pial_curvatures',
-                        fatalConditions = True,
-                        syslog          = True,
-                        logTo           = 'zrs5-pial_curvatures.log',
-                        logTee          = True,
-                        cmd             = 'mris_curvature_stats.bash -v 10 -f -t 12 -w 0 -s -S pial ' + ' '.join(args.l_subj)
-                        )                        
-    stage1.def_preconditions(stage0.def_postconditions()[0], **stage0.def_postconditions()[1])
-    stage1.def_postconditions(f_stageShellExitCode, obj=stage1)
-                        
-    stageX = stage.Stage(
-                        name            = 'Callback',
-                        fatalConditions = True,
-                        syslog          = True,
-                        logTo           = 'zrs5-callback.log',
-                        logTee          = True
-                        )
-    def f_stageXcallback(**kwargs):
-        f_sum = 0
-        for i in range(0, 10000):
-            f_sum = f_sum+i
-        stageX.stdout('f_sum = %d\n' % f_sum)
+        for pipeline._str_subj in lst_subj:
+            os.chdir(pipeline.subjDir())
+            for pipeline._str_hemi in lst_hemi:
+                for pipeline._str_surface in lst_surface:
+                    log = stage.log()
+                    log('Processing %s: %s.%s...\n' % (pipeline.subj(), pipeline.hemi(), pipeline.surface()))
+                    str_cmd = "hbwm.py -v 10 -s 012 -r -m %s -f %s -c %s -p %s %s" % \
+                        (pipeline.hemi(), pipeline.surface(), pipeline.curvList(), args.partitions,
+                        pipeline.subj())
+                    print str_cmd
+                    shell = crun.crun()
+                    shell.echo(False)
+                    shell.echoStdOut(False)
+                    shell.detach(False)
+                    shell(str_cmd, waitForChild=True, stdoutflush=False, stderrflush=False)
+                    if shell.exitCode():
+                        error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
+        os.chdir(pipeline.startDir())
         return True
 
-      
-    stageX.def_stage(f_stageXcallback)
+    stage0.def_stage(f_stage0callback, subj=args.l_subj, obj=stage0, pipe=hbwm)
+    stage0.def_postconditions(f_blockOnScheduledJobs, obj=stage0,
+                              blockProcess    = 'hbwm.py')
 
-    zrs5log = zrs5.log()
-    zrs5log('INIT: %s\n' % ' '.join(sys.argv))
-    zrs5.stage_add(stage0)
-    zrs5.stage_add(stage1)
-    zrs5.stage_add(stageX)
-    zrs5.initialize()
+    hbwmlog = hbwm.log()
+    hbwmlog('INIT: %s\n' % ' '.join(sys.argv))
+    hbwm.stage_add(stage0)
+    hbwm.initialize()
 
-    zrs5.run()
+    hbwm.run()
   
