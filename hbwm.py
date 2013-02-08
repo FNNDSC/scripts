@@ -523,7 +523,7 @@ if __name__ == "__main__":
                         if args.b_reset:
                             log('Removing analysis tree for %s-%s-%s\n' % \
                                 (pipeline.hemi(), pipeline.surface(), pipeline.curv()))
-                             OSshell('rm -fr %s' % pipeline.analysisDir())
+                            OSshell('rm -fr %s' % pipeline.analysisDir())
                         log('Building analysis dir for %s-%s-%s\n' % \
                                 (pipeline.hemi(), pipeline.surface(), pipeline.curv()))
                         misc.mkdir(pipeline.analysisDir())
