@@ -424,6 +424,14 @@ if __name__ == "__main__":
                         default='100',
                         help='number of partitions to split problem into')
     args = parser.parse_args()
+
+    
+    # A generic "shell"
+    OSshell = crun.crun()
+    OSshell.echo(False)
+    OSshell.echoStdOut(False)
+    OSshell.detach(False)
+
     
     # First, define the container pipeline
     pipe_HBWM = FNNDSC_HBWM(
@@ -512,6 +520,10 @@ if __name__ == "__main__":
                     partitionSize = nvertices / nparts
                     rem = nvertices % nparts
                     for pipeline._str_curv in lst_curv:
+                        if args.b_reset:
+                            log('Removing analysis tree for %s-%s-%s\n' % \
+                                (pipeline.hemi(), pipeline.surface(), pipeline.curv()))
+                             OSshell('rm -fr %s' % pipeline.analysisDir())
                         log('Building analysis dir for %s-%s-%s\n' % \
                                 (pipeline.hemi(), pipeline.surface(), pipeline.curv()))
                         misc.mkdir(pipeline.analysisDir())
