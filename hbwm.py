@@ -650,7 +650,7 @@ if __name__ == "__main__":
                         str_autodijkFile = '%s.%s.autodijk-%s.crv' % \
                                     (pipeline.hemi(), pipeline.surface(), pipeline.curv())
                         str_cmd = "mris_calc.py -v 10 \
-                                    --operation add $(find ../ -iname %s | tr '\n' ' ')" % \
+                                    --operation add $(find ../ -iname %s | grep [0-9] | tr '\n' ' ')" % \
                                     (str_autodijkFile)
                         shell = crun.crun()
                         shell.echo(False)
