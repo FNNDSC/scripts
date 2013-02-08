@@ -423,8 +423,9 @@ if __name__ == "__main__":
                     shell.echo(False)
                     shell.echoStdOut(False)
                     shell.detach(False)
-                    shell(str_cmd, waitForChild=True, stdoutflush=False, stderrflush=False)
+                    shell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
                     if shell.exitCode():
+                        print "here!"
                         error.fatal(hbwm, 'stageExec', shell.stderr())
         os.chdir(pipeline.startDir())
         return True
