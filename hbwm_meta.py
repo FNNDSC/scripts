@@ -30,6 +30,7 @@ import  socket
 _str_curv       = 'H'
 _partitions     = 100
 
+scriptName      = os.path.basename(sys.argv[0])
 
 class FNNDSC_HBWMmeta(base.FNNDSC):
     '''
@@ -193,7 +194,6 @@ class FNNDSC_HBWMmeta(base.FNNDSC):
             
             
 def synopsis(ab_shortOnly = False):
-    scriptName = os.path.basename(sys.argv[0])
     shortSynopsis =  '''
     SYNOPSIS
 
@@ -407,7 +407,7 @@ if __name__ == "__main__":
             if key == 'pipe':   pipeline        = val
         lst_hemi        = pipeline.l_hemisphere()
         lst_surface     = pipeline.l_surface()
-        lst_curv        = pipeline.l_curv()
+        lst_curv   
 
         for pipeline._str_subj in lst_subj:
             os.chdir(pipeline.subjDir())
