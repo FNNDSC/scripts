@@ -435,7 +435,7 @@ if __name__ == "__main__":
                               blockProcess    = 'hbwm.py')
 
     hbwmlog = hbwm.log()
-    hbwmlog('INIT: %s\n' % ' '.join(sys.argv))
+    hbwmlog()('INIT: (%s) %s %s\n' % (scriptName, os.getcwd(),  ' '.join(sys.argv[1:])))
     hbwm.stage_add(stage0)
     hbwm.initialize()
 
