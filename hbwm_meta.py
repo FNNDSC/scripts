@@ -425,7 +425,7 @@ if __name__ == "__main__":
                     shell.detach(False)
                     shell(str_cmd, waitForChild=True, stdoutflush=False, stderrflush=False)
                     if shell.exitCode():
-                        error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
+                        error.fatal(hbwm, 'stageExec', shell.stderr())
         os.chdir(pipeline.startDir())
         return True
 
