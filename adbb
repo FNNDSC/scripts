@@ -1,0 +1,28 @@
+#! /bin/bash
+# This command can be used as an alias for adb and it will prompt for the
+# device selection if needed
+#   alias adb=my-adb
+
+set +x
+PROGNAME=$(basename $0)
+ADB=$(which adb)
+if [ -z "$ADB" ]
+then
+   echo "$PROGNAME: ERROR: cannot found adb"
+   exit 1
+fi
+
+set -e
+if [ $# == 0 ]
+then
+   # no arguments
+   exec $ADB
+elif [ "$1" == 'devices' ]
+then
+   # adb devices should not accept -s, -e or -d
+   exec $ADB devices
+else
+   # because of the set -e, if selecting the device fails it exits
+   S=$(android-select-device "$@")
+   exec $ADB $S "$@"
+fi
