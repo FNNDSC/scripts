@@ -446,7 +446,7 @@ if __name__ == "__main__":
                         )
     pipe_HBWM.verbosity(args.verbosity)
     pipeline    = pipe_HBWM.pipeline()
-    pipeline.log()('INIT: %s %s\n' % (scriptName, ' '.join(sys.argv[1:])))
+    pipeline.log()('INIT: (%s) %s %s\n' % (os.getcwd(), scriptName, ' '.join(sys.argv[1:])))
     pipeline.name('HBWM')
     pipeline.poststdout(True)
     pipeline.poststderr(True)

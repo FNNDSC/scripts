@@ -30,6 +30,7 @@ import  socket
 _str_curv       = 'H'
 _partitions     = 100
 
+scriptName      = os.path.basename(sys.argv[0])
 
 class FNNDSC_HBWMmeta(base.FNNDSC):
     '''
@@ -193,7 +194,6 @@ class FNNDSC_HBWMmeta(base.FNNDSC):
             
             
 def synopsis(ab_shortOnly = False):
-    scriptName = os.path.basename(sys.argv[0])
     shortSynopsis =  '''
     SYNOPSIS
 
@@ -410,7 +410,6 @@ if __name__ == "__main__":
         lst_curv        = pipeline.l_curv()
 
         for pipeline._str_subj in lst_subj:
-            os.chdir(pipeline.subjDir())
             for pipeline._str_hemi in lst_hemi:
                 for pipeline._str_surface in lst_surface:
                     log = stage.log()
@@ -435,7 +434,7 @@ if __name__ == "__main__":
                               blockProcess    = 'hbwm.py')
 
     hbwmlog = hbwm.log()
-    hbwmlog('INIT: %s\n' % ' '.join(sys.argv))
+    hbwmlog('INIT: (%s) %s %s\n' % (os.getcwd(), scriptName, ' '.join(sys.argv[1:])))
     hbwm.stage_add(stage0)
     hbwm.initialize()
 
