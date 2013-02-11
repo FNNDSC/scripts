@@ -382,7 +382,7 @@ if __name__ == "__main__":
                         hemiList        = args.hemi,
                         surfaceList     = args.surface,
                         curvList        = args.curv,
-                        logTo           = 'HBWM_meta.log',
+                        logTo           = 'HBWMmeta.log',
                         syslog          = True,
                         logTee          = True
                         )
@@ -396,7 +396,7 @@ if __name__ == "__main__":
                         name            = 'HBWMmeta',
                         fatalConditions = True,
                         syslog          = True,
-                        logTo           = 'HBWMmeta.log',
+                        logTo           = 'HBWMmeta-process.log',
                         logTee          = True,
                         )
     def f_stage0callback(**kwargs):
