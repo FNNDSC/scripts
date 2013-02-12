@@ -615,6 +615,7 @@ if __name__ == "__main__":
                             cluster.echo(False)
                             cluster.echoStdOut()
                             cluster.detach()
+                            cluster.priority(60)
                             cluster(str_cmd, waitForChild=False)
                             pmakePort += 1
                             os.chdir(pipeline.analysisDir())
