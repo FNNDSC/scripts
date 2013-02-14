@@ -319,17 +319,10 @@ def f_blockOnScheduledJobs(**kwargs):
     A simple wrapper around a stage.blockOnShellCmd(...)
     call.
     '''
-    str_blockCondition  = 'mosq listall | wc -l'
-    str_blockProcess    = 'undefined'
-    str_blockUntil      = "0"
     timepoll            = 10
     for key, val in kwargs.iteritems():
         if key == 'obj':                stage                   = val
-        if key == 'blockCondition':     str_blockCondition      = val
-        if key == 'blockUntil':         str_blockUntil          = val
-        if key == 'blockProcess':
-            str_blockProcess            = val
-            str_blockCondition          = 'mosq listall | grep %s | wc -l' % str_blockProcess
+        if key == 'blockProcess':       str_blockProcess        = val
         if key == 'timepoll':           timepoll                = val
     str_blockMsg    = '''\n
     Postconditions are still running: multiple '%s' instances
@@ -337,10 +330,14 @@ def f_blockOnScheduledJobs(**kwargs):
     completed. Block interval = %s seconds.
     \n''' % (str_blockProcess, timepoll)
     str_loopMsg     = 'Waiting for scheduled jobs to complete... ' +\
-                      '(hit <ctrl>-c to kill this script).    '
+                      '(hit <ctrl>-c to kill this script).            '
                         
-    stage.blockOnShellCmd(  str_blockCondition, str_blockUntil,
-                            str_blockMsg, str_loopMsg, timepoll)
+    stage.kwblockOnShellCmd_rs(
+            blockProcess        = str_blockProcess,
+            blockMsg            = str_blockMsg,
+            loopMsg             = str_loopMsg,
+            timeout             = timepoll
+            )
     return True
 
 def dirPart_create(str_dirPart):

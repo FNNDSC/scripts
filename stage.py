@@ -601,6 +601,58 @@ class Stage:
             return self._b_canRun
 
 
+    def KWblockOnShellCmd_rs(self, **kwargs):
+        '''
+        A 'kwargs' version of the 'blockOnShellCmd' call. Useful for cases
+        when more complex blocking conditions need to be evaluated.
+
+        The _rs denotes that this method is specialized to flagging
+        running *and* scheduled jobs.
+
+        This particular method is MOSIX specific.
+
+        kwargs:
+            blockProcess                process in scheduler to block on
+            blockMsg                    log message when block starts
+            loopMsg                     log message while blocking
+            timeout                     how long between checking astr_shellCmd
+                                        while blocking
+        '''
+        for key, val in kwargs.iteritems():
+            if key == 'blockProcess':   astr_blockProcess       = val
+            if key == 'blockMsg':       astr_blockMsg           = val
+            if key == 'loopMsg':        astr_loopMsg            = val
+            if key == 'timeout':        atimeout                = val 
+        shellScheduleCount              = crun.crun()
+        shellRunCount                   = crun.crun()
+        astr_processInSchedulerCount    = 'mosq listall | grep %s | wc -l' % astr_blockProcess
+        astr_allJobsDoneCount           = '0'
+        astr_processRunningCount        = 'mosq listall | grep %s | grep RUN | wc -l' % astr_blockProcess
+        shellScheduleCount(astr_shellCmd)
+        blockLoop       = 1
+        if shellScheduleCount.stdout().strip() != astr_allJobsDoneCount:
+            self._log(Colors.CYAN + astr_blockMsg + Colors.NO_COLOUR)
+            while 1:
+                time.sleep(atimeout)
+                shellScheduleCount(astr_processInSchedulerCount)
+                shellRunCount(astr_processRunningCount)
+                str_scheduled   = shellScheduleCount.stdout().strip()
+                str_running     = shellRunCount.stdout().strip()
+                if str_scheduled == astr_allJobsDoneCount:
+                    self._log('\n', syslog=False)
+                    break
+                else:
+                    str_loopMsg         = Colors.BROWN + '(block duration = %ds; running/scheduled = %s/%s) '% \
+                                          (blockLoop * atimeout, str_running, str_shellCmd) + \
+                                          Colors.YELLOW + astr_loopMsg + Colors.NO_COLOUR
+                    self._log(str_loopMsg)
+                    loopMsgLen          = len(str_loopMsg)
+                    syslogLen           = len(self._log.str_syslog())
+                    for i in range(0, loopMsgLen+syslogLen): self._log('\b', syslog=False)
+                    blockLoop           += 1
+        return True
+
+
     def blockOnShellCmd(self, astr_shellCmd, astr_shellReturn,
                         astr_blockMsg,
                         astr_loopMsg,
