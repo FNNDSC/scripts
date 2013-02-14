@@ -77,7 +77,7 @@ G_SYNOPSIS="
 
 "
 
-TOPSET=$(/bin/ls -1 *1.dcm 2>/dev/null | head -n 1)
+TOPSET=$(/bin/ls -1 *.dcm 2>/dev/null | head -n 1)
 while getopts hai:t: option ; do
         case "$option"
         in
