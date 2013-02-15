@@ -601,7 +601,7 @@ class Stage:
             return self._b_canRun
 
 
-    def KWblockOnShellCmd_rs(self, **kwargs):
+    def kwBlockOnShellCmd_rs(self, **kwargs):
         '''
         A 'kwargs' version of the 'blockOnShellCmd' call. Useful for cases
         when more complex blocking conditions need to be evaluated.

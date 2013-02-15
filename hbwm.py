@@ -332,7 +332,7 @@ def f_blockOnScheduledJobs(**kwargs):
     str_loopMsg     = 'Waiting for scheduled jobs to complete... ' +\
                       '(hit <ctrl>-c to kill this script).            '
                         
-    stage.kwblockOnShellCmd_rs(
+    stage.kwBlockOnShellCmd_rs(
             blockProcess        = str_blockProcess,
             blockMsg            = str_blockMsg,
             loopMsg             = str_loopMsg,
