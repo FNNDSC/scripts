@@ -643,7 +643,7 @@ class Stage:
                     break
                 else:
                     str_loopMsg         = Colors.BROWN + '(block duration = %ds; running/scheduled = %s/%s) '% \
-                                          (blockLoop * atimeout, str_running, str_shellCmd) + \
+                                          (blockLoop * atimeout, str_running, str_scheduled) + \
                                           Colors.YELLOW + astr_loopMsg + Colors.NO_COLOUR
                     self._log(str_loopMsg)
                     loopMsgLen          = len(str_loopMsg)

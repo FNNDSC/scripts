@@ -414,7 +414,7 @@ if __name__ == "__main__":
                 for pipeline._str_surface in lst_surface:
                     log = stage.log()
                     log('Processing %s: %s.%s...\n' % (pipeline.subj(), pipeline.hemi(), pipeline.surface()))
-                    str_cmd = "hbwm.py -v 10 -s 012 -r -m %s -f %s -c %s -p %s %s" % \
+                    str_cmd = "~/src/scripts/hbwm.py -v 10 -s 012 -r -m %s -f %s -c %s -p %s %s" % \
                         (pipeline.hemi(), pipeline.surface(), pipeline.curvList(), args.partitions,
                         pipeline.subj())
                     print str_cmd
