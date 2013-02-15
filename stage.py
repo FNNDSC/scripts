@@ -628,7 +628,7 @@ class Stage:
         astr_processInSchedulerCount    = 'mosq listall | grep %s | wc -l' % astr_blockProcess
         astr_allJobsDoneCount           = '0'
         astr_processRunningCount        = 'mosq listall | grep %s | grep RUN | wc -l' % astr_blockProcess
-        shellScheduleCount(astr_shellCmd)
+        shellScheduleCount(astr_processInSchedulerCount)
         blockLoop       = 1
         if shellScheduleCount.stdout().strip() != astr_allJobsDoneCount:
             self._log(Colors.CYAN + astr_blockMsg + Colors.NO_COLOUR)
