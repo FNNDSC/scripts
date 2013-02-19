@@ -29,6 +29,7 @@ import  socket
 
 _str_curv       = 'H'
 _partitions     = 100
+_maxPartitions  = 1000
 
 scriptName      = os.path.basename(sys.argv[0])
 
@@ -63,7 +64,11 @@ class FNNDSC_HBWMmeta(base.FNNDSC):
         'Load'              : {
             'action'        : 'attempting to pickle load object, ',
             'error'         : 'a PickleError occured.',
-            'exitCode'      : 14}
+            'exitCode'      : 14},
+        'Partition'         : {
+            'action'        : 'setting up partitions, ',
+            'error'         : 'the max partition number is %d. Too many partitions specified.' % _maxPartitions,
+            'exitCode'      : 14},
     }
 
 
@@ -408,6 +413,9 @@ if __name__ == "__main__":
         lst_hemi        = pipeline.l_hemisphere()
         lst_surface     = pipeline.l_surface()
         lst_curv        = pipeline.l_curv()
+
+        if args.partitions > _maxPartitions:
+            error.fatal(hbwm, 'Partition')
 
         for pipeline._str_subj in lst_subj:
             for pipeline._str_hemi in lst_hemi:
