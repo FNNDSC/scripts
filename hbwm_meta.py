@@ -414,7 +414,7 @@ if __name__ == "__main__":
         lst_surface     = pipeline.l_surface()
         lst_curv        = pipeline.l_curv()
 
-        if args.partitions > _maxPartitions:
+        if int(args.partitions) > _maxPartitions:
             error.fatal(hbwm, 'Partition')
 
         for pipeline._str_subj in lst_subj:
