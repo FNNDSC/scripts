@@ -412,19 +412,21 @@ if __name__ == "__main__":
         for pipeline._str_subj in lst_subj:
             for pipeline._str_hemi in lst_hemi:
                 for pipeline._str_surface in lst_surface:
-                    log = stage.log()
-                    log('Processing %s: %s.%s...\n' % (pipeline.subj(), pipeline.hemi(), pipeline.surface()))
-                    str_cmd = "hbwm.py -v 10 -s 012 -r -m %s -f %s -c %s -p %s %s" % \
-                        (pipeline.hemi(), pipeline.surface(), pipeline.curvList(), args.partitions,
-                        pipeline.subj())
-                    print str_cmd
-                    shell = crun.crun()
-                    shell.echo(False)
-                    shell.echoStdOut(False)
-                    shell.detach(False)
-                    shell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
-                    if shell.exitCode():
-                        error.fatal(hbwm, 'stageExec', shell.stderr())
+                    for pipeline._str_curv in lst_curv:
+                        log = stage.log()
+                        log('Processing %s: %s.%s, %s...\n' % \
+                            (pipeline.subj(), pipeline.hemi(), pipeline.surface()), pipeline.curv())
+                        str_cmd = "hbwm.py -v 10 -s 012 -r -m %s -f %s -c %s -p %s %s" % \
+                            (pipeline.hemi(), pipeline.surface(), pipeline.curv(), args.partitions,
+                            pipeline.subj())
+                        print str_cmd
+                        shell = crun.crun()
+                        shell.echo(False)
+                        shell.echoStdOut(False)
+                        shell.detach(False)
+                        shell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
+                        if shell.exitCode():
+                            error.fatal(hbwm, 'stageExec', shell.stderr())
         os.chdir(pipeline.startDir())
         return True
 
