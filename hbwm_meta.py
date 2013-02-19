@@ -423,7 +423,7 @@ if __name__ == "__main__":
                     for pipeline._str_curv in lst_curv:
                         log = stage.log()
                         log('Processing %s: %s.%s, %s...\n' % \
-                            (pipeline.subj(), pipeline.hemi(), pipeline.surface(), pipeline.curv())
+                            (pipeline.subj(), pipeline.hemi(), pipeline.surface(), pipeline.curv()))
                         str_cmd = "hbwm.py -v 10 -s 012 -r -m %s -f %s -c %s -p %s %s" % \
                             (pipeline.hemi(), pipeline.surface(), pipeline.curv(), args.partitions,
                             pipeline.subj())
