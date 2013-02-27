@@ -90,7 +90,6 @@ OSX2147=osx2147.tch.harvard.edu
 OSX1476=osx1476.tch.harvard.edu
 DURBAN=durban.tch.harvard.edu
 NATAL=natal.tch.harvard.edu
-IPMI=ipmi.tch.harvard.edu
 SHAKA=shaka.tch.harvard.edu
 GLACIER=glacier.tch.harvard.edu
 RCDRNO=rc-drno.tch.harvard.edu
@@ -106,7 +105,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=14
+targetList=16
  TARGET_CHECK[0]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 --to localhost:10401 --isRunning"
  TARGETACTION[0]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 --to localhost:10401"
  TARGET_CHECK[1]="tunnel.bash --forward --from 4212 --via ch137123@${DREEV} --to localhost:4212 --isRunning"
