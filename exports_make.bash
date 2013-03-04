@@ -127,7 +127,7 @@ if (( ${#EXPORTLIST} )) ; then
         echo "#"
         echo ""
         for MOUNTPOINT in $EXPORTLIST ; do
-            printf "%-45s" "$MOUNTPOINT"
+            printf "%-45s  " "$MOUNTPOINT"
             for SUBNET in $lst_SUBNET ; do
                 #echo -n "${SUBNET}/24(rw,insecure,root_squash,async,no_subtree_check) "
                 echo -n "${SUBNET}/24(rw,insecure,no_root_squash,async,no_subtree_check) "
