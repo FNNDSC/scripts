@@ -24,7 +24,7 @@ G_SYNOPSIS="
 	<revision> (No default)
 	Specify an optional revision of the version. This is only necessary when 
 	multiple revisions of a given version exist, for example in the case of 
-	the 'stable' version there might be revision '5.0.0' and '5.1.0' 
+	the 'stable' version there might be revision '5.0.0', '5.1.0', and '5.2' 
 	installed concurrently on the system. If the <revision> is not 
 	specified, the environment will default to whatever has been configured
 	as the default revsion for a given version. This default will have been
@@ -58,6 +58,10 @@ G_SYNOPSIS="
     
         May 30 2012
         o Initial development.
+        
+        Mar 05 2013
+        o Add logic for PICES local use.
+        
 "
 function synopsis_show
 {
@@ -94,7 +98,13 @@ fi
 OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
 
-export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
+# Check if we are on a PICES host (names start with 'rc')
+RC=$(hostname | awk -F \- '{print $1}')
+if [[ $RC == "rc" ]] ; then
+        export PACKAGEDIR=/chb/pices/arch/${HOSTTYPE}-${OS}/packages
+else
+        export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
+fi
 export FSL_DIR=${PACKAGEDIR}/fsl419
 export SUBJECTS_DIR=$(pwd)
 
@@ -108,9 +118,6 @@ unset TIX_LIBRARY
 OS=$(uname -a | awk '{print $1}')
 export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fs-${G_VERSION}${G_REVISION}]"
 
-# why Slicer?
 export PATH=$PATH:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/mricron:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/dtk
-#:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/Slicer/current/
 
-# why cmp?
-#export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp
+
