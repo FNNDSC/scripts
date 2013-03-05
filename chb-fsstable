@@ -1,3 +1,17 @@
+echo "******************************
+echo "* WARNING! WARNING! WARNING! *
+echo "*                            *
+echo "* chb-fsstable is seriously  *
+echo "* outdated and depreciated.  *
+echo "*                            *
+echo "* Please use:                *
+echo "* 			   *
+echo "*     . chb-fs stable	   *
+echo "*                            *
+echo "* instead!                   *
+echo "*                            *
+echo "******************************
+
 OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
 
