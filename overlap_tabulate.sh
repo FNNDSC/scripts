@@ -4,6 +4,7 @@ G_SIGN="neg pos"
 G_GROUPNUM=3
 G_CURVpos="K K1 K2 H S C BE thickness"
 G_CURVneg="K K1 K2 H"
+G_TYPE=""
 
 G_SEPSTRING=""
 
@@ -21,6 +22,7 @@ G_SYNPOSIS="
   SYNOPSIS
   
         overlap_tabulate.sh -h <hemi> -r <region> -s <surface> \
+                                [-T <optionalType>]
                                 [-S <sepString>] [-G <groupNum>]
 
   DESC
@@ -44,6 +46,11 @@ G_SYNPOSIS="
 
         -s <surface>
         The surface to process ('smoothwm', 'pial')
+
+        -T <optionalType>
+        More accurate overlap analysis is available using the CentroidCloud
+        analysis. By specifying either 'L' or 'R' here, the Left or Right
+        polygon deviation percentage overlap is displayed.
         
         -S <sepString>
         Print <sepString> between field columns.
@@ -59,9 +66,12 @@ G_SYNPOSIS="
   10 March 2010
   o Group spec.
 
+  08 March 2013
+  o Type spec.
+
 "
 
-while getopts h:r:s:S:G: option ; do
+while getopts h:r:s:S:G:T: option ; do
     case "$option" 
     in
         h) HEMI=$OPTARG         ;;
@@ -69,6 +79,7 @@ while getopts h:r:s:S:G: option ; do
         s) SURFACE=$OPTARG      ;;
         S) G_SEPSTRING=$OPTARG  ;;
         G) G_GROUPNUM=$OPTARG   ;;
+        T) G_TYPE=$OPTARG       ;;
     esac
 done
 
@@ -97,7 +108,7 @@ for CURV in $G_CURVpos ; do
     printf "%15s%s" "$CURV" "$G_SEPSTRING"
     for SIGN in $G_SIGN ; do
         for GROUP in $G_GROUPS ; do
-            fileName=${SIGN}-${GROUP}-centroids-analyze-${HEMI}.${CURV}.${REGION}.${SURFACE}.txt-overlap
+            fileName=${SIGN}-${GROUP}-centroids-analyze-${HEMI}.${CURV}.${REGION}.${SURFACE}.txt-overlap${G_TYPE}
             if [[ -f $fileName ]] ; then
                 overlap=$(cat $fileName)
             else

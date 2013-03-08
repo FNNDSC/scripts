@@ -133,6 +133,8 @@ fi
 case "$G_TYPE"
 in
         overlap)        TABULATE="overlap_tabulate.sh"          ;;
+        overlapL)       TABULATE="overlap_tabulate.sh -T L"     ;;
+        overlapR)       TABULATE="overlap_tabulate.sh -T R"     ;;
         areas)          TABULATE="areas_tabulate.sh"            ;;
         ordering)       TABULATE="ordering_tabulate.sh"         ;;
         ordering2)      TABULATE="ordering_tabulate.sh -T "     ;;
