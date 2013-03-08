@@ -126,7 +126,7 @@ cd $startDir
 
 if (( Gb_annotationSpec && Gb_expDirSpecified && !Gb_regionSpec )) ; then
     cd $G_EXPDIR/groupCurvAnalysis/${ANNOTATIONSTEM}.annot
-    G_REGION=$(/bin/ls)
+    G_REGION=$(/bin/ls -d */)
     cd $startDir
 fi
 
