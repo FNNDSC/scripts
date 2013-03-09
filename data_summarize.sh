@@ -126,7 +126,7 @@ cd $startDir
 
 if (( Gb_annotationSpec && Gb_expDirSpecified && !Gb_regionSpec )) ; then
     cd $G_EXPDIR/groupCurvAnalysis/${ANNOTATIONSTEM}.annot
-    G_REGION=$(/bin/ls -d */)
+    G_REGION=$(find . -maxdepth 1 -mindepth 1 -type d | awk -F\/ '{print $2}')
     cd $startDir
 fi
 
@@ -136,6 +136,7 @@ in
         overlapL)       TABULATE="overlap_tabulate.sh -T L"     ;;
         overlapR)       TABULATE="overlap_tabulate.sh -T R"     ;;
         areas)          TABULATE="areas_tabulate.sh"            ;;
+        areasP)         TABULATE="areas_tabulate.sh -T p"       ;;
         ordering)       TABULATE="ordering_tabulate.sh"         ;;
         ordering2)      TABULATE="ordering_tabulate.sh -T "     ;;
         grid)           TABULATE="grid_tabulate.sh"             ;;
