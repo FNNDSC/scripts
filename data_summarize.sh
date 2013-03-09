@@ -42,7 +42,8 @@ G_SYNPOSIS="
   ARGS
   
         -t <dataType>
-        One of 'overlap', 'ordering', 'ordering2', 'areas', 'grid', or 'ggrid'.
+        One of 'pval1', 'pval5', 'overlap', 'overlapL', 'overlapR', 
+        'ordering', 'ordering2', 'areas', 'areasP', 'grid', or 'ggrid'.
 
         -s 
         If specified, save summary reports (one per region/hemi/surface)
@@ -132,6 +133,8 @@ fi
 
 case "$G_TYPE"
 in
+        pval5)          TABULATE="pval_tabulate.sh -T le5"      ;;
+        pval1)          TABULATE="pval_tabulate.sh -T le1"      ;;
         overlap)        TABULATE="overlap_tabulate.sh"          ;;
         overlapL)       TABULATE="overlap_tabulate.sh -T L"     ;;
         overlapR)       TABULATE="overlap_tabulate.sh -T R"     ;;
