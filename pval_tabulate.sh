@@ -97,17 +97,22 @@ for SIGN in $G_SIGN ; do
 done
 printf "\n"
 
+if [[ $G_TYPE == "le5" ]] ; then G_PVAL="le5 le1"; fi
+if [[ $G_TYPE == "le1" ]] ; then G_PVAL="le1"; fi
+
+
 for CURV in $G_CURVpos ; do
     printf "%15s%s" "$CURV" "$G_SEPSTRING"
     for SIGN in $G_SIGN ; do
         for GROUP in $G_GROUPS ; do
-            fileName=${SIGN}-${GROUP}-pval-${HEMI}.${CURV}.${REGION}.${SURFACE}-{G_TYPE}.txt
+          pval="NaN"
+          for PVAL in $G_PVAL ; do
+            fileName=${SIGN}-${GROUP}-pval-${HEMI}.${CURV}.${REGION}.${SURFACE}-${PVAL}.txt
             if [[ -f $fileName ]] ; then
                 pval=$(cat $fileName)
-            else
-                pval="NaN"
             fi
-            printf "%15.5f%s" $pval "$G_SEPSTRING"
+          done
+          printf "%15.5f%s" $pval "$G_SEPSTRING"
         done
     done
     printf "\n"
