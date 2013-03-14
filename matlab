@@ -1,6 +1,6 @@
 #!/bin/bash
 
-G_VERSION="2011b"
+G_VERSION="2013a"
 G_SYNOPSIS="
 
     NAME
