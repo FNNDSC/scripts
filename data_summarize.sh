@@ -171,7 +171,7 @@ for HEMI in $G_HEMI ; do
         fi
         for SURFACE in $G_SURFACE ; do
             printf "\n\n$HEMIREGION-$SURFACE\n"
-            REPORT=$($TABULATE -G $G_GROUPNUM -h $HEMI -r $REGION -s $SURFACE -S "|")
+            REPORT=$(~/src/scripts/$TABULATE -G $G_GROUPNUM -h $HEMI -r $REGION -s $SURFACE -S "|")
             echo "$REPORT"
             if (( Gb_reportSave )) ; then
                 echo "$REPORT" > $G_REPORTDIR/$G_TYPE-$HEMIREGION-$SURFACE.txt
