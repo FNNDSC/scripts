@@ -105,7 +105,7 @@ if [[ $RC == "rc" ]] ; then
 else
         export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
 fi
-export FSL_DIR=${PACKAGEDIR}/fsl419
+export FSL_DIR=${PACKAGEDIR}/fsl/current
 export SUBJECTS_DIR=$(pwd)
 
 source ${PACKAGEDIR}/freesurfer/${G_VERSION}${G_REVISION}/SetUpFreeSurfer.sh
