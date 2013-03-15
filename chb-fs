@@ -87,6 +87,26 @@ else
 fi
 
 echo "version:  $G_VERSION"
+
+if [[ $G_VERSION == "dev" ]] ; then
+    echo "+----------+"
+    echo "| WARNING! |____________________________________________" 
+    echo "+------------------------------------------------------+"
+    echo "| You have chosen the FreeSurfer developer version.    |"
+    echo "| Be aware that this version of FreeSurfer might be    |"
+    echo "| possibly unstable, with new and untested features.   |"
+    echo "| The 'dev' version also changes without announcement. |"
+    echo "|                                                      |"
+    echo "| Do NOT use this version for production or analysis   |"
+    echo "| work.                                                |"
+    echo "|                                                      |"
+    echo "| Unless you are a developer writing FreeSurfer code   |"
+    echo "| you probably don't want to use this. Use the         |" 
+    echo "| 'stable' version instead.                            |"
+    echo "+------------------------------------------------------+"
+    echo ""
+fi
+
 if (( ${#G_REVISION} )) ; then
     echo "revision: $G_REVISION"
     G_REVISION="-$G_REVISION"   # This is because installs on the filesystem
