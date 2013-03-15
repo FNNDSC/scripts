@@ -205,6 +205,7 @@ def synopsis(ab_shortOnly = False):
             %s                                            \\
                             [--stages <stages>]             \\
                             [-v|--verbosity <verboseLevel>] \\
+                            [--host <remoteHost>]           \\
                             [--hemi|-h <hemisphere>]            \\
                             [--surface|-f <surface>]            \\
                             [--curv|-c <curvType>               \\
@@ -228,6 +229,10 @@ def synopsis(ab_shortOnly = False):
         schedule the parts x curv analysis
 
     ARGS
+
+        --host <remoteHost>
+        If specified, schedule jobs to only run on <remoteHost>. This has the
+        result of "confining" all jobs to only one node.
 
         --reset
         If specified, remove the output directory tree.
@@ -364,6 +369,11 @@ if __name__ == "__main__":
                         dest='b_reset',
                         action="store_true",
                         default=False)
+    parser.add_argument('--host', 
+                        dest='host',
+                        action='store',
+                        default='',
+                        help='force jobs to be scheduled to only this host')
     parser.add_argument('--curv', '-c',
                         dest='curv',
                         action='store',
@@ -424,8 +434,13 @@ if __name__ == "__main__":
                         log = stage.log()
                         log('Processing %s: %s.%s, %s...\n' % \
                             (pipeline.subj(), pipeline.hemi(), pipeline.surface(), pipeline.curv()))
-                        str_cmd = "hbwm.py -v 10 -s 012 -r -m %s -f %s -c %s -p %s %s" % \
-                            (pipeline.hemi(), pipeline.surface(), pipeline.curv(), args.partitions,
+                        str_hostOnlySpec = ''
+                        if len(args.host):
+                            str_hostOnlySpec = "--host %s " % args.host
+                            log('Locking jobs to only run on host -->%s<--\n' % args.host)
+                        str_cmd = "hbwm.py -v 10 -s 012 %s -r -m %s -f %s -c %s -p %s %s" % \
+                            (str_hostOnlySpec,
+                            pipeline.hemi(), pipeline.surface(), pipeline.curv(), args.partitions,
                             pipeline.subj())
                         print str_cmd
                         shell = crun.crun()
