@@ -12,25 +12,27 @@ echo "* instead!                   *"
 echo "*                            *"
 echo "******************************"
 
-OS=$(uname -a | awk '{print $1}')
-echo "Host type is $HOSTTYPE-${OS}"
+. chb-fs stable
 
-export PACKAGEDIR=/chb/pices/arch/${HOSTTYPE}-${OS}/packages
-export FSLDIR=${PACKAGEDIR}/fsl
-export SUBJECTS_DIR=$(pwd)
+#OS=$(uname -a | awk '{print $1}')
+#echo "Host type is $HOSTTYPE-${OS}"
 
-source ${PACKAGEDIR}/freesurfer/stable/SetUpFreeSurfer.sh
-source ${FSLDIR}/etc/fslconf/fsl.sh
-unset TCLLIBPATH
-unset TCL_LIBRARY
-unset TK_LIBRARY
-unset TIX_LIBRARY
+#export PACKAGEDIR=/chb/pices/arch/${HOSTTYPE}-${OS}/packages
+#export FSLDIR=${PACKAGEDIR}/fsl
+#export SUBJECTS_DIR=$(pwd)
 
-OS=$(uname -a | awk '{print $1}')
-export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fsstable]"
+#source ${PACKAGEDIR}/freesurfer/stable/SetUpFreeSurfer.sh
+#source ${FSLDIR}/current/etc/fslconf/fsl.sh
+#unset TCLLIBPATH
+#unset TCL_LIBRARY
+#unset TK_LIBRARY
+#unset TIX_LIBRARY
 
-export PATH=$PATH:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/mricron:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/Slicer/current/:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/dtk
+#OS=$(uname -a | awk '{print $1}')
+#export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fsstable]"
 
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/boost/boost1420/lib
+#export PATH=$PATH:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/mricron:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/Slicer/current/:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/dtk
 
-export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp/lib/python
+#export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/chb/pices/arch/${HOSTTYPE}-${OS}/packages/boost/boost1420/lib
+
+#export PYTHONPATH=$PYTHONPATH:/chb/arch/python/cmp/lib/python
