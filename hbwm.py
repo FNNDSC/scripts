@@ -234,6 +234,7 @@ def synopsis(ab_shortOnly = False):
             %s                                      \\
                             [--stages|-s <stages>]                 \\
                             [--verbosity|-v <verboseLevel>]     \\
+                            [--host <remoteHost>]               \\
                             [--reset|-r]                        \\
                             [--hemi|-h <hemisphere>]            \\
                             [--surface|-f <surface>]            \\
@@ -251,6 +252,10 @@ def synopsis(ab_shortOnly = False):
         multiple sub-problems.
         
     ARGS
+
+        --host <remoteHost>
+        If specified, schedule jobs to only run on <remoteHost>. This has the
+        result of "confining" all jobs to only one node.
 
         --reset
         If specified, remove the output directory tree.
@@ -406,6 +411,11 @@ if __name__ == "__main__":
                         action='store',
                         default='smoothwm,pial',
                         help='surface to process')
+    parser.add_argument('--host',
+                        dest='host',
+                        action='store',
+                        default='',
+                        help='force jobs to be scheduled to only this host')
     parser.add_argument('--reset', '-r',
                         dest='b_reset',
                         action="store_true",
@@ -609,6 +619,11 @@ if __name__ == "__main__":
                                         int(str_vstart), int(str_vend), pipeline.curv(),
                                         str_curvatureBaseFile)
                             cluster = crun.crun_mosix()
+                            str_hostOnlySpec = ''
+                            if len(args.host):
+                                str_hostOnlySpec = "--host %s " % args.host
+                                log('Locking jobs to only run on host -->%s<--\n' % args.host)
+                                cluster.scheduleHostOnly(args.host)
                             cluster.echo(False)
                             cluster.echoStdOut()
                             cluster.detach()
