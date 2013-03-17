@@ -22,7 +22,8 @@ G_SYNOPSIS="
 
   SYNOPSIS
   
-        exports_make.bash -s <'Darwin'|'Linux'> [-v <verbosityLevel>]
+        exports_make.bash [-s <'Darwin'|'Linux'>] [-v <verbosityLevel>] \
+                          [-n <numberOfExports>]                        \
                           <DIR1> <DIR2> ... <DIRn>
 
   DESC
@@ -36,6 +37,11 @@ G_SYNOPSIS="
 	-v <verbosityLevel> (Optional)
 	Verbosity level. A value of '10' is a good choice here.
 
+	-n <numberOfExports>
+	Only generate a file for the first <numberOfExports> in the internal
+	table. This is useful for using the same internal table in 
+	different network locations.
+
         -s <'Darwin'|'Linux'>
         Style of /etc/exports to use. Will default to the style
         of the current host script is being run off.
@@ -45,19 +51,24 @@ G_SYNOPSIS="
   26 April 2011
   o Initial design and coding.
 
+  17 March 2013
+  o Add -n <numberOfLocations>.
+
 "
 
-A_args="checking command line arguments"
+A_host="checking command line arguments"
 
-EM_args="you *must* specify either '-s Linux' or '-s Darwin'."
+EM_host="I couldn't identify the underlying env. Specify either '-s Linux' or '-s Darwin'."
 
-EC_args=10
+EC_host=10
 
-while getopts v:s: option ; do
+while getopts v:s:n: option ; do
     case "$option" 
     in
         v) Gi_verbose=$OPTARG   ;;
         s) G_STYLE=$OPTARG      ;;
+	n) Gb_siteNum=1
+	   G_siteNum=$OPTARG	;;
 	\?) synopsis_show ; shut_down 10 ;;
     esac
 done
@@ -65,36 +76,41 @@ done
 G_STYLE=$(string_clean $G_STYLE)
 if [[ $G_STYLE != "Linux" && $G_STYLE != "Darwin" ]] ; then fatal args;   fi
 
-sitenum=27
+if (( Gb_siteNum )) ; then
+    sitenum=$G_siteNum
+else
+    sitenum=28
+fi
 
 # Format: <label>;<netmask>
- NETMASK[0]="1 Autumn Street, 6th floor;10.17.24.0"
- NETMASK[1]="1 Autumn Street, 4th floor;10.17.16.0"
- NETMASK[2]="Needham Data Center (PICES cluster);10.36.133.0"
- NETMASK[3]="Neuroradiology Reading Room;10.28.8.0"
- NETMASK[4]="Enders, 9th floor;10.7.34.0"
- NETMASK[5]="Waltham (0027 -GR);10.64.60.0"
- NETMASK[6]="Waltham (WL13W3 - subnet 1);10.64.4.0"
- NETMASK[7]="Waltham (WL13W3 - subnet 2);10.64.5.0"
- NETMASK[8]="Waltham (WL13W3 - subnet 3);10.64.84.0"
- NETMASK[9]="Waltham (Read   - subnet 4);10.65.130.0"
-NETMASK[10]="1 Autumn Street, TCHpeap subnet 1;10.23.50.0"
-NETMASK[11]="1 Autumn Street, TCHpeap subnet 2;10.23.128.0"
-NETMASK[12]="1 Autumn Street, TCHpeap subnet 3;10.23.129.0"
-NETMASK[13]="1 Autumn Street, TCHpeap subnet 4;10.23.130.0"
-NETMASK[14]="1 Autumn Street, TCHpeap subnet 5;10.23.131.0"
-NETMASK[15]="1 Autumn Street, TCHpeap subnet 6;10.23.132.0"
-NETMASK[16]="1 Autumn Street, TCHpeap subnet 7;10.23.133.0"
-NETMASK[17]="1 Autumn Street, TCHpeap subnet 8;10.23.134.0"
-NETMASK[18]="1 Autumn Street, TCHpeap subnet 9;10.23.135.0"
-NETMASK[19]="1 Autumn Street, TCHpeap subnet 10;10.23.136.0"
-NETMASK[20]="1 Autumn Street, TCHpeap subnet 11;10.23.137.0"
-NETMASK[21]="1 Autumn Street, TCHpeap subnet 12;10.23.138.0"
-NETMASK[22]="Main CHB Campus, 3D Lab;10.3.2.0"
-NETMASK[23]="Engels Lab;10.32.72.0"
-NETMASK[24]="Main CHB Campus, Sanjay 1;10.6.60.0"
-NETMASK[25]="Main CHB Campus, Sanjay 2;10.211.55.0"
-NETMASK[26]="Main CHB Campus, Ed Wang;10.4.46.0"
+ NETMASK[0]="Local network;192.168.1.0"
+ NETMASK[1]="1 Autumn Street, 6th floor;10.17.24.0"
+ NETMASK[2]="1 Autumn Street, 4th floor;10.17.16.0"
+ NETMASK[3]="Needham Data Center (PICES cluster);10.36.133.0"
+ NETMASK[4]="Neuroradiology Reading Room;10.28.8.0"
+ NETMASK[5]="Enders, 9th floor;10.7.34.0"
+ NETMASK[6]="Waltham (0027 -GR);10.64.60.0"
+ NETMASK[7]="Waltham (WL13W3 - subnet 1);10.64.4.0"
+ NETMASK[8]="Waltham (WL13W3 - subnet 2);10.64.5.0"
+ NETMASK[9]="Waltham (WL13W3 - subnet 3);10.64.84.0"
+NETMASK[10]="Waltham (Read   - subnet 4);10.65.130.0"
+NETMASK[11]="1 Autumn Street, TCHpeap subnet 1;10.23.50.0"
+NETMASK[12]="1 Autumn Street, TCHpeap subnet 2;10.23.128.0"
+NETMASK[13]="1 Autumn Street, TCHpeap subnet 3;10.23.129.0"
+NETMASK[14]="1 Autumn Street, TCHpeap subnet 4;10.23.130.0"
+NETMASK[15]="1 Autumn Street, TCHpeap subnet 5;10.23.131.0"
+NETMASK[16]="1 Autumn Street, TCHpeap subnet 6;10.23.132.0"
+NETMASK[17]="1 Autumn Street, TCHpeap subnet 7;10.23.133.0"
+NETMASK[18]="1 Autumn Street, TCHpeap subnet 8;10.23.134.0"
+NETMASK[19]="1 Autumn Street, TCHpeap subnet 9;10.23.135.0"
+NETMASK[20]="1 Autumn Street, TCHpeap subnet 10;10.23.136.0"
+NETMASK[21]="1 Autumn Street, TCHpeap subnet 11;10.23.137.0"
+NETMASK[22]="1 Autumn Street, TCHpeap subnet 12;10.23.138.0"
+NETMASK[23]="Main CHB Campus, 3D Lab;10.3.2.0"
+NETMASK[24]="Engels Lab;10.32.72.0"
+NETMASK[25]="Main CHB Campus, Sanjay 1;10.6.60.0"
+NETMASK[26]="Main CHB Campus, Sanjay 2;10.211.55.0"
+NETMASK[27]="Main CHB Campus, Ed Wang;10.4.46.0"
 
 shift $(($OPTIND - 1))
 EXPORTLIST=$*
