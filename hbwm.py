@@ -745,7 +745,6 @@ if __name__ == "__main__":
                         shell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
                         if shell.exitCode():
                             error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
-                        shell('cp %s %s/surf' % (str_autodijkFile, pipeline.subjDir()))
         os.chdir(pipeline.startDir())
         return True
     stage3.def_stage(f_stage3callback, subj=args.l_subj, obj=stage3, pipe=pipe_HBWM)
