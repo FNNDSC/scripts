@@ -438,7 +438,7 @@ if __name__ == "__main__":
                         if len(args.host):
                             str_hostOnlySpec = "--host %s " % args.host
                             log('Locking jobs to only run on host -->%s<--\n' % args.host)
-                        str_cmd = "hbwm.py -v 10 -s 012 %s -r -m %s -f %s -c %s -p %s %s" % \
+                        str_cmd = "hbwm.py -v 10 -s 0123 %s -r -m %s -f %s -c %s -p %s %s" % \
                             (str_hostOnlySpec,
                             pipeline.hemi(), pipeline.surface(), pipeline.curv(), args.partitions,
                             pipeline.subj())
