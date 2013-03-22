@@ -123,6 +123,9 @@ class FNNDSC_HBWM(base.FNNDSC):
     def analysisDir(self):
         return "%s/%s/%s/%s/%s" % \
             (self.subjDir(), _str_HBWMdir, self._str_hemi, self._str_surface, self._str_curv)
+
+    def surfDir(self):
+        return "%s/surf" % (self.subjDir())
             
     def startDir(self):
         return self._str_workingDir
@@ -691,12 +694,70 @@ if __name__ == "__main__":
     stage2.def_postconditions(f_blockOnScheduledJobs, obj=stage2,
                               blockProcess    = 'mris_calc.py')
 
+
+    #
+    # Stage 3
+    # Runs mris_calc on final re-combined files to normalize and shift final values.
+    #
+    stage3 = stage.Stage(
+                        name            = 'normalize-sign',
+                        fatalConditions = True,
+                        syslog          = True,
+                        logTo           = 'HBWM-normalize-sign.log',
+                        logTee          = True
+                        )
+    def f_stage3callback(**kwargs):
+        lst_subj        = []
+        for key, val in kwargs.iteritems():
+            if key == 'subj':   lst_subj        = val
+            if key == 'obj':    stage           = val
+            if key == 'pipe':   pipeline        = val
+        lst_hemi        = pipeline.l_hemisphere()
+        lst_surface     = pipeline.l_surface()
+        lst_curv        = pipeline.l_curv()
+
+        for pipeline._str_subj in lst_subj:
+            os.chdir(pipeline.subjDir())
+            for pipeline._str_hemi in lst_hemi:
+                for pipeline._str_surface in lst_surface:
+                    for pipeline._str_curv in lst_curv:
+                        os.chdir(pipeline.analysisDir())
+                        log = stage.log()
+                        str_autodijkFile = '%s.%s.autodijk-%s.crv' % \
+                                    (pipeline.hemi(), pipeline.surface(), pipeline.curv())
+                        str_autonormFile = '%s.%s.an-%s.crv' % \
+                                    (pipeline.hemi(), pipeline.surface(), pipeline.curv())
+                        str_autonsFile   = '%s.%s.ans-%s.crv' % \
+                                    (pipeline.hemi(), pipeline.surface(), pipeline.curv())
+                        os.chdir(pipeline.surfDir())
+                        log('Normalizing and shifting %s\n' % str_autodijkFile)
+                        str_cmd = "\
+                            mris_calc -o %s %s norm     ;\
+                            mris_calc -o %s %s sub 0.5  ;\
+                            chmod o+r %s %s %s\
+                        " % (str_autonormFile, str_autodijkFile,
+                             str_autonsFile, str_autonormFile,
+                             str_autodijkFile, str_autonsFile, str_autonormFile)
+                        shell = crun.crun()
+                        shell.echo(False)
+                        shell.echoStdOut(False)
+                        shell.detach(False)
+                        shell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
+                        if shell.exitCode():
+                            error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
+                        shell('cp %s %s/surf' % (str_autodijkFile, pipeline.subjDir()))
+        os.chdir(pipeline.startDir())
+        return True
+    stage3.def_stage(f_stage3callback, subj=args.l_subj, obj=stage3, pipe=pipe_HBWM)
+    stage3.def_postconditions(f_blockOnScheduledJobs, obj=stage3,
+                              blockProcess    = 'mris_calc')
+
     
     # Add all the stages to the pipeline  
     pipe_HBWM.stage_add(stage0)
     pipe_HBWM.stage_add(stage1)
     pipe_HBWM.stage_add(stage2)
-    #pipe_HBWM.stage_add(stage3)
+    pipe_HBWM.stage_add(stage3)
     #pipe_HBWM.stage_add(stage4)
 
     # Initialize the pipeline and ... run!
