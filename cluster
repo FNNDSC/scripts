@@ -4,7 +4,7 @@
 # Ensure 'getopts' works with 'source' command
 OPTIND=1
 
-G_CLUSTERNAME="pices"
+G_CLUSTERNAME=""
 G_SUBCLUSTER=""
 Gb_revisionSet=0
 G_SYNOPSIS="
@@ -71,8 +71,8 @@ function synopsis_show
 #       additional args         : show help and exit
 if (( $# <= 2 )) ; then
     if [[ $1 == "-x" ]] ; then synopsis_show 1; fi
-    if (( ${#1} )) ; then G_VERSION=$1;  fi
-    if (( $#==2 )) ; then G_REVISION=$2; fi
+    if (( ${#1} )) ; then G_CLUSTERNAME=$1;  fi
+    if (( $#==2 )) ; then G_SUBCLUSTER=$2; fi
 else
     synopsis_show 1
 fi
@@ -80,23 +80,22 @@ fi
 OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
 
-CLUSTERNAME=""
 # Check if we are on a PICES host (names start with 'rc')
 RC=$(hostname | awk -F \- '{print $1}')
 if [[ $RC == "rc" ]] ; then
     CLUSTERPATH=""
-    export CLUSTERNAME="MOSIX"
+    export G_CLUSTERNAME="MOSIX"
 fi
 if [[ $(hostname) == "launchpad" ]] ; then
     CLUSTERPATH=""
-    export CLUSTERNAME="qsub"
+    export G_CLUSTERNAME="qsub"
 fi
 if [[ $(hostname) == "eris1n2" ]] ; then
     CLUSTERPATH="/PHShome/rp937/perl5/bin:/hptc_cluster/lsf/8.0/linux2.6-glibc2.3-x86_64/etc:/hptc_cluster/lsf/8.0/linux2.6-glibc2.3-x86_64/bin"
-    export CLUSTERNAME="lsub"
+    export G_CLUSTERNAME="lsub"
 fi
 
-if (( ${#CLUSTERNAME} )) ; then
+if (( ${#G_CLUSTERNAME} )) ; then
     echo "cluster:  $G_CLUSTERNAME"
     if (( ${#G_SUBCLUSTER} )) ; then
         echo "headnode: $G_SUBCLUSTER"
@@ -109,7 +108,7 @@ if (( ${#CLUSTERNAME} )) ; then
     fi
 
     OS=$(uname -a | awk '{print $1}')
-    export PROMPTPREFIX="[$(whoami)@$name:${HOSTTYPE}-${OS}-${CLUSTERNAME}]"
+    export PROMPTPREFIX="[$(whoami)@$name:${HOSTTYPE}-${OS}-${G_CLUSTERNAME}]"
 fi
 
 
