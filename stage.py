@@ -253,6 +253,19 @@ class Stage:
             'exitCode'      : 12}
     }
     
+    def shell(self, *args):
+        '''
+        get/set the shell object.
+
+        shell():       returns the current shell object
+        shell(<obj>):  sets the shell object to <obj>
+
+        '''
+        if len(args):
+            self._shell = args[0]
+        else:
+            return self._shell
+    
     def stdout(self, *args):
         '''
         get/set the stdout analog level.
@@ -368,10 +381,16 @@ class Stage:
         self._log               = message.Message()
 
         # The fatalConditions flag controls behaviour while checking pre- and
-        # post and shell exect conditions. If True, failed pre-, post- or shell 
+        # post and shell return conditions. If True, failed pre-, post- or shell 
         # conditions will result in a fatal failure. Processing will otherwise
         # continue.
         self._b_fatalConditions = True
+
+        # A stage also contains a "shell" object used for interacting with the
+        # host OS environment. Specific sub-classes of 'crun' actually use this
+        # shell to run the stage internals; however all stages can use the 
+        # shell in any capacity.
+        self._shell             = None
 
         # The canRun flag is a simple toggle that can be controlled by a caller
         # to either turn a stage off or on, but leave it otherwise intact.
@@ -601,6 +620,52 @@ class Stage:
             return self._b_canRun
 
 
+
+    def kwBlockOnScheduler(self, **kwargs):
+        '''
+        A 'kwargs' block-on-jobs-in-scheduler method. This method assumes 
+        that the internal stage shell is a scheduler-based crun that
+        can be queried for its queue method.
+
+        Not all kwargs can be completely processed by all queue methods.
+
+        kwargs:
+            blockProcess                process in scheduler to block on
+            blockMsg                    log message when block starts
+            loopMsg                     log message while blocking
+            timeout                     how long between checking astr_shellCmd
+                                        while blocking
+        '''
+        for key, val in kwargs.iteritems():
+            if key == 'blockProcess':   astr_blockProcess       = val
+            if key == 'blockMsg':       astr_blockMsg           = val
+            if key == 'loopMsg':        astr_loopMsg            = val
+            if key == 'timeout':        atimeout                = val
+            if key == 'blockUntil':     ablockUntil             = val
+        (str_running, str_scheduled, str_completed) = self.shell().queue()    
+        astr_allJobsDoneCount           = ablockUntil
+        blockLoop       = 1
+        if str_running != astr_allJobsDoneCount:
+            self._log(Colors.CYAN + astr_blockMsg + Colors.NO_COLOUR)
+            while 1:
+                time.sleep(atimeout)
+                str_running, str_scheduled, str_completed = self.shell().queue()    
+                if str_running == astr_allJobsDoneCount:
+                    self._log('\n', syslog=False)
+                    break
+                else:
+                    str_loopMsg         = Colors.BROWN + \
+                    '(block duration = %ds; running/completed/scheduled = %s/%s/%s) '% \
+                    (blockLoop * atimeout, str_running, str_completed, str_scheduled) + \
+                    Colors.YELLOW + astr_loopMsg + Colors.NO_COLOUR
+                    self._log(str_loopMsg)
+                    loopMsgLen          = len(str_loopMsg)
+                    syslogLen           = len(self._log.str_syslog())
+                    for i in range(0, loopMsgLen+syslogLen): self._log('\b', syslog=False)
+                    blockLoop           += 1
+        return True
+
+
     def kwBlockOnShellCmd_rs(self, **kwargs):
         '''
         A 'kwargs' version of the 'blockOnShellCmd' call. Useful for cases
@@ -742,13 +807,6 @@ class Stage_crun(Stage):
             self._str_cmd = args[0]
         else:
             return self._str_cmd
-
-            
-    def shell(self):
-        '''
-        Returns the shell object.
-        '''
-        return self._shell
 
             
     def stdout(self):
