@@ -2,13 +2,13 @@
 
 '''
 
-    This "pipeline" demonstrates how to string together several console-
-    based "apps" in the pipeline/stage framework.
+    This "pipeline" is a simple demonstration/testing-platform for
+    scheduling, running, and blocking-on jobs on any of the available
+    three clusters: PICES (FNNDSC), launchpad (NMR), and erisone (Partners).
+
+    Note, that password-less ssh MUST have been setup to each of the 
+    the different clusters for the remote user for this to work.
     
-    Pre- and post-condition checking is based on the underlying stage exit
-    code values, assuming a stage has exewcuted. If a pre-stage has not
-    been run, the subsequent stage check will return True (otherwise
-    the pipeline would require all stages be run for each analysis).
     
 '''
 
@@ -29,11 +29,11 @@ import  socket
 
 scriptName      = os.path.basename(sys.argv[0])
 
-class launchpad(base.FNNDSC):
+class CLUSTER(base.FNNDSC):
     '''
-    This class is a specialization of the FNNDSC base that simply runs
-    a few tests on launchpad using the 'crun' infrastructure.
-    
+    This class is a specialization of the FNNDSC base that 
+    simply runs a passed shell command on a target cluster 
+    using the 'crun' infrastructure.
     '''
 
     # 
@@ -41,9 +41,9 @@ class launchpad(base.FNNDSC):
     # across all instances of this class
     #
     _dictErr = {
-        'notClusterNode'    : {
-            'action'        : 'examining host environment, ',
-            'error'         : 'it seems that I\'m not on a cluster node.',
+        'noClusterSpec'     : {
+            'action'        : 'checking command line args, ',
+            'error'         : 'it seems that an invalid cluster destination was specified.',
             'exitCode'      : 10},
         'noFreeSurferEnv'   : {
             'action'        : 'examining environment, ',
@@ -81,12 +81,6 @@ class launchpad(base.FNNDSC):
         
         '''
 
-        # First, this script should only be run on cluster nodes.
-        lst_clusterNodes = ['launchpad']
-        str_hostname    = socket.gethostname()
-        #if str_hostname not in lst_clusterNodes:
-            #error.fatal(self, 'notClusterNode', 'Current hostname = %s' % str_hostname)
-
         # Set the stages
         self._pipeline.stages_canRun(False)
         lst_stages = list(self._stageslist)
@@ -106,24 +100,42 @@ def synopsis(ab_shortOnly = False):
     shortSynopsis =  '''
     SYNOPSIS
 
-            %s                                            \\
-                            [--cmd <command>]             \\
+            %s                                                  \\
+                            [--cmd <command>]                   \\
+                            [--jobs <numJobs>]                  \\
+                            [--cluster <cluster>]               \\
                             [-v|--verbosity <verboseLevel>] 
     ''' % scriptName
   
     description =  '''
     DESCRIPTION
 
-        `%s' is an extremely simple testing shell used to drive 'crun' on the
-        NMR 'launchpad' cluster.
+        `%s' is an extremely simple testing script that shows how to
+        run passed command line processes on remote clusters.
 
     ARGS
 
         --cmd <command>
         The command to test. Use quotes "" to group arguments with command.
 
+        --jobs <numJobs>
+        The number of jobs to run on <cluster>.
+
+        --cluster <cluster>
+        The target cluster to schedule jobs on. Should be one of: 'PICES',
+        'launchpad', or 'erisone'.
+
     EXAMPLES
 
+        o hpc_test.py --cmd "sleep 50" --jobs 20 --cluster PICES
+
+            Run the "sleep 50" command in 20 jobs on the PICES cluster.
+
+        o hpc_test.py --cmd "sleep 50" --jobs 20 --cluster launchpad
+        o hpc_test.py --cmd "sleep 50" --jobs 20 --cluster erisone
+
+            Same as above, but target the 'launchpad' and 'erisone' cluster
+            respectively.
 
     ''' % (scriptName)
     if ab_shortOnly:
@@ -168,16 +180,20 @@ def f_blockOnScheduledJobs(**kwargs):
         if key == 'timepoll':           timepoll                = val
     str_blockMsg    = '''\n
     Postconditions are still running: multiple '%s' instances
-    detected in cluster scheduler. Blocking until all scheduled jobs are
+    detected in cluster %s (%s). Blocking until all scheduled jobs are
     completed. Block interval = %s seconds.
-    \n''' % (str_blockProcess, timepoll)
+    \n''' % (str_blockProcess,
+             stage.shell().clusterName(),
+             stage.shell().clusterType(),
+             timepoll)
     str_loopMsg     = 'Waiting for scheduled jobs to complete... ' +\
                       '(hit <ctrl>-c to kill this script).    '
 
-    stage.kwBlockOnScheduler(   loopMsg     = str_loopMsg,
-                                blockMsg    = str_blockMsg,
-                                blockUntil  = str_blockUntil,
-                                timeout     = timepoll)
+    stage.kwBlockOnScheduler(   loopMsg         = str_loopMsg,
+                                blockMsg        = str_blockMsg,
+                                blockUntil      = str_blockUntil,
+                                blockProcess    = str_blockProcess,
+                                timeout         = timepoll)
     return True
         
 #
@@ -210,22 +226,30 @@ if __name__ == "__main__":
                         action='store',
                         default='10',
                         help='number of instances of <cmd> to schedule')
+    parser.add_argument('--cluster', '-l',
+                        dest='cluster',
+                        action='store',
+                        default='10',
+                        help='destination cluster to schedule jobs on')
     args = parser.parse_args()
 
+    
+    # A "localhost" shell that this script can use to run shell commands on.
     OSshell = crun.crun()
     OSshell.echo(False)
     OSshell.echoStdOut(False)
     OSshell.detach(False)
 
-    tp = launchpad(
+
+    hpc = CLUSTER(
                         jobs            = args.jobs,
-                        logTo           = 'tptest.log',
+                        logTo           = 'hpctest.log',
                         syslog          = True,
                         logTee          = True
                         )
 
-    tp.verbosity(args.verbosity)
-    pipeline    = tp.pipeline()
+    hpc.verbosity(args.verbosity)
+    pipeline    = hpc.pipeline()
     pipeline.poststdout(True)
     pipeline.poststderr(True)
 
@@ -233,7 +257,7 @@ if __name__ == "__main__":
                         name            = 'scheduler',
                         fatalConditions = True,
                         syslog          = True,
-                        logTo           = 'tptest-schedule.log',
+                        logTo           = 'hpctest-schedule.log',
                         logTee          = True,
                         )
     def f_stage0callback(**kwargs):
@@ -246,9 +270,21 @@ if __name__ == "__main__":
             log = stage.log()
             log('Processing job: %d...\n' % job)
             str_cmd = args.cmd
-            print str_cmd
-            #stage.shell(crun.crun_launchpad(remoteUser="rudolph", remoteHost="launchpad"))
-            stage.shell(crun.crun_lsf(remoteUser="rp937", remoteHost="erisone.partners.org"))
+            for case in misc.switch(args.cluster):
+                if case('PICES'):
+                    stage.shell(crun.crun_mosix(remoteUser="rudolphpienaar",
+                                                remoteHost="rc-drno.tch.harvard.edu"))
+                    break
+                if case('launchpad'):
+                    stage.shell(crun.crun_launchpad(remoteUser="rudolph",
+                                                    remoteHost="pretoria:7774"))
+                    break
+                if case('erisone'):
+                    stage.shell(crun.crun_lsf(  remoteUser="rp937",
+                                                remoteHost="pretoria:7773"))
+                    break
+                if case():
+                    error.fatal(hpc, 'noClusterSpec')
             shell = stage.shell()
             shell.emailWhenDone(True)
             shell.echo(False)
@@ -256,18 +292,18 @@ if __name__ == "__main__":
             shell.detach(False)
             shell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
             if shell.exitCode():
-                error.fatal(tp, 'stageExec', shell.stderr())
+                error.fatal(hpc, 'stageExec', shell.stderr())
         os.chdir(pipeline.startDir())
         return True
 
-    stage0.def_stage(f_stage0callback, jobs=args.jobs, obj=stage0, pipe=tp)
+    stage0.def_stage(f_stage0callback, jobs=args.jobs, obj=stage0, pipe=hpc)
     stage0.def_postconditions(f_blockOnScheduledJobs, obj=stage0,
-                              blockProcess    = '<scheduler>')
+                              blockProcess    = 'job')
 
-    tplog = tp.log()
-    tplog('INIT: (%s) %s %s\n' % (os.getcwd(), scriptName, ' '.join(sys.argv[1:])))
-    tp.stage_add(stage0)
-    tp.initialize()
+    hpclog = hpc.log()
+    hpclog('INIT: (%s) %s %s\n' % (os.getcwd(), scriptName, ' '.join(sys.argv[1:])))
+    hpc.stage_add(stage0)
+    hpc.initialize()
 
-    tp.run()
+    hpc.run()
   
