@@ -642,14 +642,14 @@ class Stage:
             if key == 'loopMsg':        astr_loopMsg            = val
             if key == 'timeout':        atimeout                = val
             if key == 'blockUntil':     ablockUntil             = val
-        (str_running, str_scheduled, str_completed) = self.shell().queueInfo()    
+        (str_running, str_scheduled, str_completed) = self.shell().queueInfo(blockProcess=astr_blockMsg)    
         astr_allJobsDoneCount           = ablockUntil
         blockLoop       = 1
         if str_running != astr_allJobsDoneCount:
             self._log(Colors.CYAN + astr_blockMsg + Colors.NO_COLOUR)
             while 1:
                 time.sleep(atimeout)
-                str_running, str_scheduled, str_completed = self.shell().queueInfo()    
+                str_running, str_scheduled, str_completed = self.shell().queueInfo(blockProcess=astr_blockMsg)    
                 if str_running == astr_allJobsDoneCount:
                     self._log('\n', syslog=False)
                     break
