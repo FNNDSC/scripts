@@ -287,9 +287,9 @@ if __name__ == "__main__":
                     error.fatal(hpc, 'noClusterSpec')
             shell = stage.shell()
             shell.emailWhenDone(True)
-            shell.echo(False)
-            shell.echoStdOut(False)
-            shell.detach(False)
+            shell.echo(True)
+            shell.echoStdOut(True)
+            shell.detach(True)
             shell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
             if shell.exitCode():
                 error.fatal(hpc, 'stageExec', shell.stderr())
