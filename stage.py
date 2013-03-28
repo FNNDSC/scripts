@@ -642,14 +642,21 @@ class Stage:
             if key == 'loopMsg':        astr_loopMsg            = val
             if key == 'timeout':        atimeout                = val
             if key == 'blockUntil':     ablockUntil             = val
-        (str_running, str_scheduled, str_completed) = self.shell().queueInfo(blockProcess=astr_blockMsg)    
+
+        # Wait a few seconds before checking on scheduled/running etc
+        # to allow any network and "ramp up" transients to reach
+        # steady state.
+        time.sleep(5)
+        (str_running, str_scheduled, str_completed) = \
+            self.shell().queueInfo(blockProcess=astr_blockProcess)    
         astr_allJobsDoneCount           = ablockUntil
         blockLoop       = 1
-        if str_running != astr_allJobsDoneCount:
+        if str_scheduled != astr_allJobsDoneCount:
             self._log(Colors.CYAN + astr_blockMsg + Colors.NO_COLOUR)
             while 1:
                 time.sleep(atimeout)
-                str_running, str_scheduled, str_completed = self.shell().queueInfo(blockProcess=astr_blockMsg)    
+                str_running, str_scheduled, str_completed = \
+                    self.shell().queueInfo(blockProcess=astr_blockProcess)    
                 if str_running == astr_allJobsDoneCount:
                     self._log('\n', syslog=False)
                     break
