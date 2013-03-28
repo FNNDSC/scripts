@@ -113,6 +113,17 @@ def synopsis(ab_shortOnly = False):
         `%s' is an extremely simple testing script that shows how to
         run passed command line processes on remote clusters.
 
+        The script is able to remotely login and schedule jobs on several
+        cluster types:
+
+            1. The FNNDSC PICES (MOSIX) cluster.
+            2. The MGH NMR launchpad (torque-based) cluster.
+            3. The Partners erisone (LSF) cluster.
+
+        The ability to remotely login assumes that the user running this
+        script has setup password-less ssh access to each headnode of each
+        of these accessible clusters.
+
     ARGS
 
         --cmd <command>
@@ -188,7 +199,6 @@ def f_blockOnScheduledJobs(**kwargs):
              timepoll)
     str_loopMsg     = 'Waiting for scheduled jobs to complete... ' +\
                       '(hit <ctrl>-c to kill this script).    '
-
     stage.kwBlockOnScheduler(   loopMsg         = str_loopMsg,
                                 blockMsg        = str_blockMsg,
                                 blockUntil      = str_blockUntil,
@@ -270,27 +280,41 @@ if __name__ == "__main__":
             log = stage.log()
             log('Processing job: %d...\n' % job)
             str_cmd = args.cmd
+            b_jobDetach         = True
+            b_disassocaite      = False
+            b_waitForChild      = True
             for case in misc.switch(args.cluster):
                 if case('PICES'):
                     stage.shell(crun.crun_mosix(remoteUser="rudolphpienaar",
                                                 remoteHost="rc-drno.tch.harvard.edu"))
+                    stage.shell().emailUser('rudolph.pienaar@childrens.harvard.edu')
+                    b_jobDetach         = True
+                    b_disassocaite      = True
+                    b_waitForChild      = False                    
                     break
                 if case('launchpad'):
                     stage.shell(crun.crun_launchpad(remoteUser="rudolph",
                                                     remoteHost="pretoria:7774"))
+                    b_jobDetach         = False
+                    b_disassocaite      = False
+                    b_waitForChild      = True
                     break
                 if case('erisone'):
                     stage.shell(crun.crun_lsf(  remoteUser="rp937",
                                                 remoteHost="pretoria:7773"))
+                    b_jobDetach         = False
+                    b_disassocaite      = False
+                    b_waitForChild      = True
                     break
                 if case():
                     error.fatal(hpc, 'noClusterSpec')
             shell = stage.shell()
             shell.emailWhenDone(True)
-            shell.echo(True)
-            shell.echoStdOut(True)
-            shell.detach(True)
-            shell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
+            shell.echo(False)
+            shell.echoStdOut(False)
+            shell.detach(b_jobDetach)
+            shell.disassociate(b_disassocaite)
+            shell(str_cmd, waitForChild=b_waitForChild, stdoutflush=True, stderrflush=True)
             if shell.exitCode():
                 error.fatal(hpc, 'stageExec', shell.stderr())
         os.chdir(pipeline.startDir())
@@ -298,7 +322,7 @@ if __name__ == "__main__":
 
     stage0.def_stage(f_stage0callback, jobs=args.jobs, obj=stage0, pipe=hpc)
     stage0.def_postconditions(f_blockOnScheduledJobs, obj=stage0,
-                              blockProcess    = 'job')
+                              blockProcess    = 'sleep')
 
     hpclog = hpc.log()
     hpclog('INIT: (%s) %s %s\n' % (os.getcwd(), scriptName, ' '.join(sys.argv[1:])))
