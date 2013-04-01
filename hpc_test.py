@@ -239,7 +239,7 @@ if __name__ == "__main__":
     parser.add_argument('--cluster', '-l',
                         dest='cluster',
                         action='store',
-                        default='10',
+                        default='PICES',
                         help='destination cluster to schedule jobs on')
     args = parser.parse_args()
 
