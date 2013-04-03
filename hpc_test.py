@@ -285,23 +285,26 @@ if __name__ == "__main__":
             b_waitForChild      = True
             for case in misc.switch(args.cluster):
                 if case('PICES'):
-                    stage.shell(crun.crun_mosix(remoteUser="rudolphpienaar",
-                                                remoteHost="rc-drno.tch.harvard.edu"))
+                    stage.shell(crun.crun_hpc_mosix(
+                                    remoteUser="rudolphpienaar",
+                                    remoteHost="rc-drno.tch.harvard.edu"))
                     stage.shell().emailUser('rudolph.pienaar@childrens.harvard.edu')
                     b_jobDetach         = True
                     b_disassocaite      = True
                     b_waitForChild      = False                    
                     break
                 if case('launchpad'):
-                    stage.shell(crun.crun_launchpad(remoteUser="rudolph",
-                                                    remoteHost="pretoria:7774"))
+                    stage.shell(crun.crun_hpc_launchpad(
+                                    remoteUser="rudolph",
+                                    remoteHost="pretoria:7774"))
                     b_jobDetach         = False
                     b_disassocaite      = False
                     b_waitForChild      = True
                     break
                 if case('erisone'):
-                    stage.shell(crun.crun_lsf(  remoteUser="rp937",
-                                                remoteHost="pretoria:7773"))
+                    stage.shell(crun.crun_hpc_lsf(
+                                    remoteUser="rp937",
+                                    remoteHost="pretoria:7773"))
                     b_jobDetach         = False
                     b_disassocaite      = False
                     b_waitForChild      = True
