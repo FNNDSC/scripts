@@ -89,7 +89,11 @@ class FNNDSC_HBWM(base.FNNDSC):
         'Load'              : {
             'action'        : 'attempting to pickle load object, ',
             'error'         : 'a PickleError occured.',
-            'exitCode'      : 20}
+            'exitCode'      : 20},
+        'noClusterSpec'     : {
+            'action'        : 'checking command line args, ',
+            'error'         : 'it seems that an invalid cluster destination was specified.',
+            'exitCode'      : 100}
     }
 
 
@@ -117,12 +121,33 @@ class FNNDSC_HBWM(base.FNNDSC):
     def curv(self):
         return self._str_curv
                 
-    def subjDir(self):
-        return "%s/%s" % (self._str_workingDir, self._str_subj)
+    def subjDir(self, *args):
+        if len(args):
+            self._str_subjDir = args[0]
+        else:
+            return self._str_subjDir
         
     def analysisDir(self):
         return "%s/%s/%s/%s/%s" % \
             (self.subjDir(), _str_HBWMdir, self._str_hemi, self._str_surface, self._str_curv)
+
+    def dir2uniformSpace(self, astr_dirSpec):
+        '''
+        This method maps the passed <astr_dirSpec> to the
+        self._str_baseProjectsDir in such a manner that the 
+        directory specifier is completely uniform across different
+        network spaces.
+
+        Basically this means that a <subjDir> in the FNNDSC is mapped
+        correctly to the same directory from the NMR center (and/or the
+        Partners cluster).
+        '''
+        OSshell('whoami')
+        str_whoami      = OSshell.stdout().strip()
+        self._str_baseProjectsDir = os.path.expanduser(self._str_baseProjectsDir)
+        l_dir = astr_dirSpec.split(str_whoami)
+        str_dir = l_dir[1]
+        return self._str_baseProjectsDir + "/" + str_whoami + str_dir
 
     def surfDir(self):
         return "%s/surf" % (self.subjDir())
@@ -130,6 +155,11 @@ class FNNDSC_HBWM(base.FNNDSC):
     def startDir(self):
         return self._str_workingDir
 
+    def pid(self):
+        return self._str_pid
+
+    def hostname(self):
+        return self._str_hostname
         
     def __init__(self, **kwargs):
         '''
@@ -141,6 +171,11 @@ class FNNDSC_HBWM(base.FNNDSC):
 
         self._lw                        = 60
         self._rw                        = 20
+
+        self._str_pid                   = os.getpid()
+        self._str_hostname              = os.uname()[1]
+
+        self._str_baseProjectsDir       = '~/chb-projects'
         
         self._str_subjectDir            = ''
         self._stageslist                = '12'
@@ -190,8 +225,6 @@ class FNNDSC_HBWM(base.FNNDSC):
         '''
 
         # First, this script should only be run on cluster nodes.
-        lst_clusterNodes = ['rc-drno', 'rc-russia', 'rc-thunderball',
-                            'rc-goldfinger', 'rc-twice']
         str_hostname    = socket.gethostname()
         #if str_hostname not in lst_clusterNodes:
             #error.fatal(self, 'notClusterNode', 'Current hostname = %s' % str_hostname)
@@ -204,10 +237,10 @@ class FNNDSC_HBWM(base.FNNDSC):
             stage.canRun(True)
 
         # Check for FS env variable
-        self._log('Checking on FREESURFER_HOME', debug=9, lw=self._lw)
-        if not os.environ.get('FREESURFER_HOME'):
-            error.fatal(self, 'noFreeSurferEnv')
-        self._log('[ ok ]\n', debug=9, rw=self._rw, syslog=False)
+        #self._log('Checking on FREESURFER_HOME', debug=9, lw=self._lw)
+        #if not os.environ.get('FREESURFER_HOME'):
+            #error.fatal(self, 'noFreeSurferEnv')
+        #self._log('[ ok ]\n', debug=9, rw=self._rw, syslog=False)
             
         for str_subj in self._l_subject:
             self._log('Checking on subjectDir <%s>' % str_subj,
@@ -218,7 +251,6 @@ class FNNDSC_HBWM(base.FNNDSC):
                 self._log('[ not found ]\n', debug=9, rw=self._rw,
                             syslog=False)
                 error.fatal(self, 'subjectDirnotExist')
-
                 
     def run(self):
         '''
@@ -226,7 +258,56 @@ class FNNDSC_HBWM(base.FNNDSC):
 
         '''
         base.FNNDSC.run(self)
-            
+
+
+    def stageShell_createRemoteInstance(self, astr_remoteHPC, **kwargs):
+        '''
+        Returns a crun object in the passed stage object that 
+        functions as a shell on the remote HPC.
+        '''
+        for key, val in kwargs.iteritems():
+            if key == 'stage':          stage   = val
+        for case in misc.switch(astr_remoteHPC):
+            if case('PICES'):
+                stage.shell(crun.crun_hpc_mosix(
+                        remoteUser="rudolphpienaar",
+                        remoteHost="rc-drno.tch.harvard.edu")
+                        )
+                stage.shell().emailUser('rudolph.pienaar@childrens.harvard.edu')
+                b_jobDetach         = True
+                b_disassocaite      = True
+                b_waitForChild      = False
+                break
+            if case('launchpad'):
+                stage.shell(crun.crun_hpc_launchpad(
+                        remoteUser="rudolph",
+                        remoteHost="pretoria:7774")
+                        )
+                b_jobDetach         = False
+                b_disassocaite      = False
+                b_waitForChild      = True
+                break
+            if case('erisone'):
+                stage.shell(crun.crun_hpc_lsf(
+                        remoteUser="rp937",
+                        remoteHost="pretoria:7773")
+                        )
+                stage.shell().scheduleHostOnly(
+                "cmu058 cmu059 cmu061 cmu066 cmu067 cmu071 cmu073 cmu075 cmu077 cmu079 cmu081 cmu087 cmu090 cmu093 cmu094 cmu095 cmu096 cmu102 cmu106 cmu107 cmu108 cmu109 cmu111 cmu112 cmu114 cmu121 cmu123 cmu126 cmu149 cmu154 cmu156 cmu157 "
+                )
+                b_jobDetach         = False
+                b_disassocaite      = False
+                b_waitForChild      = True
+                break
+            if case():
+                error.fatal(self, 'noClusterSpec')
+        shell = stage.shell()
+        shell.emailWhenDone(True)
+        shell.echo(True)
+        shell.echoStdOut(True)
+        shell.detach(b_jobDetach)
+        shell.disassociate(b_disassocaite)
+        shell.waitForChild(b_waitForChild)
 
 ### Non-class methods
             
@@ -433,6 +514,11 @@ if __name__ == "__main__":
                         action='store',
                         default='100',
                         help='number of partitions to split problem into')
+    parser.add_argument('--cluster', '-l',
+                        dest='cluster',
+                        action='store',
+                        default='PICES',
+                        help='destination cluster to schedule jobs on')
     args = parser.parse_args()
 
     
@@ -471,9 +557,11 @@ if __name__ == "__main__":
     # core FreeSurfer command, each with slightly different operating
     # flags.
     # 
-    # In some ways, the stage0.def_stage(...) is vaguely reminiscent
-    # of javascript, in as much as the f_stage0callback is a 
-    # callback function.
+    # This stage is also a somewhat contrived example of remote HPC
+    # processing -- the 'mris_info' call is actually scheduled and
+    # executed on the remote HPC. This stage demonstrates how to
+    # block-on-wait in a general way across three different clustering
+    # schemes.
     #
     # PRECONDITIONS:
     # o Check that script is running on a cluster node.
@@ -496,32 +584,101 @@ if __name__ == "__main__":
         lst_hemi        = pipeline.l_hemisphere()
         lst_surface     = pipeline.l_surface()
         lst_curv        = pipeline.l_curv()
-        
+
+        # Create shell for scheduling/executing on the remote HPC
+        pipeline.stageShell_createRemoteInstance(args.cluster, stage=stage)
+
+        # This assumes that the script is started from the toplevel <subjDir>.
+        pipeline.subjDir(pipeline.dir2uniformSpace(pipeline._str_workingDir))
+
+        # Get the "scheduler shell" embedded within this stage
+        # This shell will schedule any commands passed to it on the specific
+        # HPC scheduler that has been instantiated. 
+        shell = stage.shell()
+        shell.detach(False)                 # This shell should not detach
+        shell.disassociate(False)           # nor disassociate, irrespective
+                                            # of how it was constructed 
+                                            # some HPC cruns, like MOSIX
+                                            # force disassociate.
         for pipeline._str_subj in lst_subj:
             os.chdir(pipeline.subjDir())
             misc.mkdir(_str_HBWMdir)
             for pipeline._str_hemi in lst_hemi:
                 for pipeline._str_surface in lst_surface:
-                    # find the relevant input files in each <subj> dir
                     os.chdir(pipeline.subjDir())
-#                        os.chdir(str_cwd); os.chdir(subj)
                     str_surfaceFile = '%s.%s' % (pipeline.hemi(), pipeline.surface())
                     str_surfDir = 'surf'
-                    log = stage.log()
+
+                    # This "remoteShell" is used to access the cluster node directly
+                    # and without using the scheduler. It is used to run remote
+                    # shell commands and return stdout type outputs to this parent
+                    # controller.
+                    remoteShell = crun.crun(remoteHost=shell._str_remoteHost,\
+                                            remoteUser=shell._str_remoteUser,\
+                                            remotePort=shell._str_remotePort)
+                    # Get the remote user homedir
+                    remoteShell('pwd')
+                    str_remoteHome = remoteShell.stdout().strip()
+
+                    log = stage.log()        
+                    # Set some FS components in the core HPC scheduler object
+                    shell.FreeSurferUse(True)
+                    shell.FSsubjDir(localSubjDir=pipeline.subjDir(),
+                                    remoteHome=str_remoteHome)
+                    str_jobID           = '%s-%s-%s-%s' % \
+                            (pipeline.hemi(), pipeline.surface(),
+                             pipeline.hostname(), pipeline.pid())
+                    str_shellstderr     = '%s/%s.err' % (shell.jobInfoDir(), str_jobID)
+                    str_shellstdout     = '%s/%s.out' % (shell.jobInfoDir(), str_jobID)
+                                    
+                    shell.jobID(str_jobID)
+                    shell.schedulerStdOut(str_shellstdout)
+                    shell.schedulerStdErr(str_shellstderr)
+
                     log('Processing %s: %s...\n' % (pipeline.subj(), str_surfaceFile))
                     log('Checking on number of vertices... ')
-                    str_cmd = "mris_info %s/%s 2>/dev/null | grep nvertices | awk '{print $2}'" % \
-                        (str_surfDir, str_surfaceFile)
-                    shell = crun.crun()
-                    shell.echo(False)
-                    shell.echoStdOut(False)
-                    shell.detach(False)
-                    shell(str_cmd, waitForChild=True, stdoutflush=False, stderrflush=False)
-                    if shell.exitCode():
-                        error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
-                    str_nvertices = shell.stdout().strip()
+                    #str_shellstdout     = '%s/%s-%s-%s-%s.out' % \
+                            #(shell.jobInfoDir(),
+                            #pipeline.hemi(), pipeline.surface(), pipeline.hostname(), pipeline.pid())
+                    #str_cmd = "mris_info %s/%s/%s 2>/dev/null | grep nvertices > %s" % \
+                        #(pipeline.subj(), str_surfDir, str_surfaceFile, str_shellstdout)
+                    str_cmd = "mris_info %s/%s/%s " % \
+                        (pipeline.subj(), str_surfDir, str_surfaceFile)
+
+
+                    # And execute the remote call. Depending on the remote HPC, the
+                    # waitForChild may or may not be fully honored -- this depends
+                    # on whether the scheduler blocks-or-not when called.
+                    shell(str_cmd,
+                            waitForChild=shell.waitForChild(),
+                            stdoutflush=False, stderrflush=False)
+                    #if shell.exitCode():
+                        #error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
+
+                    # In many cluster schedulers, scheduled jobs do *not* write
+                    # to stdout, which is why the above command was redirected
+                    # to a str_shellstdout file. In other cases (such as the 
+                    # erisone LSF), output redirection is not supported and 
+                    # requires additional, cluster-specific, scheduler options.
+                    # 
+                    # Irrespective of the mechanism, output needs to be
+                    # captured in a file and we need to block on the creation 
+                    # (and non-zero) size of this file and then parse it. The
+                    # blocking is required since since some schedulers are fire
+                    # and forget -- once sent to the scheduler, this controller
+                    # loses in many cases the direct ability to know when the 
+                    # job is complete.
+                    remoteShell('while [ ! -f %s ] ; do : ; done' % str_shellstdout)
+                    remoteShell('while [ ! -s %s ] ; do : ; done' % str_shellstdout)
+                    remoteShell('cat %s | grep nvertices' % str_shellstdout)
+                    l_nvertices = remoteShell.stdout().strip().split()
+                    remoteShell('rm -f %s %s' % (str_shellstdout, str_shellstderr))
+                    str_nvertices = l_nvertices[1]
                     # Subtrack 1 from the number of vertices since indices start from 0.
                     nvertices = int(str_nvertices) - 1
+
+                    # This block removes and builds the directory tree that will contain
+                    # intermediate outputs of the distributed processing.
                     d_v = pipeline.d_vertices()
                     d_v[pipeline._str_subj][pipeline._str_hemi][pipeline._str_surface] = nvertices
                     log('[ %s ]\n' % str_nvertices, syslog=False)
@@ -582,6 +739,9 @@ if __name__ == "__main__":
         lst_hemi        = pipeline.l_hemisphere()
         lst_surface     = pipeline.l_surface()
         lst_curv        = pipeline.l_curv()
+
+        # Create the shell on the remote HPC
+        pipeline.stageShell_createRemoteInstance(args.cluster, stage=stage)
         
         for pipeline._str_subj in lst_subj:
             os.chdir(pipeline.subjDir())
