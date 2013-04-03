@@ -33,7 +33,8 @@ G_SYNOPSIS="
     DESCRIPTION
     
         'nmr-fs' is a simple script to easily source different environments 
-        for FreeSurfer, localized for the MGH Martinos NMR center.
+        for FreeSurfer, localized for the MGH Martinos NMR center as well as
+	the Partners HPC cluster.
         
         If called without any arguments, it will setup the current default
         version of FreeSurfer for this system, which has been 
@@ -118,8 +119,22 @@ echo "Host type is $HOSTTYPE-${OS}"
 export PACKAGEDIR=/usr/pubsw/packages
 export FSL_DIR=${PACKAGEDIR}/fsl/current
 export SUBJECTS_DIR=$(pwd)
+export FREESURFER=/usr/local/freesurfer
+ENV=nmr
 
-source /usr/local/freesurfer/${G_VERSION}${G_REVISION}/SetUpFreeSurfer.sh
+if (( $(hostname | grep eris | wc -l) )) ; then
+	module load gcc-4.4
+	module load java-1.6_18
+	module load python-2.6
+	module load fftw-3.2.2
+	module load freesurfer-5.1.0
+	export FREESURFER=~/arch/x86_64-Linux/packages/freesurfer
+	echo $FREESURFER
+	ENV=erisone
+	FSL_DIR=/source/fsl-4.1.9/Install/fsl
+fi
+echo $FREESURFER
+source ${FREESURFER}/${G_VERSION}${G_REVISION}/SetUpFreeSurfer.sh
 source ${FSL_DIR}/etc/fslconf/fsl.sh
 unset TCLLIBPATH
 unset TCL_LIBRARY
@@ -127,7 +142,7 @@ unset TK_LIBRARY
 unset TIX_LIBRARY
 
 OS=$(uname -a | awk '{print $1}')
-export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-nmr-fs-${G_VERSION}${G_REVISION}]"
+export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-${ENV}-fs-${G_VERSION}${G_REVISION}]"
 
 export PATH=$PATH:${PACKAGEDIR}/mricro:${PACKAGEDIR}/dtk
 
