@@ -95,6 +95,56 @@ class CLUSTER(base.FNNDSC):
         '''
         base.FNNDSC.run(self)
             
+    def stageShell_createRemoteInstance(self, astr_remoteHPC, **kwargs):
+        '''
+        Returns a crun object in the passed stage object that
+        functions as a shell on the remote HPC.
+        '''
+        for key, val in kwargs.iteritems():
+            if key == 'stage':          stage   = val
+        for case in misc.switch(astr_remoteHPC):
+            if case('PICES'):
+                stage.shell(crun.crun_hpc_mosix(
+                        remoteUser="rudolphpienaar",
+                        remoteHost="rc-drno.tch.harvard.edu")
+                        )
+                stage.shell().emailUser('rudolph.pienaar@childrens.harvard.edu')
+                b_jobDetach         = True
+                b_disassocaite      = True
+                b_waitForChild      = False
+                break
+            if case('launchpad'):
+                stage.shell(crun.crun_hpc_launchpad(
+                        remoteUser="rudolph",
+                        remoteHost="pretoria:7774")
+                        )
+                b_jobDetach         = False
+                b_disassocaite      = False
+                b_waitForChild      = True
+                break
+            if case('erisone'):
+                stage.shell(crun.crun_hpc_lsf(
+                        remoteUser="rp937",
+                        remoteHost="pretoria:7773")
+                        )
+                stage.shell().scheduleHostOnly(
+                "cmu058 cmu059 cmu061 cmu066 cmu067 cmu071 cmu073 cmu075 cmu077 cmu079 cmu081 cmu087 cmu090 cmu093 cmu094 cmu095 cmu096 cmu102 cmu106 cmu107 cmu108 cmu109 cmu111 cmu112 cmu114 cmu121 cmu123 cmu126 cmu149 cmu154 cmu156 cmu157 "
+                )
+                b_jobDetach         = False
+                b_disassocaite      = False
+                b_waitForChild      = True
+                break
+            if case():
+                error.fatal(self, 'noClusterSpec')
+        shell = stage.shell()
+        shell.emailWhenDone(True)
+        shell.echo(False)
+        shell.echoStdOut(False)
+        shell.detach(b_jobDetach)
+        shell.disassociate(b_disassocaite)
+        shell.waitForChild(b_waitForChild)
+
+
             
 def synopsis(ab_shortOnly = False):
     shortSynopsis =  '''
@@ -275,49 +325,19 @@ if __name__ == "__main__":
             if key == 'jobs':   jobs            = val
             if key == 'obj':    stage           = val
             if key == 'pipe':   pipeline        = val
+
+        # Create shell for scheduling/executing on the remote HPC
+        pipeline.stageShell_createRemoteInstance(args.cluster, stage=stage)
             
         for job in range(0, int(args.jobs)):
             log = stage.log()
             log('Processing job: %d...\n' % job)
             str_cmd = args.cmd
-            b_jobDetach         = True
-            b_disassocaite      = False
-            b_waitForChild      = True
-            for case in misc.switch(args.cluster):
-                if case('PICES'):
-                    stage.shell(crun.crun_hpc_mosix(
-                                    remoteUser="rudolphpienaar",
-                                    remoteHost="rc-drno.tch.harvard.edu"))
-                    stage.shell().emailUser('rudolph.pienaar@childrens.harvard.edu')
-                    b_jobDetach         = True
-                    b_disassocaite      = True
-                    b_waitForChild      = False                    
-                    break
-                if case('launchpad'):
-                    stage.shell(crun.crun_hpc_launchpad(
-                                    remoteUser="rudolph",
-                                    remoteHost="pretoria:7774"))
-                    b_jobDetach         = False
-                    b_disassocaite      = False
-                    b_waitForChild      = True
-                    break
-                if case('erisone'):
-                    stage.shell(crun.crun_hpc_lsf(
-                                    remoteUser="rp937",
-                                    remoteHost="pretoria:7773"))
-                    b_jobDetach         = False
-                    b_disassocaite      = False
-                    b_waitForChild      = True
-                    break
-                if case():
-                    error.fatal(hpc, 'noClusterSpec')
             shell = stage.shell()
-            shell.emailWhenDone(True)
-            shell.echo(False)
-            shell.echoStdOut(False)
-            shell.detach(b_jobDetach)
-            shell.disassociate(b_disassocaite)
-            shell(str_cmd, waitForChild=b_waitForChild, stdoutflush=True, stderrflush=True)
+            shell(
+                str_cmd, waitForChild=shell.waitForChild(), 
+                stdoutflush=True, stderrflush=True
+            )
             if shell.exitCode():
                 error.fatal(hpc, 'stageExec', shell.stderr())
         os.chdir(pipeline.startDir())
