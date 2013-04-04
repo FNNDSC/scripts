@@ -225,8 +225,8 @@ def synopsis(ab_shortOnly = False):
             parts x hemi x surface x curv
               101 x   2  x    2    x  8     = 3232
 
-        This script will loop over each hemi and surface argument and only
-        schedule the parts x curv analysis
+        This script will loop over each subject, hemi, surface, and argument
+        scheduling sub-batches of these at a time.
 
     ARGS
 
@@ -252,16 +252,18 @@ def synopsis(ab_shortOnly = False):
         will process a sub-set of the original dataset and recombine once
         complete.
 
+        --cluster <cluster>
+        The remote cluster to schedule jobs on. Currenly suported:
+
+            * PICES
+            * launchpad
+            * erisone
+
         --stages|-s <stages>
-        The stages to execute. This is specified in a string, such as '1234'
-        which would imply stages 1, 2, 3, and 4.
+        The stages of 'hbwm.py' to execute. This is specified in a string, 
+        such as '1234' which would imply stages 1, 2, 3, and 4.
 
-
-       --stages <stages>
-       The stages to execute. This is specified in a string, such as '1234'
-       which would imply stages 1, 2, 3, and 4.
-
-       The special keyword 'all' can be used to turn on all stages.
+        The special keyword 'all' can be used to turn on all stages.
 
 
     EXAMPLES
@@ -384,6 +386,11 @@ if __name__ == "__main__":
                         action='store',
                         default='100',
                         help='number of partitions to split problem into')
+    parser.add_argument('--cluster', '-l',
+                        dest='cluster',
+                        action='store',
+                        default='PICES',
+                        help='destination cluster to schedule jobs on')
     args = parser.parse_args()
 
     OSshell = crun.crun()
@@ -393,7 +400,6 @@ if __name__ == "__main__":
 
     hbwm = FNNDSC_HBWMmeta(
                         subjectList     = args.l_subj,
-                        stages          = args.stages,
                         hemiList        = args.hemi,
                         surfaceList     = args.surface,
                         curvList        = args.curv,
@@ -438,10 +444,10 @@ if __name__ == "__main__":
                         if len(args.host):
                             str_hostOnlySpec = "--host %s " % args.host
                             log('Locking jobs to only run on host -->%s<--\n' % args.host)
-                        str_cmd = "hbwm.py -v 10 -s 0123 %s -r -m %s -f %s -c %s -p %s %s" % \
-                            (str_hostOnlySpec,
+                        str_cmd = "hbwm.py -v 10 -s %s %s -r -m %s -f %s -c %s -p %s --cluster %s %s" % \
+                            (args.stages, str_hostOnlySpec,
                             pipeline.hemi(), pipeline.surface(), pipeline.curv(), args.partitions,
-                            pipeline.subj())
+                            args.cluster, pipeline.subj())
                         print str_cmd
                         shell = crun.crun()
                         shell.echo(False)
