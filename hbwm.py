@@ -93,7 +93,11 @@ class FNNDSC_HBWM(base.FNNDSC):
         'noClusterSpec'     : {
             'action'        : 'checking command line args, ',
             'error'         : 'it seems that an invalid cluster destination was specified.',
-            'exitCode'      : 100}
+            'exitCode'      : 100},
+        'remoteTimeOut'     : {
+            'action'        : 'waiting on the results of a remote command, ',
+            'error'         : 'it seems that the command is taking too long!',
+            'exitCode'      : 110}
     }
 
 
@@ -259,6 +263,32 @@ class FNNDSC_HBWM(base.FNNDSC):
         '''
         base.FNNDSC.run(self)
 
+    def waitForRemoteFile(self, **kwargs):
+        '''
+        An alterative "blocking" function that does not consult
+        the remote HPC cluster, but checks on the appearance of
+        a file on the remote filesystem.
+
+        This assumes, of course, that the operation we're waiting
+        on creates the target output file as final result.
+        '''
+        intervalSecs        = 5
+        timeOutTotal        = 60
+        totalTime           = 0
+        for key,val in kwargs.iteritems():
+            if key == 'shell':          remoteShell             = val
+            if key == 'fileToWatch':    str_fileToWatch         = val
+            if key == 'intervalSec':    intervalSecs            = val
+            if key == 'timeOutTotal':   timeOutTotal            = val
+
+        while totalTime < timeOutTotal:
+            remoteShell('if [[ -s %s ]] ; then echo "1" ; else echo "0"; fi' % str_fileToWatch)
+            #print("Checking for %s... result: %s" % (str_fileToWatch, remoteShell.stdout().strip()))
+            if remoteShell.stdout().strip() == "1": break
+            time.sleep(intervalSecs)
+            totalTime += intervalSecs
+        if totalTime >= timeOutTotal:
+            error.fatal(self, 'remoteTimeOut')
 
     def stageShell_createRemoteInstance(self, astr_remoteHPC, **kwargs):
         '''
@@ -303,8 +333,8 @@ class FNNDSC_HBWM(base.FNNDSC):
                 error.fatal(self, 'noClusterSpec')
         shell = stage.shell()
         shell.emailWhenDone(True)
-        shell.echo(True)
-        shell.echoStdOut(True)
+        shell.echo(False)
+        shell.echoStdOut(False)
         shell.detach(b_jobDetach)
         shell.disassociate(b_disassocaite)
         shell.waitForChild(b_waitForChild)
@@ -323,6 +353,7 @@ def synopsis(ab_shortOnly = False):
                             [--hemi|-h <hemisphere>]            \\
                             [--surface|-f <surface>]            \\
                             [--curv|-c <curvType>               \\
+                            [--cluster|-l <cluster>]            \\
                             [--partitions|-p <numberOfSurfacePartitions>] \\
                             <Subj1> <Subj2> ... <SubjN>
     ''' % scriptName
@@ -358,6 +389,13 @@ def synopsis(ab_shortOnly = False):
         The number of spawned parallel instances of 'mris_pmake' -- each
         will process a sub-set of the original dataset and recombine once
         complete.
+
+        --cluster <cluster>
+        The remote cluster to schedule jobs on. Currenly suported:
+
+            * PICES
+            * launchpad
+            * erisone
       
         --stages|-s <stages>
         The stages to execute. This is specified in a string, such as '1234'
@@ -401,7 +439,6 @@ def synopsis(ab_shortOnly = False):
         return shortSynopsis
     else:
         return shortSynopsis + description
-
 
 def f_blockOnScheduledJobs(**kwargs):
     '''
@@ -584,6 +621,7 @@ if __name__ == "__main__":
         lst_hemi        = pipeline.l_hemisphere()
         lst_surface     = pipeline.l_surface()
         lst_curv        = pipeline.l_curv()
+        log             = stage.log()
 
         # Create shell for scheduling/executing on the remote HPC
         pipeline.stageShell_createRemoteInstance(args.cluster, stage=stage)
@@ -595,6 +633,10 @@ if __name__ == "__main__":
         # This shell will schedule any commands passed to it on the specific
         # HPC scheduler that has been instantiated. 
         shell = stage.shell()
+        if len(args.host):
+            str_hostOnlySpec = "--host %s " % args.host
+            log('Locking jobs to only run on host -->%s<--\n' % args.host)
+            shell.scheduleHostOnly(args.host)
         shell.detach(False)                 # This shell should not detach
         shell.disassociate(False)           # nor disassociate, irrespective
                                             # of how it was constructed 
@@ -620,7 +662,6 @@ if __name__ == "__main__":
                     remoteShell('pwd')
                     str_remoteHome = remoteShell.stdout().strip()
 
-                    log = stage.log()        
                     # Set some FS components in the core HPC scheduler object
                     shell.FreeSurferUse(True)
                     shell.FSsubjDir(localSubjDir=pipeline.subjDir(),
@@ -637,13 +678,9 @@ if __name__ == "__main__":
 
                     log('Processing %s: %s...\n' % (pipeline.subj(), str_surfaceFile))
                     log('Checking on number of vertices... ')
-                    #str_shellstdout     = '%s/%s-%s-%s-%s.out' % \
-                            #(shell.jobInfoDir(),
-                            #pipeline.hemi(), pipeline.surface(), pipeline.hostname(), pipeline.pid())
-                    #str_cmd = "mris_info %s/%s/%s 2>/dev/null | grep nvertices > %s" % \
-                        #(pipeline.subj(), str_surfDir, str_surfaceFile, str_shellstdout)
-                    str_cmd = "mris_info %s/%s/%s " % \
-                        (pipeline.subj(), str_surfDir, str_surfaceFile)
+
+                    str_cmd = " mris_info %s/%s/%s/%s " % \
+                        (shell.FSsubjDir(), pipeline.subj(), str_surfDir, str_surfaceFile)
 
 
                     # And execute the remote call. Depending on the remote HPC, the
@@ -668,8 +705,29 @@ if __name__ == "__main__":
                     # and forget -- once sent to the scheduler, this controller
                     # loses in many cases the direct ability to know when the 
                     # job is complete.
-                    remoteShell('while [ ! -f %s ] ; do : ; done' % str_shellstdout)
-                    remoteShell('while [ ! -s %s ] ; do : ; done' % str_shellstdout)
+                    # 
+                    # Note that the *correct* approach is to use the 
+                    # f_blockOnScheduledJobs() function that will query the
+                    # scheduler and block until jobs are complete. The
+                    # following is per illustration only.
+                    # 
+                    # Here, we shell into the remote filesystem and check for the
+                    # existence of the str_shellstdout file. The looping/blocking
+                    # is done in this controller, not remotely. A remote block 
+                    # such as
+                    # 
+                    #   remoteShell('while [ ! -f %s ] ; do : ; done' % str_shellstdout)
+                    #   
+                    # runs the risk of becoming orphaned on the remote processor
+                    # and sucking up CPU cycles.
+                    #
+                    pipeline.waitForRemoteFile(
+                                        shell           = remoteShell,
+                                        fileToWatch     = str_shellstdout,
+                                        interval        = 5,
+                                        timeOutTotal    = 70
+                                        )
+                                       
                     remoteShell('cat %s | grep nvertices' % str_shellstdout)
                     l_nvertices = remoteShell.stdout().strip().split()
                     remoteShell('rm -f %s %s' % (str_shellstdout, str_shellstderr))
