@@ -127,11 +127,11 @@ if (( $(hostname | grep eris | wc -l) )) ; then
 	module load java-1.6_18
 	module load python-2.6
 	module load fftw-3.2.2
-	module load freesurfer-5.1.0
+	#module load freesurfer/freesurfer_5.2
 	export FREESURFER=~/arch/x86_64-Linux/packages/freesurfer
 	echo $FREESURFER
 	ENV=erisone
-	FSL_DIR=/source/fsl-4.1.9/Install/fsl
+	export FSL_DIR=/source/fsl-4.1.9/Install/fsl
 fi
 echo $FREESURFER
 source ${FREESURFER}/${G_VERSION}${G_REVISION}/SetUpFreeSurfer.sh
