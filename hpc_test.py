@@ -138,8 +138,12 @@ class CLUSTER(base.FNNDSC):
                 error.fatal(self, 'noClusterSpec')
         shell = stage.shell()
         shell.emailWhenDone(True)
-        shell.echo(False)
-        shell.echoStdOut(False)
+        if args.b_debug:
+            shell.echo(True)
+            shell.echoStdOut(True)
+        else:
+            shell.echo(False)
+            shell.echoStdOut(False)
         shell.detach(b_jobDetach)
         shell.disassociate(b_disassocaite)
         shell.waitForChild(b_waitForChild)
@@ -286,6 +290,11 @@ if __name__ == "__main__":
                         action='store',
                         default='10',
                         help='number of instances of <cmd> to schedule')
+    parser.add_argument('--debug', '-d',
+                        dest='b_debug',
+                        action="store_true",
+                        default=False,
+                        help='turn on debugging info')
     parser.add_argument('--cluster', '-l',
                         dest='cluster',
                         action='store',
