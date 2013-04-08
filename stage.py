@@ -647,7 +647,7 @@ class Stage:
         # to allow any network and "ramp up" transients to reach
         # steady state.
         time.sleep(5)
-        (str_running, str_scheduled, str_completed) = \
+        (str_pending, str_running, str_scheduled, str_completed) = \
             self.shell().queueInfo(blockProcess=astr_blockProcess)    
         astr_allJobsDoneCount           = ablockUntil
         blockLoop       = 1
@@ -655,15 +655,16 @@ class Stage:
             self._log(Colors.CYAN + astr_blockMsg + Colors.NO_COLOUR)
             while 1:
                 time.sleep(atimeout)
-                str_running, str_scheduled, str_completed = \
+                str_pending, str_running, str_scheduled, str_completed = \
                     self.shell().queueInfo(blockProcess=astr_blockProcess)    
-                if str_running == astr_allJobsDoneCount:
+                if str_running == astr_allJobsDoneCount and \
+                   str_pending == astr_allJobsDoneCount:
                     self._log('\n', syslog=False)
                     break
                 else:
                     str_loopMsg         = Colors.BROWN + \
-                    '(block duration = %ds; running/completed/scheduled = %s/%s/%s) '% \
-                    (blockLoop * atimeout, str_running, str_completed, str_scheduled) + \
+                    '(block duration = %ds; pending/running/completed/scheduled = %s/%s/%s/%s) '% \
+                    (blockLoop * atimeout, str_pending, str_running, str_completed, str_scheduled) + \
                     Colors.YELLOW + astr_loopMsg + Colors.NO_COLOUR
                     self._log(str_loopMsg)
                     loopMsgLen          = len(str_loopMsg)
