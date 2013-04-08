@@ -288,7 +288,7 @@ if __name__ == "__main__":
     parser.add_argument('--jobs', '-j',
                         dest='jobs',
                         action='store',
-                        default='10',
+                        default='5',
                         help='number of instances of <cmd> to schedule')
     parser.add_argument('--debug', '-d',
                         dest='b_debug',
