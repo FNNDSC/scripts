@@ -114,8 +114,29 @@ class FNNDSC_HBWM(base.FNNDSC):
         return self._d_vertices
 
     def subj(self):
+        '''
+        This is typically the actual subject name that is processed
+        in a loop.
+        '''
         return self._str_subj
-        
+
+    def subjectsDir(self, *args):
+        '''
+        This is the FreeSurfer SUBJECTS_DIR, i.e. a directory
+        containing many subjects.
+        '''
+        if len(args):
+            self._str_subjectsDir = args[0]
+        else:
+            return self._str_subjectsDir
+
+    def subjectDir(self):
+        '''
+        This is a specific subject directory, i.e. the subject
+        within the larger SUBJECTS_DIR.
+        '''
+        return "%s/%s" % (self._str_subjectsDir, self._str_subj)        
+
     def surface(self):
         return self._str_surface
 
@@ -124,37 +145,86 @@ class FNNDSC_HBWM(base.FNNDSC):
 
     def curv(self):
         return self._str_curv
-                
-    def subjDir(self, *args):
-        if len(args):
-            self._str_subjDir = args[0]
-        else:
-            return self._str_subjDir
         
     def analysisDir(self):
         return "%s/%s/%s/%s/%s" % \
-            (self.subjDir(), _str_HBWMdir, self._str_hemi, self._str_surface, self._str_curv)
+            (self.subjectDir(), 
+            _str_HBWMdir, 
+            self._str_hemi, self._str_surface, self._str_curv)
 
-    def dir2uniformSpace(self, astr_dirSpec):
+    def localDir_remap2projectDir(self, astr_localDirSpec):
         '''
-        This method maps the passed <astr_dirSpec> to the
-        self._str_baseProjectsDir in such a manner that the 
-        directory specifier is completely uniform across different
-        network spaces.
+        Remaps the <astr_localDirSpec> to a cleaner name based off the 
+        internal self._str_baseProjectsDir. This self._str_baseProjectsDir
+        is the common connection point between the local and remote (cluster)
+        file systems.
 
-        Basically this means that a <subjDir> in the FNNDSC is mapped
-        correctly to the same directory from the NMR center (and/or the
-        Partners cluster).
+        This method is necessary since the actual "real" dir spec can
+        be quite convoluted, particularly if the "logical" dir spec has
+        multiple symbolic links. In fact, the "real" dir spec itself
+        can be missing the actual self._str_baseProjectsDir due to
+        excessive symbolic linking.
+
+        PRECONDITIONS:
+        o <astr_localDirSpec> is a "real" dir spec on the local filesystem.
+
+        POSTCONDITIONS
+        o Returns the <astr_localDirSpec> explicitly remaped such that 
+          it contains the self._str_baseProjectsDir, i.e. "real" path like
+
+            /net/pretoria/local_mount/space/pretoria/2/chb/users/dicom/postproc/projects/rudolphpienaar/dyslexia-curv-analysis-2/results/1-exp-dyslexia-run
+
+          is mapped to
+
+            /chb/users/rudolphpienaar/chb-projects/rudolphpienaar/dyslexia-curv-analysis-2/results/1-exp-dyslexia-run
+          
         '''
-        OSshell('whoami')
-        str_whoami      = OSshell.stdout().strip()
+        l_local = astr_localDirSpec.split('/')
+        str_2projectDir = astr_localDirSpec
         self._str_baseProjectsDir = os.path.expanduser(self._str_baseProjectsDir)
-        l_dir = astr_dirSpec.split(str_whoami)
-        str_dir = l_dir[1]
-        return self._str_baseProjectsDir + "/" + str_whoami + str_dir
+        for tetherPoint in range(1, len(l_local)):
+            l_tree              = l_local[tetherPoint:]
+            str_tree            = '/'.join(l_tree)
+            str_cleanCandidate  = self._str_baseProjectsDir + '/' + str_tree
+            if os.path.isdir(str_cleanCandidate):
+                str_2projectDir = str_cleanCandidate
+                break
+        return str_2projectDir
+        
+
+    def local2remoteUserHomeDir(self, astr_localDirSpec):
+        '''
+        This method simply maps an <astr_localDirSpec> to the corresponding
+        location on the remote filesystem.
+
+        Since an operational assumption of this system is that working
+        directories are identical between local and remote systems, differing
+        only in the possible spec of the local and remote user home directory,
+        this method maps a fully qualified local directory to the remote
+        space.
+        
+        PRECONDITIONS
+        o Valid self.remoteShell()
+        o Calls self.localDir_remap2projectDir()
+
+        POSTCONDITIONS
+        o The "home" component of <astr_localDirSpec> is mapped to the
+          corresponding "home" component of the remote directory space.
+        '''
+
+        astr_localDirSpec = self.localDir_remap2projectDir(astr_localDirSpec)
+        self.remoteShell('pwd')
+        str_remoteHome  = self.remoteShell.stdout().strip()
+        OSshell('whoami')
+        str_whoami = OSshell.stdout().strip()
+        self._str_baseProjectsDir = os.path.expanduser(self._str_baseProjectsDir)
+        l_dir = astr_localDirSpec.split(str_whoami)
+        str_workingDir          = str_whoami.join(l_dir[1:])
+        str_remoteDirSpec       = str_remoteHome + str_workingDir
+        return str_remoteDirSpec
 
     def surfDir(self):
-        return "%s/surf" % (self.subjDir())
+        return "%s/surf" % (self.subjectDir())
             
     def startDir(self):
         return self._str_workingDir
@@ -179,6 +249,12 @@ class FNNDSC_HBWM(base.FNNDSC):
         self._str_pid                   = os.getpid()
         self._str_hostname              = os.uname()[1]
 
+        # This "remote" shell provides the access point from the pipelin
+        # to running commands on the remote system.
+        self.remoteShell                = None
+
+        # This directory is the "nexus" point that is preserved between local
+        # and remote filesystems.
         self._str_baseProjectsDir       = '~/chb-projects'
         
         self._str_subjectDir            = ''
@@ -197,9 +273,10 @@ class FNNDSC_HBWM(base.FNNDSC):
         self._str_hemi                  = ''
         self._str_surface               = ''
         self._str_curv                  = ''
-        
-        
+
+        OSshell('cd %s' % self._str_baseProjectsDir)
         self._str_workingDir            = os.getcwd()
+        self._str_workingDir            = self.localDir_remap2projectDir(self._str_workingDir)
         
         for key, value in kwargs.iteritems():
             if key == 'subjectList':    self._l_subject         = value
@@ -228,23 +305,12 @@ class FNNDSC_HBWM(base.FNNDSC):
         
         '''
 
-        # First, this script should only be run on cluster nodes.
-        str_hostname    = socket.gethostname()
-        #if str_hostname not in lst_clusterNodes:
-            #error.fatal(self, 'notClusterNode', 'Current hostname = %s' % str_hostname)
-
         # Set the stages
         self._pipeline.stages_canRun(False)
         lst_stages = list(self._stageslist)
         for index in lst_stages:
             stage = self._pipeline.stage_get(int(index))
             stage.canRun(True)
-
-        # Check for FS env variable
-        #self._log('Checking on FREESURFER_HOME', debug=9, lw=self._lw)
-        #if not os.environ.get('FREESURFER_HOME'):
-            #error.fatal(self, 'noFreeSurferEnv')
-        #self._log('[ ok ]\n', debug=9, rw=self._rw, syslog=False)
             
         for str_subj in self._l_subject:
             self._log('Checking on subjectDir <%s>' % str_subj,
@@ -262,6 +328,7 @@ class FNNDSC_HBWM(base.FNNDSC):
 
         '''
         base.FNNDSC.run(self)
+
 
     def waitForRemoteFile(self, **kwargs):
         '''
@@ -333,11 +400,23 @@ class FNNDSC_HBWM(base.FNNDSC):
                 error.fatal(self, 'noClusterSpec')
         shell = stage.shell()
         shell.emailWhenDone(True)
-        shell.echo(False)
-        shell.echoStdOut(False)
+        if args.b_debug:
+            shell.echo(True)
+            shell.echoStdOut(True)
+        else:
+            shell.echo(False)
+            shell.echoStdOut(False)
         shell.detach(b_jobDetach)
         shell.disassociate(b_disassocaite)
         shell.waitForChild(b_waitForChild)
+        # This "remoteShell" is used to access the cluster node directly
+        # and without using the scheduler. It is used to run remote
+        # shell commands and return stdout type outputs to this parent
+        # controller embedded in a particular stage.
+        self.remoteShell = crun.crun(remoteHost=shell._str_remoteHost,\
+                                     remoteUser=shell._str_remoteUser,\
+                                     remotePort=shell._str_remotePort)
+        
 
 ### Non-class methods
             
@@ -442,28 +521,33 @@ def synopsis(ab_shortOnly = False):
 
 def f_blockOnScheduledJobs(**kwargs):
     '''
-    A simple wrapper around a stage.blockOnShellCmd(...)
+    A simple wrapper around a stage.kwBlockOnSchedule(...)
     call.
     '''
+    str_blockUntil      = "0"
+    str_blockProcess    = ""
     timepoll            = 10
     for key, val in kwargs.iteritems():
         if key == 'obj':                stage                   = val
+        if key == 'blockCondition':     str_blockCondition      = val
         if key == 'blockProcess':       str_blockProcess        = val
+        if key == 'blockUntil':         str_blockUntil          = val
         if key == 'timepoll':           timepoll                = val
     str_blockMsg    = '''\n
     Postconditions are still running: multiple '%s' instances
-    detected in MOSIX scheduler. Blocking until all scheduled jobs are
+    detected in cluster %s (%s). Blocking until all scheduled jobs are
     completed. Block interval = %s seconds.
-    \n''' % (str_blockProcess, timepoll)
+    \n''' % (str_blockProcess,
+             stage.shell().clusterName(),
+             stage.shell().clusterType(),
+             timepoll)
     str_loopMsg     = 'Waiting for scheduled jobs to complete... ' +\
-                      '(hit <ctrl>-c to kill this script).            '
-                        
-    stage.kwBlockOnShellCmd_rs(
-            blockProcess        = str_blockProcess,
-            blockMsg            = str_blockMsg,
-            loopMsg             = str_loopMsg,
-            timeout             = timepoll
-            )
+                      '(hit <ctrl>-c to kill this script).    '
+    stage.kwBlockOnScheduler(   loopMsg         = str_loopMsg,
+                                blockMsg        = str_blockMsg,
+                                blockUntil      = str_blockUntil,
+                                blockProcess    = str_blockProcess,
+                                timeout         = timepoll)
     return True
 
 def dirPart_create(str_dirPart):
@@ -541,6 +625,10 @@ if __name__ == "__main__":
                         dest='b_reset',
                         action="store_true",
                         default=False)
+    parser.add_argument('--debug', '-d',
+                        dest='b_debug',
+                        action="store_true",
+                        default=False)
     parser.add_argument('--curv', '-c',
                         dest='curv',
                         action='store',
@@ -564,7 +652,6 @@ if __name__ == "__main__":
     OSshell.echo(False)
     OSshell.echoStdOut(False)
     OSshell.detach(False)
-
     
     # First, define the container pipeline
     pipe_HBWM = FNNDSC_HBWM(
@@ -623,11 +710,15 @@ if __name__ == "__main__":
         lst_curv        = pipeline.l_curv()
         log             = stage.log()
 
-        # Create shell for scheduling/executing on the remote HPC
+        # First, create stage shell for scheduling/executing on the remote HPC
+        # This *must* be called here, since downstream processing in this stage
+        # depends on a working remoteShell.
         pipeline.stageShell_createRemoteInstance(args.cluster, stage=stage)
 
-        # This assumes that the script is started from the toplevel <subjDir>.
-        pipeline.subjDir(pipeline.dir2uniformSpace(pipeline._str_workingDir))
+        # This assumes that the script is started from the toplevel
+        # FreeSurfer SUBJECTS_DIR on the local filesystem, i.e. the 
+        # self._str_workingDir is teh SUBJECTS_DIR
+        pipeline.subjectsDir(pipeline._str_workingDir)
 
         # Get the "scheduler shell" embedded within this stage
         # This shell will schedule any commands passed to it on the specific
@@ -639,32 +730,29 @@ if __name__ == "__main__":
             shell.scheduleHostOnly(args.host)
         shell.detach(False)                 # This shell should not detach
         shell.disassociate(False)           # nor disassociate, irrespective
-                                            # of how it was constructed 
-                                            # some HPC cruns, like MOSIX
-                                            # force disassociate.
+                                            # of how it was constructed. 
+                                            # Some HPC cruns, like MOSIX
+                                            # force disassociate. For this
+                                            # stage, we actually want to 
+                                            # "block" on the remote 
+                                            # schedule process.
+                                            
+        os.chdir(pipeline.subjectsDir())
         for pipeline._str_subj in lst_subj:
-            os.chdir(pipeline.subjDir())
+            os.chdir(pipeline.subjectDir())
             misc.mkdir(_str_HBWMdir)
             for pipeline._str_hemi in lst_hemi:
                 for pipeline._str_surface in lst_surface:
-                    os.chdir(pipeline.subjDir())
                     str_surfaceFile = '%s.%s' % (pipeline.hemi(), pipeline.surface())
                     str_surfDir = 'surf'
 
-                    # This "remoteShell" is used to access the cluster node directly
-                    # and without using the scheduler. It is used to run remote
-                    # shell commands and return stdout type outputs to this parent
-                    # controller.
-                    remoteShell = crun.crun(remoteHost=shell._str_remoteHost,\
-                                            remoteUser=shell._str_remoteUser,\
-                                            remotePort=shell._str_remotePort)
                     # Get the remote user homedir
-                    remoteShell('pwd')
-                    str_remoteHome = remoteShell.stdout().strip()
+                    pipeline.remoteShell('pwd')
+                    str_remoteHome = pipeline.remoteShell.stdout().strip()
 
                     # Set some FS components in the core HPC scheduler object
                     shell.FreeSurferUse(True)
-                    shell.FSsubjDir(localSubjDir=pipeline.subjDir(),
+                    shell.FSsubjDir(localSubjDir=pipeline.subjectsDir(),
                                     remoteHome=str_remoteHome)
                     str_jobID           = '%s-%s-%s-%s' % \
                             (pipeline.hemi(), pipeline.surface(),
@@ -689,14 +777,13 @@ if __name__ == "__main__":
                     shell(str_cmd,
                             waitForChild=shell.waitForChild(),
                             stdoutflush=False, stderrflush=False)
-                    #if shell.exitCode():
-                        #error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
 
                     # In many cluster schedulers, scheduled jobs do *not* write
-                    # to stdout, which is why the above command was redirected
-                    # to a str_shellstdout file. In other cases (such as the 
-                    # erisone LSF), output redirection is not supported and 
-                    # requires additional, cluster-specific, scheduler options.
+                    # to stdout, which is why the above command was scheduled
+                    # with output to an str_shellstdout file. In some cases 
+                    # (such as the erisone LSF), output redirection is not 
+                    # supported at the command line and all output stdout
+                    # and stderr must be explicitly defined.
                     # 
                     # Irrespective of the mechanism, output needs to be
                     # captured in a file and we need to block on the creation 
@@ -704,7 +791,8 @@ if __name__ == "__main__":
                     # blocking is required since since some schedulers are fire
                     # and forget -- once sent to the scheduler, this controller
                     # loses in many cases the direct ability to know when the 
-                    # job is complete.
+                    # job is complete, other than some side effect of its
+                    # completion (such as creating some output file).
                     # 
                     # Note that the *correct* approach is to use the 
                     # f_blockOnScheduledJobs() function that will query the
@@ -722,15 +810,15 @@ if __name__ == "__main__":
                     # and sucking up CPU cycles.
                     #
                     pipeline.waitForRemoteFile(
-                                        shell           = remoteShell,
+                                        shell           = pipeline.remoteShell,
                                         fileToWatch     = str_shellstdout,
                                         interval        = 5,
                                         timeOutTotal    = 70
                                         )
                                        
-                    remoteShell('cat %s | grep nvertices' % str_shellstdout)
-                    l_nvertices = remoteShell.stdout().strip().split()
-                    remoteShell('rm -f %s %s' % (str_shellstdout, str_shellstderr))
+                    pipeline.remoteShell('cat %s | grep nvertices' % str_shellstdout)
+                    l_nvertices = pipeline.remoteShell.stdout().strip().split()
+                    pipeline.remoteShell('rm -f %s %s' % (str_shellstdout, str_shellstderr))
                     str_nvertices = l_nvertices[1]
                     # Subtrack 1 from the number of vertices since indices start from 0.
                     nvertices = int(str_nvertices) - 1
@@ -797,17 +885,34 @@ if __name__ == "__main__":
         lst_hemi        = pipeline.l_hemisphere()
         lst_surface     = pipeline.l_surface()
         lst_curv        = pipeline.l_curv()
+        log             = stage.log()
 
-        # Create the shell on the remote HPC
+        # First, create stage shell for scheduling/executing on the remote HPC
+        # This *must* be called here, since downstream processing in this stage
+        # depends on a working remoteShell.
         pipeline.stageShell_createRemoteInstance(args.cluster, stage=stage)
-        
+
+        # This assumes that the script is started from the toplevel
+        # FreeSurfer SUBJECTS_DIR on the local filesystem, i.e. the
+        # self._str_workingDir is teh SUBJECTS_DIR
+        pipeline.subjectsDir(pipeline._str_workingDir)
+
+        # Get the "scheduler shell" embedded within this stage
+        # This shell will schedule any commands passed to it on the specific
+        # HPC scheduler that has been instantiated.
+        cluster = stage.shell()
+        if len(args.host):
+            str_hostOnlySpec = "--host %s " % args.host
+            log('Locking jobs to only run on host -->%s<--\n' % args.host)
+            cluster.scheduleHostOnly(args.host)
+
+        os.chdir(pipeline.subjectsDir())
         for pipeline._str_subj in lst_subj:
-            os.chdir(pipeline.subjDir())
+            os.chdir(pipeline.subjectDir())
             for pipeline._str_hemi in lst_hemi:
                 for pipeline._str_surface in lst_surface:
                     for pipeline._str_curv in lst_curv:
                         os.chdir(pipeline.analysisDir())
-                        log = stage.log()
                         # Now, for each sub directory conforming to pattern:
                         #                   <hemi>-<surface>-*
                         # schedule analysis
@@ -815,41 +920,66 @@ if __name__ == "__main__":
                             (pipeline.hemi(), pipeline.surface(), pipeline.curv()))
                         for subpart in l_dir:
                             os.chdir(subpart)
+                            str_localAnalysisDir = "%s/%s" % (pipeline.analysisDir(), subpart)
+                            str_remoteDirSpec = pipeline.local2remoteUserHomeDir(str_localAnalysisDir)
+
+                            # Get the remote user homedir
+                            pipeline.remoteShell('pwd')
+                            str_remoteHome = pipeline.remoteShell.stdout().strip()
+
+                            # Set some FS components in the core HPC scheduler object
+                            cluster.FreeSurferUse(True)
+                            cluster.FSsubjDir(localSubjDir=pipeline.subjectsDir(),
+                                            remoteHome=str_remoteHome)
+
                             # Copy the relevant curvature file to this local directory
                             str_curvatureBaseFile   = '%s.%s.%s.crv' % \
                                 (pipeline.hemi(), pipeline.surface(), pipeline.curv())
-                            str_curvFilePath        = '%s/surf/%s' % (pipeline.subjDir(), str_curvatureBaseFile)
+                            str_curvFilePath        = '%s/%s' % \
+                                (pipeline.surfDir(), str_curvatureBaseFile)
                             if os.path.lexists(str_curvatureBaseFile):
                                 os.remove(str_curvatureBaseFile)
-                            os.symlink(str_curvFilePath, str_curvatureBaseFile)
+                            shutil.copyfile(str_curvFilePath, str_curvatureBaseFile)
                             file_vstart     = open('vstart', 'r')
                             str_vstart      = file_vstart.readline().strip()
                             file_vstart.close()
                             file_vend       = open('vend', 'r')
                             str_vend        = file_vend.readline().strip()
                             file_vend.close()
+
+                            str_jobID           = '%s-%s-%s-%s-%s-%s' % \
+                                (pipeline.subj(), pipeline.hemi(), pipeline.surface(), pipeline.curv(),
+                                str_vstart, str_vend)
+                            str_shellstderr     = '%s/%s.err' % (cluster.jobInfoDir(), str_jobID)
+                            str_shellstdout     = '%s/%s.out' % (cluster.jobInfoDir(), str_jobID)
+                                            
+                            cluster.jobID(str_jobID)
+                            cluster.schedulerStdOut(str_shellstdout)
+                            cluster.schedulerStdErr(str_shellstderr)
+
                             log('Scheduling %s-%s-%s-%s-%s-%s...\n' % \
                                 (pipeline.subj(), pipeline.hemi(), pipeline.surface(), pipeline.curv(),
                                 str_vstart, str_vend))
+                            cluster.workingDir(str_remoteDirSpec)
                             str_cmd = 'mris_pmake --port %d --subj %s --hemi %s \
                                         --surface %s \
                                         --mpmProg autodijk \
                                         --mpmArgs vertexStart:%d,vertexEnd:%d,worldMapCreate:1,costCurvStem:%s \
                                         --mpmOverlay curvature --mpmOverlayArgs primaryCurvature:./%s' % \
-                                        (pmakePort, pipeline.subj(), pipeline.hemi(), pipeline.surface(), 
+                                        (pmakePort,
+                                        pipeline.subj(), pipeline.hemi(), pipeline.surface(),
                                         int(str_vstart), int(str_vend), pipeline.curv(),
                                         str_curvatureBaseFile)
-                            cluster = crun.crun_mosix()
                             str_hostOnlySpec = ''
                             if len(args.host):
                                 str_hostOnlySpec = "--host %s " % args.host
                                 log('Locking jobs to only run on host -->%s<--\n' % args.host)
                                 cluster.scheduleHostOnly(args.host)
-                            cluster.echo(False)
-                            cluster.echoStdOut()
-                            cluster.detach()
                             cluster.priority(60)
-                            cluster(str_cmd, waitForChild=False)
+                            cluster(
+                                str_cmd, waitForChild=cluster.waitForChild(), 
+                                stdoutflush=True, stderrflush=True
+                            )
                             pmakePort += 1
                             os.chdir(pipeline.analysisDir())
         os.chdir(pipeline.startDir())
@@ -881,14 +1011,14 @@ if __name__ == "__main__":
         lst_hemi        = pipeline.l_hemisphere()
         lst_surface     = pipeline.l_surface()
         lst_curv        = pipeline.l_curv()
+        log             = stage.log()
         
         for pipeline._str_subj in lst_subj:
-            os.chdir(pipeline.subjDir())
+            os.chdir(pipeline.subjectsDir())
             for pipeline._str_hemi in lst_hemi:
                 for pipeline._str_surface in lst_surface:
                     for pipeline._str_curv in lst_curv:
                         os.chdir(pipeline.analysisDir())
-                        log = stage.log()
                         str_recomDir        = '%s-%s-%s' % \
                             (pipeline.hemi(), pipeline.surface(), pipeline.curv())
                         misc.mkdir(str_recomDir)
@@ -905,7 +1035,7 @@ if __name__ == "__main__":
                         shell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
                         if shell.exitCode():
                             error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
-                        shell('cp %s %s/surf' % (str_autodijkFile, pipeline.subjDir()))
+                        shell('cp %s %s/surf' % (str_autodijkFile, pipeline.subjectsDir()))
         os.chdir(pipeline.startDir())
         return True
     stage2.def_stage(f_stage2callback, subj=args.l_subj, obj=stage2, pipe=pipe_HBWM)
@@ -935,7 +1065,7 @@ if __name__ == "__main__":
         lst_curv        = pipeline.l_curv()
 
         for pipeline._str_subj in lst_subj:
-            os.chdir(pipeline.subjDir())
+            os.chdir(pipeline.subjectsDir())
             for pipeline._str_hemi in lst_hemi:
                 for pipeline._str_surface in lst_surface:
                     for pipeline._str_curv in lst_curv:
