@@ -69,6 +69,10 @@ class FNNDSC_HBWMmeta(base.FNNDSC):
             'action'        : 'setting up partitions, ',
             'error'         : 'the max partition number is %d. Too many partitions specified.' % _maxPartitions,
             'exitCode'      : 14},
+        'stageExec'         : {
+            'action'        : 'running a stage in the pipeline, ',
+            'error'         : 'the stage reported an internal failure state.',
+            'exitCode'      : 15},
     }
 
 
@@ -444,7 +448,7 @@ if __name__ == "__main__":
                         if len(args.host):
                             str_hostOnlySpec = "--host %s " % args.host
                             log('Locking jobs to only run on host -->%s<--\n' % args.host)
-                        str_cmd = "hbwm.py -v 10 -s %s %s -r -m %s -f %s -c %s -p %s --cluster %s %s" % \
+                        str_cmd = "~/src/scripts/hbwm.py -v 10 -s %s %s -r -m %s -f %s -c %s -p %s --cluster %s %s" % \
                             (args.stages, str_hostOnlySpec,
                             pipeline.hemi(), pipeline.surface(), pipeline.curv(), args.partitions,
                             args.cluster, pipeline.subj())
