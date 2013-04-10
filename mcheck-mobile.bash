@@ -106,7 +106,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=14
+targetList=15
 
 #
 ##
@@ -141,6 +141,8 @@ TARGET_CHECK[12]="tunnel.bash --forward	--from 8000  --via ch137123@${DREEV} --t
 TARGETACTION[12]="tunnel.bash --forward	--from 8000  --via ch137123@${DREEV} --to localhost:8000"
 TARGET_CHECK[13]="tunnel.bash --forward	--from 5556  --via ch137123@${DREEV} --to localhost:5556 --isRunning"
 TARGETACTION[13]="tunnel.bash --forward	--from 5556  --via ch137123@${DREEV} --to localhost:5556"
+TARGET_CHECK[14]="tunnel.bash --forward	--from 8888  --via ch137123@${DREEV} --to localhost:5556 --isRunning"
+TARGETACTION[14]="tunnel.bash --forward	--from 8888  --via ch137123@${DREEV} --to localhost:5556"
 
 # Process command line options
 while getopts hv: option ; do
