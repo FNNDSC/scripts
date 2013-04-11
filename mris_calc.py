@@ -350,8 +350,8 @@ if __name__ == "__main__":
             cluster(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
             if cluster.exitCode():
                 error.fatal(pipe_mrisCalc, 'stageExec', cluster.stderr())
-            #count += 1
-            #if count == 3: break
+            count += 1
+        if not count: error.fatal(pipe_mrisCalc, 'stageExec', "Insufficient operands found!")
         return True
     stage0.def_stage(f_stage0callback, operand=args.l_operand, obj=stage0, pipe=pipe_mrisCalc)
     stage0.def_postconditions(f_blockOnScheduledJobs, obj=stage0,
