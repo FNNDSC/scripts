@@ -390,6 +390,10 @@ if __name__ == "__main__":
                         action='store',
                         default='100',
                         help='number of partitions to split problem into')
+    parser.add_argument('--debug', '-d',
+                        dest='b_debug',
+                        action="store_true",
+                        default=False)
     parser.add_argument('--cluster', '-l',
                         dest='cluster',
                         action='store',
@@ -448,10 +452,12 @@ if __name__ == "__main__":
                         if len(args.host):
                             str_hostOnlySpec = "--host %s " % args.host
                             log('Locking jobs to only run on host -->%s<--\n' % args.host)
-                        str_cmd = "~/src/scripts/hbwm.py -v 10 -s %s %s -r -m %s -f %s -c %s -p %s --cluster %s %s" % \
+                        str_debug = ""
+                        if args.b_debug: str_debug = " --debug "
+                        str_cmd = "~/src/scripts/hbwm.py -v 10 -s %s %s -r -m %s -f %s -c %s -p %s --cluster %s %s %s" % \
                             (args.stages, str_hostOnlySpec,
                             pipeline.hemi(), pipeline.surface(), pipeline.curv(), args.partitions,
-                            args.cluster, pipeline.subj())
+                            args.cluster, str_debug, pipeline.subj())
                         print str_cmd
                         shell = crun.crun()
                         shell.echo(False)
