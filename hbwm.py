@@ -416,6 +416,12 @@ class FNNDSC_HBWM(base.FNNDSC):
         self.remoteShell = crun.crun(remoteHost=shell._str_remoteHost,\
                                      remoteUser=shell._str_remoteUser,\
                                      remotePort=shell._str_remotePort)
+        if args.b_debug:
+            self.remoteShell.echo(True)
+            self.remoteShell.echoStdOut(True)
+        else:
+            self.remoteShell.echo(False)
+            self.remoteShell.echoStdOut(False)
         
 
 ### Non-class methods
@@ -665,6 +671,7 @@ if __name__ == "__main__":
                         logTee          = True
                         )
     pipe_HBWM.verbosity(args.verbosity)
+    pipe_HBWM.subjectsDir(pipe_HBWM._str_workingDir)
     pipeline    = pipe_HBWM.pipeline()
     pipeline.log()('INIT: (%s) %s %s\n' % (os.getcwd(), scriptName, ' '.join(sys.argv[1:])))
     pipeline.name('HBWM')
@@ -1013,6 +1020,29 @@ if __name__ == "__main__":
         lst_curv        = pipeline.l_curv()
         log             = stage.log()
         
+        # First, create stage shell for scheduling/executing on the remote HPC
+        # This *must* be called here, since downstream processing in this stage
+        # depends on a working remoteShell.
+        pipeline.stageShell_createRemoteInstance(args.cluster, stage=stage)
+        cluster = stage.shell()
+
+        # The "remoteShell" is also created by the above call, however this
+        # shell does not schedule its commands in the scheduler. Rather it 
+        # simply runs them directly on the remote host (typically the head
+        # node of the cluster).
+        remoteShell = pipeline.remoteShell
+        remoteShell('pwd')
+        str_remoteHome = remoteShell.stdout().strip()
+
+        # Set some FS components in the core HPC scheduler object
+        # Also, copy the "cluster" FS setup to the non-scheduler
+        # remoteShell
+        remoteShell.FreeSurferUse(True)
+        remoteShell.FSinit(**cluster.FSinit())
+        remoteShell.FSsubjDir(localSubjDir=pipeline.subjectsDir(),
+                        remoteHome=str_remoteHome)
+        remoteShell.sourceEnv(True)
+
         for pipeline._str_subj in lst_subj:
             os.chdir(pipeline.subjectsDir())
             for pipeline._str_hemi in lst_hemi:
@@ -1023,24 +1053,22 @@ if __name__ == "__main__":
                             (pipeline.hemi(), pipeline.surface(), pipeline.curv())
                         misc.mkdir(str_recomDir)
                         os.chdir(str_recomDir)
+                        remoteShell.workingDir("%s/%s" % \
+                            (pipeline.localDir_remap2projectDir(pipeline.analysisDir()), str_recomDir))
                         str_autodijkFile = '%s.%s.autodijk-%s.crv' % \
                                     (pipeline.hemi(), pipeline.surface(), pipeline.curv())
-                        str_cmd = "mris_calc.py -v 10 \
+                        str_cmd = "~/src/scripts/mris_calc.py -v 10 \
                                     --operation add $(find ../ -iname %s | grep [0-9] | tr '\n' ' ')" % \
                                     (str_autodijkFile)
-                        shell = crun.crun()
-                        shell.echo(False)
-                        shell.echoStdOut(False)
-                        shell.detach(False)
-                        shell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
-                        if shell.exitCode():
-                            error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
-                        shell('cp %s %s/surf' % (str_autodijkFile, pipeline.subjectsDir()))
+                        remoteShell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
+                        if remoteShell.exitCode():
+                            error.fatal(pipe_HBWM, 'stageExec', remoteShell.stderr())
+                        remoteShell('cp %s %s/surf' % (str_autodijkFile, pipeline.subjectsDir()))
         os.chdir(pipeline.startDir())
         return True
     stage2.def_stage(f_stage2callback, subj=args.l_subj, obj=stage2, pipe=pipe_HBWM)
-    stage2.def_postconditions(f_blockOnScheduledJobs, obj=stage2,
-                              blockProcess    = 'mris_calc.py')
+    #stage2.def_postconditions(f_blockOnScheduledJobs, obj=stage2,
+                              #blockProcess    = 'mris_calc.py')
 
 
     #
@@ -1063,6 +1091,30 @@ if __name__ == "__main__":
         lst_hemi        = pipeline.l_hemisphere()
         lst_surface     = pipeline.l_surface()
         lst_curv        = pipeline.l_curv()
+        log             = stage.log()
+
+        # First, create stage shell for scheduling/executing on the remote HPC
+        # This *must* be called here, since downstream processing in this stage
+        # depends on a working remoteShell.
+        pipeline.stageShell_createRemoteInstance(args.cluster, stage=stage)
+        cluster = stage.shell()
+
+        # The "remoteShell" is also created by the above call, however this
+        # shell does not schedule its commands in the scheduler. Rather it
+        # simply runs them directly on the remote host (typically the head
+        # node of the cluster).
+        remoteShell = pipeline.remoteShell
+        remoteShell('pwd')
+        str_remoteHome = remoteShell.stdout().strip()
+
+        # Set some FS components in the core HPC scheduler object
+        # Also, copy the "cluster" FS setup to the non-scheduler
+        # remoteShell
+        remoteShell.FreeSurferUse(True)
+        remoteShell.FSinit(**cluster.FSinit())
+        remoteShell.FSsubjDir(localSubjDir=pipeline.subjectsDir(),
+                        remoteHome=str_remoteHome)
+        remoteShell.sourceEnv(True)
 
         for pipeline._str_subj in lst_subj:
             os.chdir(pipeline.subjectsDir())
@@ -1070,7 +1122,6 @@ if __name__ == "__main__":
                 for pipeline._str_surface in lst_surface:
                     for pipeline._str_curv in lst_curv:
                         os.chdir(pipeline.analysisDir())
-                        log = stage.log()
                         str_autodijkFile = '%s.%s.autodijk-%s.crv' % \
                                     (pipeline.hemi(), pipeline.surface(), pipeline.curv())
                         str_autonormFile = '%s.%s.an-%s.crv' % \
@@ -1078,6 +1129,7 @@ if __name__ == "__main__":
                         str_autonsFile   = '%s.%s.ans-%s.crv' % \
                                     (pipeline.hemi(), pipeline.surface(), pipeline.curv())
                         os.chdir(pipeline.surfDir())
+                        remoteShell.workingDir(pipeline.surfDir())
                         log('Normalizing and shifting %s\n' % str_autodijkFile)
                         str_cmd = "\
                             mris_calc -o %s %s norm     ;\
@@ -1086,18 +1138,14 @@ if __name__ == "__main__":
                         " % (str_autonormFile, str_autodijkFile,
                              str_autonsFile, str_autonormFile,
                              str_autodijkFile, str_autonsFile, str_autonormFile)
-                        shell = crun.crun()
-                        shell.echo(False)
-                        shell.echoStdOut(False)
-                        shell.detach(False)
-                        shell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
-                        if shell.exitCode():
-                            error.fatal(pipe_HBWM, 'stageExec', shell.stderr())
+                        remoteShell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
+                        if remoteShell.exitCode():
+                            error.fatal(pipe_HBWM, 'stageExec', remoteShell.stderr())
         os.chdir(pipeline.startDir())
         return True
     stage3.def_stage(f_stage3callback, subj=args.l_subj, obj=stage3, pipe=pipe_HBWM)
-    stage3.def_postconditions(f_blockOnScheduledJobs, obj=stage3,
-                              blockProcess    = 'mris_calc')
+    #stage3.def_postconditions(f_blockOnScheduledJobs, obj=stage3,
+                              #blockProcess    = 'mris_calc')
 
     
     # Add all the stages to the pipeline  
