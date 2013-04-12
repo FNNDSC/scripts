@@ -213,8 +213,14 @@ class FNNDSC_HBWM(base.FNNDSC):
         '''
 
         astr_localDirSpec = self.localDir_remap2projectDir(astr_localDirSpec)
-        self.remoteShell('pwd')
+        self.remoteShell('cd ~/ ; pwd')
         str_remoteHome  = self.remoteShell.stdout().strip()
+        # Another failsafe. If the <str_remoteHome> does not resolve, odds
+        # are that the remoteShell is in fact a local shell. In that case
+        # try the local OSshell...
+        if not len(str_remoteHome):
+            OSshell('cd ~/ ; pwd')
+            str_remoteHome = OSshell.stdout().strip()
         OSshell('whoami')
         str_whoami = OSshell.stdout().strip()
         self._str_baseProjectsDir = os.path.expanduser(self._str_baseProjectsDir)
@@ -371,7 +377,7 @@ class FNNDSC_HBWM(base.FNNDSC):
                         remoteHost="rc-drno.tch.harvard.edu")
                         )
                 stage.shell().emailUser('rudolph.pienaar@childrens.harvard.edu')
-                b_jobDetach         = True
+                b_jobDetach         = False
                 b_disassocaite      = True
                 b_waitForChild      = False
                 break
@@ -396,8 +402,17 @@ class FNNDSC_HBWM(base.FNNDSC):
                 b_disassocaite      = False
                 b_waitForChild      = True
                 break
-            if case():
-                error.fatal(self, 'noClusterSpec')
+            if case() or case('local'):
+                # In this case, a "local" shell will be created. Note that a
+                # "local" shell might break other logic if the caller
+                # is explicitly expecting a cluster and scheduler-
+                # infrastructure.
+                # 
+                # This default case is a failsafe fallback.
+                stage.shell(crun.crun())
+                b_jobDetach         = False
+                b_disassocaite      = False
+                b_waitForChild      = True
         shell = stage.shell()
         shell.emailWhenDone(True)
         if args.b_debug:
@@ -412,10 +427,15 @@ class FNNDSC_HBWM(base.FNNDSC):
         # This "remoteShell" is used to access the cluster node directly
         # and without using the scheduler. It is used to run remote
         # shell commands and return stdout type outputs to this parent
-        # controller embedded in a particular stage.
-        self.remoteShell = crun.crun(remoteHost=shell._str_remoteHost,\
-                                     remoteUser=shell._str_remoteUser,\
-                                     remotePort=shell._str_remotePort)
+        # controller embedded in a particular stage. In the case of
+        # a "local" shell spec, this remoteShell will in fact be
+        # a local shell running on the localhost.
+        if(astr_remoteHPC == 'local'):
+            self.remoteShell = crun.crun()
+        else:
+            self.remoteShell = crun.crun(remoteHost=shell._str_remoteHost,\
+                                         remoteUser=shell._str_remoteUser,\
+                                         remotePort=shell._str_remotePort)
         if args.b_debug:
             self.remoteShell.echo(True)
             self.remoteShell.echoStdOut(True)
@@ -912,6 +932,16 @@ if __name__ == "__main__":
             str_hostOnlySpec = "--host %s " % args.host
             log('Locking jobs to only run on host -->%s<--\n' % args.host)
             cluster.scheduleHostOnly(args.host)
+        cluster.priority(60)
+
+        # Get the remote user homedir
+        pipeline.remoteShell('pwd')
+        str_remoteHome = pipeline.remoteShell.stdout().strip()
+
+        # Set some FS components in the core HPC scheduler object
+        cluster.FreeSurferUse(True)
+        cluster.FSsubjDir(localSubjDir=pipeline.subjectsDir(),
+                        remoteHome=str_remoteHome)
 
         os.chdir(pipeline.subjectsDir())
         for pipeline._str_subj in lst_subj:
@@ -928,17 +958,10 @@ if __name__ == "__main__":
                         for subpart in l_dir:
                             os.chdir(subpart)
                             str_localAnalysisDir = "%s/%s" % (pipeline.analysisDir(), subpart)
-                            str_remoteDirSpec = pipeline.local2remoteUserHomeDir(str_localAnalysisDir)
-
-                            # Get the remote user homedir
-                            pipeline.remoteShell('pwd')
-                            str_remoteHome = pipeline.remoteShell.stdout().strip()
-
-                            # Set some FS components in the core HPC scheduler object
-                            cluster.FreeSurferUse(True)
-                            cluster.FSsubjDir(localSubjDir=pipeline.subjectsDir(),
-                                            remoteHome=str_remoteHome)
-
+                            # Note that the local2remote translations results in a 'pwd'
+                            # call to the remote system.
+                            str_remoteDirSpec = \
+                                pipeline.local2remoteUserHomeDir(str_localAnalysisDir)
                             # Copy the relevant curvature file to this local directory
                             str_curvatureBaseFile   = '%s.%s.%s.crv' % \
                                 (pipeline.hemi(), pipeline.surface(), pipeline.curv())
@@ -947,6 +970,8 @@ if __name__ == "__main__":
                             if os.path.lexists(str_curvatureBaseFile):
                                 os.remove(str_curvatureBaseFile)
                             shutil.copyfile(str_curvFilePath, str_curvatureBaseFile)
+
+                            # Read the vertex start and end indices
                             file_vstart     = open('vstart', 'r')
                             str_vstart      = file_vstart.readline().strip()
                             file_vstart.close()
@@ -955,10 +980,13 @@ if __name__ == "__main__":
                             file_vend.close()
 
                             str_jobID           = '%s-%s-%s-%s-%s-%s' % \
-                                (pipeline.subj(), pipeline.hemi(), pipeline.surface(), pipeline.curv(),
+                                (pipeline.subj(), pipeline.hemi(),
+                                pipeline.surface(), pipeline.curv(),
                                 str_vstart, str_vend)
-                            str_shellstderr     = '%s/%s.err' % (cluster.jobInfoDir(), str_jobID)
-                            str_shellstdout     = '%s/%s.out' % (cluster.jobInfoDir(), str_jobID)
+                            str_shellstderr     = '%s/%s.err' % \
+                                (cluster.jobInfoDir(), str_jobID)
+                            str_shellstdout     = '%s/%s.out' % \
+                                (cluster.jobInfoDir(), str_jobID)
                                             
                             cluster.jobID(str_jobID)
                             cluster.schedulerStdOut(str_shellstdout)
@@ -969,20 +997,14 @@ if __name__ == "__main__":
                                 str_vstart, str_vend))
                             cluster.workingDir(str_remoteDirSpec)
                             str_cmd = 'mris_pmake --port %d --subj %s --hemi %s \
-                                        --surface %s \
-                                        --mpmProg autodijk \
-                                        --mpmArgs vertexStart:%d,vertexEnd:%d,worldMapCreate:1,costCurvStem:%s \
-                                        --mpmOverlay curvature --mpmOverlayArgs primaryCurvature:./%s' % \
+                            --surface %s \
+                            --mpmProg autodijk \
+                            --mpmArgs vertexStart:%d,vertexEnd:%d,worldMapCreate:1,costCurvStem:%s \
+                            --mpmOverlay curvature --mpmOverlayArgs primaryCurvature:./%s' % \
                                         (pmakePort,
                                         pipeline.subj(), pipeline.hemi(), pipeline.surface(),
                                         int(str_vstart), int(str_vend), pipeline.curv(),
                                         str_curvatureBaseFile)
-                            str_hostOnlySpec = ''
-                            if len(args.host):
-                                str_hostOnlySpec = "--host %s " % args.host
-                                log('Locking jobs to only run on host -->%s<--\n' % args.host)
-                                cluster.scheduleHostOnly(args.host)
-                            cluster.priority(60)
                             cluster(
                                 str_cmd, waitForChild=cluster.waitForChild(), 
                                 stdoutflush=True, stderrflush=True
@@ -997,10 +1019,12 @@ if __name__ == "__main__":
     
     #
     # Stage 2
-    # This is a callback stage, demonstrating how python logic is used
-    # to create multiple cluster-based processing instances of the same
-    # core FreeSurfer command, each with slightly different operating
-    # flags.
+    # 
+    # Combine all the sub-partition solutions into one, using
+    # 'mris_calc.py'. Since 'mris_calc.py' assumes a rather
+    # complete Python installation, this stage is locked to
+    # run off PICES irrespective of where the main clustering 
+    # might have been specified.
     #
     stage2 = stage.Stage(
                         name            = 'recombine',
@@ -1023,7 +1047,7 @@ if __name__ == "__main__":
         # First, create stage shell for scheduling/executing on the remote HPC
         # This *must* be called here, since downstream processing in this stage
         # depends on a working remoteShell.
-        pipeline.stageShell_createRemoteInstance(args.cluster, stage=stage)
+        pipeline.stageShell_createRemoteInstance('PICES', stage=stage)
         cluster = stage.shell()
 
         # The "remoteShell" is also created by the above call, however this
@@ -1031,7 +1055,7 @@ if __name__ == "__main__":
         # simply runs them directly on the remote host (typically the head
         # node of the cluster).
         remoteShell = pipeline.remoteShell
-        remoteShell('pwd')
+        remoteShell('cd ~/ ; pwd')
         str_remoteHome = remoteShell.stdout().strip()
 
         # Set some FS components in the core HPC scheduler object
@@ -1054,7 +1078,7 @@ if __name__ == "__main__":
                         misc.mkdir(str_recomDir)
                         os.chdir(str_recomDir)
                         remoteShell.workingDir("%s/%s" % \
-                            (pipeline.localDir_remap2projectDir(pipeline.analysisDir()), str_recomDir))
+                            (pipeline.local2remoteUserHomeDir(pipeline.analysisDir()), str_recomDir))
                         str_autodijkFile = '%s.%s.autodijk-%s.crv' % \
                                     (pipeline.hemi(), pipeline.surface(), pipeline.curv())
                         str_cmd = "~/src/scripts/mris_calc.py -v 10 \
@@ -1063,7 +1087,9 @@ if __name__ == "__main__":
                         remoteShell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
                         if remoteShell.exitCode():
                             error.fatal(pipe_HBWM, 'stageExec', remoteShell.stderr())
-                        remoteShell('cp %s %s/surf' % (str_autodijkFile, pipeline.subjectsDir()))
+                        remoteShell('cp %s %s/surf' % (str_autodijkFile, pipeline.subjectDir()))
+                        if remoteShell.exitCode():
+                            error.fatal(pipe_HBWM, 'stageExec', remoteShell.stderr())
         os.chdir(pipeline.startDir())
         return True
     stage2.def_stage(f_stage2callback, subj=args.l_subj, obj=stage2, pipe=pipe_HBWM)
@@ -1073,7 +1099,9 @@ if __name__ == "__main__":
 
     #
     # Stage 3
-    # Runs mris_calc on final re-combined files to normalize and shift final values.
+    # 
+    # Runs mris_calc on final re-combined files to normalize and shift final 
+    # values.
     #
     stage3 = stage.Stage(
                         name            = 'normalize-sign',
@@ -1129,7 +1157,7 @@ if __name__ == "__main__":
                         str_autonsFile   = '%s.%s.ans-%s.crv' % \
                                     (pipeline.hemi(), pipeline.surface(), pipeline.curv())
                         os.chdir(pipeline.surfDir())
-                        remoteShell.workingDir(pipeline.surfDir())
+                        remoteShell.workingDir(pipeline.local2remoteUserHomeDir(pipeline.surfDir()))
                         log('Normalizing and shifting %s\n' % str_autodijkFile)
                         str_cmd = "\
                             mris_calc -o %s %s norm     ;\
