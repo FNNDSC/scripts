@@ -2,6 +2,7 @@
 
 # User spec'd
 G_HEMI="lh rh"
+G_SIGN="neg pos"
 G_REGION="frontal temporal parietal occipital"
 G_SURFACE="smoothwm pial"
 G_REPORTDIR="reports"
@@ -27,6 +28,7 @@ G_SYNPOSIS="
   NAME
 
         data_summarize.sh -t <dataType> [-s] [-E <expDir>] [-G <groups>]\
+                          [-n <sign>]                                   \
 			  [-a <annotationStem]				\
 			  [-R <regionSpec>]				\
 			  [-S <surfaceSpec>]
@@ -40,7 +42,10 @@ G_SYNPOSIS="
         Walk down an experiment tree and summarize a specific data measure.
 
   ARGS
-  
+
+        -n <sign>
+        The curvature sign to process ('neg', 'pos', or 'neg pos').
+
         -t <dataType>
         One of 'pval1', 'pval5', 'overlap', 'overlapL', 'overlapR', 
         'ordering', 'ordering2', 'areas', 'areasP', 'grid', or 'ggrid'.
@@ -90,11 +95,14 @@ G_SYNPOSIS="
   15 June 2011
   o Added -a, -R, and -S options.
 
+  17 April 2013
+  o Sign spec.
 "
 
-while getopts sE:t:G:a:S:R: option ; do
+while getopts sE:t:G:a:n:S:R: option ; do
     case "$option" 
     in
+        n)      G_SIGN="$OPTARG"                                ;;
 	a)	Gb_annotationSpec=1
                 ANNOTATIONSTEM=$OPTARG				;;
 	S)	Gb_surfaceSpec=1
@@ -171,7 +179,7 @@ for HEMI in $G_HEMI ; do
         fi
         for SURFACE in $G_SURFACE ; do
             printf "\n\n$HEMIREGION-$SURFACE\n"
-            REPORT=$(~/src/scripts/$TABULATE -G $G_GROUPNUM -h $HEMI -r $REGION -s $SURFACE -S "|")
+            REPORT=$(~/src/scripts/$TABULATE -n "$G_SIGN" -G $G_GROUPNUM -h $HEMI -r $REGION -s $SURFACE -S "|")
             echo "$REPORT"
             if (( Gb_reportSave )) ; then
                 echo "$REPORT" > $G_REPORTDIR/$G_TYPE-$HEMIREGION-$SURFACE.txt
