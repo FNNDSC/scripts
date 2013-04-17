@@ -24,7 +24,6 @@ G_SYNPOSIS="
   SYNOPSIS
   
         grid_tabulate.sh -h <hemi> -r <region> -s <surface>             \
-                                [-n <sign>]                             \
                                 [-S <sepString>] [-G <groupNum>]        \
                                 [-T]
 
@@ -44,9 +43,6 @@ G_SYNPOSIS="
         This provides a quick summary of the spatial ordering of the groups.
 
   ARGS
-
-        -n <sign>
-        The curvature sign to process ('neg', 'pos', or 'neg pos').
 
         -h <hemi>
         The hemisphere to process ('lh' or 'rh').
@@ -78,14 +74,11 @@ G_SYNPOSIS="
   25 March 2011
   o Grid additions.
 
-  17 April 2013
-  o Sign spec.
 "
 
-while getopts h:r:s:n:S:G:T option ; do
+while getopts h:r:s:S:G:T option ; do
     case "$option" 
     in
-        n) G_SIGN="$OPTARG"     ;;
         h) HEMI=$OPTARG         ;;
         r) REGION=$OPTARG       ;;
         s) SURFACE=$OPTARG      ;;
