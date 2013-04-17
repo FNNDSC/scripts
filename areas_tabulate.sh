@@ -21,8 +21,9 @@ G_SYNPOSIS="
 
   SYNOPSIS
   
-        areas_tabulate.sh -h <hemi> -r <region> -s <surface>  \
-                                [-S <sepString>] [-G <groups>]\
+        areas_tabulate.sh -h <hemi> -r <region> -s <surface>    \
+                                [-n <sign>]                     \
+                                [-S <sepString>] [-G <groups>]  \
                                 [-T <type>]
 
   DESC
@@ -36,6 +37,9 @@ G_SYNPOSIS="
             <sign>-<area>-<hemi>.<curv>.<region>.<surface>.txt
             
   ARGS
+
+        -n <sign>
+        The curvature sign to process ('neg', 'pos', or 'neg pos').
 
         -h <hemi>
         The hemisphere to process ('lh' or 'rh').
@@ -62,11 +66,14 @@ G_SYNPOSIS="
   15 November 2010
   o Initial design and coding.
 
+  17 April 2013
+  o Sign spec.
 "
 
-while getopts h:r:s:S:G:T: option ; do
+while getopts h:r:s:n:S:G:T: option ; do
     case "$option" 
     in
+        n) G_SIGN="$OPTARG"     ;;
         h) HEMI=$OPTARG         ;;
         r) REGION=$OPTARG       ;;
         s) SURFACE=$OPTARG      ;;
