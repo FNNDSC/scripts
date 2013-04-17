@@ -354,8 +354,8 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         f_ol    = 0
 
         f_overlap = p1.intersection(p2).area
-        f_or    = f_overlap / f_ar
-        f_ol    = f_overlap / f_al
+        f_or    = f_overlap / f_ar * 100
+        f_ol    = f_overlap / f_al * 100
         _str_fileName = '%s-%s-%s-centroids-analyze-%s.%s.%s.%s' % (ctype, g1, g2, hemi, curv, self._str_dataDir, surface)
         self.vprint("%60s: %10.5f %10.5f" % (_str_fileName, f_ol, f_or), 1)
         self._d_overlapLR[group][hemi][surface][curv][ctype]    = f_ol
@@ -415,6 +415,10 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         Returns a boolean True/False if a negative centroid exists
         for the passed str_curv.
         '''
+        ret = True
+        l_noNeg = ['C', 'BE', 'S', 'FI', 'thickness']
+        if str_curv in l_noNeg: ret = False
+        return ret
         
         
     def dict_ninit(self, *l_args):
@@ -513,6 +517,8 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
                 for self._str_curv in l_curv:
                     for self._str_gid in l_group:
                         for self._str_ctype in l_type:
+                            if self._str_ctype == 'neg' and not\
+                            self.negCentroid_exists(self._str_curv): continue
                             ret = func_callBack(**callBackArgs)
         return ret
 
@@ -558,6 +564,8 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
                 for self._str_surface in l_surface:
                     for self._str_curv in l_curv:
                         for self._str_ctype in l_type:
+                            if self._str_ctype == 'neg' and not\
+                            self.negCentroid_exists(self._str_curv): continue
                             ret = func_callBack(**callBackArgs)
         return ret
 
@@ -601,7 +609,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         curv    = self._str_curv
         ctype   = self._str_ctype
 
-        _str_fileName = '%s-Ap%s.%s.%s.%s.%s.txt' % (ctype, group, hemi, curv, self._str_dataDir, surface)
+        _str_fileName = '%s-Ap%s-%s.%s.%s.%s.txt' % (ctype, group, hemi, curv, self._str_dataDir, surface)
         p = sgPolygon(self._d_boundary[group][hemi][surface][curv][ctype])
         self._d_poly[group][hemi][surface][curv][ctype] = p
         f_A = p.area
@@ -633,14 +641,15 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
                     for group in self._l_gid:
                         for ctype in self._l_type:
                             if ctype == 'natural': continue
+                            if ctype == 'neg' and not self.negCentroid_exists(curv):
+                                continue
                             _M_cloud = self._c_cloud[group][hemi][surface][curv][ctype].cloud()
                             _v0 = _M_cloud[:,0]
                             _v1 = _M_cloud[:,1]
                             if np.isnan(np.sum(_v0)): continue
                             _str_fileName = '%s-%s-centroids-%s.%s.%s.%s' % (ctype, group, hemi, curv, self._str_dataDir, surface)
-                            _str_fileName = '%s-%s.%s.%s.%s.txt' % (group, hemi, surface, curv, ctype)
                             np.savetxt(_str_fileName, _M_cloud, fmt='%10.7f')
-                            print("Saving centroid cloud data to %s" % _str_fileName)
+                            self._log("Saving centroid cloud data to %s                    \t\t\t\r" % _str_fileName)
                             _d_plot[group], = plot(_v0, _v1,
                                                     color = self._l_color[int(group)-1],
                                                    marker = self._l_marker[int(group)-1],
@@ -655,6 +664,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
                     pylab.savefig('centroids-deviationContour-%s.png' % _str_title, bbox_inches=0)
                     pylab.savefig('centroids-deviationContour-%s.pdf' % _str_title, bbox_inches=0)
         if self._b_showPlots: pylab.show()
+        self._log('\n')
 
                 
     def run(self):
