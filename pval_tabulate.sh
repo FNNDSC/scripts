@@ -22,6 +22,7 @@ G_SYNPOSIS="
   SYNOPSIS
   
         pval_tabulate.sh -h <hemi> -r <region> -s <surface> \
+                                [-n <sign>]
                                 [-T <optionalType>]
                                 [-S <sepString>] [-G <groupNum>]
 
@@ -37,6 +38,9 @@ G_SYNPOSIS="
         and creates a table of pvals for groups by curvature functions.
 
   ARGS
+
+        -n <sign>
+        The curvature sign to process ('neg', 'pos', or 'neg pos').
 
         -h <hemi>
         The hemisphere to process ('lh' or 'rh').
@@ -62,11 +66,15 @@ G_SYNPOSIS="
   09 March 2013
   o Type spec.
 
+  17 April 2013
+  o Sign spec.
+
 "
 
-while getopts h:r:s:S:G:T: option ; do
+while getopts h:r:s:n:S:G:T: option ; do
     case "$option" 
     in
+        n) G_SIGN="$OPTARG"     ;;
         h) HEMI=$OPTARG         ;;
         r) REGION=$OPTARG       ;;
         s) SURFACE=$OPTARG      ;;
