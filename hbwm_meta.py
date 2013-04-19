@@ -454,7 +454,7 @@ if __name__ == "__main__":
                             log('Locking jobs to only run on host -->%s<--\n' % args.host)
                         str_debug = ""
                         if args.b_debug: str_debug = " --debug "
-                        str_cmd = "~/src/scripts/hbwm.py -v 10 -s %s %s -r -m %s -f %s -c %s -p %s --cluster %s %s %s" % \
+                        str_cmd = "hbwm.py -v 10 -s %s %s -r -m %s -f %s -c %s -p %s --cluster %s %s %s" % \
                             (args.stages, str_hostOnlySpec,
                             pipeline.hemi(), pipeline.surface(), pipeline.curv(), args.partitions,
                             args.cluster, str_debug, pipeline.subj())
