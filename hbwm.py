@@ -740,7 +740,10 @@ if __name__ == "__main__":
         # First, create stage shell for scheduling/executing on the remote HPC
         # This *must* be called here, since downstream processing in this stage
         # depends on a working remoteShell.
-        pipeline.stageShell_createRemoteInstance(args.cluster, stage=stage)
+        # 
+        # The 'PICES' backend cluster is fored here since scheduling delays
+        # on the Partners clusters can result in timeouts.
+        pipeline.stageShell_createRemoteInstance('PICES', stage=stage)
 
         # This assumes that the script is started from the toplevel
         # FreeSurfer SUBJECTS_DIR on the local filesystem, i.e. the 
@@ -1081,7 +1084,7 @@ if __name__ == "__main__":
                             (pipeline.local2remoteUserHomeDir(pipeline.analysisDir()), str_recomDir))
                         str_autodijkFile = '%s.%s.autodijk-%s.crv' % \
                                     (pipeline.hemi(), pipeline.surface(), pipeline.curv())
-                        str_cmd = "~/src/scripts/mris_calc.py -v 10 \
+                        str_cmd = "mris_calc.py -v 10 \
                                     --operation add $(find ../ -iname %s | grep [0-9] | tr '\n' ' ')" % \
                                     (str_autodijkFile)
                         remoteShell(str_cmd, waitForChild=True, stdoutflush=True, stderrflush=True)
