@@ -90,7 +90,7 @@ if [[ $(hostname | awk -F \. '{print $1}') == "launchpad" ]] ; then
     CLUSTERPATH=""
     export G_CLUSTERNAME="qsub"
 fi
-if [[ $(hostname | awk -F \. '{print $1}') == "eris1n2" ]] ; then
+if [[ $(echo $(hostname) | grep eris | wc -l) == "1" ]] ; then
     CLUSTERPATH="/PHShome/rp937/perl5/bin:/hptc_cluster/lsf/8.0/linux2.6-glibc2.3-x86_64/etc:/hptc_cluster/lsf/8.0/linux2.6-glibc2.3-x86_64/bin"
     export G_CLUSTERNAME="lsub"
 fi
