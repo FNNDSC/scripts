@@ -213,6 +213,8 @@ def synopsis(ab_shortOnly = False):
                             [--hemi|-h <hemisphere>]            \\
                             [--surface|-f <surface>]            \\
                             [--curv|-c <curvType>               \\
+                            [--cluster|-l <cluster>]            \\
+                            [--queue |-q <queue>]               \\
                             [--partitions|-p <numberOfSurfacePartitions>] \\
                             <Subj1> <Subj2> ... <SubjN>
     ''' % scriptName
@@ -262,6 +264,9 @@ def synopsis(ab_shortOnly = False):
             * PICES
             * launchpad
             * erisone
+
+        --queue <queue>
+        Name of queue on cluster to use. Cluster-specific.
 
         --stages|-s <stages>
         The stages of 'hbwm.py' to execute. This is specified in a string, 
@@ -399,6 +404,11 @@ if __name__ == "__main__":
                         action='store',
                         default='PICES',
                         help='destination cluster to schedule jobs on')
+    parser.add_argument('--queue', '-q',
+                        dest='queue',
+                        action='store',
+                        default='',
+                        help='default queue to use')
     args = parser.parse_args()
 
     OSshell = crun.crun()
@@ -454,10 +464,12 @@ if __name__ == "__main__":
                             log('Locking jobs to only run on host -->%s<--\n' % args.host)
                         str_debug = ""
                         if args.b_debug: str_debug = " --debug "
-                        str_cmd = "hbwm.py -v 10 -s %s %s -r -m %s -f %s -c %s -p %s --cluster %s %s %s" % \
+                        str_queue = ""
+                        if args.queue: str_queue = " --queue %s " % args.queue
+                        str_cmd = "hbwm.py -v 10 -s %s %s -r -m %s -f %s -c %s -p %s --cluster %s %s %s %s" % \
                             (args.stages, str_hostOnlySpec,
                             pipeline.hemi(), pipeline.surface(), pipeline.curv(), args.partitions,
-                            args.cluster, str_debug, pipeline.subj())
+                            args.cluster, str_debug, str_queue, pipeline.subj())
                         print str_cmd
                         shell = crun.crun()
                         shell.echo(False)
