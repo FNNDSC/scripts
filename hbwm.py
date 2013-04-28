@@ -459,6 +459,7 @@ def synopsis(ab_shortOnly = False):
                             [--surface|-f <surface>]            \\
                             [--curv|-c <curvType>               \\
                             [--cluster|-l <cluster>]            \\
+                            [--queue |-q <queue>]               \\
                             [--partitions|-p <numberOfSurfacePartitions>] \\
                             <Subj1> <Subj2> ... <SubjN>
     ''' % scriptName
@@ -496,11 +497,14 @@ def synopsis(ab_shortOnly = False):
         complete.
 
         --cluster <cluster>
-        The remote cluster to schedule jobs on. Currenly suported:
+        The remote cluster to schedule jobs on. Currenly supported:
 
             * PICES
             * launchpad
             * erisone
+
+        --queue <queue>
+        Name of queue on cluster to use. Cluster-specific.
       
         --stages|-s <stages>
         The stages to execute. This is specified in a string, such as '1234'
@@ -670,6 +674,11 @@ if __name__ == "__main__":
                         action='store',
                         default='PICES',
                         help='destination cluster to schedule jobs on')
+    parser.add_argument('--queue', '-q',
+                        dest='queue',
+                        action='store',
+                        default='',
+                        help='default queue to use')
     args = parser.parse_args()
 
     
@@ -994,6 +1003,8 @@ if __name__ == "__main__":
                             cluster.jobID(str_jobID)
                             cluster.schedulerStdOut(str_shellstdout)
                             cluster.schedulerStdErr(str_shellstderr)
+                            if len(args.queue):
+                                cluster.queueName(args.queue)
 
                             log('Scheduling %s-%s-%s-%s-%s-%s...\n' % \
                                 (pipeline.subj(), pipeline.hemi(), pipeline.surface(), pipeline.curv(),
