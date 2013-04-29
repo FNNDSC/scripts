@@ -414,7 +414,11 @@ class FNNDSC_HBWM(base.FNNDSC):
                 b_disassocaite      = False
                 b_waitForChild      = True
         shell = stage.shell()
-        shell.emailWhenDone(True)
+        # Only email on PICES jobs. Other clusters are far too verbose!
+        if astr_remoteHPC == 'PICES':
+            shell.emailWhenDone(True)
+        else:
+            shell.emailWhenDone(False)
         if args.b_debug:
             shell.echo(True)
             shell.echoStdOut(True)
