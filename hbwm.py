@@ -808,6 +808,7 @@ if __name__ == "__main__":
                     shell.schedulerStdErr(str_shellstderr)
 
                     log('Processing %s: %s...\n' % (pipeline.subj(), str_surfaceFile))
+                    shell.desc('0:%s:%s:%s' % (pipeline.subj(), pipeline.hemi(), pipeline.surface()))
                     log('Checking on number of vertices... ')
 
                     str_cmd = " mris_info %s/%s/%s/%s " % \
@@ -1095,6 +1096,8 @@ if __name__ == "__main__":
                             (pipeline.hemi(), pipeline.surface(), pipeline.curv())
                         misc.mkdir(str_recomDir)
                         os.chdir(str_recomDir)
+                        remoteShell.desc('2:%s:%s:%s:%s' % (pipeline.subj(),
+                                    pipeline.hemi(), pipeline.surface(), pipeline.curv()))
                         remoteShell.workingDir("%s/%s" % \
                             (pipeline.local2remoteUserHomeDir(pipeline.analysisDir()), str_recomDir))
                         str_autodijkFile = '%s.%s.autodijk-%s.crv' % \
@@ -1175,6 +1178,8 @@ if __name__ == "__main__":
                         str_autonsFile   = '%s.%s.ans-%s.crv' % \
                                     (pipeline.hemi(), pipeline.surface(), pipeline.curv())
                         os.chdir(pipeline.surfDir())
+                        remoteShell.desc('3:%s:%s:%s:%s' % (pipeline.subj(),
+                                    pipeline.hemi(), pipeline.surface(), pipeline.curv()))
                         remoteShell.workingDir(pipeline.local2remoteUserHomeDir(pipeline.surfDir()))
                         log('Normalizing and shifting %s\n' % str_autodijkFile)
                         str_cmd = "\
