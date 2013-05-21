@@ -65,8 +65,11 @@ class TrackvisTransformLogic( object ):
     #
     # load our transformation Matrix
     #
-    newMatrix = numpy.loadtxt( matrix, float, '#', ' ' )
-
+    #newMatrix = numpy.loadtxt( matrix, float, '#', ' ' )
+    from utility import Utility
+    newMatrix = Utility.readITKtransform(matrix)
+    
+    print newMatrix
 
     #
     # THREADED COMPONENT
@@ -137,18 +140,32 @@ class TrackvisTransformLogic( object ):
       c.info( '    ' + str( result[2] ) )
       c.info( '    ' + str( result[3] ) )
       newHeader['vox_to_ras'] = result
+    import nibabel
+    newHeader = nibabel.trackvis.empty_header()
+    # trk_header['voxel_size'] = fa_image.get_header().get_zooms()[:3]
+    # trk_header['voxel_order'] = 'LPS'
+#    
+#
+#    t1 = nibabel.load('/net/pretoria/local_mount/space/pretoria/2/chb/users/daniel.haehn/TMP/FYBORG3000/4543113/clean/diffusion.nii.gz')
+#    newHeader['dim'] = t1.get_data().shape
+#
+#    # adjust trackvis header according to affine from FA
+#    
+#    nibabel.trackvis.aff_to_hdr( t1.get_affine(), newHeader, True, True )
 
     # write
     c.info( 'Saving ' + output + '..' )
-    io.saveTrk( output, tracks, newHeader )
+    io.saveTrk( output, tracks, header )
 
     c.info( 'All done!' )
 
 
   @staticmethod
-  def transform( tracks, matrix, outputFile=None, verbose=False, threadName='Global' ):
+  def transform( tracks, matrix, outputFile=None, verbose=False, threadName='Global' , spacing=[1/2,1/2,1/2] ):
     '''
     '''
+    
+
     # O(Tracks x Points)
     #
     # loop through all tracks and transform'em!!
@@ -164,11 +181,13 @@ class TrackvisTransformLogic( object ):
 
         pointBefore = points[p]
 
-        pointAfter = numpy.append( pointBefore, 1 )
-        pointAfter = numpy.dot( matrix, pointAfter )
-        pointAfter = numpy.delete( pointAfter, -1 )
+        
+        pointAfter = numpy.dot( matrix, numpy.append( pointBefore, 1 ) )
+        #pointAfter = numpy.delete( pointAfter, -1 )
 
-        newPoints[p] = pointAfter
+        newPoints[p] = pointAfter[0:3]
+        
+        #print pointBefore, pointAfter
 
       # create a new track with the transformed points
       newTrack = ( newPoints, track[1], track[2] )
