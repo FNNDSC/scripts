@@ -323,7 +323,7 @@ if __name__ == "__main__":
                         --mpmOverlay euclidean )' % \
                         (pmakePort, subj, hemi, args.radius, hemi, lobe)
                     #str_cmd = 'sleep 10 )'
-                    cluster = crun.crun_mosix(cmdPrefix=str_prefixCmd)
+                    cluster = crun.crun_hpc_mosix(cmdPrefix=str_prefixCmd)
                     cluster.echo(False)
                     cluster.echoStdOut()
                     cluster.detach()
@@ -381,7 +381,7 @@ if __name__ == "__main__":
                         '%sintersect-%s-r%s-ply%s.label' % \
                         (hemi, intersection, args.radius, args.intersection))
                     #str_cmd = 'sleep 10 )'
-                    cluster = crun.crun_mosix(cmdPrefix=str_prefixCmd)
+                    cluster = crun.crun_hpc_mosix(cmdPrefix=str_prefixCmd)
                     cluster.echo(False)
                     cluster.echoStdOut()
                     cluster.detach()
@@ -432,7 +432,7 @@ if __name__ == "__main__":
                           ' '.join(lst_intersectLbl) + \
                           ' --a intersect-r%s-ply%s )' % (args.radius, args.intersection)
                 log('Scheduling %s-%s-intersection annotation...\n' % (subj, hemi))
-                cluster = crun.crun_mosix(cmdPrefix=str_prefixCmd)
+                cluster = crun.crun_hpc_mosix(cmdPrefix=str_prefixCmd)
                 cluster.echo(False)
                 cluster.echoStdOut()
                 cluster.detach()
