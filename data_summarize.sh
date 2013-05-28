@@ -27,10 +27,10 @@ G_SYNPOSIS="
 
   NAME
 
-        data_summarize.sh -t <dataType> [-s] [-E <expDir>] [-G <groups>]\
-                          [-n <sign>]                                   \
-			  [-a <annotationStem]				\
-			  [-R <regionSpec>]				\
+        data_summarize.sh -t <dataType> [-s] [-E <expDir>] [-G <groups>]\\
+                          [-n <sign>]                                   \\
+			  [-a <annotationStem]				\\
+			  [-R <regionSpec>]				\\
 			  [-S <surfaceSpec>]
 
   SYNOPSIS
