@@ -44,7 +44,8 @@ G_SYNPOSIS="
   ARGS
 
         -n <sign>
-        The curvature sign to process ('neg', 'pos', or 'neg pos').
+        The curvature sign to process ('neg', 'pos', 'sk', or combinations like
+        'neg pos').
 
         -t <dataType>
         One of 'pval1', 'pval5', 'overlap', 'overlapL', 'overlapR', 
