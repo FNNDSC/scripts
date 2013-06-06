@@ -288,7 +288,7 @@ if (( ${barr_stage[1]} )) ; then
     	done    
     # Do a full DICOM-compliant anonymize
     else
-        STAGECMD="$STAGEPROC -c $G_SSLCERTIFICATE -i $G_DICOMINPUTDIR -o $STAGE1FULLDIR"
+        STAGECMD="$STAGEPROC -c $G_SSLCERTIFICATE -i $G_DICOMINPUTDIR -o $STAGE1FULLDIR --continue"
         stage_run "$STAGE"  "$STAGECMD"                             \
                   "${STAGE1FULLDIR}/${STAGEPROC}.std"               \
                   "${STAGE1FULLDIR}/${STAGEPROC}.err"               \
