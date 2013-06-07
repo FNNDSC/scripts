@@ -145,10 +145,13 @@ in
         pval5)          TABULATE="pval_tabulate.sh -T le5"      ;;
         pval1)          TABULATE="pval_tabulate.sh -T le1"      ;;
         overlap)        TABULATE="overlap_tabulate.sh"          ;;
-        overlapL)       TABULATE="overlap_tabulate.sh -T L"     ;;
-        overlapR)       TABULATE="overlap_tabulate.sh -T R"     ;;
+        overlapLSym)    TABULATE="overlap_tabulate.sh -T LSym"  ;;
+        overlapRSym)    TABULATE="overlap_tabulate.sh -T RSym"  ;;
+        overlapLAsym)   TABULATE="overlap_tabulate.sh -T LAsym" ;;
+        overlapRAsym)   TABULATE="overlap_tabulate.sh -T RAsym" ;;
         areas)          TABULATE="areas_tabulate.sh"            ;;
-        areasP)         TABULATE="areas_tabulate.sh -T p"       ;;
+        areasAsym)      TABULATE="areas_tabulate.sh -T Asym"    ;;
+        areasAAsym)     TABULATE="areas_tabulate.sh -T AAsym"   ;;
         ordering)       TABULATE="ordering_tabulate.sh"         ;;
         ordering2)      TABULATE="ordering_tabulate.sh -T "     ;;
         grid)           TABULATE="grid_tabulate.sh"             ;;
