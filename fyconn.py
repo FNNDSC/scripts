@@ -620,7 +620,7 @@ bug  : \\\\   \\   :   ;    :: ;;  .' ;._..+:     ;
 
       # now store the trk file
       trk_outputfile = l + '_' + colors[l] + '.trk'
-      nii_outputfile = l + '_' + colors[l] + '.nii'
+      nii_outputfile = l + '_' + colors[l] + '.nii.gz'
       c.info( Colors.YELLOW + '  Creating fiber ROI ' + Colors.PURPLE + trk_outputfile + Colors.YELLOW + '!' + Colors._CLEAR )
       io.saveTrk( os.path.join( outputs['roi'], trk_outputfile ), new_tracks, header, None, True )
 
