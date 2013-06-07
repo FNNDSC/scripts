@@ -97,7 +97,7 @@ RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
 CHRIS=chris.tch.harvard.edu
-H1=98.110.201.50
+H1=96.252.107.87
 
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
