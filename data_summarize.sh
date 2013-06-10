@@ -150,8 +150,8 @@ in
         overlapLAsym)   TABULATE="overlap_tabulate.sh -T LAsym" ;;
         overlapRAsym)   TABULATE="overlap_tabulate.sh -T RAsym" ;;
         areas)          TABULATE="areas_tabulate.sh"            ;;
+        areasSym)       TABULATE="areas_tabulate.sh -T Sym"     ;;
         areasAsym)      TABULATE="areas_tabulate.sh -T Asym"    ;;
-        areasAAsym)     TABULATE="areas_tabulate.sh -T AAsym"   ;;
         ordering)       TABULATE="ordering_tabulate.sh"         ;;
         ordering2)      TABULATE="ordering_tabulate.sh -T "     ;;
         grid)           TABULATE="grid_tabulate.sh"             ;;
