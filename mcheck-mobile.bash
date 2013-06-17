@@ -106,7 +106,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=17
+targetList=18
 
 #
 ##
