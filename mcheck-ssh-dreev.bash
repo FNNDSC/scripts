@@ -163,9 +163,6 @@ TARGETACTION[17]="tunnel.bash --reverse	--from ch137123@${DREEV}:2121   --to ${P
 # ChRIS VM
 TARGET_CHECK[18]="tunnel.bash --reverse	--from ch137123@${DREEV}:8888	--to ${CHRIS}:80 --isRunning"
 TARGETACTION[18]="tunnel.bash --reverse	--from ch137123@${DREEV}:8888	--to ${CHRIS}:80"
-# MatLAB
-TARGET_CHECK[18]="tunnel.bash --reverse	--from ch137123@${DREEV}:27000  --to ${MATLAB}:27000 --isRunning"
-TARGETACTION[18]="tunnel.bash --reverse	--from ch137123@${DREEV}:27000  --to ${MATLAB}:27000 "
 
 #
 ##
@@ -205,6 +202,10 @@ TARGET_CHECK[25]="tunnel.bash --forward	--from 7774 --via ch137123@${DREEV} --to
 TARGETACTION[25]="tunnel.bash --forward	--from 7774 --via ch137123@${DREEV} --to localhost:7774"
 TARGET_CHECK[26]="tunnel.bash --forward	--from 7773 --via ch137123@${DREEV} --to localhost:7773 --isRunning"
 TARGETACTION[26]="tunnel.bash --forward	--from 7773 --via ch137123@${DREEV} --to localhost:7773"
+
+# MatLAB
+TARGET_CHECK[27]="tunnel.bash --reverse	--from ch137123@${DREEV}:27000  --to ${MATLAB}:27000 --isRunning"
+TARGETACTION[27]="tunnel.bash --reverse	--from ch137123@${DREEV}:27000  --to ${MATLAB}:27000 "
 
 # Process command line options
 while getopts hv: option ; do
