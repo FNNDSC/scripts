@@ -97,6 +97,7 @@ RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
 CHRIS=chris.tch.harvard.edu
+MATLAB=rc-matlab.tch.harvard.edu
 H1=96.252.107.87
 
 verbosity_check
@@ -162,6 +163,9 @@ TARGETACTION[17]="tunnel.bash --reverse	--from ch137123@${DREEV}:2121   --to ${P
 # ChRIS VM
 TARGET_CHECK[18]="tunnel.bash --reverse	--from ch137123@${DREEV}:8888	--to ${CHRIS}:80 --isRunning"
 TARGETACTION[18]="tunnel.bash --reverse	--from ch137123@${DREEV}:8888	--to ${CHRIS}:80"
+# MatLAB
+TARGET_CHECK[18]="tunnel.bash --reverse	--from ch137123@${DREEV}:27000  --to ${MATLAB}:27000 --isRunning"
+TARGETACTION[18]="tunnel.bash --reverse	--from ch137123@${DREEV}:27000  --to ${MATLAB}:27000 "
 
 #
 ##
