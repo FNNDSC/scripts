@@ -147,6 +147,8 @@ TARGET_CHECK[15]="tunnel.bash --forward	--from 8880  --via ch137123@${DREEV} --t
 TARGETACTION[15]="tunnel.bash --forward	--from 8880  --via ch137123@${DREEV} --to localhost:8880"
 TARGET_CHECK[16]="tunnel.bash --forward	--from 3204  --via ch137123@${DREEV} --to localhost:3204 --isRunning"
 TARGETACTION[16]="tunnel.bash --forward	--from 3204  --via ch137123@${DREEV} --to localhost:3204"
+TARGET_CHECK[17]="tunnel.bash --forward	--from 27000 --via ch137123@${DREEV} --to localhost:27000 --isRunning"
+TARGETACTION[17]="tunnel.bash --forward	--from 27000 --via ch137123@${DREEV} --to localhost:27000"
 
 # Process command line options
 while getopts hv: option ; do
