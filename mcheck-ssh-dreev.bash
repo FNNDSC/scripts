@@ -108,7 +108,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=29
+targetList=36
 #
 ##
 ### REVERSE TUNNELS -- from dreev
@@ -210,6 +210,20 @@ TARGETACTION[27]="tunnel.bash --reverse	--from ch137123@${DREEV}:27000  --to ${M
 # HP-Test cluster 
 TARGET_CHECK[28]="tunnel.bash --forward	--from 5050 --via ch137123@${DREEV} --to localhost:5050 --isRunning"
 TARGETACTION[28]="tunnel.bash --forward	--from 5050 --via ch137123@${DREEV} --to localhost:5050"
+TARGET_CHECK[29]="tunnel.bash --forward	--from 5051 --via ch137123@${DREEV} --to localhost:5050 --isRunning"
+TARGETACTION[29]="tunnel.bash --forward	--from 5051 --via ch137123@${DREEV} --to localhost:5050"
+TARGET_CHECK[30]="tunnel.bash --forward	--from 5052 --via ch137123@${DREEV} --to localhost:5050 --isRunning"
+TARGETACTION[30]="tunnel.bash --forward	--from 5052 --via ch137123@${DREEV} --to localhost:5050"
+TARGET_CHECK[31]="tunnel.bash --forward	--from 5053 --via ch137123@${DREEV} --to localhost:5050 --isRunning"
+TARGETACTION[31]="tunnel.bash --forward	--from 5053 --via ch137123@${DREEV} --to localhost:5050"
+TARGET_CHECK[32]="tunnel.bash --forward	--from 5054 --via ch137123@${DREEV} --to localhost:5050 --isRunning"
+TARGETACTION[32]="tunnel.bash --forward	--from 5054 --via ch137123@${DREEV} --to localhost:5050"
+TARGET_CHECK[33]="tunnel.bash --forward	--from 5055 --via ch137123@${DREEV} --to localhost:5050 --isRunning"
+TARGETACTION[33]="tunnel.bash --forward	--from 5055 --via ch137123@${DREEV} --to localhost:5050"
+TARGET_CHECK[34]="tunnel.bash --forward	--from 5056 --via ch137123@${DREEV} --to localhost:5050 --isRunning"
+TARGETACTION[34]="tunnel.bash --forward	--from 5056 --via ch137123@${DREEV} --to localhost:5050"
+TARGET_CHECK[35]="tunnel.bash --forward	--from 5057 --via ch137123@${DREEV} --to localhost:5050 --isRunning"
+TARGETACTION[35]="tunnel.bash --forward	--from 5057 --via ch137123@${DREEV} --to localhost:5050"
 
 # Process command line options
 while getopts hv: option ; do
