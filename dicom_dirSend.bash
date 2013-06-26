@@ -7,6 +7,7 @@ declare -i Gb_customStorescu=0
 declare -i Gi_verbose=0
 declare -i Gb_anonymize=0
 declare -i Gb_partialAnonymize=0
+declare -i Gb_keepAnonymize=0
 
 G_STORESCU="storescu"
 G_FILEEXT=""
@@ -30,6 +31,7 @@ G_SYNOPSIS="
                                 [-s <storescu>]				\\
                                 [-A]                        		\\
                                 [-P]                        		\\
+                                [-k]                        		\\
                                 [-K <SSLCertificate>        		\\
                                 [-E <fileExt>]              		\\
 				<dicomDir1> <dicomDir2> ... <dicomDirN>
@@ -56,6 +58,9 @@ G_SYNOPSIS="
         If specified, do a partial anonymization of the data (similar to -A,
         but rather than doing a full DICOM-compliant anonymize, only anonymizes
         some of the fields).
+        
+        -k (Optional)
+        If specified, do not delete (keep) the anonymized directory 
                 
         -E <fileExt> (Optional)
         If specified, only transmit files ending in *.<fileExt>, otherwise
@@ -129,12 +134,13 @@ EC_dirAccess="50"
 # Process command options
 ###///
 
-while getopts v:a:h:p:s:APE:K: option ; do
+while getopts v:a:h:p:s:APE:k:K: option ; do
         case "$option"
         in
                 v) Gi_verbose=$OPTARG					;;
                 A) Gb_anonymize=1                       ;;
                 P) Gb_partialAnonymize=1                ;;
+                k) Gb_keepAnonymize=1                   ;;
                 K) G_SSLCERTIFICATE=$OPTARG             ;;
                 E) G_FILEEXT=".${OPTARG}"               ;;
                 a) G_AETITLE=$OPTARG                    ;;
@@ -202,7 +208,7 @@ for DIR in $DCMLIST ; do
         $G_STORESCU -aet "$G_SELF" -aec $G_AETITLE $G_HOST $G_LISTENPORT *${G_FILEEXT}
         ret_check $? || fatal storescu
         cd ../
-        if (( Gb_anonymize || Gb_partialAnonymize)) ; then
+        if ( !Gb_keepAnonymize && ( Gb_anonymize || Gb_partialAnonymize)) ; then
             lprint      "Removing temp directory"
             rm -fr "$DIR"
             rprint      "[ ok ]"
