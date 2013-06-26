@@ -207,6 +207,10 @@ TARGETACTION[26]="tunnel.bash --forward	--from 7773 --via ch137123@${DREEV} --to
 TARGET_CHECK[27]="tunnel.bash --reverse	--from ch137123@${DREEV}:27000  --to ${MATLAB}:27000 --isRunning"
 TARGETACTION[27]="tunnel.bash --reverse	--from ch137123@${DREEV}:27000  --to ${MATLAB}:27000 "
 
+# HP-Test cluster 
+TARGET_CHECK[28]="tunnel.bash --forward	--from 5050 --via ch137123@${DREEV} --to localhost:5050 --isRunning"
+TARGETACTION[28]="tunnel.bash --forward	--from 5050 --via ch137123@${DREEV} --to localhost:5050"
+
 # Process command line options
 while getopts hv: option ; do
         case "$option"
