@@ -134,7 +134,7 @@ EC_dirAccess="50"
 # Process command options
 ###///
 
-while getopts v:a:h:p:s:APE:k:K: option ; do
+while getopts v:a:h:p:s:APkE:K: option ; do
         case "$option"
         in
                 v) Gi_verbose=$OPTARG					;;
