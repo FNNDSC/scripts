@@ -225,6 +225,22 @@ TARGETACTION[34]="tunnel.bash --forward	--from 5056 --via ch137123@${DREEV} --to
 TARGET_CHECK[35]="tunnel.bash --forward	--from 5057 --via ch137123@${DREEV} --to localhost:5057 --isRunning"
 TARGETACTION[35]="tunnel.bash --forward	--from 5057 --via ch137123@${DREEV} --to localhost:5057"
 
+TARGET_CHECK[36]="tunnel.bash --forward	--from 6050 --via ch137123@${DREEV} --to localhost:6050 --isRunning"
+TARGETACTION[36]="tunnel.bash --forward	--from 6050 --via ch137123@${DREEV} --to localhost:6050"
+TARGET_CHECK[37]="tunnel.bash --forward	--from 6051 --via ch137123@${DREEV} --to localhost:6051 --isRunning"
+TARGETACTION[37]="tunnel.bash --forward	--from 6051 --via ch137123@${DREEV} --to localhost:6051"
+TARGET_CHECK[38]="tunnel.bash --forward	--from 6052 --via ch137123@${DREEV} --to localhost:6052 --isRunning"
+TARGETACTION[38]="tunnel.bash --forward	--from 6052 --via ch137123@${DREEV} --to localhost:6052"
+TARGET_CHECK[39]="tunnel.bash --forward	--from 6053 --via ch137123@${DREEV} --to localhost:6053 --isRunning"
+TARGETACTION[39]="tunnel.bash --forward	--from 6053 --via ch137123@${DREEV} --to localhost:6053"
+TARGET_CHECK[40]="tunnel.bash --forward	--from 6054 --via ch137123@${DREEV} --to localhost:6054 --isRunning"
+TARGETACTION[40]="tunnel.bash --forward	--from 6054 --via ch137123@${DREEV} --to localhost:6054"
+TARGET_CHECK[41]="tunnel.bash --forward	--from 6055 --via ch137123@${DREEV} --to localhost:6055 --isRunning"
+TARGETACTION[41]="tunnel.bash --forward	--from 6055 --via ch137123@${DREEV} --to localhost:6055"
+TARGET_CHECK[42]="tunnel.bash --forward	--from 6056 --via ch137123@${DREEV} --to localhost:6056 --isRunning"
+TARGETACTION[42]="tunnel.bash --forward	--from 6056 --via ch137123@${DREEV} --to localhost:6056"
+TARGET_CHECK[43]="tunnel.bash --forward	--from 6057 --via ch137123@${DREEV} --to localhost:6057 --isRunning"
+TARGETACTION[43]="tunnel.bash --forward	--from 6057 --via ch137123@${DREEV} --to localhost:6057"
 # Process command line options
 while getopts hv: option ; do
         case "$option"
