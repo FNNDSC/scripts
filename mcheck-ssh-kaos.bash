@@ -146,8 +146,8 @@ TARGET_CHECK[18]="tunnel.bash --reverse --from ch137123@${DREEV}:7773 --to eriso
 TARGETACTION[18]="tunnel.bash --reverse --from ch137123@${DREEV}:7773 --to erisone.partners.org:22"
 TARGET_CHECK[19]="tunnel.bash --reverse --from ch137123@${DREEV}:1148 --to chris.nmr.mgh.harvard.edu:22 --isRunning"
 TARGETACTION[19]="tunnel.bash --reverse --from ch137123@${DREEV}:1148 --to chris.nmr.mgh.harvard.edu:22"
-TARGET_CHECK[20]="tunnel.bash --reverse --from ch137123@${DREEV}:1188 --to chris.nmr.mgh.harvard.edu:8000 --isRunning"
-TARGETACTION[20]="tunnel.bash --reverse --from ch137123@${DREEV}:1188 --to chris.nmr.mgh.harvard.edu:8000"
+TARGET_CHECK[20]="tunnel.bash --reverse --from ch137123@${DREEV}:1188 --to chris.nmr.mgh.harvard.edu:80 --isRunning"
+TARGETACTION[20]="tunnel.bash --reverse --from ch137123@${DREEV}:1188 --to chris.nmr.mgh.harvard.edu:80"
 
 while getopts hv: option ; do
         case "$option"
