@@ -368,6 +368,7 @@ class FNNDSC_HBWM(base.FNNDSC):
         Returns a crun object in the passed stage object that 
         functions as a shell on the remote HPC.
         '''
+        log = self.log()
         for key, val in kwargs.iteritems():
             if key == 'stage':          stage   = val
         for case in misc.switch(astr_remoteHPC):
@@ -375,6 +376,16 @@ class FNNDSC_HBWM(base.FNNDSC):
                 stage.shell(crun.crun_hpc_mosix(
                         remoteUser="rudolphpienaar",
                         remoteHost="rc-drno.tch.harvard.edu")
+                        )
+                stage.shell().emailUser('rudolph.pienaar@childrens.harvard.edu')
+                b_jobDetach         = False
+                b_disassocaite      = True
+                b_waitForChild      = False
+                break
+            if case('HPtest'):
+                stage.shell(crun.crun_hpc_mosix_HPtest(
+                        remoteUser="rudolphpienaar",
+                        remoteHost="pretoria:5054")
                         )
                 stage.shell().emailUser('rudolph.pienaar@childrens.harvard.edu')
                 b_jobDetach         = False
@@ -402,7 +413,24 @@ class FNNDSC_HBWM(base.FNNDSC):
                 b_disassocaite      = False
                 b_waitForChild      = True
                 break
+            if case('crit'):
+                stage.shell(crun.crun_hpc_lsf_crit(
+                        remoteUser="ch137123",
+                        remoteHost="crit-hpc-head")
+                        )
+                b_jobDetach         = False
+                b_disassocaite      = False
+                b_waitForChild      = True
+                break
             if case() or case('local'):
+                if astr_remoteHPC != 'local':
+                    log('Warning! Remote cluster was not recognized.\n')
+                    log('Valid clusters are:\n')
+                    log('\t* PICES\n')
+                    log('\t* HPtest\n')
+                    log('\t* launchpad\n')
+                    log('\t* erisone\n')
+                    log('\t* crit\n')
                 # In this case, a "local" shell will be created. Note that a
                 # "local" shell might break other logic if the caller
                 # is explicitly expecting a cluster and scheduler-
@@ -1012,9 +1040,9 @@ if __name__ == "__main__":
                             if len(args.queue):
                                 cluster.queueName(args.queue)
 
-                            log('Scheduling %s-%s-%s-%s-%s-%s...\n' % \
+                            log('Scheduling %s-%s-%s-%s-%s-%s on %s...\n' % \
                                 (pipeline.subj(), pipeline.hemi(), pipeline.surface(), pipeline.curv(),
-                                str_vstart, str_vend))
+                                str_vstart, str_vend, args.cluster))
                             cluster.workingDir(str_remoteDirSpec)
                             str_cmd = 'mris_pmake --port %d --subj %s --hemi %s \
                             --surface %s \
@@ -1035,7 +1063,7 @@ if __name__ == "__main__":
         return True
     stage1.def_stage(f_stage1callback, subj=args.l_subj, obj=stage1, pipe=pipe_HBWM)
     stage1.def_postconditions(f_blockOnScheduledJobs, obj=stage1,
-                              blockProcess    = 'mris_pmake')
+                              blockProcess    = 'mris_pmake', timepoll = 10)
     
     #
     # Stage 2
