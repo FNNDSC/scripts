@@ -1,6 +1,6 @@
 
 # First source  freesurfer environment
-source  /chb/arch/scripts/chb-fsdev
+source  /chb/arch/scripts/chb-fs stable
 
 # Set the cmtk tk environment variables
 OS=$(uname -a | awk '{print $1}')
