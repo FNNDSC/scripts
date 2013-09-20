@@ -44,6 +44,12 @@ G_SYNOPSIS="
 
         20 September 2013
         o Initial development
+	
+ SEE ALSO
+ 
+ 		o http://apple.stackexchange.com/questions/73926/is-there-a-command-to-install-a-dmg
+		o https://gist.github.com/afgomez/4172338
+
 "
 
 # TODO
