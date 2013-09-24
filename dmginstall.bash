@@ -61,18 +61,21 @@ A_noMacOSX="checking environment"
 A_noDestDir="checking on destination directory"
 A_noDMG="checking on the dmg file"
 A_appExists="attempting to install"
+A_copyApp="copying app to destination"
 
 # Error messages
 EM_noMacOSX="it seems that you're not running on Mac OS X."
 EM_noDestDir="it seems that the destination directory does not exist."
 EM_noDMG="could not access/find file."
 EM_appExists="this app seems to already be installed. You'll have to manually remove the older version first."
+EM_copyApp="the copy failed. Perhaps a permissions issue?"
 
 # Error codes
 EC_noMacOSX=10
 EC_noDestDir=11
 EC_noDMG=12
 EC_appExists=13
+EC_copyApp=14
 
 while getopts v:d: option ; do
         case "$option"
@@ -124,14 +127,16 @@ cprint "Volume mounted as $volume..." "[ ok ]"
 
 # Locate .app folder and move to /Applications
 b_canCopy=1
-app=`find $volume/. -name *.app -maxdepth 1 -type d -print0`
-lprint "Can install?"
-dirExist_check ${DESTINATIONDIR}/$app "no" || b_canCopy=0
+appFull=$(find $volume/. -name "*.app" -maxdepth 1 -type d -print0)
+lprint "Already installed?"
+app=$(echo $appFull | awk -F/ '{print $NF}')
+dirExist_check ${DESTINATIONDIR}/$app "no" "yes" && b_canCopy=0
 
 if (( b_canCopy )) ; then 
-	lprint "Copying `echo $app | awk -F/ '{print $NF}'` into $DESTINATIONDIR..."
-	cp -ir $app $DESTINATIONDIR
-	ret_check $?
+#	cprint "Application name"  "[ $app ]"
+	lprint "Copying <$app> into $DESTINATIONDIR..."
+	cp -ir $appFull $DESTINATIONDIR 2>/dev/null
+	ret_check $? || beware copyApp
 fi
 
 # Unmount volume, delete temporal file
