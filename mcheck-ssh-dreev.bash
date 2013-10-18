@@ -109,7 +109,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=31
+targetList=32
 #
 ##
 ### REVERSE TUNNELS -- from dreev
