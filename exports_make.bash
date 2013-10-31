@@ -79,7 +79,7 @@ if [[ $G_STYLE != "Linux" && $G_STYLE != "Darwin" ]] ; then fatal args;   fi
 if (( Gb_siteNum )) ; then
     sitenum=$G_siteNum
 else
-    sitenum=30
+    sitenum=31
 fi
 
 # Format: <label>;<netmask>
@@ -106,13 +106,14 @@ NETMASK[19]="1 Autumn Street, TCHpeap subnet 9;10.23.135.0"
 NETMASK[20]="1 Autumn Street, TCHpeap subnet 10;10.23.136.0"
 NETMASK[21]="1 Autumn Street, TCHpeap subnet 11;10.23.137.0"
 NETMASK[22]="1 Autumn Street, TCHpeap subnet 12;10.23.138.0"
-NETMASK[23]="Main CHB Campus, 3D Lab;10.3.2.0"
-NETMASK[24]="Engels Lab;10.32.72.0"
-NETMASK[25]="Main CHB Campus, Sanjay 1;10.6.60.0"
-NETMASK[26]="Main CHB Campus, Sanjay 2;10.211.55.0"
-NETMASK[27]="Main CHB Campus, Ed Wang;10.4.46.0"
-NETMASK[28]="Main CHB Campus, CRIT-HPC;10.36.142.0"
-NETMASK[29]="Main CHB Campus, CRIT-HPC-workers;10.36.149.0"
+NETMASK[23]="1 Autumn Street, TCHpeap subnet 12;10.23.139.0"
+NETMASK[24]="Main CHB Campus, 3D Lab;10.3.2.0"
+NETMASK[25]="Engels Lab;10.32.72.0"
+NETMASK[26]="Main CHB Campus, Sanjay 1;10.6.60.0"
+NETMASK[27]="Main CHB Campus, Sanjay 2;10.211.55.0"
+NETMASK[28]="Main CHB Campus, Ed Wang;10.4.46.0"
+NETMASK[29]="Main CHB Campus, CRIT-HPC;10.36.142.0"
+NETMASK[30]="Main CHB Campus, CRIT-HPC-workers;10.36.149.0"
 
 shift $(($OPTIND - 1))
 EXPORTLIST=$*
