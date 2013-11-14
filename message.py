@@ -17,7 +17,8 @@ class Message:
     Messages can be tagged with optional debug level descriptors, allowing
     easy filtering by setting an object's internal verbosity value.
     
-    Messages can also be prepended with syslog style prefixes.
+    Messages can also be prepended with syslog style prefixes, as well as
+    "group" type string tags for easy post-filtering.
 
     Furthermore, text messages can be left/right justified in columns of given 
     width by setting in-call flags.
@@ -44,6 +45,48 @@ class Message:
         else:
             return self._verbosity
     
+
+    def tagstring(self, *args):
+        '''
+        get/set the tag string itself.
+
+        If called with non-zero length argument, will toggle the
+        internal b_tag flag to True.
+
+        The tagstring, if flagged TRUE and non-zero length, will
+        prepend each output log line. In this manner, it's possible
+        to post-filter log files for specific tags.
+
+        tagstring():            returns the current tagstring
+        tagstring(<string>):    sets the tagstring to <string>
+
+        '''
+        if len(args):
+            self._str_tag = args[0]
+            self._b_tag   = True
+        else:
+            return self._str_tag
+
+
+    def tag(self, *args):
+        '''
+        get/set the tag flag.
+
+        The tag flag toggles the most basic prepending to each log
+        output. The idea with the tagging text is to provide a 
+        simple mechanism by which a log output can be filtered/parsed
+        for specific outputs.
+
+        tag():                  returns the current syslog flag
+        tag(True|False):        sets the flag to True|False
+
+        '''
+        if len(args):
+            self._b_tag = args[0]
+        else:
+            return self._b_tag
+
+
     def syslog(self, *args):
 	'''
 	get/set the syslog flag.
@@ -196,25 +239,25 @@ class Message:
             log.to(sys.stdout)
 
             # prints message to stdout            
-            log('hello, world\\n')              
+            log('hello, world\n')              
 
             log.verbosity(1)
             # With verbosity set to 1, messages tagged with
             # a debug level greater than 1 will not be
             # printed to stdout.
-            log('hello world\\n', debug=5)
+            log('hello world\n', debug=5)
 
             # Setting verbosity to 10 will allow the previous
             # message to be printed.
             log.verbosity(10)
-            log('hello, world\\n', debug=5)
+            log('hello, world\n', debug=5)
 
             # Simple two-column justifed output can be created by
             # first printing a message left justifed in a column of
-            # width 40 (with no carriage return, i.e. no '\\n')
+            # width 40 (with no carriage return, i.e. no '\n')
             log('starting process...', lw=40)
-            # followed by a right justified message (with a '\\n')
-            log('[ ok ]\\n', rw=20)
+            # followed by a right justified message (with a '\n')
+            log('[ ok ]\n', rw=20)
 
         The payload presentation is dependent on several internal flags:
 
@@ -233,11 +276,15 @@ class Message:
         verbosity       = 0
         lw              = 0
         rw              = 0
+        
         for key, value in kwargs.iteritems():
             if key == 'debug' or key == 'verbose':      verbosity       = value
             if key == 'lw':                             lw              = -value
             if key == 'rw':                             rw              = value
             if key == 'syslog':                         self._b_syslog  = value
+
+        if self._b_tag and len(self._str_tag):
+            str_prepend = Colors.LIGHT_CYAN + self._str_tag + ' ' + Colors.NO_COLOUR
 
         if self._b_syslog:
             self._str_syslog = '%s: ' % self.syslog_generate(
@@ -297,7 +344,7 @@ class Message:
 
         self._verbosity         = 0
 
-        # One construction, set the "internal" stdout and stderr to the 
+        # On construction, set the "internal" stdout and stderr to the 
         # (current) system stdout and stderr file handles
         self._sys_stdout        = sys.stdout
         self._sys_stderr        = sys.stderr
@@ -305,6 +352,8 @@ class Message:
         self._verbosity         = 1
         self._b_syslog          = False
         self._str_syslog        = ''
+        self._b_tag             = False
+        self._str_tag           = ''
         self._b_tee             = False
 
         self._b_isSocket        = False
@@ -382,6 +431,9 @@ if __name__ == "__main__":
 
     log2.to(open('/tmp/test2.log', 'a'))
     log2('another message to /tmp/test2.log\n')
+    log2.tagstring('MARK-->')
+    log2('this text is tagged\n')
+    log2('and so is this text\n')
     
     log1.clear()
     log1.append('this is message ')
@@ -390,5 +442,6 @@ if __name__ == "__main__":
     log1.to('stdout')
     log1()
 
+    log2.tag(False)
     log2('goodbye!\n')
     
