@@ -79,5 +79,8 @@ class C_dgmsocket :
                 self.m_dgmsocket.sendto(str_payload, (self.mstr_remoteHost, self.m_port))
         def close(self):
                 self.m_dgmsocket.close()
+        def flush(self):
+                pass
+            
                 
 
