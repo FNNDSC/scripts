@@ -15,7 +15,7 @@ G_HOST=heisenberg.nmr.mgh.harvard.edu
 G_AETITLE="DCM4CHEE"
 G_LISTENPORT=11112
 G_SSLCERTIFICATE="/chb/users/dicom/anonymize_key/CA_cert.pem"
-
+G_ANONOUTDIR=""
 G_SYNOPSIS="
 
  NAME
@@ -33,6 +33,7 @@ G_SYNOPSIS="
                                 [-P]                        		\\
                                 [-k]                        		\\
                                 [-K <SSLCertificate>        		\\
+                                [-O <anonOutputDir>]              		\\
                                 [-E <fileExt>]              		\\
 				<dicomDir1> <dicomDir2> ... <dicomDirN>
 
@@ -82,6 +83,9 @@ G_SYNOPSIS="
         The anonymization process ('gdcmanon') requires an SSL certificate.  
         If requesting anonymization, the process to generate an SSL certificate 
         is described at: http://gdcm.sourceforge.net/html/gdcmanon.html
+
+        -O <anonOutDir> (optional, default = $G_ANONOUTDIR)
+        The directory where the anonymized files will be stored
 
         -s <storescu> (optional, default = $G_STORESCU)
         Use this option to specify a <storescu> binary, typically used
@@ -134,7 +138,7 @@ EC_dirAccess="50"
 # Process command options
 ###///
 
-while getopts v:a:h:p:s:APkE:K: option ; do
+while getopts v:a:h:p:s:APkE:K:O: option ; do
         case "$option"
         in
                 v) Gi_verbose=$OPTARG					;;
@@ -142,6 +146,7 @@ while getopts v:a:h:p:s:APkE:K: option ; do
                 P) Gb_partialAnonymize=1                ;;
                 k) Gb_keepAnonymize=1                   ;;
                 K) G_SSLCERTIFICATE=$OPTARG             ;;
+                O) G_ANONOUTDIR=$OPTARG                 ;;
                 E) G_FILEEXT=".${OPTARG}"               ;;
                 a) G_AETITLE=$OPTARG                    ;;
                 h) G_HOST=$OPTARG                       ;;
@@ -193,7 +198,11 @@ for DIR in $DCMLIST ; do
         if (( Gb_anonymize  || Gb_partialAnonymize)) ; then
             statusPrint "Anonymizing $DIR..." "\n"
             INPUTDIR=$DIR
-            OUTPUTDIR=${DIR}-anon
+            if [ -z "$G_ANONOUTDIR" ]; then
+              OUTPUTDIR=${DIR}-anon
+            else  
+              OUTPUTDIR=$G_ANONOUTDIR
+            fi
             ANONARG=""
             if ((Gb_partialAnonymize)) ; then
             	ANONARG=" -P "
@@ -208,7 +217,7 @@ for DIR in $DCMLIST ; do
         $G_STORESCU -aet "$G_SELF" -aec $G_AETITLE $G_HOST $G_LISTENPORT *${G_FILEEXT}
         ret_check $? || fatal storescu
         cd ../
-        if ( !Gb_keepAnonymize && ( Gb_anonymize || Gb_partialAnonymize)) ; then
+        if (( !Gb_keepAnonymize && ( Gb_anonymize || Gb_partialAnonymize) )) ; then
             lprint      "Removing temp directory"
             rm -fr "$DIR"
             rprint      "[ ok ]"
