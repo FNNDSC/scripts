@@ -1,14 +1,23 @@
-# misc.tcl
 #
-# Miscellaneous tcl routines
+# NAME
 #
-# ToDo
-# o	`clint' needs to be more robust - specifically as far as interpreting
-#	flags with no arguments
+#	misc.tcl
+#
+# DESCRIPTION
+#
+#	Miscellaneous tcl routines
+#
+# TODO
+# o	`clint' needs to be more robust - specifically as far as 
+#	interpreting flags with no arguments
 #
 # HSTORY
+#
 # 5-11-1998
 # o	Initial transfer and testing
+#
+# 1-10-2000
+# o	Re-evaluation. Beautify
 #
 
 package provide misc 0.1
@@ -20,11 +29,14 @@ proc weekdays_list {} {
 
 proc deref {pointer {level 1} }  {
 #
+# ARGS
+# pointer		in		name of holder variable
+# level		        in (opt)	        stack level reference	
+#
+# DESC
 # "Dereferences" a "pointer" - i.e. a variable containing
 # the name of anothr variable.
 #
-# pointer		in		name of holder variable
-# level		in (opt)	stack level reference	
 #
     upvar $level $pointer contents
     return $contents
@@ -32,14 +44,16 @@ proc deref {pointer {level 1} }  {
 
 proc clint {argv lst_commargs {prefix ""} } {
 #
-# simple command line interpreter
-#
+# ARGS
 # argv			in		list of command line arguments
-# lst_commargs	in		input list of search variables
+# lst_commargs	        in		input list of search variables
 #					Variables are assumed defined at a 
 #					higher stack level
-# prefix		in		string to prefix to variable name at a
+# prefix		        in		string to prefix to variable name at a
 #					higher stack level
+#
+# DESC
+# (Very) Simple command line interpreter.
 #
 # NOTE
 # o It is assumed that lst_commargs are prefixed by "--"
@@ -60,7 +74,7 @@ proc clint {argv lst_commargs {prefix ""} } {
 		}
 		if {!$found} {
 		    puts "unknown flag $arg"
-		    exit 0
+		    exit 100
 		}
 	    }
 	    value { 
@@ -71,7 +85,6 @@ proc clint {argv lst_commargs {prefix ""} } {
 	    }
 	}
     }
-
 }
 
 
