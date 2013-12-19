@@ -260,7 +260,7 @@ proc shutdown {exitcode} {
 #
     global SELF
 
-    puts "\n`$SELF' shutting down..."
+    puts "\n'$SELF' shutting down..."
     puts "\tSending system exitcode of $exitcode\n"
     exit $exitcode
 }
