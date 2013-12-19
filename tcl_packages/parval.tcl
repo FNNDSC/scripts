@@ -100,10 +100,15 @@
 # 01-06-2000
 # o Initial design and coding. Derivation from `commint.c'
 #
+# 22 September 2004
+# o Added an option for processing option values that contain spaces,
+#	"os" : option spaces. If set to "1", then assume options can
+#	contain spaces, and that no "spurious" options are in $argv.
+#
 
 package provide parval 0.1
 
-proc PARVAL_build {name argv {cs "--"}} {
+proc PARVAL_build {name argv {cs "--"} {so "0"}} {
     global arr_PARVAL
 
     set arr_PARVAL($name,cs)		$cs
@@ -111,17 +116,19 @@ proc PARVAL_build {name argv {cs "--"}} {
     set arr_PARVAL($name,parameter)	""
     set arr_PARVAL($name,value)		""
     set arr_PARVAL($name,argnum)	-1
+    set arr_PARVAL($name,so)		$so
 
     return arr_PARVAL
 }
 
-proc PARVAL_nullify {name} {
+proc PARVAL_nullify {name {so "0"}} {
     global arr_PARVAL
 
     set arr_PARVAL($name,cs)		"--"
     set arr_PARVAL($name,parameter)	""
-    set arr_PARVAL($name,value)		""
+    set arr_PARVAL($name,value)	""
     set arr_PARVAL($name,argnum)	-1
+    set arr_PARVAL($name,so)		$so
 }
 
 proc PARVAL_print {name}  {
@@ -129,6 +136,7 @@ proc PARVAL_print {name}  {
 
     puts stdout "PARVAL:\t\t$name"
     puts stdout "cs:\t\t$arr_PARVAL($name,cs)"
+    puts stdout "so:\t\t$arr_PARVAL($name,so)"
     puts stdout "parameter:\t$arr_PARVAL($name,parameter)"
     puts stdout "value:\t\t$arr_PARVAL($name,value)"
     puts stdout "argnum:\t\t$arr_PARVAL($name,argnum)"
@@ -138,7 +146,7 @@ proc PARVAL_print {name}  {
 proc PARVAL_interpret {name option} {
     global arr_PARVAL
 
-    PARVAL_nullify $name
+    PARVAL_nullify $name $arr_PARVAL($name,so)
     set argnum \
 	[lsearch -regexp $arr_PARVAL($name,argv) $option]
     
@@ -158,9 +166,24 @@ proc PARVAL_interpret {name option} {
 	set arr_PARVAL($name,value) 1
 	set argc [llength $arr_PARVAL($name,argv)]
 	if {$argnum < $argc} {
-	    set value [lindex $arr_PARVAL($name,argv) $argnum]
-	    if { [string first $arr_PARVAL($name,cs) $value] != 0 } {
-		set arr_PARVAL($name,value) $value
+	    if {$arr_PARVAL($name,so)} {
+	    	set value [lindex $arr_PARVAL($name,argv) $argnum]
+		set arr_PARVAL($name,value) ""
+		set wordCount "0"
+		while {[string first $arr_PARVAL($name,cs) $value] != 0 && $argnum < $argc} {
+		    if {$wordCount} {
+			append arr_PARVAL($name,value) " "
+		    }
+		    append arr_PARVAL($name,value) $value
+		    incr argnum
+		    incr wordCount
+		    set value [lindex $arr_PARVAL($name,argv) $argnum]
+		}
+	    } else {
+	    	set value [lindex $arr_PARVAL($name,argv) $argnum]
+	    	if { [string first $arr_PARVAL($name,cs) $value] != 0 } {
+		    set arr_PARVAL($name,value) $value
+	    	}
 	    }
 	}
     }

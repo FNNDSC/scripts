@@ -9,8 +9,6 @@
 # full path name of this file's directory.
 
 package ifneeded class_struct 0.1 [list tclPkgSetup $dir class_struct 0.1 {{class_struct.tcl source {array_associate class_Dump class_Initialise class_get list_order}}}]
-package ifneeded foxGetOpt 0.1 [list tclPkgSetup $dir foxGetOpt 0.1 {{foxGetOpt.tcl source getopt}}]
-package ifneeded foxTypedOpts 0.1 [list tclPkgSetup $dir foxTypedOpts 0.1 {{foxTypedOpts.tcl source typedopts}}]
 package ifneeded misc 0.1 [list tclPkgSetup $dir misc 0.1 {{misc.tcl source {clint deref weekdays_list}}}]
 package ifneeded parval 0.1 [list tclPkgSetup $dir parval 0.1 {{parval.tcl source {PARVAL_build PARVAL_interpret PARVAL_nullify PARVAL_print}}}]
 package ifneeded tape_misc 0.1 [list tclPkgSetup $dir tape_misc 0.1 {{tape_misc.tcl source {tape_admin_close tape_admin_init tape_backup_do tape_backup_manage tape_canDoMonthly tape_class_struct tape_control tape_currentSet_inc tape_do_nothing tape_error tape_incReset tape_notice_sendMail tape_ruleDays_find tape_shut_down tape_todayRule_get tape_tomorrowRule_get}}}]
