@@ -162,7 +162,7 @@ ARGS
 # The following need to be defined for a given backup system!!
 ###///
 # The path containing the support tcl files.
-lappend auto_path       /chb/users/rudolphpienaar/src/devel/tcl_packages.devel
+lappend auto_path       /chb/arch/scripts/tcl_packages.devel
 # The <dataPath> is the backupRootDir and contains the config files for
 # a backup, as well as the actual backup tgz files for each config.
 set dataPath            "/chb/users/rudolphpienaar/backup"
