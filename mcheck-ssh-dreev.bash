@@ -99,7 +99,7 @@ PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
 CHRIS=chris.tch.harvard.edu
 MATLAB=rc-matlab.tch.harvard.edu
-H1=71.248.179.250
+H1=98.118.51.216
 
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
