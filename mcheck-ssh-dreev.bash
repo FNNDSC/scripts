@@ -100,6 +100,7 @@ GATE=gate.nmr.mgh.harvard.edu
 CHRIS=chris.tch.harvard.edu
 MATLAB=rc-matlab.tch.harvard.edu
 H1=98.118.51.216
+FNNDSC=fnndsc.tch.harvard.edu
 
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
@@ -109,7 +110,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=33
+targetList=34
 #
 ##
 ### REVERSE TUNNELS -- from dreev
@@ -221,6 +222,10 @@ TARGETACTION[31]="tunnel.bash --forward	--from 1143 --via ch137123@${DREEV} --to
 
 TARGET_CHECK[32]="tunnel.bash --reverse	--from ch137123@${DREEV}:4443 --to ${CHRIS}:443 --isRunning"
 TARGETACTION[32]="tunnel.bash --reverse	--from ch137123@${DREEV}:4443 --to ${CHRIS}:443"
+
+# Persisten hosts: fnndsc and tautona
+TARGET_CHECK[33]="tunnel.bash --reverse	--from ch137123@${DREEV}:2137 --to ${FNNDSC}:2137 --isRunning"
+TARGETACTION[33]="tunnel.bash --reverse	--from ch137123@${DREEV}:2137 --to ${FNNDSC}:2137 "
 
 # Process command line options
 while getopts hv: option ; do
