@@ -224,8 +224,8 @@ TARGET_CHECK[32]="tunnel.bash --reverse	--from ch137123@${DREEV}:4443 --to ${CHR
 TARGETACTION[32]="tunnel.bash --reverse	--from ch137123@${DREEV}:4443 --to ${CHRIS}:443"
 
 # Persisten hosts: fnndsc and tautona
-TARGET_CHECK[33]="tunnel.bash --reverse	--from ch137123@${DREEV}:2137 --to ${FNNDSC}:2137 --isRunning"
-TARGETACTION[33]="tunnel.bash --reverse	--from ch137123@${DREEV}:2137 --to ${FNNDSC}:2137 "
+TARGET_CHECK[33]="tunnel.bash --reverse	--from ch137123@${DREEV}:2137 --to ${FNNDSC}:22 --isRunning"
+TARGETACTION[33]="tunnel.bash --reverse	--from ch137123@${DREEV}:2137 --to ${FNNDSC}:22 "
 
 # Process command line options
 while getopts hv: option ; do
