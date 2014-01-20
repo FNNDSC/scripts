@@ -108,25 +108,25 @@ shift $(($OPTIND - 1))
 lst_APP=$*
 
 topDir=$(pwd)
-for file in $lst_APP ; do
+for file in "$lst_APP" ; do
 	lprint "Checking on app dir"
-	dirExist_check $file || fatal noApp
+	dirExist_check "$file" || fatal noApp
 	lprint "Checking for alreadyRetina on app"
-	cd $file/Contents >/dev/null 2>/dev/null || fatal InfoCheck
+	cd "$file"/Contents >/dev/null 2>/dev/null || fatal InfoCheck
 	b_alreadyRetina=$(grep NSHighResolutionCapable Info.plist | wc -l)
 	if (( b_alreadyRetina )) ; then fatal alreadyRetina ; fi
 	rprint "[ not retina ready ]"
 	cd $topDir
 	gcp -pvrdi $file /tmp >/dev/null
-	rm -fr $file.orig 2>/dev/null
-	mv $file $file.orig
+	rm -fr "$file".orig 2>/dev/null
+	mv "$file" "$file".orig
 	baseFile=$(basename $file)
 	cd /tmp/${baseFile}/Contents
 	lprint "Make updates to Info.plist"
 	gsed -i.orig 's|</dict>|\t<key>NSPrincipalClass</key>\n\t<string>NSApplication</string>\n\t<key>NSHighResolutionCapable</key>\n\t<true/>\n</dict>|'	Info.plist
 	rprint "[ ok ]"
 	lprint "Refreshing app cache"
-	gcp -pvrdi /tmp/${baseFile} ${topDir}/$file >/dev/null
+	gcp -pvrdi /tmp/${baseFile} ${topDir}/"$file" >/dev/null
 	rprint "[ ok ]"
 	rm -fr /tmp/${baseFile}
 done
