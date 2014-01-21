@@ -86,7 +86,7 @@ fi
  NETMASK[0]="Local network;192.168.1.0"
  NETMASK[1]="1 Autumn Street, 6th floor;10.17.24.0"
  NETMASK[2]="1 Autumn Street, 4th floor;10.17.16.0"
- NETMASK[3]="Needham Data Center ('tautona' storage);10.36.132.0"
+ NETMASK[3]="Needham Data Center ('tautona');10.36.132.0"
  NETMASK[4]="Needham Data Center (PICES cluster);10.36.133.0"
  NETMASK[5]="Neuroradiology Reading Room;10.28.8.0"
  NETMASK[6]="Enders, 9th floor;10.7.34.0"
