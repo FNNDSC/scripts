@@ -13,32 +13,42 @@ G_SYNOPSIS="
   DESCRIPTION
   
         'lnchd' preserves the relationship between a created link and its 
-        original destination file, but replaces the original destination
+        original destination, but replaces the original destination
         directory with <newBaseDir>.
 
-        It is useful when the original source file(s) have been moved, leaving
-        the original links to these files dead. 
+        It is useful when the original source file(s) have been moved (leaving
+        the original links to these files dead) or when links need to be 
+        switched to a <newBaseDir> but keep the original end target of the
+        original link.
+        
+        'lnchd' preserves the original link name (which differ from the
+        actual target of the link).
 
   EXAMPLES
 
         $>cd /some/dir
-        $>lnchd /some/new/dir *
-  
+        $>lnchd /some/new/dir ln1 ln2 ... lnN  
         In this snippet, /some/dir contains symbolic links along the lines of
 
-            ln1 -> /original/dir/file1
-            ln2 -> /original/dir/file2
+            ln1 -> /original/dir/target1
+            ln2 -> /original/dir/target2
                           ...
-            lnN -> /original/dir/fileN
+            lnN -> /original/dir/targetN
 
-        Assume that the files (file1, file2, ..., fileN) have all been moved
-        to a new location, /some/new/dir. All the original links are now 
-        dead. By running the above lnchd, the links are restored to
+        Assume that the targets (target1, target2, ..., targetN) have all been
+        moved to a new location, /some/new/dir. All the original links are now 
+        dead. Alternatively, it could be that a copy of the targets now exist
+        in /some/new/dir and the links need to re-assigned to this new copy.
+        
+        By running the above lnchd, the links are re-assigned to
 
-            ln1 -> /some/new/dir/file1
-            ln2 -> /some/new/dir/file2
+            ln1 -> /some/new/dir/target1
+            ln2 -> /some/new/dir/target2
                           ...
-            lnN -> /some/new/dir/fileN
+            lnN -> /some/new/dir/targetN
+            
+        The link will only be restored if /some/new/dir/targetN is itself
+        valid.
 
 "
 
@@ -48,24 +58,26 @@ if (( ! ${#1} )) ; then
 fi
 
 NEWDIR=$1
-LNFILES=$(echo $* | awk '{for(i=2; i<=NF; i++) printf("%s ", $i);}')
+LNTARGETS=$(echo $* | awk '{for(i=2; i<=NF; i++) printf("%s ", $i);}')
 
 #echo "$LNFILES"
 
-for FILE in $LNFILES ; do
-     if [[ -h $FILE ]] ; then
-	 LINK=$(/bin/ls -l $FILE | awk '{print $NF}')
-	 ORIGFILE=$(basename $LINK)
+for TARGET in $LNTARGETS ; do
+     if [[ -h $TARGET ]] ; then
+	 LINK=$(/bin/ls -l $TARGET | awk '{print $NF}')
+	 ORIGTARGET=$(basename $LINK)
+	 ORIGNAME=$(/bin/ls -l $TARGET | grep $LINK | awk '{print $9}')
 	 
-	 if [[ -d ${NEWDIR}/$ORIGFILE || -f ${NEWDIR}/$ORIGFILE ]] ; then
-            rm $FILE
-            printf "%60s%20s\n" "$ORIGFILE ->" "[ $FILE ]"
-            ln -s ${NEWDIR}/$ORIGFILE $FILE
+	 if [[ -d ${NEWDIR}/$ORIGTARGET || -f ${NEWDIR}/$ORIGTARGET ]] ; then
+            rm $TARGET
+            printf "OLD: %20s -> %30s\n" "$ORIGNAME" "$LINK" 
+            printf "NEW: %20s -> %30s\n\n" "$ORIGNAME" "${NEWDIR}/$ORIGTARGET" 
+            ln -s ${NEWDIR}/$ORIGTARGET $ORIGNAME
 	 else
 	    printf "%60s%20s\n" "$ORIGFILE not found in target" "[ skipping ]"
 	 fi
      else
-	 printf "\n\t'$FILE' is not a symbolic link.\n"
+	 printf "\n\t'$TARGET' is not a symbolic link.\n"
 	 printf "\tNo action performed.\n"
 	 exit 2
     fi
