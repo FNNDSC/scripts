@@ -35,7 +35,7 @@ TARGETDIR=$2
 ACTUALDIR=$3
 
 if [[ -h $SYMNAME ]] ; then
-  SYMTARGETDIR=$(/bin/ls -l $SYMNAME | awk {'print $10'})
+  SYMTARGETDIR=$(/bin/ls -l $SYMNAME | awk {'print $11'})
   SYMTARGET=$(basename $SYMTARGETDIR)
   if (( ${#ACTUALDIR} )) ; then
       SYMTARGETDIR=$ACTUALDIR/$SYMTARGET
