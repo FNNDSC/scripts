@@ -101,6 +101,7 @@ CHRIS=chris.tch.harvard.edu
 MATLAB=rc-matlab.tch.harvard.edu
 H1=98.118.51.216
 FNNDSC=fnndsc.tch.harvard.edu
+TAUTONA=tautona.tch.harvard.edu
 
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
@@ -226,6 +227,8 @@ TARGETACTION[32]="tunnel.bash --reverse	--from ch137123@${DREEV}:4443 --to ${CHR
 # Persisten hosts: fnndsc and tautona
 TARGET_CHECK[33]="tunnel.bash --reverse	--from ch137123@${DREEV}:2137 --to ${FNNDSC}:22 --isRunning"
 TARGETACTION[33]="tunnel.bash --reverse	--from ch137123@${DREEV}:2137 --to ${FNNDSC}:22 "
+TARGET_CHECK[34]="tunnel.bash --reverse	--from ch137123@${DREEV}:3228 --to ${TAUTONA}:22 --isRunning"
+TARGETACTION[34]="tunnel.bash --reverse	--from ch137123@${DREEV}:3228 --to ${TAUTONA}:22 "
 
 # Process command line options
 while getopts hv: option ; do
