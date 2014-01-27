@@ -8,7 +8,7 @@ G_SYNOPSIS="
         
   SYNOPSIS
   
-        lnchd <newBaseDir> <link1> <link2> ... <linkN>
+        lnchd [-s <dirSubString>] <newBaseDir> <link1> <link2> ... <linkN>
         
   DESCRIPTION
   
@@ -23,6 +23,12 @@ G_SYNOPSIS="
         
         'lnchd' preserves the original link name (which differ from the
         actual target of the link).
+	
+  ARGUMENTS
+  
+  	-s <dirSubString>
+	A sed-friendly regex that will applied to each <link> to create the
+	new link target string.
 
   EXAMPLES
 
@@ -57,28 +63,52 @@ if (( ! ${#1} )) ; then
     exit 1
 fi
 
-NEWDIR=$1
-LNTARGETS=$(echo $* | awk '{for(i=2; i<=NF; i++) printf("%s ", $i);}')
+let b_verbose=0
+let b_regex=0
 
-#echo "$LNFILES"
+while getopts "s:vh" option ; do
+        case "$option"
+        in
+		s) REGEX=$OPTARG
+		   b_regex=1		;;
+                v) b_verbose=1 		;;
+                h) echo "$G_SYNOPSIS"	;;
+                \?) echo "$G_SYNOPSIS" 	;;
+        esac
+done
+shift $(($OPTIND - 1))
 
+if (( !b_regex )) ; then 
+	NEWDIR=$1
+	LNTARGETS=$(echo $* | awk '{for(i=2; i<=NF; i++) printf("%s ", $i);}')
+else
+	LNTARGETS="$*"
+fi
+	
 for TARGET in $LNTARGETS ; do
      if [[ -h $TARGET ]] ; then
 	 LINK=$(/bin/ls -l $TARGET | awk '{print $NF}')
 	 ORIGTARGET=$(basename $LINK)
 	 ORIGNAME=$(/bin/ls -l $TARGET | grep $LINK | awk '{print $9}')
+	 if (( b_regex )) ; then
+		 CMD="echo $LINK | sed '$REGEX'"
+		 NEWDIR=$(eval "$CMD")
+		 NEWDIR=$(dirname $NEWDIR)
+	 fi
 	 
 	 if [[ -d ${NEWDIR}/$ORIGTARGET || -f ${NEWDIR}/$ORIGTARGET ]] ; then
             rm $TARGET
-            printf "OLD: %20s -> %30s\n" "$ORIGNAME" "$LINK" 
-            printf "NEW: %20s -> %30s\n\n" "$ORIGNAME" "${NEWDIR}/$ORIGTARGET" 
+	    if (( b_verbose )) ; then
+                printf "OLD: %20s -> %30s\n" "$ORIGNAME" "$LINK" 
+                printf "NEW: %20s -> %30s\n\n" "$ORIGNAME" "${NEWDIR}/$ORIGTARGET" 
+    	    fi
             ln -s ${NEWDIR}/$ORIGTARGET $ORIGNAME
 	 else
-	    printf "%60s%20s\n" "$ORIGFILE not found in target" "[ skipping ]"
+	    printf "%60s%20s\n" "<$ORIGTARGET> not found in target" "[ skipping ]"
 	 fi
      else
 	 printf "\n\t'$TARGET' is not a symbolic link.\n"
 	 printf "\tNo action performed.\n"
-	 exit 2
+	 # exit 2
     fi
 done
