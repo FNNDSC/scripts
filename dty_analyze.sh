@@ -4,7 +4,7 @@
 # "include" the set of common script functions
 source common.bash
 
-G_STAGES="12"
+G_STAGES="123"
 DENSITYLIST="AreaDensity.txt ParticleDensity.txt"
 TOKEN="cloudCoreOverlap"
 OUTDIR="./"
@@ -84,17 +84,22 @@ G_SELF=`basename $0`
 G_PID=$$
 
 A_noOutRunDir="checking on output run directory"
-EM_noOutRunDir="I couldn't access the output run dir. Does it exist?"
-EC_noOutRootDir=54
+A_preconditionFail="checking on stage preconditions"
 
-while getopts v:s:p:o: option ; do
+EM_noOutRunDir="I couldn't access the output run dir. Does it exist?"
+EM_preconditionFail="I couldn't find a necessary precondition."
+
+EC_noOutRootDir=54
+EC_preconditionFail=60
+
+while getopts v:s:p:o:t: option ; do
         case "$option"
         in
 		o) OUTDIR=$OPTARG		;;
 		p) PREFIXLIST=$OPTARG			
 		   b_prefixList=${#PREFIXLIST}	;;
                 s) FILTER=$OPTARG		;;
-                t) G_STAGES="$OPTARG"		b;;
+                t) G_STAGES="$OPTARG"		;;
                 v) let Gi_verbose=$OPTARG       ;;
                 \?) synopsis_show
                     exit 0;;
@@ -105,11 +110,9 @@ verbosity_check
 topDir=$(pwd)
 
 # Are we on a Mac with installed MacPorts?
-EXPR=expr
-fileExist_check /opt/local/bin/gexpr && EXPR=/opt/local/bin/gexpr
-
-echo "expr = $EXPR"
-exit 0
+XARGS=xargs
+lprint "Checking on xargs style"
+fileExist_check /opt/local/bin/gxargs Linux MacOS && XARGS=/opt/local/bin/gxargs
 
 printf "\n"
 cprint  "hostname"      "[ $(hostname) ]"
@@ -131,7 +134,7 @@ fi
 
 ## Check which stages to process
 statusPrint     "Checking which stages to process"
-barr_stage=([0]=0 [1]=0)
+barr_stage=([1]=0 [2]=0)
 for i in $(seq 1 2) ; do
         b_test=$(expr index $G_STAGES "$i")
         if (( b_test )) ; then b_flag="1" ; else b_flag="0" ; fi
@@ -142,7 +145,7 @@ ret_check $?
 STAMPLOG=${G_LOGDIR}/${G_SELF}.log
 stage_stamp "Init | ($(pwd)) $G_SELF $*" $STAMPLOG
 
-STAGENUM="1-dty_analyze"
+STAGENUM="dty_analyze-1"
 STAGEPROC="summaryTables"
 STAGE=${STAGENUM}-${STAGEPROC}
 STAGE1RELDIR=${G_OUTRUNDIR}/${STAGE}
@@ -152,7 +155,7 @@ dirExist_check ${OUTDIR}/${STAGE} "not found - creating"        \
             || mkdir -p ${OUTDIR}/${STAGE}                      \
             || fatal noOutRunDir
 if (( ${barr_stage[1]} )) ; then
-	statusPrint "$(date) | Processing Stage $STAGENUM" "\n"
+	statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
 	ALLHITS=""
 	b_removeResultFiles=0
 	for PREFIX in $PREFIXLIST; do 
@@ -168,22 +171,127 @@ if (( ${barr_stage[1]} )) ; then
 			break
 		fi
 	done
+
 	if [[ b_removeResultFiles ]] ; then
 		rm -f $DENSITYLIST
 	fi
 
 	for HIT in $ALLHITS ; do
-		DIR=$(echo $HIT   | gxargs -i% echo "dirname %"   | sh)
-		FILE=$(echo $HIT  | gxargs -i% echo "basename %"  | sh)
+		DIR=$(echo $HIT   | $XARGS -i% echo "dirname %"   | sh)
+		FILE=$(echo $HIT  | $XARGS -i% echo "basename %"  | sh)
 		for DTY in $DENSITYLIST ; do
 			STEM=$(echo $FILE | sed 's/\(.*\)'${TOKEN}'\(.*\)/\1'${TOKEN}${DTY}'/')
-			if (( Gi_verbose )); then
-				printf "%s    %s  %s \n" $DIR $FILE $STEM
-			fi
+			# printf "%s    %s  %s \n" $DIR $FILE $STEM
 			CONTENTS=$(cat $DIR/$STEM)
-			echo -e "$CONTENTS\t$DIR/$STEM" >> $DTY
+			echo -e "$CONTENTS\t$DIR/$STEM" >> ${OUTDIR}/${STAGE}/$DTY
 		done
 	done
+        statusPrint "$(date) | Processing Stage $STAGENUM - END" "\n"
+fi
 
+
+if (( b_prefixList )) ; then
+        PREFIXLIST=". $PREFIXLIST"
+else
+        PREFIXLIST="."
+fi
+
+STAGENUM="dty_analyze-2"
+STAGEPROC="statTables"
+STAGE=${STAGENUM}-${STAGEPROC}
+STAGE2RELDIR=${G_OUTRUNDIR}/${STAGE}
+STAGE2FULLDIR=${OUTDIR}/${STAGE}
+statusPrint 	"Checking on stage 2 preconditions" "\n"
+for FILE in $DENSITYLIST ; do
+	lprint $FILE
+	fileExist_check ${STAGE1FULLDIR}/$FILE || fatal preconditionFail
+done
+statusPrint     "Checking stage 2 output dir"
+dirExist_check ${OUTDIR}/${STAGE} "not found - creating"        \
+            || mkdir -p ${OUTDIR}/${STAGE}                      \
+            || fatal noOutRunDir
+if (( ${barr_stage[2]} )) ; then
+	statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
+	
+	AREATABLE=$(cat ${STAGE1FULLDIR}/AreaDensity.txt)
+	PARTICLETABLE=$(cat ${STAGE1FULLDIR}/ParticleDensity.txt)
+
+	for FILE in $DENSITYLIST ; do
+            for PREFIX in $PREFIXLIST ; do
+                if [[ $PREFIX == "." ]] ; then 
+                        FILTER="$PREFIX"
+                        SCOPE="-all-"
+                else
+                        FILTER="/$PREFIX/"
+                        SCOPE="-$PREFIX-"
+                fi
+		base=$(basename $FILE)
+		meanFileName="mean${SCOPE}$FILE"
+		stdFileName="std${SCOPE}$FILE"
+		meanLine=$(cat ${STAGE1FULLDIR}/$FILE | grep "$FILTER" 	| stats_print.awk | grep Mean)
+		stdLine=$(cat  ${STAGE1FULLDIR}/$FILE | grep "$FILTER"  | stats_print.awk | grep Std)
+		echo "$meanLine" 	> ${STAGE2FULLDIR}/$meanFileName
+		echo "$stdLine" 	> ${STAGE2FULLDIR}/$stdFileName
+                mean=$(echo $meanLine   | awk '{print $4}')
+                std=$(echo $stdLine     | awk '{print $4}')
+                sum=$(echo "scale = 2; $mean + $std" | bc)
+                echo "$sum"             > ${STAGE2FULLDIR}/cutoff${SCOPE}$FILE
+            done
+	done
+
+	AREAMEAN=$(echo "$AREATABLE" | stats_print.awk | grep Mean)
+        statusPrint "$(date) | Processing Stage $STAGENUM - END" "\n"
+	
+fi
+
+STAGENUM="dty_analyze-3"
+STAGEPROC="cutoffs"
+STAGE=${STAGENUM}-${STAGEPROC}
+STAGE3RELDIR=${G_OUTRUNDIR}/${STAGE}
+STAGE3FULLDIR=${OUTDIR}/${STAGE}
+
+statusPrint     "Checking on stage 3 preconditions" "\n"
+for FILE in $DENSITYLIST ; do
+    for PREFIX in $PREFIXLIST ; do
+        if [[ $PREFIX == "." ]] ; then 
+                FILTER="$PREFIX"
+                SCOPE="-all-"
+        else
+                FILTER="/$PREFIX/"
+                SCOPE="-$PREFIX-"
+        fi
+        PRE="cutoff${SCOPE}$FILE"
+        lprint $PRE
+        fileExist_check ${STAGE2FULLDIR}/$PRE || fatal preconditionFail
+done
+
+statusPrint     "Checking stage 3 output dir"
+dirExist_check ${OUTDIR}/${STAGE} "not found - creating"        \
+            || mkdir -p ${OUTDIR}/${STAGE}                      \
+            || fatal noOutRunDir
+if (( ${barr_stage[3]} )) ; then
+        statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
+        
+
+        for FILE in $DENSITYLIST ; do
+            for PREFIX in $PREFIXLIST ; do
+                if [[ $PREFIX == "." ]] ; then 
+                        FILTER=""
+                        SCOPE="-all-"
+                else
+                        FILTER="/$PREFIX/"
+                        SCOPE="-$PREFIX-"
+                fi
+                TARGET="${STAGE2FULLDIR}/cutoff${SCOPE}$FILE"
+                cutoff=$(cat $TARGET)
+                TARGETLIST=$(find . -iname "*$FILTER*$FILE")
+                echo "$TARGETLIST"
+                exit 0
+
+            done
+        done
+
+        statusPrint "$(date) | Processing Stage $STAGENUM - END" "\n"
+        
 fi
 
