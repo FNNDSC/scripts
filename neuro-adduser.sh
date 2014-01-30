@@ -104,20 +104,43 @@ if [[ "$G_GROUPNAME" == "sheridan" ]]; then
   GROUPID="1104"
 fi
 
+echo "$G_USERNAME will be part of the ${G_GROUPNAME} group (gid: ${GROUPID})"
+
 #########################
 #
 # ADD USER IN THE LDAP
 #
 #########################
 
+############################################
 #get highest uidNumber and increment it by 1
-USERID=$( ldapsearch -b "dc=fnndsc" -D "cn=admin,dc=fnndsc" -W -h zulu-ldap | grep uidNumber | awk '{print $2 | "sort -nk2"}' | awk 'END{print}' | tr -d '\r')
 
+echo -e "\E[33m--> Looking for next available user id\E[0m"
+
+ldapsearch -b "dc=fnndsc" -D "cn=admin,dc=fnndsc" -W -h zulu-ldap > /tmp/userslist.txt
+
+OUT=$?
+if [ $OUT -eq 0 ];then
+   echo "previous users id found"
+else
+   echo -e "\E[1;31msomething went wrong"
+   echo -e "EXITING NOW\E[0m"
+   exit
+fi
+
+USERID=$( cat /tmp/userslist.txt | grep uidNumber | awk '{print $2 | "sort -nk2"}' | awk 'END{print}' | tr -d '\r')
 USERID=$(expr $USERID + 1)
 
+echo "user will be assigned id: ${USERID}"
+
+###############################################
 # add user with correct uid but dummmy password
+
+echo -e "\E[33m--> Adding user in the LDAP (passwd: 1234)\E[0m"
+
 FIRSTNAME=$(echo $G_USERNAME | awk -F \. '{print $1}')
 LASTNAME=$(echo $G_USERNAME | awk -F \. '{print $2}')
+
 echo "dn: uid=$G_USERNAME,ou=people,dc=fnndsc
 objectClass: inetOrgPerson
 objectClass: posixAccount
@@ -125,7 +148,7 @@ givenName: $FIRSTNAME
 sn: $LASTNAME
 cn: $G_USERNAME
 uid: $G_USERNAME
-userPassword: {MD5}$1234
+userPassword: {MD5}1234
 uidNumber: $USERID
 gidNumber: $GROUPID
 homeDirectory: /neuro/users/$G_USERNAME
@@ -133,9 +156,23 @@ loginShell:/bin/bash" > /tmp/addusertoldap.txt
 
 ldapadd -D "cn=admin,dc=fnndsc" -W -h zulu-ldap -f /tmp/addusertoldap.txt
 
+OUT=$?
+if [ $OUT -eq 0 ];then
+   echo "user successfully added to the LDAP"
+else
+   echo -e "\E[1;31msomething went wrong"
+   echo -e "EXITING NOW\E[0m"
+   exit
+fi
+
+# cleaning up tmp files
 rm /tmp/addusertoldap.txt
 
+#############################
 # add user to the chris group
+
+echo -e "\E[33m--> Adding user to the chris group\E[0m"
+
 echo "dn: cn=chrisgp,ou=groups,dc=fnndsc
 changetype: modify
 add: memberuid
@@ -143,25 +180,49 @@ memberuid: $G_USERNAME" > /tmp/addusertochrisgp.txt
 
 ldapmodify -D "cn=admin,dc=fnndsc" -W -h zulu-ldap -f /tmp/addusertochrisgp.txt
 
+OUT=$?
+if [ $OUT -eq 0 ];then
+   echo "user successfully added to the the chris group"
+else
+   echo -e "\E[1;31msomething went wrong"
+   echo -e "EXITING NOW\E[0m"
+   exit
+fi
+
+# cleaning up tmp files
 rm /tmp/addusertochrisgp.txt
 
-# add meg users to the meg group
+######################################
+# add users to the meg group if needed
+
 if [[ "$G_GROUPNAME" == "meg" ]]; then
+  echo -e "\E[33m--> Adding user to the meg group \E[0m"
+
   echo "dn: cn=meglab,ou=groups,dc=fnndsc
-  changetype: modify
-  add: memberuid
-  memberuid: $G_USERNAME" > /tmp/addusertomeggp.txt
+changetype: modify
+add: memberuid
+memberuid: $G_USERNAME" > /tmp/addusertomeggp.txt
 
   ldapmodify -D "cn=admin,dc=fnndsc" -W -h zulu-ldap -f /tmp/addusertomeggp.txt
 
+  OUT=$?
+  if [ $OUT -eq 0 ];then
+     echo "User successfully added to the the meg group!"
+  else
+     echo -e "\E[1;31msomething went wrong"
+     echo -e "EXITING NOW\E[0m"
+     exit
+  fi
+  
+  # cleaning up tmp files
   rm /tmp/addusertomeggp.txt
 fi
 
-#########################
+#####################
 #
-# SELECT THE HOMEFOLDER LOCATION
+# FILE SYSTEM ACTIONS
 #
-#########################
+#####################
 
 HOMEFOLDER="/neuro/labs/"$G_GROUPNAME"lab/users"
 if [[ "$G_GROUPNAME" == "collabs" || "$G_GROUPNAME" == "visitors" ]]; then
@@ -171,31 +232,46 @@ fi
 # home directory
 HOMEFOLDER=$HOMEFOLDER"/"$G_USERNAME
 
-echo "Creating "$HOMEFOLDER
+echo -e "\E[33m--> Creating "$HOMEFOLDER"\E[0m"
 
-# just create the folder and link it
+#######################################
+# create the home directory and link it
 sudo mkdir $HOMEFOLDER
 sudo chmod 777 $HOMEFOLDER
+
+echo -e "\E[33m--> Creating symlink from "$HOMEFOLDER" to /neuro/users\E[0m"
 ln -s $HOMEFOLDER "/neuro/users/"
 
 # create the link
-echo "Copying .bash* and .git* over.."
+echo -e "\E[33m--> Copying .bash* and .git* over the user home directory\E[0m"
 cp /neuro/sys/install/ubuntu/setup/customize_shells/.bash* $HOMEFOLDER/
 cp /neuro/sys/install/ubuntu/setup/customize_shells/.git* $HOMEFOLDER/
-echo "Linking /neuro/arch/"
-ln -s /neuro/arch/ $HOMEFOLDER/arch
+echo -e "\E[33m--> Linking /neuro/arch/ to the user home directory\E[0m"
+ln -s /neuro/arch $HOMEFOLDER/
 
-#
-# Now reset the permissions 
-#
-echo "Reset permissions to "$USERID":"$GROUPID
+#####################
+# set the permissions 
+
+echo -e "\E[33m--> Setting home directory permissions to "$USERID":"$GROUPID"\E[0m"
   
 sudo chmod 770 $HOMEFOLDER
 sudo chown -R $USERID:$GROUPID $HOMEFOLDER
 
-# update user passowrd
+######################
+# update user password
+
+echo -e "\E[33m--> Setting the user password\E[0m"
 ldappasswd -h zulu-ldap -D "cn=admin,dc=fnndsc" -W -S "uid=$G_USERNAME,ou=people,dc=fnndsc"
 
-echo "All done - sayonara.."
+OUT=$?
+if [ $OUT -eq 0 ];then
+   echo "password successfully updated"
+else
+   echo -e "\E[1;31msomething went wrong"
+   echo -e "EXITING NOW\E[0m"
+   exit
+fi
 
-echo "DO NOT FORGET TO ADD THIS USER TO RSNAPSHOT!"
+echo -e "\E[1;32mAll done\E[0m"
+echo -e "\E[1;31mDO NOT FORGET TO ADD THIS USER TO RSNAPSHOT!\E[0m"
+echo -e "\E[1;31mDO NOT FORGET TO ADD THIS USER TO THE MAILING LIST!\E[0m"
