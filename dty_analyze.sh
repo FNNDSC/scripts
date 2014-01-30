@@ -5,11 +5,11 @@
 source common.bash
 
 G_STAGES="123"
-DENSITYLIST="AreaDensity.txt ParticleDensity.txt"
-TOKEN="cloudCoreOverlap"
-OUTDIR="./"
+G_DENSITYLIST="AreaDensity.txt ParticleDensity.txt"
+G_TOKEN="cloudCoreOverlap"
+G_OUTDIR="./"
+G_FILTER="le5"
 
-FILTER="le5"
 PREFIXLIST=""
 let b_prefixList=0
 
@@ -32,6 +32,9 @@ G_SYNPOSIS="
 
         'dty_analyze.sh' creates grouped summaries of a set of density
 	files that have been tagged by the p-test <subscringFilter>.
+
+        It relies on the outputs of a standard curvature analysis 
+        pipeline.
 
   ARGS
 
@@ -95,10 +98,10 @@ EC_preconditionFail=60
 while getopts v:s:p:o:t: option ; do
         case "$option"
         in
-		o) OUTDIR=$OPTARG		;;
+		o) G_OUTDIR=$OPTARG		;;
 		p) PREFIXLIST=$OPTARG			
 		   b_prefixList=${#PREFIXLIST}	;;
-                s) FILTER=$OPTARG		;;
+                s) G_FILTER=$OPTARG		;;
                 t) G_STAGES="$OPTARG"		;;
                 v) let Gi_verbose=$OPTARG       ;;
                 \?) synopsis_show
@@ -117,12 +120,12 @@ fileExist_check /opt/local/bin/gxargs Linux MacOS && XARGS=/opt/local/bin/gxargs
 printf "\n"
 cprint  "hostname"      "[ $(hostname) ]"
 
-G_LOGDIR=$OUTDIR
+G_LOGDIR=$G_OUTDIR
 lprint          "Checking on output root dir"
 dirExist_check ${G_LOGDIR} "not found - creating"  \
               || mkdir -p ${G_LOGDIR}              \
               || fatal noOutRootDir
-cd $OUTDIR >/dev/null
+cd $G_OUTDIR >/dev/null
 G_LOGDIR=$(pwd)
 cd $topDir >/dev/null
 
@@ -134,8 +137,8 @@ fi
 
 ## Check which stages to process
 statusPrint     "Checking which stages to process"
-barr_stage=([1]=0 [2]=0)
-for i in $(seq 1 2) ; do
+barr_stage=([1]=0 [2]=0 [3]=0)
+for i in $(seq 1 3) ; do
         b_test=$(expr index $G_STAGES "$i")
         if (( b_test )) ; then b_flag="1" ; else b_flag="0" ; fi
         barr_stage[$i]=$b_flag
@@ -146,13 +149,13 @@ STAMPLOG=${G_LOGDIR}/${G_SELF}.log
 stage_stamp "Init | ($(pwd)) $G_SELF $*" $STAMPLOG
 
 STAGENUM="dty_analyze-1"
-STAGEPROC="summaryTables"
+STAGEPROC="summaryTables-$G_FILTER"
 STAGE=${STAGENUM}-${STAGEPROC}
 STAGE1RELDIR=${G_OUTRUNDIR}/${STAGE}
-STAGE1FULLDIR=${OUTDIR}/${STAGE}
+STAGE1FULLDIR=${G_OUTDIR}/${STAGE}
 statusPrint     "Checking stage 1 output dir"
-dirExist_check ${OUTDIR}/${STAGE} "not found - creating"        \
-            || mkdir -p ${OUTDIR}/${STAGE}                      \
+dirExist_check ${G_OUTDIR}/${STAGE} "not found - creating"        \
+            || mkdir -p ${G_OUTDIR}/${STAGE}                      \
             || fatal noOutRunDir
 if (( ${barr_stage[1]} )) ; then
 	statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
@@ -160,11 +163,19 @@ if (( ${barr_stage[1]} )) ; then
 	b_removeResultFiles=0
 	for PREFIX in $PREFIXLIST; do 
 		if (( b_prefixList )) ; then
-			PREFIXHITS=$(find . -iname "*$PREFIX*$FILTER*")
+			PREFIXHITS=$(find . -iname "*$PREFIX*$G_FILTER*" | grep -v dty_analyze)
 		else
-			PREFIXHITS=$(find . -iname "*$FILTER*")
+			PREFIXHITS=$(find . -iname "*$G_FILTER*" | grep -v dty_analyze)
 		fi
-		b_HITS=$(echo "$HITS" | wc -l)
+                b_HITS=$(echo "$PREFIXHITS" | wc -l)
+                if (( ! ${#PREFIXHITS} )) ; then b_HITS=0; fi
+                lprint "Saving p-test lists for $PREFIX-$G_FILTER"
+                if (( b_HITS )) ; then
+                        echo "$PREFIXHITS" > ${G_OUTDIR}/${STAGE}/p-$PREFIX-$G_FILTER
+                else
+                        touch ${G_OUTDIR}/${STAGE}/p-$PREFIX-$G_FILTER
+                fi
+                rprint "[ $b_HITS ]"
 		b_removeResultFiles=$(( b_HITS || b_removeResultFiles))
 		ALLHITS=$(printf "%s\n%s" "$ALLHITS" "$PREFIXHITS")
 		if (( !b_prefixList )) ; then 
@@ -173,17 +184,17 @@ if (( ${barr_stage[1]} )) ; then
 	done
 
 	if [[ b_removeResultFiles ]] ; then
-		rm -f $DENSITYLIST
+		rm -f ${G_OUTDIR}/${STAGE}/$G_DENSITYLIST
 	fi
 
 	for HIT in $ALLHITS ; do
 		DIR=$(echo $HIT   | $XARGS -i% echo "dirname %"   | sh)
 		FILE=$(echo $HIT  | $XARGS -i% echo "basename %"  | sh)
-		for DTY in $DENSITYLIST ; do
-			STEM=$(echo $FILE | sed 's/\(.*\)'${TOKEN}'\(.*\)/\1'${TOKEN}${DTY}'/')
+		for DTY in $G_DENSITYLIST ; do
+			STEM=$(echo $FILE | sed 's/\(.*\)'${G_TOKEN}'\(.*\)/\1'${G_TOKEN}${DTY}'/')
 			# printf "%s    %s  %s \n" $DIR $FILE $STEM
 			CONTENTS=$(cat $DIR/$STEM)
-			echo -e "$CONTENTS\t$DIR/$STEM" >> ${OUTDIR}/${STAGE}/$DTY
+			echo -e "$CONTENTS\t$DIR/$STEM" >> ${G_OUTDIR}/${STAGE}/$DTY
 		done
 	done
         statusPrint "$(date) | Processing Stage $STAGENUM - END" "\n"
@@ -197,18 +208,18 @@ else
 fi
 
 STAGENUM="dty_analyze-2"
-STAGEPROC="statTables"
+STAGEPROC="statTables-$G_FILTER"
 STAGE=${STAGENUM}-${STAGEPROC}
 STAGE2RELDIR=${G_OUTRUNDIR}/${STAGE}
-STAGE2FULLDIR=${OUTDIR}/${STAGE}
+STAGE2FULLDIR=${G_OUTDIR}/${STAGE}
 statusPrint 	"Checking on stage 2 preconditions" "\n"
-for FILE in $DENSITYLIST ; do
+for FILE in $G_DENSITYLIST ; do
 	lprint $FILE
 	fileExist_check ${STAGE1FULLDIR}/$FILE || fatal preconditionFail
 done
 statusPrint     "Checking stage 2 output dir"
-dirExist_check ${OUTDIR}/${STAGE} "not found - creating"        \
-            || mkdir -p ${OUTDIR}/${STAGE}                      \
+dirExist_check ${G_OUTDIR}/${STAGE} "not found - creating"        \
+            || mkdir -p ${G_OUTDIR}/${STAGE}                      \
             || fatal noOutRunDir
 if (( ${barr_stage[2]} )) ; then
 	statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
@@ -216,8 +227,10 @@ if (( ${barr_stage[2]} )) ; then
 	AREATABLE=$(cat ${STAGE1FULLDIR}/AreaDensity.txt)
 	PARTICLETABLE=$(cat ${STAGE1FULLDIR}/ParticleDensity.txt)
 
-	for FILE in $DENSITYLIST ; do
+	for FILE in $G_DENSITYLIST ; do
+            lprintn "$FILE"
             for PREFIX in $PREFIXLIST ; do
+                cprint "Filtering results for prefix" "[ $PREFIX ]"
                 if [[ $PREFIX == "." ]] ; then 
                         FILTER="$PREFIX"
                         SCOPE="-all-"
@@ -228,8 +241,14 @@ if (( ${barr_stage[2]} )) ; then
 		base=$(basename $FILE)
 		meanFileName="mean${SCOPE}$FILE"
 		stdFileName="std${SCOPE}$FILE"
-		meanLine=$(cat ${STAGE1FULLDIR}/$FILE | grep "$FILTER" 	| stats_print.awk | grep Mean)
-		stdLine=$(cat  ${STAGE1FULLDIR}/$FILE | grep "$FILTER"  | stats_print.awk | grep Std)
+                # The control || after the grep is necessary to handle cases
+                # where the filter didn't return any hits.
+		meanLine=$(cat ${STAGE1FULLDIR}/$FILE                   |\
+                         (grep "$FILTER" || echo -e "0 0 0 0")          |\
+                          stats_print.awk | grep Mean)
+		stdLine=$(cat  ${STAGE1FULLDIR}/$FILE                   |\
+                        (grep "$FILTER"  || echo -e "0 0 0 0")          |\
+                         stats_print.awk | grep Std)
 		echo "$meanLine" 	> ${STAGE2FULLDIR}/$meanFileName
 		echo "$stdLine" 	> ${STAGE2FULLDIR}/$stdFileName
                 mean=$(echo $meanLine   | awk '{print $4}')
@@ -245,13 +264,13 @@ if (( ${barr_stage[2]} )) ; then
 fi
 
 STAGENUM="dty_analyze-3"
-STAGEPROC="cutoffs"
+STAGEPROC="cutoffs-$G_FILTER"
 STAGE=${STAGENUM}-${STAGEPROC}
 STAGE3RELDIR=${G_OUTRUNDIR}/${STAGE}
-STAGE3FULLDIR=${OUTDIR}/${STAGE}
+STAGE3FULLDIR=${G_OUTDIR}/${STAGE}
 
 statusPrint     "Checking on stage 3 preconditions" "\n"
-for FILE in $DENSITYLIST ; do
+for FILE in $G_DENSITYLIST ; do
     for PREFIX in $PREFIXLIST ; do
         if [[ $PREFIX == "." ]] ; then 
                 FILTER="$PREFIX"
@@ -263,31 +282,52 @@ for FILE in $DENSITYLIST ; do
         PRE="cutoff${SCOPE}$FILE"
         lprint $PRE
         fileExist_check ${STAGE2FULLDIR}/$PRE || fatal preconditionFail
+    done
 done
 
 statusPrint     "Checking stage 3 output dir"
-dirExist_check ${OUTDIR}/${STAGE} "not found - creating"        \
-            || mkdir -p ${OUTDIR}/${STAGE}                      \
+dirExist_check ${G_OUTDIR}/${STAGE} "not found - creating"        \
+            || mkdir -p ${G_OUTDIR}/${STAGE}                      \
             || fatal noOutRunDir
 if (( ${barr_stage[3]} )) ; then
         statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
         
-
-        for FILE in $DENSITYLIST ; do
+        rm ${STAGE3FULLDIR}/* 2>/dev/null
+        for FILE in $G_DENSITYLIST ; do
+            # echo "PREFIXLIST = $PREFIXLIST"
+            lprintn "$FILE"
             for PREFIX in $PREFIXLIST ; do
-                if [[ $PREFIX == "." ]] ; then 
+                if [[ $PREFIXLIST == "." ]] ; then
                         FILTER=""
                         SCOPE="-all-"
-                else
+                fi
+                if [[ $PREFIX != "." ]] ; then
                         FILTER="/$PREFIX/"
                         SCOPE="-$PREFIX-"
                 fi
+                if [[ $PREFIX == "." && $PREFIXLIST != "." ]] ; then
+                        continue
+                fi
+                lprint "processing separation for groups $SCOPE"
+                SEPARATIONFILE="separate${SCOPE}$FILE"
+                # echo "PREFIX = $PREFIX"
                 TARGET="${STAGE2FULLDIR}/cutoff${SCOPE}$FILE"
-                cutoff=$(cat $TARGET)
-                TARGETLIST=$(find . -iname "*$FILTER*$FILE")
-                echo "$TARGETLIST"
-                exit 0
-
+                # echo "TARGET = $TARGET"
+                f_cutoff=$(cat $TARGET)
+                TARGETLIST=$(find . -wholename "*$FILTER*$FILE" | grep -v dty_analyze)
+                overlapCount=0
+                for OVERLAP in $TARGETLIST ; do
+                        f_overlap=$(cat $OVERLAP | awk '{print $3}')
+                        # printf "%s\t%s\n" $f_overlap $f_cutoff
+                        b_overlap=$(echo "$f_overlap <= $f_cutoff" | bc)
+                        if (( b_overlap )) ; then
+                                overlapCount=$(expr $overlapCount + 1)
+                                OUTTXT=$(printf "%7.3f\t%7.3f\t\t%s\n" $f_cutoff $f_overlap $OVERLAP)
+                                echo "$OUTTXT" >> ${STAGE3FULLDIR}/$SEPARATIONFILE
+                        fi
+                done
+                rprint "[ ok ]"
+                cprint "Separation count" "[ $overlapCount ]"
             done
         done
 
