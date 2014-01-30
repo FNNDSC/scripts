@@ -26,6 +26,7 @@ G_DIRSUFFIX=""
 G_OUTPREFIX="anon-"
 G_DICOMINPUTDIR="-x"
 G_STAGES="1"
+G_SUBJECTNAME="anonymous"
 
 G_SYNOPSIS="
 
@@ -35,13 +36,14 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-	dcmanon_meta.bash	-D <dicomInputDir>                              \\
+	dcmanon_meta.bash        -D <dicomInputDir>                     \\
                                 [-d <dicomSeriesFile>]                  \\
                                 [-v <verbosity>]                        \\
                                 [-O <experimentTopDir>]                 \\
                                 [-o <outputSuffix>]                     \\
                                 [-p <outputPrefix>]                     \\
                                 [-K <SSLCertificate>]                   \\
+                                [-S <subjectName>]                      \\
                                 [-P]
  DESCRIPTION
 
@@ -119,6 +121,9 @@ G_SYNOPSIS="
 	o Updated help: removed mention of MatLAB since this is no longer
 	  used.
 
+    29 Jan 2014
+    o Added subject override spec for anonymization.
+
 "
 
 ###\\\
@@ -169,20 +174,21 @@ D_whatever=
 # Process command options
 ###///
 
-while getopts D:Ev:O:o:p:t:R:d:K:P option ; do 
+while getopts D:Ev:O:o:p:t:R:d:K:Ps: option ; do 
 	case "$option"
 	in
                 D)      G_DICOMINPUTDIR=$OPTARG         ;;
                 E)      Gb_useExpertOptions=1           ;;
                 v)      let Gi_verbose=$OPTARG          ;;
                 O)      Gb_useOverrideOut=1
-			            G_OUTDIR=$OPTARG                ;;
+                        G_OUTDIR=$OPTARG                ;;
                 o)      G_OUTSUFFIX="$OPTARG"           ;;
                 p)      G_OUTPREFIX="$OPTARG"           ;;
                 R)      G_DIRSUFFIX=$OPTARG             ;;
                 K)      G_SSLCERTIFICATE=$OPTARG        ;;
                 t)      G_STAGES="$OPTARG"              ;;
                 P)      Gb_partialAnonymize=1           ;;
+                s)      G_SUBJECTNAME="$OPTARG"         ;;
                 d)      NOP                             ;;
 		\?)     synopsis_show 
                         exit 0;;
@@ -273,9 +279,9 @@ if (( ${barr_stage[1]} )) ; then
             STAGECMD="echo $MD5 |                                             \
                       xargs -i% $STAGEPROC                                    \
                             --dumb                                            \
-                            --replace 0010,0010,anonymized                    \
+                            --replace 0010,0010,$G_SUBJECTNAME                \
                             --replace 0010,0020,%                             \
-                            --replace 0010,0030,19000101		      \
+                            --replace 0010,0030,19000101                      \
                             --replace 0008,1030,anonymized                    \
                             --replace 0032,1030,anonymized                    \
                             --replace 0032,1060,anonymized                    \
