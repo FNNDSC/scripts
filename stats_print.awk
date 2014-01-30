@@ -156,8 +156,12 @@ END {
         farray_print(a_mean);
       }
       if(std) {
-        for(i=0; i<NF; i++)
-            a_std[i] = sqrt(a_std[i]/(NR-1));
+        if(NR>1)
+            for(i=0; i<NF; i++)
+                a_std[i] = sqrt(a_std[i]/(NR-1));
+        else
+            for(i=0; i<NF; i++)
+                a_std[i] = 0.0;
         printf("%10s ", "Std:");
         farray_print(a_std);
       }
