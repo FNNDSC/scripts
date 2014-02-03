@@ -9,12 +9,12 @@ Gb_revisionSet=0
 G_SYNOPSIS="
 
     NAME
-   
-        neuro-fs
+    
+        chb-fs
         
     SYNOPSIS
     
-        neuro-fs [<version>] [<revision>]
+        chb-fs [<version>] [<revision>]
         
     ARGS
     
@@ -32,7 +32,7 @@ G_SYNOPSIS="
         
     DESCRIPTION
     
-        'neuro-fs' is a simple script to easily source different environments 
+        'chb-fs' is a simple script to easily source different environments 
         for FreeSurfer.
         
         If called without any arguments, it will setup the current default
@@ -45,11 +45,11 @@ G_SYNOPSIS="
         parent's scope), this script *must* be sourced and not executed. That 
         means instead of typing:
         
-                $>neuro-fs stable
+                $>chb-fs stable
                 
         to setup the FreeSurfer stable enviroment, you have to type:
         
-                $>. neuro-fs stable
+                $>. chb-fs stable
                 
         note the dot '.' at the beginning! Without this dot, the specified
         FreeSurfer environment will NOT be initialized.
@@ -62,8 +62,6 @@ G_SYNOPSIS="
         Mar 05 2013
         o Add logic for PICES local use.
         
-	Jan 24 2014
-	o Switch 'chb' for 'neuro'.
 "
 function synopsis_show
 {
@@ -87,21 +85,6 @@ if (( $# <= 2 )) ; then
 else
     synopsis_show 1
 fi
-
-echo "+---------------------------+"
-echo "| WARNING! WARNING! WARNING!|-___" 
-echo "+-------------------------------+"
-echo "|* chb-fs is seriously outdated |"
-echo "|* and depreciated.             |"
-echo "|*                              |"
-echo "|* Please use:                  |"
-echo "|*                              |"
-echo "|*   . neuro-fs stable          |"
-echo "|*                              |"
-echo "|* instead!                     |" 
-echo "|*                              |"
-echo "+-------------------------------+"
-echo ""
 
 echo "version:  $G_VERSION"
 
@@ -135,7 +118,13 @@ fi
 OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
 
-export PACKAGEDIR=/neuro/arch/${HOSTTYPE}-${OS}/packages
+# Check if we are on a PICES host (names start with 'rc')
+RC=$(hostname | awk -F \- '{print $1}')
+if [[ $RC == "rc" ]] ; then
+        export PACKAGEDIR=/chb/pices/arch/${HOSTTYPE}-${OS}/packages
+else
+        export PACKAGEDIR=/chb/freesurfer/${HOSTTYPE}-${OS}/packages
+fi
 export FSL_DIR=${PACKAGEDIR}/fsl/current
 export SUBJECTS_DIR=$(pwd)
 
@@ -147,8 +136,8 @@ unset TK_LIBRARY
 unset TIX_LIBRARY
 
 OS=$(uname -a | awk '{print $1}')
-export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-neuro-fs-${G_VERSION}${G_REVISION}]"
+export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-chb-fs-${G_VERSION}${G_REVISION}]"
 
-export PATH=$PATH:${PACKAGEDIR}/mricron:${PACKAGEDIR}/dtk/current/dtk
+export PATH=$PATH:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/mricron:/chb/freesurfer/${HOSTTYPE}-${OS}/packages/dtk
 
 
