@@ -93,16 +93,16 @@ fi
 if (( ! b_useLocal )) ; then
     if [[ $HOST_PREFIX == "rc" ]] ; then
         printf "Using 'pices' local install of MatLAB...\n"
-        export MPATH=/chb/pices/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin
+        export MPATH=/neuro/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin
         export PATH=$MPATH:$PATH
     else
         printf "Using FNNDSC local install of MatLAB...\n"
         case $(uname) 
         in 
-            Linux)  export MPATH=/chb/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin
+            Linux)  export MPATH=/neuro/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin
               	    export PATH=$MPATH:$PATH
                     ;;
-            Darwin) export MPATH=/chb/arch/x86_64-Darwin/packages/matlab/MATLAB_R${G_VERSION}.app/bin
+            Darwin) export MPATH=/neuro/arch/x86_64-Darwin/packages/matlab/MATLAB_R${G_VERSION}.app/bin
                     export PATH=$MPATH:$PATH
 		    ;;
         esac
