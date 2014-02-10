@@ -91,11 +91,11 @@ G_SYNOPSIS="
 
   ARGS
 
-        -M <MRN> || -N <PatientsName>
-        MRN or patient name to query. Only specify one or the other; if
-	both are specified, the <PatientsName> is ignored. Also note that
-	the <PatientsName> is an *exact* string -- no substring searching
-	is performed. The name is found only if it exactly matches the
+        -M <MRN> || -N <PatientsName> || -A <AccessionNumber>
+        MRN, patient name, or accession number to query. Only specify one 
+        or the other; if all are specified, only the <MRN> is used. 
+        Also note that the <PatientsName> is an *exact* string -- no substring 
+        searching is performed. The name is found only if it exactly matches the
 	name in the PACS.
 	
 	Multiple targets can be concatenated with a ',' -- i.e. -M 123,456
@@ -179,6 +179,7 @@ G_SeriesDescription="0008,103e"
 G_StudyInstanceUID="0020,000d"
 G_SeriesInstanceUID="0020,000e"
 G_PatientID="0010,0020"
+G_AccessionNumber="0008,0050"
 G_Modality="0008,0060"
 G_StudyDate="0008,0020"
 G_PatientAge="0010,1010"
@@ -295,11 +296,12 @@ function institution_set
     esac
 }
 
-while getopts M:N:m:QD:S:a:c:l:P:p:v:Rh: option ; do
+while getopts M:N:A:m:QD:S:a:c:l:P:p:v:Rh: option ; do
     case "$option" 
     in
         v) Gi_verbose=$OPTARG           ;;
         M) GLST_PATIENTID=$OPTARG       ;;
+        A) GLST_ACCESSION=$OPTARG       ;;
 	m) G_MODALITY=$OPTARG		;;
 	N) GLST_PATIENTSNAME=$OPTARG	;;
         R) let Gb_queryOnly=0           ;;
@@ -321,12 +323,17 @@ if (( Gb_institution )) ; then
     institution_set $G_INSTITUTION
 fi
 
-if (( ! ${#GLST_PATIENTID} && ! ${#GLST_PATIENTSNAME} )) ; then fatal noMRNorName; fi
-if (( ${#GLST_PATIENTID} && ${#GLST_PATIENTSNAME} )) ; then GLST_PATIENTSNAME="" ; fi
+if (( ! ${#GLST_PATIENTID} && ! ${#GLST_PATIENTSNAME} && ! ${#GLST_ACCESSION} )) ; then fatal noMRNorName; fi
+if (( ${#GLST_PATIENTID} && ${#GLST_PATIENTSNAME} && ${#GLST_ACCESSION} )) ; then 
+    GLST_PATIENTSNAME="" ; 
+    GLST_ACCESSION="" ; 
+fi
+
 if (( ${#G_SCANDATE}            )) ; then Gb_dateSpecified=1;   fi
 
 if (( ${#GLST_PATIENTID} )) ;   then GLST=$GLST_PATIENTID; fi 
 if (( ${#GLST_PATIENTSNAME}));  then GLST=$GLST_PATIENTSNAME; fi
+if (( ${#GLST_ACCESSION} )) ;   then GLST=$GLST_ACCESSION; fi 
 
 for EL in $(echo $GLST | tr , ' '); do
     cprint "M: Institution"		"[ $G_INSTITUTION ]"
@@ -336,7 +343,8 @@ for EL in $(echo $GLST | tr , ' '); do
 
     if (( ${#GLST_PATIENTID} )) ; then G_PATIENTID=$EL; fi
     if (( ${#GLST_PATIENTSNAME})) ; then G_PATIENTSNAME=$EL; fi
-
+    if (( ${#GLST_ACCESSION})) ; then G_ACCESSIONNUMBER=$EL; fi
+    
     if (( ${#G_PATIENTID} )) ; then
         cprint "M: Querying for MRN" "[ $G_PATIENTID ]"
     fi
@@ -345,6 +353,10 @@ for EL in $(echo $GLST | tr , ' '); do
         cprint "M: Querying for NAME" "[ $G_PATIENTSNAME ]"
     fi
 
+    if (( ${#G_ACCESSIONNUMBER} )) ; then
+        cprint "M: Querying for ACCESSION" "[ $G_ACCESSIONNUMBER ]"
+    fi
+    
     if (( Gb_dateSpecified )) ; then
         cprint "M: Querying for SCANDATE" "[ $G_SCANDATE ]" 
     else
@@ -364,6 +376,7 @@ for EL in $(echo $GLST | tr , ' '); do
     QUERYSTUDY="findscu -xi -S --aetitle $G_AETITLE $CALLSPEC               \
              -k $G_QueryRetrieveLevel=STUDY                                 \
              -k $G_PatientID=$G_PATIENTID                                   \
+             -k $G_AccessionNumber=$G_ACCESSIONNUMBER                       \
              -k $G_Modality=$G_MODALITY                                     \
              -k $G_StudyDate=$G_SCANDATE                                    \
              -k $G_PatientsName=$G_PATIENTSNAME                             \
@@ -393,6 +406,7 @@ for EL in $(echo $GLST | tr , ' '); do
         QUERYSERIES="findscu -v -S --aetitle $G_AETITLE $CALLSPEC		\
              -k $G_QueryRetrieveLevel=SERIES                                \
              -k $G_PatientID=$G_PATIENTID                                   \
+             -k $G_AccessionNumber=$G_ACCESSIONNUMBER                       \
              -k $G_Modality=$G_MODALITY                                     \
              -k $G_StudyDate=$G_SCANDATE                                    \
              -k $G_PatientsName=$G_PATIENTSNAME                             \
@@ -474,6 +488,10 @@ for EL in $(echo $GLST | tr , ' '); do
 
         tMRID=$(echo "$line"        | grep "$G_PatientID")
         if (( ${#tMRID} )) ; then G_PATIENTID=$(bracket_find "$tMRID");    fi
+
+        tACCESSION=$(echo "$line"   | grep "$G_AccessionNumber")
+        if (( ${#tACCESSION} )) ; then G_ACCESSIONNUMBER=$(bracket_find "$tACCESSION");    fi
+        
         
         tSERIESUID=$(echo "$line"   | grep "$G_SeriesInstanceUID")
         if (( ${#tSERIESUID} )) ; then
@@ -497,6 +515,7 @@ for EL in $(echo $GLST | tr , ' '); do
                 cprint "Scan Date"          "$STUDYDATE"
                 cprint "Patient Name"       "$NAME"
                 cprint "Patient MRN"        "$G_PATIENTID"
+                cprint "Accession Number"   "$G_ACCESSIONNUMBER"
                 cprint "Patient Birthdate"  "$BIRTHDATE"
                 cprint "Patient Age"        "$(age_calc.py $BIRTHDATE $STUDYDATE 2>/dev/null)"
                 echo ""
