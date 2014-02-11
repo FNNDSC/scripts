@@ -129,8 +129,8 @@ TARGETACTION[2]="tunnel.bash --reverse	--from ch137123@${DREEV}:5214	--to 10.3.1
 TARGET_CHECK[3]="tunnel.bash --reverse	--from ch137123@${DREEV}:5241	--to 10.64.4.241:5900 --isRunning"
 TARGETACTION[3]="tunnel.bash --reverse	--from ch137123@${DREEV}:5241	--to 10.64.4.241:5900"
 # DICOM transmission/reception to osx1927
-TARGET_CHECK[4]="tunnel.bash --reverse 	--from ch137123@${DREEV}:10402 	--to ${FNNDSC}:10401 --isRunning"
-TARGETACTION[4]="tunnel.bash --reverse 	--from ch137123@${DREEV}:10402 	--to ${FNNDSC}:10401"
+TARGET_CHECK[4]="tunnel.bash --reverse 	--from ch137123@${DREEV}:10402 	--to ${PRETORIA}:10401 --isRunning"
+TARGETACTION[4]="tunnel.bash --reverse 	--from ch137123@${DREEV}:10402 	--to ${PRETORIA}:10401"
 # Web access to 'durban'
 TARGET_CHECK[5]="tunnel.bash --reverse 	--from ch137123@${DREEV}:8000 	--to ${DURBAN}:80 --isRunning"
 TARGETACTION[5]="tunnel.bash --reverse 	--from ch137123@${DREEV}:8000 	--to ${DURBAN}:80"
