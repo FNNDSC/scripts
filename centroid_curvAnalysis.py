@@ -575,9 +575,10 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         v2      = self._d_cloud[g2][hemi][surface][curv][ctype]
 
         v_tstat, v_pval = stats.ttest_ind(v1, v2)
-        f_pval  = np.linalg.norm(v_pval)
+        # f_pval  = np.linalg.norm(v_pval)
+        f_pval  = np.amin(v_pval)
         _str_fileName = '%s-centroids-cloudCoreOverlapPval' % self.filestem()
-#         _str_fileName = '%s-%s-%s-pval-%s.%s.%s.%s' % (ctype, g1, g2, hemi, curv, self._str_dataDir, surface)
+        # _str_fileName = '%s-%s-%s-pval-%s.%s.%s.%s' % (ctype, g1, g2, hemi, curv, self._str_dataDir, surface)
         vstr_tstat = ' '.join('%10.6f'%F for F in v_tstat)
         vstr_pval  = ' '.join('%10.6f'%F for F in v_pval)
         self.vprint("%s, pvalue: (%s), pvalueN: %f" %\
