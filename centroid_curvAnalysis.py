@@ -1024,7 +1024,7 @@ def synopsis(ab_shortOnly = False):
                             [--curv|-c <curvType>               \\
                             [--asymmetricalDeviations <center]  \\
                             [--usePercentiles <percentile>]     \\
-                            [--convexHull|x]
+                            [--convexHulluse|-x]
     ''' % scriptName
   
     description =  '''
@@ -1061,7 +1061,7 @@ def synopsis(ab_shortOnly = False):
         percentile ranges above and below the mean to consider in the 
         kernel boundary. Usually, 25 is a good choice.
 
-        --convexHull
+        --convexHulluse
         If specified, set the statistics to use convex hulls drawn about
         the statistical regions. This has the effect of "smoothing" the
         contours, i.e. dumbell-type shapes become cigars.
@@ -1228,7 +1228,7 @@ if __name__ == "__main__":
                         action='store',
                         default='',
                         help='Use percentile offset from mean in calculating cloud boundary')
-    parser.add_argument('--convexHulluse',
+    parser.add_argument('--convexHulluse', '-x'
                         dest='convexHulluse',
                         action='store_true',
                         default=False,
