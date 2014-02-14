@@ -89,7 +89,7 @@ while getopts M:L: option ; do
 done
 
 MATLABSCRIPT=invTest.m
-matlab_scriptCreate $(pwd) $MATLABSCRIPT
+#matlab_scriptCreate $(pwd) $MATLABSCRIPT
 CMD="eval \"$G_MATLAB -nodesktop -nosplash -nojvm	\
               -r \\\"[N M] = invTest($MATRIXSIZE, $LOOPS) ; exit\\\"\"" 
 echo $CMD
