@@ -1228,7 +1228,7 @@ if __name__ == "__main__":
                         action='store',
                         default='',
                         help='Use percentile offset from mean in calculating cloud boundary')
-    parser.add_argument('--convexHulluse', '-x'
+    parser.add_argument('--convexHulluse', '-x',
                         dest='convexHulluse',
                         action='store_true',
                         default=False,
