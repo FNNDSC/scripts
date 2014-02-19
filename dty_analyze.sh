@@ -22,16 +22,16 @@ G_SYNPOSIS="
 
   SYNOPSIS
   
-        dty_analyze.sh		-s <substringFilter>			\
-				-p <substringPrefixList>		\
-				-t <splitToken>				\
-				-o <outputDir>
+        dty_analyze.sh          -s <substringFilter>                    \
+                                -p <substringPrefixList>                \
+                                -t <splitToken>                         \
+                                -o <outputDir>
 
 
   DESC
 
         'dty_analyze.sh' creates grouped summaries of a set of density
-	files that have been tagged by the p-test <subscringFilter>.
+        files that have been tagged by the p-test <subscringFilter>.
 
         It relies on the outputs of a standard curvature analysis 
         pipeline.
@@ -39,48 +39,48 @@ G_SYNPOSIS="
   ARGS
 
         -s <substringFilter>
-	The p-test substring filter to process. This is usually one of
-	'le5' or 'le1', corresponding to 'less-than-equal to 5%' or 
-	'less-than-equal-to 1%' confidence threshold.
-	
-	Defaults to 'le5'.
-	
-	-p <substringPrefixList>
-	A prefix string to be added to the main search pattern. Each 
-	item in this comma separated list is used to prefix a find search, 
-	i.e. for an argument \"-p prefix1,prefix2,prefix3,...,prefixN\"
- 	
-		find . -iname \"*prefix1*<substringFilter>*\"
-		find . -iname \"*prefix2*<substringFilter>*\"
-					...
-		find . -iname \"*prefixN*<substringFilter>*\"
-		
-	
-	-t <splitToken>
-	The string token to split output filenames on. Probably this
-	shouldn't be changed from the default.
-	
-	Defaults to 'cloudCoreOverlap'.
-	
-	-o <outputDir>
-	The directory to contain output text files.
-	
-	Defaults to './'
+        The p-test substring filter to process. This is usually one of
+        'le5' or 'le1', corresponding to 'less-than-equal to 5%' or 
+        'less-than-equal-to 1%' confidence threshold.
+        
+        Defaults to 'le5'.
+        
+        -p <substringPrefixList>
+        A prefix string to be added to the main search pattern. Each 
+        item in this comma separated list is used to prefix a find search, 
+        i.e. for an argument \"-p prefix1,prefix2,prefix3,...,prefixN\"
+        
+                find . -iname \"*prefix1*<substringFilter>*\"
+                find . -iname \"*prefix2*<substringFilter>*\"
+                                        ...
+                find . -iname \"*prefixN*<substringFilter>*\"
+                
+        
+        -t <splitToken>
+        The string token to split output filenames on. Probably this
+        shouldn't be changed from the default.
+        
+        Defaults to 'cloudCoreOverlap'.
+        
+        -o <outputDir>
+        The directory to contain output text files.
+        
+        Defaults to './'
 
   STAGES
 
-	1 - summarize
-		Build the density table files by filtering the space
-		of outputs conforming to a filter.
+        1 - summarize
+                Build the density table files by filtering the space
+                of outputs conforming to a filter.
         2 - threshold
-		Parse the density table files and determine a new
-		threshold cut off to parse all density files.
+                Parse the density table files and determine a new
+                threshold cut off to parse all density files.
 
 
   HISTORY
   
-  	10-Jan-2014
-	o Initial design and coding.
+        10-Jan-2014
+        o Initial design and coding.
 "
 
 G_SELF=`basename $0`
@@ -98,11 +98,11 @@ EC_preconditionFail=60
 while getopts v:s:p:o:t: option ; do
         case "$option"
         in
-		o) G_OUTDIR=$OPTARG		;;
-		p) PREFIXLIST=$OPTARG			
-		   b_prefixList=${#PREFIXLIST}	;;
-                s) G_FILTER=$OPTARG		;;
-                t) G_STAGES="$OPTARG"		;;
+                o) G_OUTDIR=$OPTARG             ;;
+                p) PREFIXLIST=$OPTARG                   
+                   b_prefixList=${#PREFIXLIST}  ;;
+                s) G_FILTER=$OPTARG             ;;
+                t) G_STAGES="$OPTARG"           ;;
                 v) let Gi_verbose=$OPTARG       ;;
                 \?) synopsis_show
                     exit 0;;
@@ -130,9 +130,9 @@ G_LOGDIR=$(pwd)
 cd $topDir >/dev/null
 
 if (( b_prefixList )) ; then
-	PREFIXLIST=$(echo "$PREFIXLIST" | tr "," " ")
+        PREFIXLIST=$(echo "$PREFIXLIST" | tr "," " ")
 else
-	PREFIXLIST="*"
+        PREFIXLIST="*"
 fi
 
 ## Check which stages to process
@@ -158,15 +158,15 @@ dirExist_check ${G_OUTDIR}/${STAGE} "not found - creating"        \
             || mkdir -p ${G_OUTDIR}/${STAGE}                      \
             || fatal noOutRunDir
 if (( ${barr_stage[1]} )) ; then
-	statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
-	ALLHITS=""
-	b_removeResultFiles=0
-	for PREFIX in $PREFIXLIST; do 
-		if (( b_prefixList )) ; then
-			PREFIXHITS=$(find . -iname "*$PREFIX*$G_FILTER*" | grep -v dty_analyze)
-		else
-			PREFIXHITS=$(find . -iname "*$G_FILTER*" | grep -v dty_analyze)
-		fi
+        statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
+        ALLHITS=""
+        b_removeResultFiles=0
+        for PREFIX in $PREFIXLIST; do 
+                if (( b_prefixList )) ; then
+                        PREFIXHITS=$(find . -iname "*$PREFIX*$G_FILTER*" | grep -v dty_analyze)
+                else
+                        PREFIXHITS=$(find . -iname "*$G_FILTER*" | grep -v dty_analyze)
+                fi
                 b_HITS=$(echo "$PREFIXHITS" | wc -l)
                 if (( ! ${#PREFIXHITS} )) ; then b_HITS=0; fi
                 lprint "Saving p-test lists for $PREFIX-$G_FILTER"
@@ -176,27 +176,27 @@ if (( ${barr_stage[1]} )) ; then
                         touch ${G_OUTDIR}/${STAGE}/p-$PREFIX-$G_FILTER
                 fi
                 rprint "[ $b_HITS ]"
-		b_removeResultFiles=$(( b_HITS || b_removeResultFiles))
-		ALLHITS=$(printf "%s\n%s" "$ALLHITS" "$PREFIXHITS")
-		if (( !b_prefixList )) ; then 
-			break
-		fi
-	done
+                b_removeResultFiles=$(( b_HITS || b_removeResultFiles))
+                ALLHITS=$(printf "%s\n%s" "$ALLHITS" "$PREFIXHITS")
+                if (( !b_prefixList )) ; then 
+                        break
+                fi
+        done
 
-	if [[ b_removeResultFiles ]] ; then
-		rm -f ${G_OUTDIR}/${STAGE}/$G_DENSITYLIST
-	fi
+        if [[ b_removeResultFiles ]] ; then
+                rm -f ${G_OUTDIR}/${STAGE}/$G_DENSITYLIST
+        fi
 
-	for HIT in $ALLHITS ; do
-		DIR=$(echo $HIT   | $XARGS -i% echo "dirname %"   | sh)
-		FILE=$(echo $HIT  | $XARGS -i% echo "basename %"  | sh)
-		for DTY in $G_DENSITYLIST ; do
-			STEM=$(echo $FILE | sed 's/\(.*\)'${G_TOKEN}'\(.*\)/\1'${G_TOKEN}${DTY}'/')
-			# printf "%s    %s  %s \n" $DIR $FILE $STEM
-			CONTENTS=$(cat $DIR/$STEM)
-			echo -e "$CONTENTS\t$DIR/$STEM" >> ${G_OUTDIR}/${STAGE}/$DTY
-		done
-	done
+        for HIT in $ALLHITS ; do
+                DIR=$(echo $HIT   | $XARGS -i% echo "dirname %"   | sh)
+                FILE=$(echo $HIT  | $XARGS -i% echo "basename %"  | sh)
+                for DTY in $G_DENSITYLIST ; do
+                        STEM=$(echo $FILE | sed 's/\(.*\)'${G_TOKEN}'\(.*\)/\1'${G_TOKEN}${DTY}'/')
+                        # printf "%s    %s  %s \n" $DIR $FILE $STEM
+                        CONTENTS=$(cat $DIR/$STEM)
+                        echo -e "$CONTENTS\t$DIR/$STEM" >> ${G_OUTDIR}/${STAGE}/$DTY
+                done
+        done
         statusPrint "$(date) | Processing Stage $STAGENUM - END" "\n"
 fi
 
@@ -212,22 +212,22 @@ STAGEPROC="statTables-$G_FILTER"
 STAGE=${STAGENUM}-${STAGEPROC}
 STAGE2RELDIR=${G_OUTRUNDIR}/${STAGE}
 STAGE2FULLDIR=${G_OUTDIR}/${STAGE}
-statusPrint 	"Checking on stage 2 preconditions" "\n"
+statusPrint     "Checking on stage 2 preconditions" "\n"
 for FILE in $G_DENSITYLIST ; do
-	lprint $FILE
-	fileExist_check ${STAGE1FULLDIR}/$FILE || fatal preconditionFail
+        lprint $FILE
+        fileExist_check ${STAGE1FULLDIR}/$FILE || fatal preconditionFail
 done
 statusPrint     "Checking stage 2 output dir"
 dirExist_check ${G_OUTDIR}/${STAGE} "not found - creating"        \
             || mkdir -p ${G_OUTDIR}/${STAGE}                      \
             || fatal noOutRunDir
 if (( ${barr_stage[2]} )) ; then
-	statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
-	
-	AREATABLE=$(cat ${STAGE1FULLDIR}/AreaDensity.txt)
-	PARTICLETABLE=$(cat ${STAGE1FULLDIR}/ParticleDensity.txt)
+        statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
+        
+        AREATABLE=$(cat ${STAGE1FULLDIR}/AreaDensity.txt)
+        PARTICLETABLE=$(cat ${STAGE1FULLDIR}/ParticleDensity.txt)
 
-	for FILE in $G_DENSITYLIST ; do
+        for FILE in $G_DENSITYLIST ; do
             lprintn "$FILE"
             for PREFIX in $PREFIXLIST ; do
                 cprint "Filtering results for prefix" "[ $PREFIX ]"
@@ -238,29 +238,29 @@ if (( ${barr_stage[2]} )) ; then
                         FILTER="/$PREFIX/"
                         SCOPE="-$PREFIX-"
                 fi
-		base=$(basename $FILE)
-		meanFileName="mean${SCOPE}$FILE"
-		stdFileName="std${SCOPE}$FILE"
+                base=$(basename $FILE)
+                meanFileName="mean${SCOPE}$FILE"
+                stdFileName="std${SCOPE}$FILE"
                 # The control || after the grep is necessary to handle cases
                 # where the filter didn't return any hits.
-		meanLine=$(cat ${STAGE1FULLDIR}/$FILE                   |\
+                meanLine=$(cat ${STAGE1FULLDIR}/$FILE                   |\
                          (grep "$FILTER" || echo -e "0 0 0 0")          |\
                           stats_print.awk | grep Mean)
-		stdLine=$(cat  ${STAGE1FULLDIR}/$FILE                   |\
+                stdLine=$(cat  ${STAGE1FULLDIR}/$FILE                   |\
                         (grep "$FILTER"  || echo -e "0 0 0 0")          |\
                          stats_print.awk | grep Std)
-		echo "$meanLine" 	> ${STAGE2FULLDIR}/$meanFileName
-		echo "$stdLine" 	> ${STAGE2FULLDIR}/$stdFileName
+                echo "$meanLine"        > ${STAGE2FULLDIR}/$meanFileName
+                echo "$stdLine"         > ${STAGE2FULLDIR}/$stdFileName
                 mean=$(echo $meanLine   | awk '{print $4}')
                 std=$(echo $stdLine     | awk '{print $4}')
                 sum=$(echo "scale = 2; $mean + $std" | bc)
                 echo "$sum"             > ${STAGE2FULLDIR}/cutoff${SCOPE}$FILE
             done
-	done
+        done
 
-	AREAMEAN=$(echo "$AREATABLE" | stats_print.awk | grep Mean)
+        AREAMEAN=$(echo "$AREATABLE" | stats_print.awk | grep Mean)
         statusPrint "$(date) | Processing Stage $STAGENUM - END" "\n"
-	
+        
 fi
 
 STAGENUM="dty_analyze-3"
