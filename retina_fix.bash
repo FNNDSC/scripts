@@ -25,9 +25,9 @@ G_SYNOPSIS="
 
  DESCRIPTION
 
-	'retina_fix.bash' add some text to the Info.plist file
-	of each passed <osxapp> allowing it to run properly on retina 
-	displays.
+	'retina_fix.bash' adds some text to the Info.plist file
+	of each passed <osxapp> allowing the app to run properly
+	on retina displays.
 	
 	If any of the <osxapp> applications have already been made
 	retina-ready, then the script exits.
@@ -39,12 +39,12 @@ G_SYNOPSIS="
 
  PRECONDITIONS
 
-		o None	
+	o None	
 
  POSTCONDITIONS
 
         o <osxapp> is backed up to <osxapp>.orig
-		o <osxapp> has the following added to its Info.plist:
+	o <osxapp> has the following added to its Info.plist:
 		
         <key>NSPrincipalClass</key>
         <string>NSApplication</string>
