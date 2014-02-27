@@ -48,6 +48,10 @@ G_SYNOPSIS="
   	An egrep friendly regex that defines the filesystems that 
   	are stale.
 
+  ACKNOWLEDGEMENTS
+
+  	o http://joelinoff.com/blog/?p=356
+
 "
 
 G_SELF=`basename $0`
