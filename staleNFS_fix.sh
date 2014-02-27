@@ -52,6 +52,12 @@ G_SYNOPSIS="
 
   	o http://joelinoff.com/blog/?p=356
 
+  EXAMPLE
+
+  	o staleNFS_fix.sh -v 1 \"/neuro|/net/fnndsc\"
+  	This will search for any hung processes accessing any dirs in
+  	either the '/neuro' or '/net/fnndsc' trees.
+
 "
 
 G_SELF=`basename $0`
