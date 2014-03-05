@@ -12,7 +12,8 @@ declare -i Gi_verbose=0
 
 G_HOSTLIST="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
 
-G_HOSTLISTPICES="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
+G_HOSTLISTG6="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
+G_HOSTLISTG8="rc-majesty,rc-golden,rc-moonraker,rc-live,rc-loved,rc-only,rc-forever"
 G_HOSTLISTMEG="pandora,mario,saggfire,megdaq,glacier,iceberg"
 G_HOSTLISTFNNDSC_LINUX="shaka,paris,pretoria,natal,sparks, capetown,vuka"
 G_HOSTLISTFNNDSC_MAC="osx2147,osx1927,osx1999,mosel,maracuja,newcastle,osaka,quebec"
@@ -42,7 +43,8 @@ G_SYNOPSIS="
         Hosts are specified as comma delimites list with no white space.
         Several convenience lists are available:
         
-                -h pices        : all the cluster hosts
+                -h g6		: the g6 cluster hosts
+                -h g8		: the g8 cluster hosts
                 -h meg          : all the MEG hosts
                 -h fnndsc_linux : all the 1 Autumn Linux hosts
                 -h fnndsc_mac   : all the 1 Autumn Mac hosts
@@ -55,6 +57,8 @@ G_SYNOPSIS="
   21 June 2011
   o Initial design and coding.
 
+  05 March 2014
+  o Added 'g8' nodes.
 "
 
 A_args="checking command line arguments"
@@ -87,10 +91,11 @@ done
 
 case $G_HOSTLIST 
 in
-        "pices")        G_HOSTLIST=$G_HOSTLISTPICES     ;;
-        "meg")          G_HOSTLIST=$G_HOSTLISTMEG       ;;
-        "fnndsc_linux") G_HOSTLIST=$G_HOSTLISTFNNDSC_LINUX    ;;
-        "fnndsc_mac")   G_HOSTLIST=$G_HOSTLISTFNNDSC_MAC      ;;
+        "g6")        	G_HOSTLIST=$G_HOSTLISTG6     		;;
+        "g8")        	G_HOSTLIST=$G_HOSTLISTG8     		;;
+        "meg")          G_HOSTLIST=$G_HOSTLISTMEG       	;;
+        "fnndsc_linux") G_HOSTLIST=$G_HOSTLISTFNNDSC_LINUX    	;;
+        "fnndsc_mac")   G_HOSTLIST=$G_HOSTLISTFNNDSC_MAC      	;;
 esac
     
 shift $((OPTIND - 1))
