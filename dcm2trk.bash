@@ -484,7 +484,7 @@ echo $G_OUTDIR
 G_LOGDIR=$G_OUTDIR
 
 REQUIREDFILES=" common.bash mri_info                    \
-                mri_convert eddy_correct                \
+                mri_convert fsl5.0-eddy_correct                \
                 dti_recon dti_tracker spline_filter     \
                 vol_thFind.py hardi_mat odf_recon       \
                 odf_tracker"
