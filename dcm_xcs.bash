@@ -10,7 +10,7 @@
 
 # "include" the set of common script functions
 source common.bash
-source chris_env.bash
+
 declare -i Gb_forceStage=1
 
 let b_alreadyProcessed=0
