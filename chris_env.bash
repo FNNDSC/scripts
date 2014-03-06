@@ -68,7 +68,7 @@ export CHRIS_MAIL=/usr/bin/mail
 
 # FreeSurfer environment sourcing script
 #export FSSOURCE=${CHRIS_SCRIPTPATH}/chris-fsdev
-export FSSOURCE=${CHRIS_SCRIPTPATH}/chb-fsstable
+export FSSOURCE=${CHRIS_SCRIPTPATH}/neuro-fs stable
 
 #
 # +----- You shouldn't need to set anything below this line: -----------+
