@@ -31,8 +31,8 @@
 
 # Root dir of CHRIS DICOM packer subsystem -- this is the main 
 # directory housing everything relevant to CHRIS
-export CHRIS_HOME=/chb/users/chris
-export CHRIS_DICOMROOT=/chb/users/chris
+export CHRIS_HOME=/neuro/users/chris
+export CHRIS_DICOMROOT=/neuro/users/chris
 # CHRIS script storage location -- contains all script and related
 # files relevant to CHRIS
 #export CHRIS_SCRIPTPATH=${CHRIS_DICOMROOT}/repo/trunk/scripts
