@@ -2,7 +2,6 @@
 
 # "include" the set of common script functions
 source common.bash
-source chris_env.bash
 
 declare -i Gi_mtime=-365
 declare -i Gi_verbosity=10
