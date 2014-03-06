@@ -13,7 +13,7 @@ declare -i Gi_verbose=0
 G_HOSTLIST="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
 
 G_HOSTLISTG6="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
-G_HOSTLISTG8="rc-majesty,rc-golden,rc-moonraker,rc-live,rc-loved,rc-only,rc-forever"
+G_HOSTLISTG8="rc-majesty,rc-forever,rc-live,rc-golden,rc-loved,rc-moonraker,rc-only"
 G_HOSTLISTMEG="pandora,mario,saggfire,megdaq,glacier,iceberg"
 G_HOSTLISTFNNDSC_LINUX="shaka,paris,pretoria,natal,sparks, capetown,vuka"
 G_HOSTLISTFNNDSC_MAC="osx2147,osx1927,osx1999,mosel,maracuja,newcastle,osaka,quebec"
