@@ -111,7 +111,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=36
+targetList=37
 #
 ##
 ### REVERSE TUNNELS -- from dreev
@@ -224,13 +224,15 @@ TARGETACTION[31]="tunnel.bash --forward	--from 1143 --via ch137123@${DREEV} --to
 TARGET_CHECK[32]="tunnel.bash --reverse	--from ch137123@${DREEV}:4443 --to ${CHRIS}:443 --isRunning"
 TARGETACTION[32]="tunnel.bash --reverse	--from ch137123@${DREEV}:4443 --to ${CHRIS}:443"
 
-# Persisten hosts: fnndsc and tautona
+# Persistent hosts: fnndsc, tautona, rc-majesty
 TARGET_CHECK[33]="tunnel.bash --reverse	--from ch137123@${DREEV}:2137 --to ${FNNDSC}:22 --isRunning"
 TARGETACTION[33]="tunnel.bash --reverse	--from ch137123@${DREEV}:2137 --to ${FNNDSC}:22 "
 TARGET_CHECK[34]="tunnel.bash --reverse	--from ch137123@${DREEV}:3228 --to ${TAUTONA}:22 --isRunning"
 TARGETACTION[34]="tunnel.bash --reverse	--from ch137123@${DREEV}:3228 --to ${TAUTONA}:22 "
 TARGET_CHECK[35]="tunnel.bash --reverse	--from ch137123@${DREEV}:8443 --to ${CHRIS}:443 --isRunning"
 TARGETACTION[35]="tunnel.bash --reverse	--from ch137123@${DREEV}:8443 --to ${CHRIS}:443"
+TARGET_CHECK[36]="tunnel.bash --reverse	--from ch137123@${DREEV}:3142 --to ${CHRIS}:3142 --isRunning"
+TARGETACTION[36]="tunnel.bash --reverse	--from ch137123@${DREEV}:3142 --to ${CHRIS}:3142"
 
 
 # Process command line options
