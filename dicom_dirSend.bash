@@ -13,6 +13,7 @@ G_STORESCU="storescu"
 G_FILEEXT=""
 G_HOST=heisenberg.nmr.mgh.harvard.edu
 G_AETITLE="DCM4CHEE"
+G_CAETITLE="CDCM4CHEE"
 G_LISTENPORT=11112
 G_SSLCERTIFICATE="/neuro/users/chris/anonymize_key/CA_cert.pem"
 G_ANONOUTDIR=""
@@ -71,6 +72,7 @@ G_SYNOPSIS="
 
         -a <aetitle> (optional, default = $G_AETITLE)
         The aetitle of the PACS process to receive the data.
+        
 
         -h <remoteNMRhost> (optional, default = $G_HOST)
         The host running the PACS process, i.e. the hostname of the DICOM
