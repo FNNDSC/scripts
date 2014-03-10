@@ -95,6 +95,7 @@ SHAKA=shaka.tch.harvard.edu
 GLACIER=glacier.tch.harvard.edu
 RCDRNO=rc-drno.tch.harvard.edu
 RCRUSSIA=rc-russia.tch.harvard.edu
+RCMAJESTY=rc-majesty.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
 CHRIS=chris.tch.harvard.edu
@@ -231,8 +232,8 @@ TARGET_CHECK[34]="tunnel.bash --reverse	--from ch137123@${DREEV}:3228 --to ${TAU
 TARGETACTION[34]="tunnel.bash --reverse	--from ch137123@${DREEV}:3228 --to ${TAUTONA}:22 "
 TARGET_CHECK[35]="tunnel.bash --reverse	--from ch137123@${DREEV}:8443 --to ${CHRIS}:443 --isRunning"
 TARGETACTION[35]="tunnel.bash --reverse	--from ch137123@${DREEV}:8443 --to ${CHRIS}:443"
-TARGET_CHECK[36]="tunnel.bash --reverse	--from ch137123@${DREEV}:3142 --to ${CHRIS}:3142 --isRunning"
-TARGETACTION[36]="tunnel.bash --reverse	--from ch137123@${DREEV}:3142 --to ${CHRIS}:3142"
+TARGET_CHECK[36]="tunnel.bash --reverse	--from ch137123@${DREEV}:3142 --to ${RCMAJESTY}:22 --isRunning"
+TARGETACTION[36]="tunnel.bash --reverse	--from ch137123@${DREEV}:3142 --to ${RCMAJESTY}:22"
 
 
 # Process command line options
