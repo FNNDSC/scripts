@@ -73,6 +73,8 @@ G_SYNOPSIS="
         -a <aetitle> (optional, default = $G_AETITLE)
         The aetitle of the PACS process to receive the data.
         
+        -c <aetitle> (optional, default = $G_CAETITLE)
+        The called aetitle of the PACS process to receive the data.
 
         -h <remoteNMRhost> (optional, default = $G_HOST)
         The host running the PACS process, i.e. the hostname of the DICOM
@@ -140,7 +142,7 @@ EC_dirAccess="50"
 # Process command options
 ###///
 
-while getopts v:a:h:p:s:APkE:K:O: option ; do
+while getopts v:a:c:h:p:s:APkE:K:O: option ; do
         case "$option"
         in
                 v) Gi_verbose=$OPTARG					;;
@@ -151,6 +153,7 @@ while getopts v:a:h:p:s:APkE:K:O: option ; do
                 O) G_ANONOUTDIR=$OPTARG                 ;;
                 E) G_FILEEXT=".${OPTARG}"               ;;
                 a) G_AETITLE=$OPTARG                    ;;
+                c) G_CAETITLE=$OPTARG                   ;;
                 h) G_HOST=$OPTARG                       ;;
                 p) G_LISTENPORT=$OPTARG                 ;;
                 s) G_STORESCU=$OPTARG					
@@ -216,7 +219,7 @@ for DIR in $DCMLIST ; do
         statusPrint	"Transmitting *$G_FILEEXT files in $DIR..." "\n"
         cd "$DIR" >/dev/null
         lprint          "Transmission"
-        $G_STORESCU -aet "$G_SELF" -aec $G_AETITLE $G_HOST $G_LISTENPORT *${G_FILEEXT}
+        $G_STORESCU -aet $G_CAETITLE -aec $G_AETITLE $G_HOST $G_LISTENPORT *${G_FILEEXT}
         ret_check $? || fatal storescu
         cd ../
         if (( !Gb_keepAnonymize && ( Gb_anonymize || Gb_partialAnonymize) )) ; then
