@@ -336,6 +336,7 @@ if (( ${#GLST_PATIENTSNAME}));  then GLST=$GLST_PATIENTSNAME; fi
 if (( ${#GLST_ACCESSION} )) ;   then GLST=$GLST_ACCESSION; fi 
 
 for EL in $(echo $GLST | tr , ' '); do
+    cprint "-->$EL<--"
     cprint "M: Institution"             "[ $G_INSTITUTION ]"
     cprint "M: AETitle for query"       "[ $G_AETITLE ]"
     cprint "M: PACS IP"                 "[ $G_QUERYHOST ]"
