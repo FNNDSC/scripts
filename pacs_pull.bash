@@ -64,15 +64,15 @@ G_SYNOPSIS="
   SYNOPSIS
   
         pacs_pull.bash  -M <MRN> || -N <PatientsName>                   \\
-			[-m <modality>]					\\
+                        [-m <modality>]                                 \\
                         [-R]                                            \\
                         [-D <scandate>]                                 \\
                         [-S <seriesDescription>]                        \\
-			[-h <institution>]				\\
+                        [-h <institution>]                              \\
                         [-a <aetitle>]                                  \\
                         [-P <PACShost>]                                 \\
                         [-p <PACSport>]                                 \\
-			[-c <calltitle>]				\\
+                        [-c <calltitle>]                                \\
                         [-v <verbosityLevel>]
 
   DESC
@@ -96,13 +96,13 @@ G_SYNOPSIS="
         or the other; if all are specified, only the <MRN> is used. 
         Also note that the <PatientsName> is an *exact* string -- no substring 
         searching is performed. The name is found only if it exactly matches the
-	name in the PACS.
-	
-	Multiple targets can be concatenated with a ',' -- i.e. -M 123,456
-	will search for MRN 123 and then MRN 456.
+        name in the PACS.
         
-	-m <modality>
-	The modality to retrieve. This defaults to 'MR'. For CT, use 'CT'.
+        Multiple targets can be concatenated with a ',' -- i.e. -M 123,456
+        will search for MRN 123 and then MRN 456.
+        
+        -m <modality>
+        The modality to retrieve. This defaults to 'MR'. For CT, use 'CT'.
 
         -R
         By default, the script will only query the PACS and not retrieve
@@ -118,18 +118,18 @@ G_SYNOPSIS="
         Series description. If specified, limit retrieve or query to
         <seriesDescription>. This is a substring search match.
 
-	-h <institution>
+        -h <institution>
         If specified, assigns some default AETITLE and PACS variables
         appropriate to the <institution>. Valid <institutions> are
-	'MGH' and 'CHB'.
+        'MGH' and 'CHB'.
 
         -a <aetitle> (Optional $G_AETITLE)
         Local AETITLE. This is the only field that the CHB PACS seems to care 
         about. Queries are retrieved to the host:port that is associated
         with this <aetitle>.
                 
-	-c <calltitle> (Optional)
-	The call title. Required by some, but not all, PACS.
+        -c <calltitle> (Optional)
+        The call title. Required by some, but not all, PACS.
 
         -P <PACShost> (Optional $G_QUERYHOST)
         The PACS host to query.
@@ -137,7 +137,7 @@ G_SYNOPSIS="
         -p <PACSport> (Optional $G_QUERYPORT)
         The port on <PACShost>.        
         
-	-v <verbosityLevel> (Optional)
+        -v <verbosityLevel> (Optional)
         This script defaults to a verbosityLevel of '1'. To be most
         verbose, use a level of '10'.
 
@@ -261,38 +261,38 @@ function institution_set
 
     case "$INSTITUTION" 
     in
-	CHB)
-	  G_AETITLE=rudolphpienaar
-	  G_QUERYHOST=134.174.12.21
-	  G_QUERYPORT=104
-	;;
-	CHB-chris)
-	  G_AETITLE=FNNDSC-CHRIS
-	  G_QUERYHOST=134.174.12.21
-	  G_QUERYPORT=104
-	;;
-	CHB-chrisdev)
-	  G_AETITLE=FNNDSC-CHRISDEV
-	  G_QUERYHOST=134.174.12.21
-	  G_QUERYPORT=104
-	;;
-	CHB-christest)
-	  G_AETITLE=FNNDSC-CHRISTEST
-	  G_QUERYHOST=134.174.12.21
-	  G_QUERYPORT=104
-	;;
-	MGH)
-	  G_AETITLE=ELLENGRANT
-	  G_QUERYHOST=172.16.128.91
-	  G_QUERYPORT=104
-	  G_CALLTITLE=SDM1
-	;;
-	MGH2)
-	  G_AETITLE=ELLENGRANT-CH
-	  G_QUERYHOST=172.16.128.91
-	  G_QUERYPORT=104
-	  G_CALLTITLE=SDM1
-	;;
+        CHB)
+          G_AETITLE=rudolphpienaar
+          G_QUERYHOST=134.174.12.21
+          G_QUERYPORT=104
+        ;;
+        CHB-chris)
+          G_AETITLE=FNNDSC-CHRIS
+          G_QUERYHOST=134.174.12.21
+          G_QUERYPORT=104
+        ;;
+        CHB-chrisdev)
+          G_AETITLE=FNNDSC-CHRISDEV
+          G_QUERYHOST=134.174.12.21
+          G_QUERYPORT=104
+        ;;
+        CHB-christest)
+          G_AETITLE=FNNDSC-CHRISTEST
+          G_QUERYHOST=134.174.12.21
+          G_QUERYPORT=104
+        ;;
+        MGH)
+          G_AETITLE=ELLENGRANT
+          G_QUERYHOST=172.16.128.91
+          G_QUERYPORT=104
+          G_CALLTITLE=SDM1
+        ;;
+        MGH2)
+          G_AETITLE=ELLENGRANT-CH
+          G_QUERYHOST=172.16.128.91
+          G_QUERYPORT=104
+          G_CALLTITLE=SDM1
+        ;;
     esac
 }
 
@@ -302,14 +302,14 @@ while getopts M:N:A:m:QD:S:a:c:l:P:p:v:Rh: option ; do
         v) Gi_verbose=$OPTARG           ;;
         M) GLST_PATIENTID=$OPTARG       ;;
         A) GLST_ACCESSION=$OPTARG       ;;
-	m) G_MODALITY=$OPTARG		;;
-	N) GLST_PATIENTSNAME=$OPTARG	;;
+        m) G_MODALITY=$OPTARG           ;;
+        N) GLST_PATIENTSNAME=$OPTARG    ;;
         R) let Gb_queryOnly=0           ;;
         D) G_SCANDATE=$OPTARG           ;;
         S) G_SERIESDESCRIPTION=$OPTARG
            let Gb_seriesRetrieve=1      ;;
-	h) G_INSTITUTION=$OPTARG
-	   let Gb_institution=1		;;
+        h) G_INSTITUTION=$OPTARG
+           let Gb_institution=1         ;;
         a) G_AETITLE=$OPTARG            ;;
         c) G_CALLTITLE=$OPTARG          ;;
         l) G_RCVPORT=$OPTARG            ;;
@@ -336,10 +336,10 @@ if (( ${#GLST_PATIENTSNAME}));  then GLST=$GLST_PATIENTSNAME; fi
 if (( ${#GLST_ACCESSION} )) ;   then GLST=$GLST_ACCESSION; fi 
 
 for EL in $(echo $GLST | tr , ' '); do
-    cprint "M: Institution"		"[ $G_INSTITUTION ]"
-    cprint "M: AETitle for query"	"[ $G_AETITLE ]"
-    cprint "M: PACS IP"		        "[ $G_QUERYHOST ]"
-    cprint "M: CallTitle for query"	"[ $G_CALLTITLE ]"
+    cprint "M: Institution"             "[ $G_INSTITUTION ]"
+    cprint "M: AETitle for query"       "[ $G_AETITLE ]"
+    cprint "M: PACS IP"                 "[ $G_QUERYHOST ]"
+    cprint "M: CallTitle for query"     "[ $G_CALLTITLE ]"
 
     if (( ${#GLST_PATIENTID} )) ; then G_PATIENTID=$EL; fi
     if (( ${#GLST_PATIENTSNAME})) ; then G_PATIENTSNAME=$EL; fi
@@ -403,7 +403,7 @@ for EL in $(echo $GLST | tr , ' '); do
       for currentUIb in $UI ; do
         currentUI=$(bracket_find $currentUIb)
         statusPrint "I: Collecting series information for $currentUI" "\n"
-        QUERYSERIES="findscu -v -S --aetitle $G_AETITLE $CALLSPEC		\
+        QUERYSERIES="findscu -v -S --aetitle $G_AETITLE $CALLSPEC               \
              -k $G_QueryRetrieveLevel=SERIES                                \
              -k $G_PatientID=$G_PATIENTID                                   \
              -k $G_AccessionNumber=$G_ACCESSIONNUMBER                       \
