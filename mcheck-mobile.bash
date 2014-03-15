@@ -23,15 +23,15 @@ G_SYNOPSIS="
 
  NAME
 
-       mcheck-ssh-dreev.bash
+       mcheck-mobile.bash
 
  SYNOPSIS
 
-       mcheck-ssh-dreev.bash
+       mcheck-mobile.bash
 
  DESCRIPTION
  
-        'mcheck-ssh-dreev.bash' is used to check that certain script-defined
+        'mcheck-mobile.bash' is used to check that certain script-defined
 	conditions are true. If any of these conditions are false, it executes 
 	a set of corrective actions.
 
@@ -106,7 +106,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=18
+targetList=20
 
 #
 ##
@@ -149,8 +149,10 @@ TARGET_CHECK[16]="tunnel.bash --forward	--from 3204  --via ch137123@${DREEV} --t
 TARGETACTION[16]="tunnel.bash --forward	--from 3204  --via ch137123@${DREEV} --to localhost:3204"
 TARGET_CHECK[17]="tunnel.bash --forward	--from 27000 --via ch137123@${DREEV} --to localhost:27000 --isRunning"
 TARGETACTION[17]="tunnel.bash --forward	--from 27000 --via ch137123@${DREEV} --to localhost:27000"
-TARGET_CHECK[18]="tunnel.bash --forward	--from 2137 --via ch137123@${DREEV} --to localhost:2137 --isRunning"
-TARGETACTION[18]="tunnel.bash --forward	--from 2137 --via ch137123@${DREEV} --to localhost:2137"
+TARGET_CHECK[18]="tunnel.bash --forward	--from 2137  --via ch137123@${DREEV} --to localhost:2137 --isRunning"
+TARGETACTION[18]="tunnel.bash --forward	--from 2137  --via ch137123@${DREEV} --to localhost:2137"
+TARGET_CHECK[19]="tunnel.bash --forward	--from 1143  --via rudolph@${GATE}   --to chris:443 --isRunning"
+TARGETACTION[19]="tunnel.bash --forward	--from 1143  --via rudolph@${GATE}   --to chris:443"
 
 # Process command line options
 while getopts hv: option ; do
