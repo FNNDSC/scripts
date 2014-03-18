@@ -18,8 +18,8 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-        $G_SELF -a <annotationBase> [-s <surface>] 	\
-		[-M <mri_annotation2label>] 		\
+        $G_SELF -a <annotationBase> [-s <surface>] 	\\
+		[-M <mri_annotation2label>] 		\\
 		<subj1> ... <subjN>
 
  DESCRIPTION
