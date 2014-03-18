@@ -75,6 +75,9 @@ G_SYNPOSIS="
         2 - threshold
                 Parse the density table files and determine a new
                 threshold cut off to parse all density files.
+        3 - final cutoffs
+                Based on the threshold cutoff, analyze all statistical
+                geometries for cutoffs.
 
 
   HISTORY
