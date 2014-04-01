@@ -116,7 +116,7 @@ class CLUSTER(base.FNNDSC):
             if case('launchpad'):
                 stage.shell(crun.crun_hpc_launchpad(
                         remoteUser="rudolph",
-                        remoteHost="pretoria:7774")
+                        remoteHost="fnndsc:7774")
                         )
                 b_jobDetach         = False
                 b_disassocaite      = False
@@ -125,7 +125,7 @@ class CLUSTER(base.FNNDSC):
             if case('erisone'):
                 stage.shell(crun.crun_hpc_lsf(
                         remoteUser="rp937",
-                        remoteHost="pretoria:7773")
+                        remoteHost="fnndsc:7773")
                         )
                 stage.shell().scheduleHostOnly(
                 "cmu058 cmu059 cmu061 cmu066 cmu067 cmu071 cmu073 cmu075 cmu077 cmu079 cmu081 cmu087 cmu090 cmu093 cmu094 cmu095 cmu096 cmu102 cmu106 cmu107 cmu108 cmu109 cmu111 cmu112 cmu114 cmu121 cmu123 cmu126 cmu149 cmu154 cmu156 cmu157 "
