@@ -106,7 +106,7 @@ class CLUSTER(base.FNNDSC):
             if case('PICES'):
                 stage.shell(crun.crun_hpc_mosix(
                         remoteUser="rudolphpienaar",
-                        remoteHost="rc-drno.tch.harvard.edu")
+                        remoteHost="rc-majesty.tch.harvard.edu")
                         )
                 stage.shell().emailUser('rudolph.pienaar@childrens.harvard.edu')
                 b_jobDetach         = True
@@ -343,6 +343,7 @@ if __name__ == "__main__":
             log('Processing job: %d...\n' % job)
             str_cmd = args.cmd
             shell = stage.shell()
+            shell.echo(False)
             shell(
                 str_cmd, waitForChild=shell.waitForChild(), 
                 stdoutflush=True, stderrflush=True
