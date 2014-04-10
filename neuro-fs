@@ -121,6 +121,11 @@ OS=$(uname -a | awk '{print $1}')
 echo "Host type is $HOSTTYPE-${OS}"
 
 export PACKAGEDIR=/neuro/arch/${HOSTTYPE}-${OS}/packages
+
+export DTDIR=${PACKAGEDIR}/dtk
+export DSI_PATH=${DTDIR}/matrices
+
+export PATH=$PATH:${CHB_SCRIPTPATH}:${FSLDIR}:${FSLDIR}/bin
 export FSL_DIR=${PACKAGEDIR}/fsl/current
 export SUBJECTS_DIR=$(pwd)
 
