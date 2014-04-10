@@ -122,7 +122,7 @@ echo "Host type is $HOSTTYPE-${OS}"
 
 export PACKAGEDIR=/neuro/arch/${HOSTTYPE}-${OS}/packages
 
-export DTDIR=${PACKAGEDIR}/dtk
+export DTDIR=${PACKAGEDIR}/dtk/current/dtk
 export DSI_PATH=${DTDIR}/matrices
 
 export PATH=$PATH:${CHB_SCRIPTPATH}:${FSLDIR}:${FSLDIR}/bin
