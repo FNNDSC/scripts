@@ -105,7 +105,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=27
+targetList=2i8
  TARGET_CHECK[0]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 --to localhost:10401 --isRunning"
  TARGETACTION[0]="tunnel.bash --reverse --from ch137123@${DREEV}:10301 --to localhost:10401"
  TARGET_CHECK[1]="tunnel.bash --forward --from 4212 --via ch137123@${DREEV} --to localhost:4212 --isRunning"
@@ -160,6 +160,8 @@ TARGET_CHECK[25]="tunnel.bash --forward --from 3142 --via ch137123@${DREEV} --to
 TARGETACTION[25]="tunnel.bash --forward --from 3142 --via ch137123@${DREEV} --to localhost:3142"
 TARGET_CHECK[26]="tunnel.bash --reverse --from ch137123@${DREEV}:7772 --to heisenberg:22 --isRunning"
 TARGETACTION[26]="tunnel.bash --reverse --from ch137123@${DREEV}:7772 --to heisenberg:22"
+TARGET_CHECK[27]="tunnel.bash --forward --from 2214 --via ch137123@${DREEV} --to localhost:2214 --isRunning"
+TARGETACTION[27]="tunnel.bash --forward --from 2214 --via ch137123@${DREEV} --to localhost:2214"
 
 while getopts hv: option ; do
         case "$option"
