@@ -1,6 +1,6 @@
 #!/bin/bash
 
-G_VERSION="2013b"
+G_VERSION="2014a"
 G_SYNOPSIS="
 
     NAME
@@ -92,11 +92,11 @@ fi
 
 if (( ! b_useLocal )) ; then
     if [[ $HOST_PREFIX == "rc" ]] ; then
-        printf "Using 'pices' local install of MatLAB...\n"
+        printf "Using FNNDSC licensed version of MatLAB...\n"
         export MPATH=/neuro/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin
         export PATH=$MPATH:$PATH
     else
-        printf "Using FNNDSC local install of MatLAB...\n"
+        printf "Using BCH licensed install of MatLAB...\n"
         case $(uname) 
         in 
             Linux)  export MPATH=/neuro/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin
