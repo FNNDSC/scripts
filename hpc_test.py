@@ -343,7 +343,7 @@ if __name__ == "__main__":
             log('Processing job: %d...\n' % job)
             str_cmd = args.cmd
             shell = stage.shell()
-            shell.echo(False)
+            shell.echo(True)
             shell(
                 str_cmd, waitForChild=shell.waitForChild(), 
                 stdoutflush=True, stderrflush=True
