@@ -118,6 +118,12 @@ G_SYNOPSIS="
 
     $>dicom_dirSend.bash -v 10 -a ELLENGRANT -h kaos.nmr.mgh.harvard.edu \\
       -p 10401 <DIR1>... <DIRn>
+
+  o To anonymize and override MRN and SubjectName:
+
+    $>dicom_dirSend.bash -v 10 -a ELLENGRANT -h kaos.nmr.mgh.harvard.edu \\
+      -p 10401 -P -M ANON-MRN -N ANON-NAME <DIR1>... <DIRn>
+
 "
 
 ###\\\
@@ -226,11 +232,13 @@ for DIR in $DCMLIST ; do
             fi
             ANONARG=""
             if ((Gb_partialAnonymize)) ; then
-            	ANONARG=" -P -N $SubjName "
+            	ANONARG=" -P -N $G_SUBJECTNAME "
                 if (( Gb_overrideMRN )) ; then
                     ANONARG="$ANONARG -M $G_MRN "
+                fi
             fi
-            dcmanon_meta.bash -v 10 -K $G_SSLCERTIFICATE -D $INPUTDIR -O $OUTPUTDIR $ANONARG
+            CMD="dcmanon_meta.bash -v 10 -K $G_SSLCERTIFICATE -D $INPUTDIR -O $OUTPUTDIR $ANONARG"
+            echo "$CMD" | sh -v
             DIR=$OUTPUTDIR
             cprint      "Anonymization" "[ ok ]"
         fi
