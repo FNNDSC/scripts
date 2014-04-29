@@ -16,6 +16,7 @@ declare -i Gb_useExpertOptions=0
 declare -i Gb_useOverrideOut=0
 declare -i Gb_forceStage=1
 declare -i Gb_partialAnonymize=0
+declare -i Gb_overrideMRN=0
 
 G_LOGDIR="-x"
 G_OUTDIR="$CHRIS_POSTPROC"
@@ -25,7 +26,8 @@ G_DIRSUFFIX=""
 G_OUTPREFIX="anon-"
 G_DICOMINPUTDIR="-x"
 G_STAGES="1"
-G_SUBJECTNAME="anonymous"
+G_SUBJECTNAME="anonymized"
+G_MRN="anonymized"
 
 G_SYNOPSIS="
 
@@ -42,8 +44,10 @@ G_SYNOPSIS="
                                 [-o <outputSuffix>]                     \\
                                 [-p <outputPrefix>]                     \\
                                 [-K <SSLCertificate>]                   \\
-                                [-S <subjectName>]                      \\
+                                [-N <subjectName>]                      \\
+                                [-M <MRN>]                              \\
                                 [-P]
+
  DESCRIPTION
 
 	'dcmanon_meta.bash' accepts an input directory containing DICOM
@@ -92,6 +96,14 @@ G_SYNOPSIS="
         If specified, do a partial anonymization of the data (rather than 
         doing a full DICOM-compliant anonymize, only anonymizes some of the 
         fields).
+
+        -N <SubjName>
+        In conjunction with -P, specifies the subject name field to inject
+        into the anonymized DICOMS. Otherwise reverts to 'anonymous'.
+
+        -M <MRN>
+        In conjunction with -P, specifies the MRN field to inject into the
+        anonymized DICOMS. Otherwise, anon MRN is a md5 hash of original MRN.
 
  PRECONDITIONS
 	
@@ -173,7 +185,7 @@ D_whatever=
 # Process command options
 ###///
 
-while getopts D:Ev:O:o:p:t:R:d:K:Ps: option ; do 
+while getopts D:Ev:O:o:p:t:R:d:K:PM:N: option ; do 
 	case "$option"
 	in
                 D)      G_DICOMINPUTDIR=$OPTARG         ;;
@@ -187,7 +199,9 @@ while getopts D:Ev:O:o:p:t:R:d:K:Ps: option ; do
                 K)      G_SSLCERTIFICATE=$OPTARG        ;;
                 t)      G_STAGES="$OPTARG"              ;;
                 P)      Gb_partialAnonymize=1           ;;
-                s)      G_SUBJECTNAME="$OPTARG"         ;;
+                M)      G_MRN=$OPTARG
+                        Gb_overrideMRN=1                ;;
+                N)      G_SUBJECTNAME="$OPTARG"         ;;
                 d)      NOP                             ;;
 		\?)     synopsis_show 
                         exit 0;;
@@ -273,7 +287,11 @@ if (( ${barr_stage[1]} )) ; then
         for FILE in $G_DICOMINPUTDIR/*.dcm ; do
             FILEBASE=$(basename $FILE)
             TAG=$(mri_probedicom --i $FILE --t 0010 0020)
-            MD5=$(echo $TAG | openssl md5 | sed 's/^.*= *//' | sed 's/[ \t]*$//')
+            if (( Gb_overrideMRN )) ; then
+                MD5=$G_MRN
+            else
+                MD5=$(echo $TAG | openssl md5 | sed 's/^.*= *//' | sed 's/[ \t]*$//')
+            fi
             printf "$TAG --> %s\n" "$MD5"
             STAGECMD="echo $MD5 |                                             \
                       xargs -i% $STAGEPROC                                    \

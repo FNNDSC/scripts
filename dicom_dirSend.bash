@@ -8,16 +8,21 @@ declare -i Gi_verbose=0
 declare -i Gb_anonymize=0
 declare -i Gb_partialAnonymize=0
 declare -i Gb_keepAnonymize=0
+declare -i Gb_overrideMRN=0
 
 G_STORESCU="storescu"
 G_FILEEXT=""
-G_HOST=heisenberg.nmr.mgh.harvard.edu
+G_HOST=fnndsc.tch.harvard.edu
 G_AETITLE="DCM4CHEE"
 G_CAETITLE="CDCM4CHEE"
 G_LISTENPORT=11112
 G_SSLCERTIFICATE="/neuro/users/chris/anonymize_key/CA_cert.pem"
 G_ANONOUTDIR=""
+G_SUBJECTNAME="anonymized"
+G_MRN="anonymized"
+
 G_SYNOPSIS="
+
 
  NAME
 
@@ -31,10 +36,10 @@ G_SYNOPSIS="
                                 [-p <listenPort>]			\\
                                 [-s <storescu>]				\\
                                 [-A]                        		\\
-                                [-P]                        		\\
+                                [-P] [-N <SubjName>] [-M <MRN>]         \\
                                 [-k]                        		\\
                                 [-K <SSLCertificate>        		\\
-                                [-O <anonOutputDir>]              		\\
+                                [-O <anonOutputDir>]              	\\
                                 [-E <fileExt>]              		\\
 				<dicomDir1> <dicomDir2> ... <dicomDirN>
 
@@ -60,7 +65,15 @@ G_SYNOPSIS="
         If specified, do a partial anonymization of the data (similar to -A,
         but rather than doing a full DICOM-compliant anonymize, only anonymizes
         some of the fields).
-        
+
+        -N <SubjName>
+        In conjunction with -P, specifies the subject name field to inject
+        into the anonymized DICOMS. Otherwise reverts to 'anonymous'.
+
+        -M <MRN>
+        In conjunction with -P, specifies the MRN field to inject into the
+        anonymized DICOMS. Otherwise, anon MRN is a md5 hash of original MRN.
+
         -k (Optional)
         If specified, do not delete (keep) the anonymized directory 
                 
@@ -142,12 +155,15 @@ EC_dirAccess="50"
 # Process command options
 ###///
 
-while getopts v:a:c:h:p:s:APkE:K:O: option ; do
+while getopts v:a:c:h:p:s:APkE:K:O:N:M: option ; do
         case "$option"
         in
                 v) Gi_verbose=$OPTARG					;;
                 A) Gb_anonymize=1                       ;;
                 P) Gb_partialAnonymize=1                ;;
+                M) G_MRN=$OPTARG
+                   Gb_overrideMRN=1                     ;;
+                N) G_SUBJECTNAME=$OPTARG                ;;
                 k) Gb_keepAnonymize=1                   ;;
                 K) G_SSLCERTIFICATE=$OPTARG             ;;
                 O) G_ANONOUTDIR=$OPTARG                 ;;
@@ -210,7 +226,9 @@ for DIR in $DCMLIST ; do
             fi
             ANONARG=""
             if ((Gb_partialAnonymize)) ; then
-            	ANONARG=" -P "
+            	ANONARG=" -P -N $SubjName "
+                if (( Gb_overrideMRN )) ; then
+                    ANONARG="$ANONARG -M $G_MRN "
             fi
             dcmanon_meta.bash -v 10 -K $G_SSLCERTIFICATE -D $INPUTDIR -O $OUTPUTDIR $ANONARG
             DIR=$OUTPUTDIR
