@@ -199,7 +199,7 @@ while getopts D:Ev:O:o:p:t:R:d:K:PM:N: option ; do
                 K)      G_SSLCERTIFICATE=$OPTARG        ;;
                 t)      G_STAGES="$OPTARG"              ;;
                 P)      Gb_partialAnonymize=1           ;;
-                M)      G_MRN=$OPTARG
+                M)      G_MRN="$OPTARG"
                         Gb_overrideMRN=1                ;;
                 N)      G_SUBJECTNAME="$OPTARG"         ;;
                 d)      NOP                             ;;
@@ -253,6 +253,9 @@ OUTDIR=$(pwd)
 lprint "Anonymized directory" 
 rprint "[ $OUTDIR ]"
 cd $topDir
+
+cprint      "Anon Subject name" "[ $G_SUBJECTNAME ]"
+cprint      "MRN override"      "[ $Gb_overrideMRN ]"
 
 ## Check which stages to process
 statusPrint     "Checking which stages to process"
