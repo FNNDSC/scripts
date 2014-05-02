@@ -181,7 +181,7 @@ if (( ${barr_stage[1]} )) ; then
                 rprint "[ $b_HITS ]"
                 b_removeResultFiles=$(( b_HITS || b_removeResultFiles))
                 ALLHITS=$(printf "%s\n%s" "$ALLHITS" "$PREFIXHITS")
-                if (( !b_prefixList )) ; then 
+                if (( !b_prefixList )) ; then
                         break
                 fi
         done
@@ -190,6 +190,7 @@ if (( ${barr_stage[1]} )) ; then
                 rm -f ${G_OUTDIR}/${STAGE}/$G_DENSITYLIST
         fi
 
+        for DTY in $G_DENSITYLIST ; do touch ${G_OUTDIR}/${STAGE}/$DTY; done
         for HIT in $ALLHITS ; do
                 DIR=$(echo $HIT   | $XARGS -i% echo "dirname %"   | sh)
                 FILE=$(echo $HIT  | $XARGS -i% echo "basename %"  | sh)
