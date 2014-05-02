@@ -143,6 +143,7 @@ export PATH=$PATH:${PACKAGEDIR}/mricron:${PACKAGEDIR}/dtk/current/dtk
 
 # MatLAB exports
 ## Matlab compiler Runtime (MCR)
+export MCRROOT=/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current
 export LD_LIBRARY_PATH=/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/runtime/glnxa64:/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/bin/glnxa64:/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/os/glnxa64:/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/java/jre/glnxa64/jre/lib/amd64/native_threads:/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/java/jre/glnxa64/jre/lib/amd64/server:/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/java/jre/glnxa64/jre/lib/amd64:$LD_LIBRARY_PATH
 export XAPPLRESDIR=/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/X11/app-defaults
 
