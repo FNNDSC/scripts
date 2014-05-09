@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# we perform "in" directory conversion
+dir=$1
+
+cd $dir
+
+mkdir jpegCompressed
+mv *.dcm jpegCompressed/
+
+for file in $dir/jpegCompressed/*.dcm
+do
+    if [[ -f $file ]]; then
+        #http://wiki.bash-hackers.org/syntax/pe#substring_removal
+        echo $file
+        dcmdjpeg -v $file ${file##*/}
+    fi
+done
+
+echo "All files have been decompressed"
