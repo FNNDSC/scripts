@@ -26,29 +26,31 @@ G_SYNOPSIS="
  ARGUMENTS
 
         -d <destinationDir>
-		The destination directory for the DMG. Only applicable if DMG does
-		not contain a pkg file.
+
+	The destination directory for the DMG. Only applicable if DMG does
+	not contain a pkg file.
 
         <file.dmg>
-		File to install.
+
+	File to install.
 
  PRECONDITIONS
 
         o Mac OS X envirnoment (obviously).
 
  POSTCONDITIONS
-		
-		o File is installed as specified.
+
+	o File is installed as specified.
 
  HISTORY
 
         20 September 2013
         o Initial development
-	
+
  SEE ALSO
- 
- 		o http://apple.stackexchange.com/questions/73926/is-there-a-command-to-install-a-dmg
-		o https://gist.github.com/afgomez/4172338
+
+        o http://apple.stackexchange.com/questions/73926/is-there-a-command-to-install-a-dmg
+        o https://gist.github.com/afgomez/4172338
 
 "
 
@@ -101,7 +103,7 @@ b_MacOSX=$(uname -a | grep Darwin | wc -l)
 if (( !b_MacOSX )) ; then
         fatal noMacOSX
 fi
-ret_check $?   
+ret_check $?
 
 shift $(($OPTIND - 1))
 DMGFILE=$*
@@ -115,7 +117,7 @@ fileExist_check $DMGFILE || fatal noDMG
 # # Generate a random file name
 # tmp_file=/tmp/`openssl rand -base64 10 | tr -dc '[:alnum:]'`.dmg
 # apps_folder='/Applications'
-# 
+#
 # # Download file
 # echo "Downloading $url..."
 # curl -# -L -o $tmp_file $url
@@ -123,7 +125,7 @@ fileExist_check $DMGFILE || fatal noDMG
 lprint "Mounting image..."
 volume=`hdiutil mount $DMGFILE | tail -n1 | perl -nle '/(\/Volumes\/[^ ]+)/; print $1'`
 rprint "[ ok ]"
-cprint "Volume mounted as $volume..." "[ ok ]"  
+cprint "Volume mounted as $volume..." "[ ok ]"
 
 # Locate .app folder and move to /Applications
 b_canCopy=1
@@ -132,7 +134,7 @@ lprint "Already installed?"
 app=$(echo $appFull | awk -F/ '{print $NF}')
 dirExist_check ${DESTINATIONDIR}/$app "no" "yes" && b_canCopy=0
 
-if (( b_canCopy )) ; then 
+if (( b_canCopy )) ; then
 #	cprint "Application name"  "[ $app ]"
 	lprint "Copying <$app> into $DESTINATIONDIR..."
 	cp -ir $appFull $DESTINATIONDIR 2>/dev/null
