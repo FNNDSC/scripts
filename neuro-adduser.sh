@@ -117,7 +117,7 @@ echo "$G_USERNAME will be part of the ${G_GROUPNAME} group (gid: ${GROUPID})"
 
 echo -e "\E[33m--> Looking for next available user id\E[0m"
 
-ldapsearch -b "dc=fnndsc" -D "cn=admin,dc=fnndsc" -W -h zulu-ldap > /tmp/userslist.txt
+ldapsearch -b "dc=fnndsc" -D "cn=admin,dc=fnndsc" -W -h fnndsc > /tmp/userslist.txt
 
 OUT=$?
 if [ $OUT -eq 0 ];then
@@ -154,7 +154,7 @@ gidNumber: $GROUPID
 homeDirectory: /neuro/users/$G_USERNAME
 loginShell:/bin/bash" > /tmp/addusertoldap.txt
 
-ldapadd -D "cn=admin,dc=fnndsc" -W -h zulu-ldap -f /tmp/addusertoldap.txt
+ldapadd -D "cn=admin,dc=fnndsc" -W -h fnndsc -f /tmp/addusertoldap.txt
 
 OUT=$?
 if [ $OUT -eq 0 ];then
@@ -178,7 +178,7 @@ changetype: modify
 add: memberuid
 memberuid: $G_USERNAME" > /tmp/addusertochrisgp.txt
 
-ldapmodify -D "cn=admin,dc=fnndsc" -W -h zulu-ldap -f /tmp/addusertochrisgp.txt
+ldapmodify -D "cn=admin,dc=fnndsc" -W -h fnndsc -f /tmp/addusertochrisgp.txt
 
 OUT=$?
 if [ $OUT -eq 0 ];then
@@ -203,7 +203,7 @@ changetype: modify
 add: memberuid
 memberuid: $G_USERNAME" > /tmp/addusertomeggp.txt
 
-  ldapmodify -D "cn=admin,dc=fnndsc" -W -h zulu-ldap -f /tmp/addusertomeggp.txt
+  ldapmodify -D "cn=admin,dc=fnndsc" -W -h fnndsc -f /tmp/addusertomeggp.txt
 
   OUT=$?
   if [ $OUT -eq 0 ];then
@@ -261,7 +261,7 @@ sudo chown -R $USERID:$GROUPID $HOMEFOLDER
 # update user password
 
 echo -e "\E[33m--> Setting the user password\E[0m"
-ldappasswd -h zulu-ldap -D "cn=admin,dc=fnndsc" -W -S "uid=$G_USERNAME,ou=people,dc=fnndsc"
+ldappasswd -h fnndsc -D "cn=admin,dc=fnndsc" -W -S "uid=$G_USERNAME,ou=people,dc=fnndsc"
 
 OUT=$?
 if [ $OUT -eq 0 ];then
