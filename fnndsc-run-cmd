@@ -10,13 +10,13 @@
 source common.bash
 declare -i Gi_verbose=0
 
-G_HOSTLIST="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
-
 G_HOSTLISTG6="rc-drno,rc-twice,rc-thunderball,rc-goldfinger,rc-russia"
 G_HOSTLISTG8="rc-majesty,rc-forever,rc-live,rc-golden,rc-loved,rc-moonraker,rc-only"
 G_HOSTLISTMEG="pandora,mario,saggfire,megdaq,glacier,iceberg"
 G_HOSTLISTFNNDSC_LINUX="shaka,paris,pretoria,natal,sparks, capetown,vuka"
 G_HOSTLISTFNNDSC_MAC="osx2147,osx1927,osx1999,mosel,maracuja,newcastle,osaka,quebec"
+
+G_HOSTLIST="$G_HOSTLISTG6,$G_HOSTLISTG8"
 
 G_LOG=fnndsc-run-cmd.log
 
@@ -45,6 +45,7 @@ G_SYNOPSIS="
         
                 -h g6		: the g6 cluster hosts
                 -h g8		: the g8 cluster hosts
+		-h pices	: *all* the cluster hosts
                 -h meg          : all the MEG hosts
                 -h fnndsc_linux : all the 1 Autumn Linux hosts
                 -h fnndsc_mac   : all the 1 Autumn Mac hosts
@@ -93,6 +94,7 @@ case $G_HOSTLIST
 in
         "g6")        	G_HOSTLIST=$G_HOSTLISTG6     		;;
         "g8")        	G_HOSTLIST=$G_HOSTLISTG8     		;;
+	"pices")	G_HOSTLIST=$G_HOSTLIST			;;
         "meg")          G_HOSTLIST=$G_HOSTLISTMEG       	;;
         "fnndsc_linux") G_HOSTLIST=$G_HOSTLISTFNNDSC_LINUX    	;;
         "fnndsc_mac")   G_HOSTLIST=$G_HOSTLISTFNNDSC_MAC      	;;
