@@ -1,0 +1,5 @@
+echo "FYBORG 3000 ready."
+echo "------------------"
+export PATH=$PATH:/neuro/arch/python/F3000
+export FY_TESTDATA=/neuro/arch/python/F3000/web/testdata
+
