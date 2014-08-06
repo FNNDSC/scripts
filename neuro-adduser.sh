@@ -16,8 +16,8 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-        neuro-adduser.sh    -u <username>                      
-                                -g <groupname>                    
+        neuro-adduser.sh    -u <username>                      \\
+                            -g <groupname>                    
 
  DESCRIPTION
 
@@ -27,7 +27,7 @@ G_SYNOPSIS="
  ARGUMENTS                                
 
         -u <username>
-        The user name which should match the part of the CHB email before @.
+        The user name which should match the part of the BCH email before @.
         e.g. daniel.haehn
         
         -g <groupname>
@@ -37,8 +37,9 @@ G_SYNOPSIS="
  HISTORY
 
         21 Nov 2012
-        remove the toor username for ssh
-        should run the script as root to take advantage of the passwordless ssh 
+        o remove the toor username for ssh
+        o should run the script as root to take advantage of the passwordless ssh 
+
         30 May 2012
         o First version.
 "
