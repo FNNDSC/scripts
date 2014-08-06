@@ -18,7 +18,7 @@ G_HOSTLISTFNNDSC_MAC="osx2147,osx1927,osx1999,mosel,maracuja,newcastle,osaka,que
 
 G_HOSTLIST="$G_HOSTLISTG6,$G_HOSTLISTG8"
 
-G_LOG=fnndsc-run-cmd.log
+G_LOG=/tmp/fnndsc-run-cmd.log
 
 G_SYNOPSIS="
 
