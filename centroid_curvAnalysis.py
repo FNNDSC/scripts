@@ -4,7 +4,7 @@
 
     This script analyzes cumulative centroid files using the
     'C_centroid_cloud' class.
-    
+
 '''
 
 # Sytem imports
@@ -43,10 +43,10 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
     '''
     This class is a specialization of the FNNDSC base and geared to dyslexia
     curvature analysis.
-    
+
     '''
 
-    # 
+    #
     # Class member variables -- if declared here are shared
     # across all instances of this class
     #
@@ -79,20 +79,20 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         Determines a filestem for output text and figure files. This stem
         also contains a directory prefix -- this method will create this
         directory if necessary.
-        
+
         Any particular component can be overwritten using **kwargs.
-        
+
         Example returns:
-        
+
             "sym-convexhull/2/pos-2-lh-K-entire-pial"
-            
+
         '''
         _str_group   = self._str_gid
         _str_hemi    = self._str_hemi
         _str_surface = self._str_surface
         _str_curv    = self._str_curv
         _str_ctype   = self._str_ctype
-        
+
 
         for key, value in kwargs.iteritems():
             if key == 'group':      _str_group   = value
@@ -101,18 +101,18 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
             if key == 'curv':       _str_curv    = value
             if key == 'ctype':      _str_ctype   = value
 
-        _str_dir     = '%s-%s/%s/%s' % (self.symmetryID(), self.convexityID(), 
+        _str_dir     = '%s-%s/%s/%s' % (self.symmetryID(), self.convexityID(),
                                         _str_group, _str_ctype)
         misc.mkdir(_str_dir)
 
 
         _str_filestem = '%s/%s-%s-%s-%s-%s-%s' % \
             (_str_dir,
-             _str_ctype, 
-             _str_group, 
-             _str_hemi, 
-             _str_curv, 
-             self._str_dataDir, 
+             _str_ctype,
+             _str_group,
+             _str_hemi,
+             _str_curv,
+             self._str_dataDir,
              _str_surface)
 
         return _str_filestem
@@ -186,7 +186,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
             self._b_convexHull_use = args[0]
         else:
             return self._b_convexHull_use
-    
+
     def verbosity(self, *args):
         """
         Get/set the boundary points.
@@ -212,7 +212,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         '''
         if self._verbosity >= averbosity:
             print(astr_output)
-                    
+
     def __init__(self, **kwargs):
         '''
         Basic constructor. Checks on named input args, checks that files
@@ -272,16 +272,16 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         self._d_polyDensity             = {} # Each group's boundary "density"
         self._d_overlapLR               = {} # The left->right overlap norm
         self._d_overlapRL               = {} # The right->left overlap norm
-        self._d_intersectPointsR        = {} # Points within the overlap, R 
-        self._d_intersectPointsL        = {} # Points within the overlap, L 
-        
+        self._d_intersectPointsR        = {} # Points within the overlap, R
+        self._d_intersectPointsL        = {} # Points within the overlap, L
+
         # Operational control
         self._b_asymmetricalDeviations  = False
         self._str_stdCenter             = 'original'
         self._b_usePercentiles          = False
         self._f_percentile              = 25
         self._b_convexHull_use          = False
-        
+
         # Dictionaries containing all the cloud classes
         self._c_cloud                   = {}
         self._zOrderDeviation           = 3;
@@ -290,29 +290,29 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         # dictionary
         self._f_callBack                = lambda **x: True      # function
         self._f_callBackArgs            = {'val': True}         # args
-        
+
         self._str_workingDir            = os.getcwd()
         self._csv                       = None
 
         for key, value in kwargs.iteritems():
-            if key == 'stages':           
+            if key == 'stages':
                 self._stageslist        = value
             if key == 'dataDir':
                 os.chdir(value)
                 self._str_dataDir       = os.path.basename(value)
-            if key == 'colorSpecList':    
+            if key == 'colorSpecList':
                 self._l_color           = value.split(',')
-            if key == 'markerSpecList':   
+            if key == 'markerSpecList':
                 self._l_marker          = value.split(',')
-            if key == 'centroidTypeList': 
+            if key == 'centroidTypeList':
                 self._l_type            = value.split(',')
-            if key == 'subjectList':      
+            if key == 'subjectList':
                 self._l_subject         = value.split(',')
-            if key == 'hemiList':         
+            if key == 'hemiList':
                 self._l_hemi            = value.split(',')
-            if key == 'surfaceList':      
+            if key == 'surfaceList':
                 self._l_surface         = value.split(',')
-            if key == 'asymmetricalDeviations' and len(value): 
+            if key == 'asymmetricalDeviations' and len(value):
                 self._b_asymmetricalDeviations = True
                 self._str_stdCenter            = value
             if key == 'usePercentiles' and len(value):
@@ -323,14 +323,14 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
             if key == 'curvList':
                 self._l_curv            = value.split(',')
                 self._curvList          = value
-                
+
         # Read initial centroids file to determine number of subjects
         self._str_centroidFile = 'cumulative-centroids-%s.%s.%s.smoothwm.txt' % \
                 (self._l_hemi[0], self._l_curv[0], self._str_dataDir)
         self._csv = csv.DictReader(file(self._str_centroidFile, "rb"), delimiter=" ", skipinitialspace=True)
         for entry in self._csv:
             self._l_subject.append(entry['Subj'])
-        
+
         # Build core data dictionary that contains all the centroids
         self._d_centroids               = misc.dict_init(self._l_subject)
         for subj in self._l_subject:
@@ -385,7 +385,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         This method provides some "post-constructor" initialization. It is
         typically called after the constructor and after other class flags
         have been set (or reset).
-        
+
         '''
 
         # First, this script should only be run on cluster nodes.
@@ -401,10 +401,10 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
             stage.canRun(True)
 
         # Check for FS env variable
-        self._log('Checking on FREESURFER_HOME', debug=9, lw=self._lw)
-        if not os.environ.get('FREESURFER_HOME'):
-            error.fatal(self, 'noFreeSurferEnv')
-        self._log('[ ok ]\n', debug=9, rw=self._rw, syslog=False)
+        # self._log('Checking on FREESURFER_HOME', debug=9, lw=self._lw)
+        # if not os.environ.get('FREESURFER_HOME'):
+        #     error.fatal(self, 'noFreeSurferEnv')
+        # self._log('[ ok ]\n', debug=9, rw=self._rw, syslog=False)
         
         #for str_subj in self._l_subject:
             #self._log('Checking on subjectDir <%s>' % str_subj,
@@ -424,7 +424,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         between all pairs of boundary polygons.
 
         Builds the internal dictionaries that track this information.
-        
+
         '''
         self._str_gidList       = ''.join(self._l_gid)
         self._l_gidComb         = list(itertools.combinations(self._str_gidList, 2))
@@ -443,10 +443,10 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
     @staticmethod
     def groupIntersections_pointMembership_find(aplgn_space, apnt):
         '''
-        For a given polygon and a set of shapely points in the same space, 
-        return the subset of points that are contained within the polygon 
+        For a given polygon and a set of shapely points in the same space,
+        return the subset of points that are contained within the polygon
         as well as the "density".
-        
+
         Density is returned as a percentage.
         '''
         l_pointWithin   = []
@@ -459,17 +459,17 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
     def groupIntersections_determine(self, **kwargs):
         '''
         This method is one of the "core" discriminatory functions
-        that determines if two statistical groups are "different" 
+        that determines if two statistical groups are "different"
         in a geometric projection sense.
-        
+
         It calculates both the area and particulate densities of
         overlap regions, and stores the results in two text files,
         one for area density and one for particulate density.
-        
+
         These files contain:
-        
+
             f_d1    f_d2    f_d1 * f_d2
-            
+
         expressed as percentages, where f_d1 is the overlap density
         normalized to group1, f_d2 is the overlap density normalized
         to group2.
@@ -479,12 +479,12 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         surface = self._str_surface
         curv    = self._str_curv
         ctype   = self._str_ctype
-        
+
         g1      = group[0]
         g2      = group[1]
         p1      = self._d_poly[g1][hemi][surface][curv][ctype]
         p2      = self._d_poly[g2][hemi][surface][curv][ctype]
-        
+
         M_c1    = self._d_cloud[g1][hemi][surface][curv][ctype]
         M_c2    = self._d_cloud[g2][hemi][surface][curv][ctype]
         pnts1   = self._d_cloudPoints[g1][hemi][surface][curv][ctype]
@@ -507,7 +507,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
 #             np.savetxt('/tmp/M_c2.txt', M_c2)
 #             print("Threshold crossed!")
 
-        
+
         # In some cases, the generation of the deviation boundary can form an
         # invalid geometry, esp for the descriptive statistics. To account for this
         # we track the is_valid property and form the intersections only of the
@@ -519,7 +519,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
                 log = self.log()
                 log('\nWarning! Self intersection in statistical geometry!\n', syslog=False)
                 log('\nInvalid geometry found\n')
-                _str_invalid = _str_focus1 if geom==p1 else _str_focus2 
+                _str_invalid = _str_focus1 if geom==p1 else _str_focus2
                 log('%s\n' % _str_invalid)
                 log('Applying buffer(0) fix...\n')
                 geomClean = geom.buffer(0.0)
@@ -530,9 +530,9 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
                 log('Geometry fixed!\n')
                 log('Continuing with group intersections...')
 
-        p_overlap   = p1.intersection(p2)        
+        p_overlap   = p1.intersection(p2)
 
-        # Area density...        
+        # Area density...
         f_overlap = p_overlap.area
         f_or    = f_overlap / f_ar * 100
         f_ol    = f_overlap / f_al * 100
@@ -541,28 +541,28 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         self._d_overlapLR[group][hemi][surface][curv][ctype]    = f_ol
         self._d_overlapRL[group][hemi][surface][curv][ctype]    = f_or
         misc.file_writeOnce('%s-cloudCoreOverlapAreaDensity.txt' % \
-                                (_str_fileName), 
+                                (_str_fileName),
                             '%10.3f%10.3f%10.3f\n' % \
                                 (f_or, f_ol, f_or * f_ol / 100))
 
         # Particulate density...
         l_pntr, f_dr  = FNNDSC_CentroidCloud.groupIntersections_pointMembership_find(p_overlap, pnts1)
         l_pntl, f_dl  = FNNDSC_CentroidCloud.groupIntersections_pointMembership_find(p_overlap, pnts2)
-                
+
         self.vprint("%60s: %10.5f %10.5f" % (_str_fileName, f_ol, f_or), 1)
         self.vprint("%60s: %10.5f %10.5f" % (_str_fileName, f_dr, f_dl), 1)
         misc.file_writeOnce('%s-cloudCoreOverlapParticleDensity.txt' % \
-                                (_str_fileName), 
+                                (_str_fileName),
                             '%10.3f%10.3f%10.3f\n' % \
                                 (f_dr, f_dl, f_dr * f_dl / 100))
-         
+
 
     def groupTtest_determine(self, **kwargs):
         '''
         Determine the two-sided t-test on all pairwise combinations
         of centroid clouds
         '''
-                    
+
         group   = self._str_gid
         hemi    = self._str_hemi
         surface = self._str_surface
@@ -591,14 +591,14 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         '''
         Analyzes a given centroid table for all subjects and determines the
         number of groups.
-        
+
         PRECONDITIONS
         o self._l_subject list
-        
+
         POSTCONDITIONS
         o self._l_gidTotal
         o self._l_gid
-        
+
         '''
         _str_log        = ''
         for key, value in kwargs.iteritems():
@@ -611,7 +611,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
 
         if len(_str_log): self._log('[ ok ]\n', rw=self._rw, syslog=False)
 
-     
+
     def negCentroid_exists(self, str_curv):
         '''
         Returns a boolean True/False if a negative centroid exists
@@ -621,8 +621,8 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         l_noNeg = ['C', 'BE', 'S', 'FI', 'thickness']
         if str_curv in l_noNeg: ret = False
         return ret
-        
-        
+
+
     def dict_ninit(self, *l_args):
         '''
         Initialize a "nested" dictionary of multiple shells, each shell
@@ -634,7 +634,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
                         defaultdict(lambda:\
                             defaultdict(lambda:\
                                 defaultdict(np.array)))))
-                                
+
         l_keys = list(itertools.product(*l_args))
 
         for group, hemi, surface, curv, ctype in l_keys:
@@ -650,7 +650,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         for key, value in kwargs.iteritems():
             if key == 'log':    _str_log        = value
         if len(_str_log): self._log(_str_log, lw=self._lw)
-        
+
         self._c_cloud           = self.dict_ninit(self._l_gid,
                                                   self._l_hemi,
                                                   self._l_surface,
@@ -662,7 +662,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
                                                   self._l_surface,
                                                   self._l_curv,
                                                   self._l_type)
-        
+
         self._d_cloudPoints     = self.dict_ninit(self._l_gid,
                                                   self._l_hemi,
                                                   self._l_surface,
@@ -686,13 +686,13 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
                                                   self._l_surface,
                                                   self._l_curv,
                                                   self._l_type)
-        
+
         self._d_polyDensity     = self.dict_ninit(self._l_gid,
                                                   self._l_hemi,
                                                   self._l_surface,
                                                   self._l_curv,
                                                   self._l_type)
-        
+
 
         if len(_str_log): self._log('[ ok ]\n', syslog=False, rw=self._rw)
 
@@ -727,7 +727,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         l_group         = self._l_gid
         l_type          = self._l_type
         _str_log        = ''
-       
+
         for key, val in callBackArgs.iteritems():
             if key == 'hemi':           l_hemi          = val
             if key == 'surface':        l_surface       = val
@@ -737,7 +737,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
             if key == 'log':            _str_log        = val
 
         if len(_str_log): self._log(_str_log, lw=self._lw)
-        
+
         for self._str_hemi in l_hemi:
             for self._str_surface in l_surface:
                 for self._str_curv in l_curv:
@@ -750,7 +750,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         if len(_str_log): self._log('[ ok ]\n', syslog=False, rw=self._rw)
         return ret
 
-        
+
     def innerLoop_ghsct(self, func_callBack, **callBackArgs):
         '''
 
@@ -771,7 +771,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         In the context of the loop controller, loop conditions can
         be changed by passing appropriately name args in the
         **callBackArgs structure.
-        
+
         '''
         ret             = True
         l_hemi          = self._l_hemi
@@ -809,24 +809,24 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         Returns an array of sgPoints -- each row of aM is a new point.
         '''
         rows, cols  = aM.shape
-        l_point     = [] 
+        l_point     = []
         for i in range(0, rows):
             p = sgPoint(aM[i])
-            l_point.append(p) 
+            l_point.append(p)
         return l_point
 
     @staticmethod
     def convexHull_boundaryFind(ar_boundary):
         '''
-        For a given np array <ar_boundary>, deterime the convex hull 
+        For a given np array <ar_boundary>, deterime the convex hull
         (implicitly assuming 2D spaces).
-        
+
         Basically, this builds a polygon, finds the convex hull, and
         translates back to an np.array.
         '''
         return np.asarray( sgPolygon(ar_boundary).convex_hull.exterior )
-        
-    
+
+
     def clouds_define(self, **kwargs):
         '''
         '''
@@ -835,7 +835,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         surface = self._str_surface
         curv    = self._str_curv
         ctype   = self._str_ctype
-        
+
         b_firstElementPerCluster = False
         for subj in self._l_subject:
             if subj[0] == group:
@@ -850,7 +850,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
 
         self._d_cloudPoints[group][hemi][surface][curv][ctype] = \
             FNNDSC_CentroidCloud.matrix2pointArray(self._d_cloud[group][hemi][surface][curv][ctype])
-                    
+
         self._c_cloud[group][hemi][surface][curv][ctype] = \
             C_centroidCloud(cloud=self._d_cloud[group][hemi][surface][curv][ctype])
         self._c_cloud[group][hemi][surface][curv][ctype].asymmetricalDeviations(self._b_asymmetricalDeviations)
@@ -893,31 +893,31 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         misc.file_writeOnce(_str_fileNameArea, '%s' % f_A)
         misc.file_writeOnce(_str_fileNameDty, '%s' % f_density)
         return True
-      
+
 
     def deviation_plot(self, al_points, **kwargs):
         _str_faceColor  = 'red'
         _str_edgeColor  = 'black'
-        _zorder         = self._zOrderDeviation 
+        _zorder         = self._zOrderDeviation
         for key, value in kwargs.iteritems():
-            if key == 'facecolor':      _str_faceColor  = value 
-            if key == 'edgecolor':      _str_edgeColor  = value 
+            if key == 'facecolor':      _str_faceColor  = value
+            if key == 'edgecolor':      _str_edgeColor  = value
             if key == 'zorder':         _zorder         = int(value)
         poly    = pylab.Polygon(al_points,
                             facecolor   = _str_faceColor,
-                            edgecolor   = _str_edgeColor, 
+                            edgecolor   = _str_edgeColor,
                             zorder      = _zorder)
         pylab.gca().add_patch(poly)
         return poly
-        
-        
+
+
     def clouds_plot(self, **kwargs):
         '''
         Generate (and save) the actual centroid plot for given parameters.
         Displaying the plot is controlled through the internal self._b_showPlots
         boolean.
-        
-        The kwargs 'groups' defines a subset of groups to plot. It is 
+
+        The kwargs 'groups' defines a subset of groups to plot. It is
         '''
         b_showSkewKurtosis      = False
         b_groupSubset           = False
@@ -933,12 +933,12 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
                 _l_group        = value
 
         if len(_str_log): self._log(_str_log+'\n')
-        
-        if not b_showSkewKurtosis: 
+
+        if not b_showSkewKurtosis:
             _l_type.remove('sk')
         else:
             _l_type = ['sk']
-       
+
         for self._str_hemi in self._l_hemi:
             for self._str_surface in self._l_surface:
                 for self._str_curv in self._l_curv:
@@ -981,7 +981,7 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
                     else: self._str_gid     = 'all'
                     if not b_showSkewKurtosis: self._str_ctype = 'curvPosNeg'
                     else: self._str_ctype   = 'curvSK'
-                    
+
                     _str_title = self.filestem()
 #                     if b_showSkewKurtosis: _str_title = '%s-sk' % _str_title
 #                     if b_groupSubset:      _str_title = '%s-%s' % (_str_title, ''.join(_l_group))
@@ -1000,15 +1000,15 @@ class FNNDSC_CentroidCloud(base.FNNDSC):
         if self._b_showPlots: pylab.show()
         self._log('\n')
 
-                
+
     def run(self):
         '''
         The main 'engine' of the class.
 
         '''
         base.FNNDSC.run(self)
-            
-            
+
+
 def synopsis(ab_shortOnly = False):
     shortSynopsis =  '''
     SYNOPSIS
@@ -1026,7 +1026,7 @@ def synopsis(ab_shortOnly = False):
                             [--usePercentiles <percentile>]     \\
                             [--convexHulluse|-x]
     ''' % scriptName
-  
+
     description =  '''
     DESCRIPTION
 
@@ -1036,7 +1036,7 @@ def synopsis(ab_shortOnly = False):
     ARGS
 
         --dataDir <dataDir>
-        The directory containing the centroid table files. These 
+        The directory containing the centroid table files. These
         files contain a per-subject list of centroids:
 
             Subj        xn      yn      xp      yp      xc      yc
@@ -1047,18 +1047,18 @@ def synopsis(ab_shortOnly = False):
         The "type" of centroid to analyze. One (or more) of:
 
                 neg,pos,natural
-                
+
         --asymmetricalDeviations <center>
-        If specified, calculate asymmetricalDeviations, i.e. separate 
-        explicit deviations "above" and "below" the mean along a 
-        dimension. The <center> defines the "center", i.e. mean, 
+        If specified, calculate asymmetricalDeviations, i.e. separate
+        explicit deviations "above" and "below" the mean along a
+        dimension. The <center> defines the "center", i.e. mean,
         for the deviation calcuations. Usually this should be 'original'.
-        See the source code of C_centroid_cloud for <center> types. 
-        
+        See the source code of C_centroid_cloud for <center> types.
+
         --usePercentiles <percentile>
         If specified, define kernel boundary regions using descriptive
         statistics, i.e. percentiles. The <percentiles> indicates the
-        percentile ranges above and below the mean to consider in the 
+        percentile ranges above and below the mean to consider in the
         kernel boundary. Usually, 25 is a good choice.
 
         --convexHulluse
@@ -1073,7 +1073,7 @@ def synopsis(ab_shortOnly = False):
             'red,yellow,green,blue,cyan,magenta'
 
         would define six groups, with colors in order as spec'd.
-    
+
         --hemi <hemisphere>
         The hemisphere to process. For both 'left' and 'right', pass
         'lh,rh'.
@@ -1082,10 +1082,10 @@ def synopsis(ab_shortOnly = False):
         The surface to process. One of 'pial' or 'smoothwm'. To process both,
         use 'smoothwm,pial'.
 
-        --curv <curvType> 
+        --curv <curvType>
         The curvature map function stem name to analyze. The actual curvature
         file is contructed from <hemi>.<surface>.<curvType>.crv.
-        
+
         --stages|-s <stages>
         The stages to execute. This is specified in a string, such as '1234'
         which would imply stages 1, 2, 3, and 4.
@@ -1112,7 +1112,7 @@ def f_stageShellExitCode(**kwargs):
 
         obj=<stage>
         The stage to query for exitStatus.
-    
+
     '''
     stage = None
     for key, val in kwargs.iteritems():
@@ -1153,7 +1153,7 @@ def f_blockOnScheduledJobs(**kwargs):
     return True
 
 
-        
+
 #
 # entry point
 #
@@ -1170,7 +1170,7 @@ if __name__ == "__main__":
     verbosity   = 0
 
     parser = argparse.ArgumentParser(description = synopsis(True))
-    
+
     #parser.add_argument('l_subj',
                         #metavar='SUBJECT', nargs='+',
                         #help='SubjectIDs to process')
@@ -1283,9 +1283,9 @@ if __name__ == "__main__":
 
         pipeline.internals_build(       log='Building internals...')
 
-        pipeline.innerLoop_ghsct(pipeline.clouds_define, 
+        pipeline.innerLoop_ghsct(pipeline.clouds_define,
                                         log='Defining clouds...')
-        pipeline.innerLoop_hscgt(pipeline.boundary_areaAnalyze, 
+        pipeline.innerLoop_hscgt(pipeline.boundary_areaAnalyze,
                                         log='Analyzing boundary areas...')
 
         pipeline.groupIntersections_initialize()
@@ -1295,13 +1295,13 @@ if __name__ == "__main__":
         pipeline.innerLoop_ghsct(pipeline.groupTtest_determine,
                                         group=pipeline.l_gidComb(),
                                         log='Performing paired t-tests...')
-        
+
         # First plot the "pure" centroid data
         pipeline.clouds_plot(           log='Plotting centroid clouds...')
         # Plot again to show the skew/kurtosis
-        pipeline.clouds_plot(showSkewKurtosis = True, 
+        pipeline.clouds_plot(showSkewKurtosis = True,
                                         log='Plotting skewness -vs- kurtosis clouds...')
-        
+
         # Now plot again, this time only the underlying pair-wise groups:
         for groupPair in pipeline._l_gidComb:
             pipeline.clouds_plot(       log='Plotting centroid clouds for pair %s' % groupPair,
@@ -1322,4 +1322,3 @@ if __name__ == "__main__":
     Ccloud.initialize()
 
     Ccloud.run()
-  
