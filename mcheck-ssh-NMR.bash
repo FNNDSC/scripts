@@ -237,7 +237,7 @@ TARGET_CHECK[37]="tunnel.bash --forward	--from 7772 --via rudolph@${GATE} --to h
 TARGETACTION[37]="tunnel.bash --forward	--from 7772 --via rudolph@${GATE} --to heisenberg:22"
 
 TARGET_CHECK[38]="tunnel.bash --reverse	--from rudolph@${GATE}:5901 --to ${YESNABY}:5901 --isRunning"
-TARGETACTION[38]="tunnel.bash --reverse	--from rudolph@${GATE}:5901 --to ${YESBANY}:5901"
+TARGETACTION[38]="tunnel.bash --reverse	--from rudolph@${GATE}:5901 --to ${YESNABY}:5901"
 
 # Process command line options
 while getopts hv: option ; do
