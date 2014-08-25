@@ -89,7 +89,7 @@ ret_check $?
 #
 statusPrint "Checking on <hostname>"
 HOSTNAME=$(cat /etc/hostname | awk '{print $1}')
-if [[ "$HOSTNAME" != "tautona" ]] ; then echo "Please run this script from host 'tautona'."; exit; fi
+if [[ "$HOSTNAME" != "fnndsc" ]] ; then echo "Please run this script from host 'fnndsc'."; exit; fi
 
 #
 # GET THE GROUP IDS
