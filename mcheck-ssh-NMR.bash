@@ -238,10 +238,10 @@ TARGETACTION[37]="tunnel.bash --forward	--from 7772 --via rudolph@${GATE} --to h
 
 TARGET_CHECK[38]="tunnel.bash --reverse	--from rudolph@${GATE}:5901 --to ${RCMAJESTY}:5901 --isRunning"
 TARGETACTION[38]="tunnel.bash --reverse	--from rudolph@${GATE}:5901 --to ${RCMAJESTY}:5901"
-TARGET_CHECK[39]="tunnel.bash --reverse	--from rudolph@${GATE}:3901 --to ${PRETORIA}:3901 --isRunning"
-TARGETACTION[39]="tunnel.bash --reverse	--from rudolph@${GATE}:3901 --to ${PRETORIA}:3901"
-TARGET_CHECK[40]="tunnel.bash --reverse	--from rudolph@${GATE}:3902 --to ${PRETORIA}:3902 --isRunning"
-TARGETACTION[40]="tunnel.bash --reverse	--from rudolph@${GATE}:3902 --to ${PRETORIA}:3902"
+TARGET_CHECK[39]="tunnel.bash --reverse	--from rudolph@${GATE}:3901 --to ${PRETORIA}:5901 --isRunning"
+TARGETACTION[39]="tunnel.bash --reverse	--from rudolph@${GATE}:3901 --to ${PRETORIA}:5901"
+TARGET_CHECK[40]="tunnel.bash --reverse	--from rudolph@${GATE}:3902 --to ${PRETORIA}:5902 --isRunning"
+TARGETACTION[40]="tunnel.bash --reverse	--from rudolph@${GATE}:3902 --to ${PRETORIA}:5902"
 
 # Process command line options
 while getopts hv: option ; do
