@@ -80,17 +80,19 @@ EC_release=12
 EC_noCmd=14
 EC_execRemoteApt=15
 
+HOSTALIAS="pices"
+
 while getopts h:l:v: option ; do
     case "$option" 
     in
         v) Gi_verbose=$OPTARG   ;;
-        h) G_HOSTLIST=$OPTARG   ;;
+        h) HOSTALIAS=$OPTARG   ;;
         l) G_LOG=$OPTARG        ;;
         *) synopsis_show        ;;
     esac
 done
 
-case $G_HOSTLIST 
+case $HOSTALIAS
 in
         "g6")        	G_HOSTLIST=$G_HOSTLISTG6     		;;
         "g8")        	G_HOSTLIST=$G_HOSTLISTG8     		;;
