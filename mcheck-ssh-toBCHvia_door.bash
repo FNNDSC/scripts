@@ -99,7 +99,7 @@ RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
 DOOR=door.nmr.mgh.harvard.edu
-DOOR=gate.nmr.mgh.harvard.edu
+#DOOR=gate.nmr.mgh.harvard.edu
 H1=98.118.51.216
 
 verbosity_check
@@ -159,8 +159,8 @@ TARGET_CHECK[22]="tunnel.bash --forward --from 2137 --via rudolph@${DOOR} --to l
 TARGETACTION[22]="tunnel.bash --forward --from 2137 --via rudolph@${DOOR} --to localhost:2137"
 TARGET_CHECK[23]="tunnel.bash --forward --from 3228 --via rudolph@${DOOR} --to localhost:3228 --isRunning"
 TARGETACTION[23]="tunnel.bash --forward --from 3228 --via rudolph@${DOOR} --to localhost:3228"
-TARGET_CHECK[24]="tunnel.bash --forward --from 8443 --via rudolph@${DOOR} --to localhost:8443 --isRunning"
-TARGETACTION[24]="tunnel.bash --forward --from 8443 --via rudolph@${DOOR} --to localhost:8443"
+TARGET_CHECK[24]="tunnel.bash --forward --from 4443 --via rudolph@${DOOR} --to localhost:4443 --isRunning"
+TARGETACTION[24]="tunnel.bash --forward --from 4443 --via rudolph@${DOOR} --to localhost:4443"
 TARGET_CHECK[25]="tunnel.bash --forward --from 3142 --via rudolph@${DOOR} --to localhost:3142 --isRunning"
 TARGETACTION[25]="tunnel.bash --forward --from 3142 --via rudolph@${DOOR} --to localhost:3142"
 TARGET_CHECK[26]="tunnel.bash --reverse --from rudolph@${DOOR}:7772 --to heisenberg:22 --isRunning"
