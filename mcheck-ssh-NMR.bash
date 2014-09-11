@@ -94,6 +94,7 @@ RCRUSSIA=rc-russia.tch.harvard.edu
 RCMAJESTY=rc-majesty.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
+GATE=door.nmt.mgh.harvard.edu
 CHRIS=chris.tch.harvard.edu
 MATLAB=rc-matlab.tch.harvard.edu
 H1=98.118.51.216
