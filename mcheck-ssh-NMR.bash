@@ -247,8 +247,8 @@ TARGET_CHECK[41]="tunnel.bash --forward	--from 2901 --via rudolph@${H1} --to loc
 TARGETACTION[41]="tunnel.bash --forward	--from 2901 --via rudolph@${H1} --to localhost:5901 --sshArgs '-p 7778'"
 TARGET_CHECK[42]="tunnel.bash --reverse	--from rudolph@${GATE}:3904 --to ${PRETORIA}:5904 --isRunning"
 TARGETACTION[42]="tunnel.bash --reverse	--from rudolph@${GATE}:3904 --to ${PRETORIA}:5904"
-TARGET_CHECK[43]="tunnel.bash --forward	--from 6901 --via rudolph@${GATE} --to kaos:6901 --isRunning"
-TARGETACTION[43]="tunnel.bash --forward	--from 6901 --via rudolph@${GATE} --to kaos:6901"
+TARGET_CHECK[43]="tunnel.bash --forward	--from 6901 --via rudolph@${GATE} --to kaos:5901 --isRunning"
+TARGETACTION[43]="tunnel.bash --forward	--from 6901 --via rudolph@${GATE} --to kaos:5901"
 
 # Process command line options
 while getopts hv: option ; do
