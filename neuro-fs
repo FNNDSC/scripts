@@ -118,9 +118,9 @@ else
 fi
 
 OS=$(uname -a | awk '{print $1}')
-echo "Host type is $HOSTTYPE-${OS}"
+echo "Host type is ${HOSTTYPE,,}-${OS}"
 
-export PACKAGEDIR=/neuro/arch/${HOSTTYPE}-${OS}/packages
+export PACKAGEDIR=/neuro/arch/${HOSTTYPE,,}-${OS}/packages
 
 export DTDIR=${PACKAGEDIR}/dtk/current/dtk
 export DSI_PATH=${DTDIR}/matrices
