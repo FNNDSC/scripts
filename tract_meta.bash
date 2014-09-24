@@ -390,6 +390,10 @@ STAGES
         11 May 2009
         o Added -F <lth>.
 
+	24 September 2014
+	o Removed dependency check on 'convert' since this
+	  functionality is almost never required anymore.
+
 "
 
 ###\\\
@@ -673,7 +677,7 @@ cprint  "hostname"      "[ $(hostname) ]"
 REQUIREDFILES="common.bash dcm2trk.bash tract_slice.bash dicom_dirSend.bash \
                 dicom_seriesCollect.bash mri_info $XVFB dcm_mkIndx.bash \
                 ge_diffusionProcess.bash siemens_diffusionProcess.bash \
-                philips_diffusionProcess.bash convert"
+                philips_diffusionProcess.bash "
 
 cprint  "Use diff_unpack for dcm->nii"  "[ $Gb_useDiffUnpack ]"
 if (( Gb_useDiffUnpack )) ; then
