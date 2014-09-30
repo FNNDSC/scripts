@@ -125,6 +125,19 @@ G_SYNOPSIS="
         -D <scandate>
         Scan date. If not specified, will collect *all* matches. Use with
         some care.
+	
+	-C <scannerName>
+	Scanner Name. If specificed, will only return hits collected from
+	this <scannerName>.
+	
+	-x <prefixList>
+	If specified, will prepend sequence/protocol names with prefixList
+	codes. Accepted codes are:
+	
+		MRN: 		MRN
+		SCANNER:	Scanner name
+		
+	This allows for easier post processing of scans of interest.
 
         -S <seriesDescription>
         Series description. If specified, limit retrieve or query to
