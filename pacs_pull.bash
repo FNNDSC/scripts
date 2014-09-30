@@ -494,6 +494,8 @@ for EL in $(echo $GLST | tr , ' '); do
       echo ""
       if (( Gb_exitOnNoHits )) ; then       
 	      shut_down 1
+      else
+	      continue
       fi
     fi
 
@@ -511,7 +513,15 @@ for EL in $(echo $GLST | tr , ' '); do
     rprint "[ ok ]"
     lprint "I: Reordering UI series files"
     HITS=$(/bin/ls -1 $G_FINDSCUSERIESSTD.* 2>/dev/null | wc -l)
-    if (( !HITS )) ; then fatal noBlockSort ; fi
+    if (( !HITS )) ; then 
+	     echo ""
+     	     statusPrint "No sorted series file hits for $G_QUERYTYPE $SEARCHKEY." "\n"		     
+	     if (( Gb_exitOnNoHits )) ; then
+		     fatal noBlockSort  
+	    else
+		    continue
+	    fi
+    fi
     for FILE in $G_FINDSCUSERIESSTD.* ; do
         LINE="lineAfter.py -f $FILE -s StudyInstance -u SeriesInstance > ${FILE}.reordered"
         #echo "$LINE"
