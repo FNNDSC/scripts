@@ -19,6 +19,9 @@ declare -i Gb_metaInfoPrinted=0
 declare -i Gb_dateSpecified=0
 declare -i Gb_seriesRetrieve=0
 declare -i Gb_institution=0
+declare -i Gb_exitOnNoHits=1
+declare -i Gb_scannerID=0
+declare -i Gb_prefix=0
 
 # Column formatting (from common.bash)
 G_LC=30
@@ -37,7 +40,8 @@ G_PATIENTSNAME=""
 G_SERIESDESCRIPTION=""
 G_STUDYINSTANCEUID=""
 G_SCANDATE=""
-
+G_SCANNER=""
+G_QUERYTYPE=""
 G_FINDSCUSTUDYSTD=/tmp/${G_SELF}_${G_PID}_findscu_study.std
 G_FINDSCUSTUDYERR=/tmp/${G_SELF}_${G_PID}_findscu_study.err
 G_FINDSCUSERIESSTD=/tmp/${G_SELF}_${G_PID}_findscu_series.std
@@ -49,6 +53,7 @@ G_QUERYHOST=134.174.12.21
 G_QUERYPORT=104
 G_CALLTITLE=""
 G_RCVPORT=11112
+
 
 # For Mac OS X Darwin with MacPorts
 if [[ -f /opt/local/lib/dicom.dic ]] ; then
@@ -100,6 +105,13 @@ G_SYNOPSIS="
         
         Multiple targets can be concatenated with a ',' -- i.e. -M 123,456
         will search for MRN 123 and then MRN 456.
+	
+	-E <1|0>
+	Exit on nohits. If no hits are found, and '-E 1' is passed, the script
+	will exit on the first search that didn't return hits. If '-E 0' then
+	the script will continue.
+	
+	Default is '-E 1'.
         
         -m <modality>
         The modality to retrieve. This defaults to 'MR'. For CT, use 'CT'.
@@ -188,6 +200,11 @@ G_RetrieveAETitle="0008,0054"
 G_ScheduledStudyLocationAETitle="0032,1021"
 G_ScheduledStationAETitle="0040,0001"
 G_PerformedStationAETitle="0040,0241"
+G_StationName="0008,1010"
+G_SuiteID="0009,1002"
+G_ServiceID="0009,1030"
+G_PerformedStationAETitle=PerformedStationAETitle
+
 
 function bracket_find
 {
@@ -255,6 +272,14 @@ function moveSTUDY_cmd
     Gb_final=$(( Gb_final || $? ))
 }
 
+function station_lookup 
+{
+	TABLE=$1
+	KEY=$2
+        TT=$(echo "$TABLE" | grep $KEY | awk '{print $2}' )
+	echo $TT
+}
+
 function institution_set
 {
     local INSTITUTION=$1
@@ -296,14 +321,21 @@ function institution_set
     esac
 }
 
-while getopts M:N:A:m:QD:S:a:c:l:P:p:v:Rh: option ; do
+while getopts M:N:A:m:QD:S:a:c:l:P:p:v:Rh:E:C:x: option ; do
     case "$option" 
     in
         v) Gi_verbose=$OPTARG           ;;
-        M) GLST_PATIENTID=$OPTARG       ;;
-        A) GLST_ACCESSION=$OPTARG       ;;
+	C) G_SCANNER=$OPTARG
+	   Gb_scannerID=1		;;
+        x) GLST_PREFIX=$OPTARG
+	   Gb_prefix=1			;;
+        M) GLST_PATIENTID=$OPTARG       
+	   G_QUERYTYPE="MRN"		;;
+        A) GLST_ACCESSION=$OPTARG       
+	   G_QUERYTYPE="ACCESSION"	;;
         m) G_MODALITY=$OPTARG           ;;
-        N) GLST_PATIENTSNAME=$OPTARG    ;;
+        N) GLST_PATIENTSNAME=$OPTARG    
+	   G_QUERYTYPE="PATIENTNAME"	;;
         R) let Gb_queryOnly=0           ;;
         D) G_SCANDATE=$OPTARG           ;;
         S) G_SERIESDESCRIPTION=$OPTARG
@@ -315,6 +347,7 @@ while getopts M:N:A:m:QD:S:a:c:l:P:p:v:Rh: option ; do
         l) G_RCVPORT=$OPTARG            ;;
         P) G_QUERYHOST=$OPTARG          ;;
         p) G_QUERYPORT=$OPTARG          ;;
+	E) Gb_exitOnNoHits=$OPTARG	;;
         *) synopsis_show                ;;
     esac
 done
@@ -351,14 +384,17 @@ for EL in $(echo $GLST | tr , ' '); do
     
     if (( ${#G_PATIENTID} )) ; then
         cprint "M: Querying for MRN" "[ $G_PATIENTID ]"
+	SEARCHKEY="$G_PATIENTID"
     fi
 
     if (( ${#G_PATIENTSNAME} )) ; then
         cprint "M: Querying for NAME" "[ $G_PATIENTSNAME ]"
+	SEARCHKEY="$G_PATIENTSNAME"
     fi
 
     if (( ${#G_ACCESSIONNUMBER} )) ; then
         cprint "M: Querying for ACCESSION" "[ $G_ACCESSIONNUMBER ]"
+	SEARCHKEY="$G_ACCESSIONNUMBER"
     fi
     
     if (( Gb_dateSpecified )) ; then
@@ -385,6 +421,10 @@ for EL in $(echo $GLST | tr , ' '); do
              -k $G_StudyDate=$G_SCANDATE                                    \
              -k $G_PatientsName=$G_PATIENTSNAME                             \
              -k $G_StudyInstanceUID=                                        \
+   	     -k $G_StationName=$G_STATIONNAME				    \
+	     -k $G_SuiteID=$G_SUITEID					    \
+   	     -k $G_ServiceID=$G_SERVICEID				    \
+	     -k $G_PerformedStationAETitle=$G_PERFORMEDSTATIONAETITLE	    \
              $G_QUERYHOST $G_QUERYPORT 2> $G_FINDSCUSTUDYSTD"
 
     QUERY="$QUERYSTUDY"
@@ -392,13 +432,20 @@ for EL in $(echo $GLST | tr , ' '); do
     eval "$QUERY"
     ret_check $? || fatal studyFindFail
     #echo "$QUERY"
+    lprint "I: Building Station table"
+    STATIONTABLE=$(cat $G_FINDSCUSTUDYSTD 					|\
+	    	 	sed -n -e '/StudyInstanceUID/{x;g;$!N;p;D;}' -e h 	|\
+			sed 's/\ \]/]/' | awk '{printf("%s\n", $4)}' 		|\
+			awk 'NR%2{printf $0" ";next;}1'  			|\
+			awk '{printf("%68s%10s\n", $1, $2)}'			|\
+			tr '[' ' ' | tr ']' ' ')
+    rprint "[ ok ]"
+    echo "$STATIONTABLE" | sed 's/\(.*\)/I: \1/'
     UILINE=$(cat $G_FINDSCUSTUDYSTD| grep StudyInstanceUID)
     #echo "UILINE=$UILINE"
     UI=$(echo "$UILINE" | awk '{print $4}')
     #echo "UI=$UI"
-
     statusPrint "" "\n"
-
     # Now collect the Series information
     rm -f $G_FINDSCUSERIESSTD
     #rm -f $G_FINDSCUSERIESERR
@@ -418,17 +465,23 @@ for EL in $(echo $GLST | tr , ' '); do
              -k $G_StudyInstanceUID=$currentUI                              \
              -k $G_SeriesInstanceUID=                                       \
              -k $G_SeriesDescription=                                       \
+   	     -k $G_StationName=$G_STATIONNAME				    \
+  	     -k $G_SuiteID=$G_SUITEID					    \
+   	     -k $G_ServiceID=$G_SERVICEID				    \
+	     -k $G_PerformedStationAETitle=$G_PERFORMEDSTATIONAETITLE	    \
              $G_QUERYHOST $G_QUERYPORT 2>> $G_FINDSCUSERIESSTD"
         eval "$QUERYSERIES"
-        #echo "$QUERYSERIES"
+	#exit 0
       done
       echo ""
       PACSdata_size    
     else
       echo ""
-      statusPrint "No hits returned for MRN $G_PATIENTID."
+      statusPrint "No hits returned for $G_QUERYTYPE $SEARCHKEY."
       echo ""
-      shut_down 1
+      if (( Gb_exitOnNoHits )) ; then       
+	      shut_down 1
+      fi
     fi
 
     lprint "I: Cleaning Series MetaInfo"
@@ -466,6 +519,12 @@ for EL in $(echo $GLST | tr , ' '); do
     b_dateHit=0
     for currentUIb in $UI ; do
       currentUI=$(bracket_find $currentUIb)
+      SCANNER=$(station_lookup "$STATIONTABLE" $currentUI)
+      if (( Gb_scannerID )) ; then
+	      if [[ $SCANNER != $G_SCANNER ]] ; then
+		      break
+	      fi
+      fi
       echo ""
       statusPrint "I: StudyInstanceUID = $currentUI:" "\n"
       Gb_metaInfoPrinted=0
@@ -491,7 +550,7 @@ for EL in $(echo $GLST | tr , ' '); do
         if (( ${#tNAME} )) ; then NAME=$(bracket_find "$tNAME");    fi
 
         tMRID=$(echo "$line"        | grep "$G_PatientID")
-        if (( ${#tMRID} )) ; then G_PATIENTID=$(bracket_find "$tMRID");    fi
+        if (( ${#tMRID} )) ; then G_PATIENTID=$(bracket_find "$tMRID" | tr -d ' ');    fi
 
         tACCESSION=$(echo "$line"   | grep "$G_AccessionNumber")
         if (( ${#tACCESSION} )) ; then G_ACCESSIONNUMBER=$(bracket_find "$tACCESSION");    fi
@@ -502,7 +561,7 @@ for EL in $(echo $GLST | tr , ' '); do
             SERIESUID=$(bracket_find "$tSERIESUID");
             b_seriesUIDOK=1
         fi
-
+	
         tSERIES=$(echo "$line"      | grep "$G_SeriesDescription")
         if (( ${#tSERIES} )) ; then
             SERIES=$(bracket_find "$tSERIES")
@@ -515,6 +574,17 @@ for EL in $(echo $GLST | tr , ' '); do
                 $b_dateHit == 1             &&              \
                 $b_seriesOK == 1            &&              \
                 $b_seriesUIDOK == 1 ]] ; then
+             PREFIX=""
+       	     if (( Gb_prefix )) ; then
+	        LST_PREFIX=$(echo $GLST_PREFIX | tr ',' '\n')
+	        for PREFIXSPEC in $LST_PREFIX ; do
+	  	      case $PREFIXSPEC in 
+	  		      "MRN" ) 		PREFIX="$PREFIX-$G_PATIENTID"	;;
+	  		      "SCANNER" )	PREFIX="$PREFIX-$SCANNER"	;;
+	  	      esac
+	        done
+		PREFIX="$PREFIX-"
+	    fi
             if (( !Gb_metaInfoPrinted )) ; then
                 cprint "Scan Date"          "$STUDYDATE"
                 cprint "Patient Name"       "$NAME"
@@ -522,13 +592,14 @@ for EL in $(echo $GLST | tr , ' '); do
                 cprint "Accession Number"   "$G_ACCESSIONNUMBER"
                 cprint "Patient Birthdate"  "$BIRTHDATE"
                 cprint "Patient Age"        "$(age_calc.py $BIRTHDATE $STUDYDATE 2>/dev/null)"
+		cprint "Station Name"	    "$(station_lookup "$STATIONTABLE" $currentUI)"
                 echo ""
                 Gb_metaInfoPrinted=1
                 if (( !Gb_queryOnly && !Gb_seriesRetrieve )) ; then
                     moveSTUDY_cmd $STUDYUID;
                 fi
             fi
-            cprint "SeriesDescription" "$SERIES"
+            cprint "SeriesDescription" "${PREFIX}${SERIES}"
             #cprint "SeriesUID" "$SERIESUID"
             if (( !Gb_queryOnly && Gb_seriesRetrieve )) ; then
                 moveSERIES_cmd $STUDYUID "$SERIESUID";
