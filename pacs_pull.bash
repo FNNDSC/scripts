@@ -32,15 +32,15 @@ G_RC=50
 # when running this script
 GLST_PATIENTID=""
 GLST_PATIENTSNAME=""
+GLST_SCANNER=""
+GLST_SERIESDESCRIPTION=""
 G_PATIENTID=""
 G_PATIENTSNAME=""
 G_QUERYRETRIEVELEVEL=""
 G_MODALITY="MR"
 G_PATIENTSNAME=""
-G_SERIESDESCRIPTION=""
 G_STUDYINSTANCEUID=""
 G_SCANDATE=""
-G_SCANNER=""
 G_QUERYTYPE=""
 G_FINDSCUSTUDYSTD=/tmp/${G_SELF}_${G_PID}_findscu_study.std
 G_FINDSCUSTUDYERR=/tmp/${G_SELF}_${G_PID}_findscu_study.err
@@ -80,6 +80,7 @@ G_SYNOPSIS="
                         [-P <PACShost>]                                 \\
                         [-p <PACSport>]                                 \\
                         [-c <calltitle>]                                \\
+			[-r <rightColWidth>]				\\
                         [-v <verbosityLevel>]
 
   DESC
@@ -130,7 +131,7 @@ G_SYNOPSIS="
 	
 	-C <scannerName>
 	Scanner Name. If specificed, will only return hits collected from
-	this <scannerName>.
+	this <scannerName>. This can be a comma separated list.
 	
 	-x <prefixList>
 	If specified, will prepend sequence/protocol names with prefixList
@@ -138,12 +139,14 @@ G_SYNOPSIS="
 	
 		MRN: 		MRN
 		SCANNER:	Scanner name
+		STUDYDATE:	Date scan was collected
 		
 	This allows for easier post processing of scans of interest.
 
         -S <seriesDescription>
         Series description. If specified, limit retrieve or query to
-        <seriesDescription>. This is a substring search match.
+        <seriesDescription>. This is a substring search match, and 
+	can be a comma separated list.
 
         -h <institution>
         If specified, assigns some default AETITLE and PACS variables
@@ -164,6 +167,9 @@ G_SYNOPSIS="
         -p <PACSport> (Optional $G_QUERYPORT)
         The port on <PACShost>.        
         
+	-r <rightColWidth>
+	Override the default right column width on display. 
+	
         -v <verbosityLevel> (Optional)
         This script defaults to a verbosityLevel of '1'. To be most
         verbose, use a level of '10'.
@@ -336,11 +342,11 @@ function institution_set
     esac
 }
 
-while getopts M:N:A:m:QD:S:a:c:l:P:p:v:Rh:E:C:x: option ; do
+while getopts M:N:A:m:QD:S:a:c:l:P:p:v:Rh:E:C:x:r: option ; do
     case "$option" 
     in
         v) Gi_verbose=$OPTARG           ;;
-	C) G_SCANNER=$OPTARG
+	C) GLST_SCANNER=$OPTARG
 	   Gb_scannerID=1		;;
         x) GLST_PREFIX=$OPTARG
 	   Gb_prefix=1			;;
@@ -353,7 +359,7 @@ while getopts M:N:A:m:QD:S:a:c:l:P:p:v:Rh:E:C:x: option ; do
 	   G_QUERYTYPE="PATIENTNAME"	;;
         R) let Gb_queryOnly=0           ;;
         D) G_SCANDATE=$OPTARG           ;;
-        S) G_SERIESDESCRIPTION=$OPTARG
+        S) GLST_SERIESDESCRIPTION=$OPTARG
            let Gb_seriesRetrieve=1      ;;
         h) G_INSTITUTION=$OPTARG
            let Gb_institution=1         ;;
@@ -363,6 +369,7 @@ while getopts M:N:A:m:QD:S:a:c:l:P:p:v:Rh:E:C:x: option ; do
         P) G_QUERYHOST=$OPTARG          ;;
         p) G_QUERYPORT=$OPTARG          ;;
 	E) Gb_exitOnNoHits=$OPTARG	;;
+	r) G_RC=$OPTARG			;;
         *) synopsis_show                ;;
     esac
 done
@@ -552,16 +559,22 @@ for EL in $(echo $GLST | tr , ' '); do
       currentUI=$(bracket_find $currentUIb)
       SCANNER=$(station_lookup "$STATIONTABLE" $currentUI)
       if (( Gb_scannerID )) ; then
-	      if [[ $SCANNER != $G_SCANNER ]] ; then
-	    	  statusPrint "E: No hits for $G_QUERYTYPE $SEARCHKEY on scanner $G_SCANNER." "\n"		     
-		  break
+	  declare -i b_scannerFound=0
+	  for thisSCANNER in $(echo "$GLST_SCANNER" | tr ',' ' ') ; do
+	      if [[ "$SCANNER" != "$thisSCANNER" ]] ; then
+	    	  statusPrint "E: No hits for $G_QUERYTYPE $SEARCHKEY on scanner $thisSCANNER for series $currentUIb." "\n"
+	      else
+  	          b_scannerFound=1
 	      fi
+          done
+	  if (( !b_scannerFound )) ; then
+		  continue
+	  fi
       fi
       echo ""
       statusPrint "I: StudyInstanceUID = $currentUI:" "\n"
       Gb_metaInfoPrinted=0
       SERIESFILE=${G_FINDSCUSERIESSTD}.${currentUI}
-      IFS=$'\n'
       while read line ; do
         DA=$(echo "$line" | grep "0008,0020")
         if (( ${#DA} )) ; then
@@ -602,7 +615,11 @@ for EL in $(echo $GLST | tr , ' '); do
             SERIES=$(bracket_find "$tSERIES")
             b_seriesOK=$(echo "$SERIES" | grep -v "no value" | wc -l)
             if (( Gb_seriesRetrieve )) ; then
-                b_seriesOK=$(echo "$SERIES"|grep "$G_SERIESDESCRIPTION"|wc -l)
+		b_seriesOK=0
+		for TARGETSERIES in $(echo $GLST_SERIESDESCRIPTION | tr ',' ' ') ; do
+                    b_seriesHIT=$(echo "$SERIES"|grep "$TARGETSERIES"|wc -l)
+		    b_seriesOK=$((b_seriesHIT || b_seriesOK))
+		done
             fi
         fi
         if [[   ${STUDYUID} == $currentUI   &&              \
@@ -616,6 +633,7 @@ for EL in $(echo $GLST | tr , ' '); do
 	  	      case $PREFIXSPEC in 
 	  		      "MRN" ) 		PREFIX="$PREFIX-$G_PATIENTID"	;;
 	  		      "SCANNER" )	PREFIX="$PREFIX-$SCANNER"	;;
+			      "STUDYDATE")	PREFIX="$PREFIX-$STUDYDATE"	;;
 	  	      esac
 	        done
 		PREFIX="$PREFIX-"
@@ -627,7 +645,7 @@ for EL in $(echo $GLST | tr , ' '); do
                 cprint "Accession Number"   "$G_ACCESSIONNUMBER"
                 cprint "Patient Birthdate"  "$BIRTHDATE"
                 cprint "Patient Age"        "$(age_calc.py $BIRTHDATE $STUDYDATE 2>/dev/null)"
-		cprint "Station Name"	    "$(station_lookup "$STATIONTABLE" $currentUI)"
+		cprint "Station Name"	    "$SCANNER"
                 echo ""
                 Gb_metaInfoPrinted=1
                 if (( !Gb_queryOnly && !Gb_seriesRetrieve )) ; then
