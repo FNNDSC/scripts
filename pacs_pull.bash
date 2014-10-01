@@ -71,9 +71,11 @@ G_SYNOPSIS="
         pacs_pull.bash  -M <MRN> || -N <PatientsName>                   \\
                         [-m <modality>]                                 \\
                         [-R]                                            \\
+			[-C <scannerName>]				\\
                         [-D <scandate>]                                 \\
                         [-S <seriesDescription>]                        \\
                         [-h <institution>]                              \\
+			[-x <prefixList>]				\\
                         [-a <aetitle>]                                  \\
                         [-P <PACShost>]                                 \\
                         [-p <PACSport>]                                 \\
