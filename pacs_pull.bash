@@ -453,7 +453,9 @@ for EL in $(echo $GLST | tr , ' '); do
 			awk '{printf("%68s%10s\n", $1, $2)}'			|\
 			tr '[' ' ' | tr ']' ' ')
     rprint "[ ok ]"
-    echo "$STATIONTABLE" | sed 's/\(.*\)/I: \1/'
+    if (( ${#STATIONTABLE} )) ; then
+    	echo "$STATIONTABLE" | sed 's/\(.*\)/I: \1/'
+    fi
     UILINE=$(cat $G_FINDSCUSTUDYSTD| grep StudyInstanceUID)
     #echo "UILINE=$UILINE"
     UI=$(echo "$UILINE" | awk '{print $4}')
@@ -489,14 +491,18 @@ for EL in $(echo $GLST | tr , ' '); do
       echo ""
       PACSdata_size    
     else
-      echo ""
-      statusPrint "No hits returned for $G_QUERYTYPE $SEARCHKEY."
-      echo ""
-      if (( Gb_exitOnNoHits )) ; then       
+	DATESPEC=""
+	if (( Gb_dateSpecified )) ; then
+		DATESPEC="on specified date $G_SCANDATE"
+	fi
+	echo ""
+      	statusPrint "E: No hits returned for $G_QUERYTYPE $SEARCHKEY $DATESPEC."
+      	echo ""
+        if (( Gb_exitOnNoHits )) ; then       
 	      shut_down 1
-      else
+        else
 	      continue
-      fi
+        fi
     fi
 
     lprint "I: Cleaning Series MetaInfo"
@@ -515,7 +521,7 @@ for EL in $(echo $GLST | tr , ' '); do
     HITS=$(/bin/ls -1 $G_FINDSCUSERIESSTD.* 2>/dev/null | wc -l)
     if (( !HITS )) ; then 
 	     echo ""
-     	     statusPrint "No sorted series file hits for $G_QUERYTYPE $SEARCHKEY." "\n"		     
+     	     statusPrint "E: No sorted series file hits for $G_QUERYTYPE $SEARCHKEY." "\n"		     
 	     if (( Gb_exitOnNoHits )) ; then
 		     fatal noBlockSort  
 	    else
@@ -545,7 +551,8 @@ for EL in $(echo $GLST | tr , ' '); do
       SCANNER=$(station_lookup "$STATIONTABLE" $currentUI)
       if (( Gb_scannerID )) ; then
 	      if [[ $SCANNER != $G_SCANNER ]] ; then
-		      break
+	    	  statusPrint "E: No hits for $G_QUERYTYPE $SEARCHKEY on scanner $G_SCANNER." "\n"		     
+		  break
 	      fi
       fi
       echo ""
@@ -561,7 +568,10 @@ for EL in $(echo $GLST | tr , ' '); do
                 b_dateHit=1
             elif [[ $G_SCANDATE == $STUDYDATE ]] ; then
                 b_dateHit=1
-            fi
+	    else
+    	        statusPrint "E: No hits for $G_QUERYTYPE $SEARCHKEY on date $G_SCANDATE." "\n"		     
+		break
+	    fi
         fi
         UILINE=$(echo "$line"       | grep "$G_StudyInstanceUID")
         STUDYUID=$(bracket_find "${UILINE}")
@@ -622,7 +632,7 @@ for EL in $(echo $GLST | tr , ' '); do
                     moveSTUDY_cmd $STUDYUID;
                 fi
             fi
-            cprint "SeriesDescription" "${PREFIX}${SERIES}"
+            cprint "S: SeriesDescription" "${PREFIX}${SERIES}"
             #cprint "SeriesUID" "$SERIESUID"
             if (( !Gb_queryOnly && Gb_seriesRetrieve )) ; then
                 moveSERIES_cmd $STUDYUID "$SERIESUID";
