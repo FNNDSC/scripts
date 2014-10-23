@@ -97,7 +97,7 @@ rm -f $G_REPORTLOG
 b_logGenerate=0
 
 for i in $(seq 0 $(expr $targetList - 1)) ; do
-        result=$(eval ${TARGETCHECK[$i]})
+        result=$(eval ${TARGET_CHECK[$i]})
 	if (( result == 0 )) ; then
 	        #echo "${TARGETACTION[$i]}"
 		lprintn "Restarting target action..."
