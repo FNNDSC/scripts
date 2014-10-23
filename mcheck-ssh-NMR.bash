@@ -102,6 +102,7 @@ FNNDSC=fnndsc.tch.harvard.edu
 TAUTONA=tautona.tch.harvard.edu
 YESNABY=yesnaby.tch.harvard.edu
 CHRISMGHPCC=chris-mghpcc.tch.harvard.edu
+CHRISCHPC=chris-chpc.tch.harvard.edu
 
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
