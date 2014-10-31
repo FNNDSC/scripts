@@ -4,11 +4,17 @@
 # "include" the set of common script functions
 source common.bash
 
+G_LC=60
+G_RC=20
+
 G_STAGES="123"
-G_DENSITYLIST="AreaDensity.txt ParticleDensity.txt"
+G_DENSITYLIST="AreaDensity ParticleDensity"
 G_TOKEN="cloudCoreOverlap"
 G_OUTDIR="./"
 G_FILTER="le5"
+G_HEMI=lh
+G_SURFACE=smoothwm
+
 
 PREFIXLIST=""
 let b_prefixList=0
@@ -21,11 +27,14 @@ G_SYNPOSIS="
         dty_analyze.sh
 
   SYNOPSIS
-  
-        dty_analyze.sh          -s <substringFilter>                    \
+
+        dty_analyze.sh          -S <substringFilter>                    \
                                 -p <substringPrefixList>                \
                                 -t <splitToken>                         \
-                                -o <outputDir>
+                                -o <outputDir>                          \
+                                -s <surface>                            \
+                                -h <hemi>                               \
+                                -t <STAGES>
 
 
   DESC
@@ -33,39 +42,48 @@ G_SYNPOSIS="
         'dty_analyze.sh' creates grouped summaries of a set of density
         files that have been tagged by the p-test <subscringFilter>.
 
-        It relies on the outputs of a standard curvature analysis 
+        It relies on the outputs of a standard curvature analysis
         pipeline.
 
   ARGS
 
-        -s <substringFilter>
+        -S <substringFilter>
         The p-test substring filter to process. This is usually one of
-        'le5' or 'le1', corresponding to 'less-than-equal to 5%' or 
+        'le5' or 'le1', corresponding to 'less-than-equal to 5%' or
         'less-than-equal-to 1%' confidence threshold.
-        
+
         Defaults to 'le5'.
-        
+
         -p <substringPrefixList>
-        A prefix string to be added to the main search pattern. Each 
-        item in this comma separated list is used to prefix a find search, 
+        A prefix string to be added to the main search pattern. Each
+        item in this comma separated list is used to prefix a find search,
         i.e. for an argument \"-p prefix1,prefix2,prefix3,...,prefixN\"
-        
+
                 find . -iname \"*prefix1*<substringFilter>*\"
                 find . -iname \"*prefix2*<substringFilter>*\"
                                         ...
                 find . -iname \"*prefixN*<substringFilter>*\"
-                
-        
-        -t <splitToken>
+
+
+        -T <splitToken>
         The string token to split output filenames on. Probably this
         shouldn't be changed from the default.
-        
+
         Defaults to 'cloudCoreOverlap'.
-        
+
         -o <outputDir>
         The directory to contain output text files.
-        
+
         Defaults to './'
+
+        -s <surface>
+        The surface to filter on.
+
+        -h <hemi>
+        The hemisphere to filter on.
+
+        -t <STAGES>
+        The stages to run.
 
   STAGES
 
@@ -81,7 +99,7 @@ G_SYNPOSIS="
 
 
   HISTORY
-  
+
         10-Jan-2014
         o Initial design and coding.
 "
@@ -98,13 +116,15 @@ EM_preconditionFail="I couldn't find a necessary precondition."
 EC_noOutRootDir=54
 EC_preconditionFail=60
 
-while getopts v:s:p:o:t: option ; do
+while getopts v:s:h:S:p:o:t: option ; do
         case "$option"
         in
                 o) G_OUTDIR=$OPTARG             ;;
-                p) PREFIXLIST=$OPTARG                   
+                p) PREFIXLIST=$OPTARG
                    b_prefixList=${#PREFIXLIST}  ;;
-                s) G_FILTER=$OPTARG             ;;
+                S) G_FILTER=$OPTARG             ;;
+                s) G_SURFACE=$OPTARG            ;;
+                h) G_HEMI=$OPTARG               ;;
                 t) G_STAGES="$OPTARG"           ;;
                 v) let Gi_verbose=$OPTARG       ;;
                 \?) synopsis_show
@@ -164,19 +184,25 @@ if (( ${barr_stage[1]} )) ; then
         statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
         ALLHITS=""
         b_removeResultFiles=0
-        for PREFIX in $PREFIXLIST; do 
+        for PREFIX in $PREFIXLIST; do
                 if (( b_prefixList )) ; then
-                        PREFIXHITS=$(find . -iname "*$PREFIX*$G_FILTER*" | grep -v dty_analyze)
+                        PREFIXHITS=$(find . -iname "*$PREFIX*$G_FILTER*"    |\
+                                    grep -v dty_analyze                     |\
+                                    grep $G_SURFACE                         |\
+                                    grep $G_HEMI)
                 else
-                        PREFIXHITS=$(find . -iname "*$G_FILTER*" | grep -v dty_analyze)
+                        PREFIXHITS=$(find . -iname "*$G_FILTER*"            |\
+                                    grep -v dty_analyze                     |\
+                                    grep $G_SURFACE                         |\
+                                    grep $G_HEMI)
                 fi
                 b_HITS=$(echo "$PREFIXHITS" | wc -l)
                 if (( ! ${#PREFIXHITS} )) ; then b_HITS=0; fi
-                lprint "Saving p-test lists for $PREFIX-$G_FILTER"
+                lprint "Saving p-test lists for $PREFIX-$G_FILTER-$G_HEMI-$G_SURFACE"
                 if (( b_HITS )) ; then
-                        echo "$PREFIXHITS" > ${G_OUTDIR}/${STAGE}/p-$PREFIX-$G_FILTER
+                        echo "$PREFIXHITS" > ${G_OUTDIR}/${STAGE}/p-$PREFIX-$G_FILTER-$G_HEMI-$G_SURFACE
                 else
-                        touch ${G_OUTDIR}/${STAGE}/p-$PREFIX-$G_FILTER
+                        touch ${G_OUTDIR}/${STAGE}/p-$PREFIX-$G_FILTER-$G_HEMI-$G_SURFACE
                 fi
                 rprint "[ $b_HITS ]"
                 b_removeResultFiles=$(( b_HITS || b_removeResultFiles))
@@ -187,18 +213,23 @@ if (( ${barr_stage[1]} )) ; then
         done
 
         if [[ b_removeResultFiles ]] ; then
-                rm -f ${G_OUTDIR}/${STAGE}/$G_DENSITYLIST
+            for DTY in $G_DENSITYLIST ; do
+                rm -f ${G_OUTDIR}/${STAGE}/$G_DTY-$G_HEMI-$G_SURFACE.txt
+            done
         fi
 
-        for DTY in $G_DENSITYLIST ; do touch ${G_OUTDIR}/${STAGE}/$DTY; done
+        for DTY in $G_DENSITYLIST ; do
+            touch ${G_OUTDIR}/${STAGE}/$DTY-$G_HEMI-$G_SURFACE.txt;
+        done
         for HIT in $ALLHITS ; do
                 DIR=$(echo $HIT   | $XARGS -i% echo "dirname %"   | sh)
                 FILE=$(echo $HIT  | $XARGS -i% echo "basename %"  | sh)
+                #echo $FILE
                 for DTY in $G_DENSITYLIST ; do
-                        STEM=$(echo $FILE | sed 's/\(.*\)'${G_TOKEN}'\(.*\)/\1'${G_TOKEN}${DTY}'/')
-                        # printf "%s    %s  %s \n" $DIR $FILE $STEM
+                        STEM=$(echo $FILE | sed 's/\(.*\)'${G_TOKEN}'\(.*\)/\1'${G_TOKEN}${DTY}'/').txt
+                        #printf "%s    %s  %s \n" $DIR $FILE $STEM
                         CONTENTS=$(cat $DIR/$STEM)
-                        echo -e "$CONTENTS\t$DIR/$STEM" >> ${G_OUTDIR}/${STAGE}/$DTY
+                        echo -e "$CONTENTS\t$DIR/$STEM" >> ${G_OUTDIR}/${STAGE}/$DTY-$G_HEMI-$G_SURFACE.txt
                 done
         done
         statusPrint "$(date) | Processing Stage $STAGENUM - END" "\n"
@@ -219,7 +250,7 @@ STAGE2FULLDIR=${G_OUTDIR}/${STAGE}
 statusPrint     "Checking on stage 2 preconditions" "\n"
 for FILE in $G_DENSITYLIST ; do
         lprint $FILE
-        fileExist_check ${STAGE1FULLDIR}/$FILE || fatal preconditionFail
+        fileExist_check ${STAGE1FULLDIR}/$FILE-$G_HEMI-$G_SURFACE.txt || fatal preconditionFail
 done
 statusPrint     "Checking stage 2 output dir"
 dirExist_check ${G_OUTDIR}/${STAGE} "not found - creating"        \
@@ -227,15 +258,15 @@ dirExist_check ${G_OUTDIR}/${STAGE} "not found - creating"        \
             || fatal noOutRunDir
 if (( ${barr_stage[2]} )) ; then
         statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
-        
-        AREATABLE=$(cat ${STAGE1FULLDIR}/AreaDensity.txt)
-        PARTICLETABLE=$(cat ${STAGE1FULLDIR}/ParticleDensity.txt)
+
+        AREATABLE=$(cat ${STAGE1FULLDIR}/AreaDensity-$G_HEMI-$G_SURFACE.txt)
+        PARTICLETABLE=$(cat ${STAGE1FULLDIR}/ParticleDensity-$G_HEMI-$G_SURFACE.txt)
 
         for FILE in $G_DENSITYLIST ; do
             lprintn "$FILE"
             for PREFIX in $PREFIXLIST ; do
                 cprint "Filtering results for prefix" "[ $PREFIX ]"
-                if [[ $PREFIX == "." ]] ; then 
+                if [[ $PREFIX == "." ]] ; then
                         FILTER="$PREFIX"
                         SCOPE="-all-"
                 else
@@ -243,14 +274,14 @@ if (( ${barr_stage[2]} )) ; then
                         SCOPE="-$PREFIX-"
                 fi
                 base=$(basename $FILE)
-                meanFileName="mean${SCOPE}$FILE"
-                stdFileName="std${SCOPE}$FILE"
+                meanFileName="mean${SCOPE}$FILE-$G_HEMI-$G_SURFACE.txt"
+                stdFileName="std${SCOPE}$FILE-$G_HEMI-$G_SURFACE.txt"
                 # The control || after the grep is necessary to handle cases
                 # where the filter didn't return any hits.
-                meanLine=$(cat ${STAGE1FULLDIR}/$FILE                   |\
+                meanLine=$(cat ${STAGE1FULLDIR}/$FILE-$G_HEMI-$G_SURFACE.txt |\
                          (grep "$FILTER" || echo -e "0 0 0 0")          |\
                           stats_print.awk | grep Mean)
-                stdLine=$(cat  ${STAGE1FULLDIR}/$FILE                   |\
+                stdLine=$(cat  ${STAGE1FULLDIR}/$FILE-$G_HEMI-$G_SURFACE.txt |\
                         (grep "$FILTER"  || echo -e "0 0 0 0")          |\
                          stats_print.awk | grep Std)
                 echo "$meanLine"        > ${STAGE2FULLDIR}/$meanFileName
@@ -258,13 +289,13 @@ if (( ${barr_stage[2]} )) ; then
                 mean=$(echo $meanLine   | awk '{print $4}')
                 std=$(echo $stdLine     | awk '{print $4}')
                 sum=$(echo "scale = 2; $mean + $std" | bc)
-                echo "$sum"             > ${STAGE2FULLDIR}/cutoff${SCOPE}$FILE
+                echo "$sum"             > ${STAGE2FULLDIR}/cutoff${SCOPE}$FILE-$G_HEMI-$G_SURFACE.txt
             done
         done
 
         AREAMEAN=$(echo "$AREATABLE" | stats_print.awk | grep Mean)
         statusPrint "$(date) | Processing Stage $STAGENUM - END" "\n"
-        
+
 fi
 
 STAGENUM="dty_analyze-3"
@@ -276,14 +307,14 @@ STAGE3FULLDIR=${G_OUTDIR}/${STAGE}
 statusPrint     "Checking on stage 3 preconditions" "\n"
 for FILE in $G_DENSITYLIST ; do
     for PREFIX in $PREFIXLIST ; do
-        if [[ $PREFIX == "." ]] ; then 
+        if [[ $PREFIX == "." ]] ; then
                 FILTER="$PREFIX"
                 SCOPE="-all-"
         else
                 FILTER="/$PREFIX/"
                 SCOPE="-$PREFIX-"
         fi
-        PRE="cutoff${SCOPE}$FILE"
+        PRE="cutoff${SCOPE}$FILE-$G_HEMI-$G_SURFACE.txt"
         lprint $PRE
         fileExist_check ${STAGE2FULLDIR}/$PRE || fatal preconditionFail
     done
@@ -295,11 +326,12 @@ dirExist_check ${G_OUTDIR}/${STAGE} "not found - creating"        \
             || fatal noOutRunDir
 if (( ${barr_stage[3]} )) ; then
         statusPrint "$(date) | Processing Stage $STAGENUM - START" "\n"
-        
-        rm ${STAGE3FULLDIR}/* 2>/dev/null
+
+        # Running the analysis over previous results will APPEND!!
+        #rm ${STAGE3FULLDIR}/* 2>/dev/null
         for FILE in $G_DENSITYLIST ; do
             # echo "PREFIXLIST = $PREFIXLIST"
-            lprintn "$FILE"
+            lprintn "$FILE-$G_HEMI-$G_SURFACE.txt"
             for PREFIX in $PREFIXLIST ; do
                 if [[ $PREFIXLIST == "." ]] ; then
                         FILTER=""
@@ -313,12 +345,16 @@ if (( ${barr_stage[3]} )) ; then
                         continue
                 fi
                 lprint "processing separation for groups $SCOPE"
-                SEPARATIONFILE="separate${SCOPE}$FILE"
+                SEPARATIONFILE="separate${SCOPE}$FILE-$G_HEMI-$G_SURFACE.txt"
                 # echo "PREFIX = $PREFIX"
-                TARGET="${STAGE2FULLDIR}/cutoff${SCOPE}$FILE"
+                TARGET="${STAGE2FULLDIR}/cutoff${SCOPE}$FILE-$G_HEMI-$G_SURFACE.txt"
                 # echo "TARGET = $TARGET"
                 f_cutoff=$(cat $TARGET)
-                TARGETLIST=$(find . -wholename "*$FILTER*$FILE" | grep -v dty_analyze)
+                CMD="find . -wholename \"*$FILTER*$FILE.txt\"       |\
+                            grep -v dty_analyze                     |\
+                            grep $G_SURFACE                         |\
+                            grep $G_HEMI"
+                TARGETLIST=$(eval $CMD)
                 overlapCount=0
                 for OVERLAP in $TARGETLIST ; do
                         f_overlap=$(cat $OVERLAP | awk '{print $3}')
@@ -336,6 +372,5 @@ if (( ${barr_stage[3]} )) ; then
         done
 
         statusPrint "$(date) | Processing Stage $STAGENUM - END" "\n"
-        
-fi
 
+fi
