@@ -72,14 +72,19 @@ EM_badRestart="the corrective action failed. Perhaps a target process failed?"
 # Error codes
 EC_badRestart=10
 
+DOOR=door.nmr.mgh.harvard.edu
 H1=98.118.51.216
 
 targetList=2
 
-TARGET_CHECK[0]="tunnel.bash --forward	--from 2468 --via rudolph@${H1} --to localhost:2468 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[0]="tunnel.bash --forward	--from 2468 --via rudolph@${H1} --to localhost:2468 --sshArgs '-p 7778'"
-TARGET_CHECK[1]="tunnel.bash --forward	--from 2444 --via rudolph@${H1} --to localhost:2444 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[1]="tunnel.bash --forward	--from 2444 --via rudolph@${H1} --to localhost:2444 --sshArgs '-p 7778'"
+TARGET_CHECK[0]="tunnel.bash --forward	--from 2468 --via rudolph@${DOOR} --to localhost:2468 --isRunning"
+TARGETACTION[0]="tunnel.bash --forward	--from 2468 --via rudolph@${DOOR} --to localhost:2468"
+TARGET_CHECK[1]="tunnel.bash --forward	--from 2444 --via rudolph@${DOOR} --to localhost:2444 --isRunning"
+TARGETACTION[1]="tunnel.bash --forward	--from 2444 --via rudolph@${DOOR} --to localhost:2444"
+#TARGET_CHECK[0]="tunnel.bash --forward	--from 2468 --via rudolph@${H1} --to localhost:2468 --sshArgs '-p 7778' --isRunning"
+#TARGETACTION[0]="tunnel.bash --forward	--from 2468 --via rudolph@${H1} --to localhost:2468 --sshArgs '-p 7778'"
+#TARGET_CHECK[1]="tunnel.bash --forward	--from 2444 --via rudolph@${H1} --to localhost:2444 --sshArgs '-p 7778' --isRunning"
+#TARGETACTION[1]="tunnel.bash --forward	--from 2444 --via rudolph@${H1} --to localhost:2444 --sshArgs '-p 7778'"
 
 
 # Process command line options
