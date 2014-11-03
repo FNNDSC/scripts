@@ -257,10 +257,16 @@ TARGET_CHECK[45]="tunnel.bash --reverse	--from rudolph@${H1}:2443 --to ${CHRISMG
 TARGETACTION[45]="tunnel.bash --reverse	--from rudolph@${H1}:2443 --to ${CHRISMGHPCC}:443 --sshArgs '-p 7778'"
 TARGET_CHECK[46]="tunnel.bash --forward	--from 7900 --via rudolph@${GATE} --to tesla:5900 --isRunning"
 TARGETACTION[46]="tunnel.bash --forward	--from 7900 --via rudolph@${GATE} --to tesla:5900"
-TARGET_CHECK[47]="tunnel.bash --reverse	--from rudolph@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[47]="tunnel.bash --reverse	--from rudolph@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778'"
-TARGET_CHECK[48]="tunnel.bash --reverse	--from rudolph@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[48]="tunnel.bash --reverse	--from rudolph@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778'"
+
+#TARGET_CHECK[47]="tunnel.bash --reverse	--from rudolph@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778' --isRunning"
+#TARGETACTION[47]="tunnel.bash --reverse	--from rudolph@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778'"
+#TARGET_CHECK[48]="tunnel.bash --reverse	--from rudolph@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778' --isRunning"
+#TARGETACTION[48]="tunnel.bash --reverse	--from rudolph@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778'"
+
+TARGET_CHECK[47]="tunnel.bash --reverse	--from rudolph@${GATE}:2468 --to ${CHRISCHPC}:22 --isRunning"
+TARGETACTION[47]="tunnel.bash --reverse	--from rudolph@${GATE}:2468 --to ${CHRISCHPC}:22"
+TARGET_CHECK[48]="tunnel.bash --reverse	--from rudolph@${GATE}:2444 --to ${CHRISCHPC}:443 --isRunning"
+TARGETACTION[48]="tunnel.bash --reverse	--from rudolph@${GATE}:2444 --to ${CHRISCHPC}:443"
 
 # Process command line options
 while getopts hv: option ; do
