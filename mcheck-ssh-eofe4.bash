@@ -77,10 +77,10 @@ H1=98.118.51.216
 
 targetList=2
 
-TARGET_CHECK[0]="tunnel.bash --forward	--from 2439 --via rudolph@${GATE} --to localhost:2439 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[0]="tunnel.bash --forward	--from 2439 --via rudolph@${GATE} --to localhost:2439 --sshArgs '-p 7778'"
-TARGET_CHECK[1]="tunnel.bash --forward	--from 2443 --via rudolph@${GATE} --to localhost:2443 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[1]="tunnel.bash --forward	--from 2443 --via rudolph@${GATE} --to localhost:2443 --sshArgs '-p 7778'"
+TARGET_CHECK[0]="tunnel.bash --forward	--from 2439 --via rudolph@${GATE} --to localhost:2439 --isRunning"
+TARGETACTION[0]="tunnel.bash --forward	--from 2439 --via rudolph@${GATE} --to localhost:2439 "
+TARGET_CHECK[1]="tunnel.bash --forward	--from 2443 --via rudolph@${GATE} --to localhost:2443 --isRunning"
+TARGETACTION[1]="tunnel.bash --forward	--from 2443 --via rudolph@${GATE} --to localhost:2443 "
 
 
 # Process command line options
