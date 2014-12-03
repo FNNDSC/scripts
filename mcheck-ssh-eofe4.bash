@@ -72,7 +72,7 @@ EM_badRestart="the corrective action failed. Perhaps a target process failed?"
 # Error codes
 EC_badRestart=10
 
-GATE=gate.nmr.mgh.harvard.edu
+GATE=door.nmr.mgh.harvard.edu
 H1=98.118.51.216
 
 targetList=2
