@@ -72,14 +72,15 @@ EM_badRestart="the corrective action failed. Perhaps a target process failed?"
 # Error codes
 EC_badRestart=10
 
+GATE=gate.nmr.mgh.harvard.edu
 H1=98.118.51.216
 
 targetList=2
 
-TARGET_CHECK[0]="tunnel.bash --forward	--from 2439 --via rudolph@${H1} --to localhost:2439 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[0]="tunnel.bash --forward	--from 2439 --via rudolph@${H1} --to localhost:2439 --sshArgs '-p 7778'"
-TARGET_CHECK[1]="tunnel.bash --forward	--from 2443 --via rudolph@${H1} --to localhost:2443 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[1]="tunnel.bash --forward	--from 2443 --via rudolph@${H1} --to localhost:2443 --sshArgs '-p 7778'"
+TARGET_CHECK[0]="tunnel.bash --forward	--from 2439 --via rudolph@${GATE} --to localhost:2439 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[0]="tunnel.bash --forward	--from 2439 --via rudolph@${GATE} --to localhost:2439 --sshArgs '-p 7778'"
+TARGET_CHECK[1]="tunnel.bash --forward	--from 2443 --via rudolph@${GATE} --to localhost:2443 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[1]="tunnel.bash --forward	--from 2443 --via rudolph@${GATE} --to localhost:2443 --sshArgs '-p 7778'"
 
 
 # Process command line options
