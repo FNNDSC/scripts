@@ -98,12 +98,13 @@ GATE=door.nmr.mgh.harvard.edu
 GATE=entry.nmr.mgh.harvard.edu
 CHRIS=chris.tch.harvard.edu
 MATLAB=rc-matlab.tch.harvard.edu
-H1=98.118.51.216
 FNNDSC=fnndsc.tch.harvard.edu
 TAUTONA=tautona.tch.harvard.edu
 YESNABY=yesnaby.tch.harvard.edu
 CHRISMGHPCC=chris-mghpcc.tch.harvard.edu
 CHRISCHPC=chris-chpc.tch.harvard.edu
+
+H1=96.237.51.69
 
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
