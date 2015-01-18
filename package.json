@@ -10,5 +10,8 @@
     "type": "git",
     "url": "https://github.com/FNNDSC/scripts.git"
   },
-  "author": ""
+  "author": "",
+  "scripts": {
+    "install": "ln -s node_modules/_common ."
+  }
 }
