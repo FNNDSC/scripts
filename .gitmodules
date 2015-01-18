@@ -1,9 +1,0 @@
-[submodule "_common"]
-	path = _common
-	url = https://github.com/FNNDSC/_common.git
-[submodule "fyborg"]
-	path = fyborg
-	url = git://github.com/FNNDSC/fyborg
-[submodule "wheels"]
-	path = wheels
-	url = git://github.com/FNNDSC/wheels
