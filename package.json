@@ -12,6 +12,6 @@
   },
   "author": "",
   "scripts": {
-    "install": "ln -s node_modules/_common ."
+    "install": " [ ! -L _common ] && ln -s node_modules/_common . &>/dev/null;"
   }
 }
