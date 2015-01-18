@@ -1,0 +1,14 @@
+{
+  "name": "scripts",
+  "version": "0.0.0",
+  "description": "",
+  "dependencies": {
+    "_common": "FNNDSC/_common"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FNNDSC/scripts.git"
+  },
+  "author": "",
+}
