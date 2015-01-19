@@ -10,7 +10,7 @@ Various Scripts. Needs some ordering.
 ## installation
 
 ```
-$>git clone https://github.com/FNNDSC/scripts.git
+$> git clone https://github.com/FNNDSC/scripts.git
 $> cd scripts
 $> npm install
 ```
