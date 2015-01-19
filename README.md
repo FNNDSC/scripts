@@ -1,6 +1,19 @@
 # scripts
+
 Various Scripts
-# get the code
-git clone https://github.com/FNNDSC/scripts.git
-# get the modules
-npm install
+
+## pre-requisite
+
+* git
+
+* npm
+
+## installation
+
+'''
+$>git clone https://github.com/FNNDSC/scripts.git
+
+$> cd scripts
+
+$> npm install
+'''
