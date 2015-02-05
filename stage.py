@@ -56,15 +56,15 @@ class Pipeline:
             self.log().verbosity(args[0])
         else:
             return self._verbosity
-    
-    
+
+
     def pipeline(self):
         '''
         Get the pipeline.
         '''
         return self._pipeline
 
-        
+
     def poststdout(self, *args):
         '''
         get/set the poststdout flag. This flag toggles outputing the stdout
@@ -92,8 +92,8 @@ class Pipeline:
     def log(self, *args):
         '''
         get/set the internal pipeline log message object.
-        
-        Caller can further manipulate the log object with object-specific 
+
+        Caller can further manipulate the log object with object-specific
         calls.
         '''
         if len(args):
@@ -110,8 +110,8 @@ class Pipeline:
             self.__name = args[0]
         else:
             return self.__name
-        
-        
+
+
     def __init__(self, **kwargs):
         '''
         Constructor
@@ -146,7 +146,7 @@ class Pipeline:
 
         o an integer offset into the pipeline list.
         o a string "name" of a particular stage.
-        
+
         '''
         if type(index) is types.IntType:
             if index >= len(self._pipeline):
@@ -156,9 +156,9 @@ class Pipeline:
             for stage in self._pipeline:
                 if stage.name() == index:
                     return stage
-            error.fatal(self, 'stageNotFound')    
+            error.fatal(self, 'stageNotFound')
 
-            
+
     def pop(self):
         '''
         Pop a stage from the pipeline stack.
@@ -173,7 +173,7 @@ class Pipeline:
         '''
         for stage in self._pipeline:
             stage.canRun(value)
-        
+
     def execute(self):
         '''
         Run the pipeline, stage by stage.
@@ -186,16 +186,22 @@ class Pipeline:
             stage(checkpreconditions=True, runstage=True, checkpostconditions=True)
             log = stage.log()
             if self._b_poststdout:
-                log(Colors.LIGHT_GREEN + 'stage stdout:\n' + Colors.NO_COLOUR)
-                log('\n' + Colors.LIGHT_GREEN + stage.stdout() + Colors.NO_COLOUR)
+                log(Colors.LIGHT_GREEN + 'stage specific stdout:\n' + Colors.NO_COLOUR)
+                if not len(stage.stdout()):
+                    log(Colors.LIGHT_GREEN + '\t\t(no stage specific stdout)\n' + Colors.NO_COLOUR)
+                else:
+                    log('\n' + Colors.LIGHT_GREEN + stage.stdout() + Colors.NO_COLOUR)
             if self._b_poststderr:
-                log(Colors.LIGHT_RED + 'stage stderr:\n' + Colors.NO_COLOUR)
-                log('\n' + Colors.LIGHT_RED + stage.stderr() + Colors.NO_COLOUR)
+                log(Colors.LIGHT_RED + 'stage specific stderr:\n' + Colors.NO_COLOUR)
+                if not len(stage.stdout()):
+                    log(Colors.LIGHT_RED + '\t\t(no stage specific stderr)\n' + Colors.NO_COLOUR)
+                else:
+                    log('\n' + Colors.LIGHT_RED + stage.stderr() + Colors.NO_COLOUR)
             if stage.exitCode():
                 error.fatal(self, 'stageError', '%s' % stage.name())
         self._log(  Colors.CYAN + 'Terminating pipeline ' +
                     Colors.PURPLE +  '<'+self.name()+'>' + Colors.NO_COLOUR + '\n')
-        
+
 
     def fatalConditions(self, *args):
         '''
@@ -214,7 +220,7 @@ class Pipeline:
         else:
             return self._b_fatalConditions
 
-            
+
 class Stage:
     '''
     A simple 'stage' class used for constructing serialized pipeline
@@ -231,7 +237,7 @@ class Stage:
 
         - each callback must return boolean
         - each callback arguments are **kwargs
-    
+
     '''
 
     #
@@ -252,7 +258,7 @@ class Stage:
             'error'         : 'no shell command has been specified.',
             'exitCode'      : 12}
     }
-    
+
     def shell(self, *args):
         '''
         get/set the shell object.
@@ -265,7 +271,7 @@ class Stage:
             self._shell = args[0]
         else:
             return self._shell
-    
+
     def stdout(self, *args):
         '''
         get/set the stdout analog level.
@@ -311,7 +317,13 @@ class Stage:
         else:
             return self._callCount
 
-            
+    def _f_callCount(self, *args, **kwargs):
+        '''
+        Return the actual callCount function.
+        '''
+        return self.callCount
+
+
     def exitCode(self, *args):
         '''
         get/set the exitCode analog level.
@@ -339,8 +351,8 @@ class Stage:
             self.log().verbosity(args[0])
         else:
             return self._verbosity
-    
-    
+
+
     def vprint(self, alevel, astr_msg):
         '''
         A verbosity-aware print.
@@ -348,18 +360,18 @@ class Stage:
         '''
         if self._verbosity and self._verbosity <= alevel:
             sys.stdout.write(astr_msg)
-        
+
 
     def name(self, *args):
         '''
-        get/set the descriptive name text of this stage object. 
+        get/set the descriptive name text of this stage object.
         '''
         if len(args):
             self.__name = args[0]
         else:
             return self.__name
 
-            
+
     def __init__(self, **kwargs):
         '''
         The base constructor for the 'Stage' class.
@@ -381,14 +393,14 @@ class Stage:
         self._log               = message.Message()
 
         # The fatalConditions flag controls behaviour while checking pre- and
-        # post and shell return conditions. If True, failed pre-, post- or shell 
+        # post and shell return conditions. If True, failed pre-, post- or shell
         # conditions will result in a fatal failure. Processing will otherwise
         # continue.
         self._b_fatalConditions = True
 
         # A stage also contains a "shell" object used for interacting with the
         # host OS environment. Specific sub-classes of 'crun' actually use this
-        # shell to run the stage internals; however all stages can use the 
+        # shell to run the stage internals; however all stages can use the
         # shell in any capacity.
         self._shell             = None
 
@@ -403,7 +415,7 @@ class Stage:
         self._str_stdout        = ''
         self._str_stderr        = ''
         self._str_exitCode      = ''
-        
+
         self._f_preconditions           = lambda **x: True
         self._f_preconditionsArgs       = {'val': True}
         self._f_stage                   = lambda **x: True
@@ -420,7 +432,7 @@ class Stage:
             if key == 'logTee':             self.log().tee(value)
             if key == 'def_stage':          self._f_stage = value
 
-        
+
     def def_preconditions(self, *args, **kwargs):
         '''
         get/set the 'preconditions' function
@@ -458,7 +470,7 @@ class Stage:
         else:
             return self._f_stage, self._f_stageArgs
 
-            
+
     def def_postconditions(self, *args, **kwargs):
         '''
         set the 'postconditions' function
@@ -479,13 +491,13 @@ class Stage:
             self._f_postconditionsArgs  = kwargs
         else:
             return self._f_postconditions, self._f_postconditionsArgs
-        
-        
+
+
     def preconditions(self):
         '''
         Evaluates the internal preconditions callback, and returns
         a boolean result.
-        
+
         '''
         self._log('Checking preconditions...\n')
         ret = self._f_preconditions(**self._f_preconditionsArgs)
@@ -501,16 +513,16 @@ class Stage:
         self._log('Calling stage...\n')
         ret = self._f_stage(**self._f_stageArgs)
         return ret
-        
-       
+
+
     def callPreconditionsOnly(self):
         '''
         This is a convenience function that calls the main stage
         functor, but only executes the precondition check.
         '''
         Stage.__call__( self,
-                        checkpreconditions=True, 
-                        runstage=False, 
+                        checkpreconditions=True,
+                        runstage=False,
                         checkpostconditions=False,
                         preamble=True,
                         postamble=False)
@@ -522,13 +534,13 @@ class Stage:
         functor, but only executes the precondition check.
         '''
         Stage.__call__( self,
-                        checkpreconditions=False, 
-                        runstage=False, 
+                        checkpreconditions=False,
+                        runstage=False,
                         checkpostconditions=True,
                         preamble=False,
                         postamble=True)
-        
-        
+
+
     def __call__(self, **kwargs):
         '''
         The base class __call__ functor "runs" the stage. Each stage
@@ -538,7 +550,7 @@ class Stage:
             o stage
             o postconditions
 
-        By default, all three componets are executed in order    
+        By default, all three componets are executed in order
         pre- and/or post-conditions checking.
 
         If called with (stage=True) will execute the externally defined
@@ -558,7 +570,7 @@ class Stage:
                 if key == 'checkpostconditions':  b_postconditionsRun   = value
                 if key == 'preamble':             b_preamble            = value
                 if key == 'postamble':            b_postamble           = value
-            
+
             if b_preamble:
                 misc.tic() ; self._log(Colors.GREEN + \
                                        '<%s> START' % self.name() + \
@@ -579,8 +591,8 @@ class Stage:
                 self._log(Colors.GREEN      + '<%s> END' % self.name()      + \
                         Colors.NO_COLOUR  + '. Elapsed time = '           + \
                         Colors.CYAN       + '%f' % misc.toc()             + \
-                        Colors.NO_COLOUR  + ' seconds.\n') 
-                    
+                        Colors.NO_COLOUR  + ' seconds.\n')
+
 
     def postconditions(self):
         '''
@@ -592,7 +604,7 @@ class Stage:
         ret = self._f_postconditions(**self._f_postconditionsArgs)
         return ret
 
-        
+
     def log(self):
         '''
         Returns the internal log message object. Caller can further manipulate
@@ -600,7 +612,7 @@ class Stage:
         '''
         return self._log
 
-        
+
     def canRun(self, *args):
         '''
         get/set the canRun flag.
@@ -623,7 +635,7 @@ class Stage:
 
     def kwBlockOnScheduler(self, **kwargs):
         '''
-        A 'kwargs' block-on-jobs-in-scheduler method. This method assumes 
+        A 'kwargs' block-on-jobs-in-scheduler method. This method assumes
         that the internal stage shell is a scheduler-based crun that
         can be queried for its queue method.
 
@@ -648,7 +660,7 @@ class Stage:
         # steady state.
         time.sleep(5)
         (str_pending, str_running, str_scheduled, str_completed) = \
-            self.shell().queueInfo(blockProcess=astr_blockProcess)    
+            self.shell().queueInfo(blockProcess=astr_blockProcess)
         astr_allJobsDoneCount           = ablockUntil
         blockLoop       = 1
         if str_scheduled != astr_allJobsDoneCount:
@@ -656,7 +668,7 @@ class Stage:
             while 1:
                 time.sleep(atimeout)
                 str_pending, str_running, str_scheduled, str_completed = \
-                    self.shell().queueInfo(blockProcess=astr_blockProcess)    
+                    self.shell().queueInfo(blockProcess=astr_blockProcess)
                 if str_running == astr_allJobsDoneCount and \
                    str_pending == astr_allJobsDoneCount:
                     self._log('\n', syslog=False)
@@ -695,7 +707,7 @@ class Stage:
             if key == 'blockProcess':   astr_blockProcess       = val
             if key == 'blockMsg':       astr_blockMsg           = val
             if key == 'loopMsg':        astr_loopMsg            = val
-            if key == 'timeout':        atimeout                = val 
+            if key == 'timeout':        atimeout                = val
         shellScheduleCount              = crun.crun()
         shellRunCount                   = crun.crun()
         astr_processInSchedulerCount    = 'mosq listall | grep %s | wc -l' % astr_blockProcess
@@ -750,7 +762,7 @@ class Stage:
                                         while blocking
         RETURN
             o True
-        
+
         '''
         shell           = crun.crun()
         shell(astr_shellCmd)
@@ -773,8 +785,8 @@ class Stage:
                     for i in range(0, loopMsgLen+syslogLen): self._log('\b', syslog=False)
                     blockLoop           += 1
         return True
-        
-            
+
+
     def fatalConditions(self, *args):
         '''
         get/set the fatalConditions flag.
@@ -791,14 +803,14 @@ class Stage:
             self._b_fatalConditions = args[0]
         else:
             return self._b_fatalConditions
-        
-        
+
+
 class Stage_crun(Stage):
     '''
     A Stage class that uses crun as its execute engine.
     '''
 
-    
+
     def cmd(self, *args):
         '''
         get/set the shell command to execute.
@@ -808,7 +820,7 @@ class Stage_crun(Stage):
 
         cmd():          returns the current fatalConditions flag
         cmd(<str_cmd>): sets the command to execute but does NOT actually
-                        trigger the execution. 
+                        trigger the execution.
 
         '''
         if len(args):
@@ -816,7 +828,7 @@ class Stage_crun(Stage):
         else:
             return self._str_cmd
 
-            
+
     def stdout(self):
         '''
         Returns the stdout data from the shell. This reflects the most
@@ -824,7 +836,7 @@ class Stage_crun(Stage):
         '''
         return self._shell.stdout()
 
-        
+
     def stderr(self):
         '''
         Returns the stderr data from the shell. This reflects the most
@@ -832,14 +844,14 @@ class Stage_crun(Stage):
         '''
         return self._shell.stderr()
 
-        
+
     def exitCode(self):
         '''
         Returns the shell exit code from the most command executed.
         '''
         return self._shell.exitCode()
 
-        
+
     def __init__(self, **kwargs):
         '''
         Sub-class constuctor. Currently sets an internal sub-class
@@ -857,7 +869,7 @@ class Stage_crun(Stage):
         for key, value in kwargs.iteritems():
             if key == 'stdoutflush':    self._b_stdoutflush = value
             if key == 'stderrflush':    self._b_stderrflush = value
-        
+
     def __call__(self, **kwargs):
         '''
         The actual stage innards.
@@ -885,11 +897,11 @@ class Stage_crun(Stage):
         else:
             self.fatal('NoCmd')
 
-        # Now we again call the base-class stage handler and only execute 
+        # Now we again call the base-class stage handler and only execute
         # the postconditions
         self.callPostconditionsOnly()
 
-        
+
 class Stage_crun_mosix(Stage_crun):
     '''
     A Stage class that uses crun_mosix as its execute engine.
@@ -915,7 +927,7 @@ class Stage_crun_mosix(Stage_crun):
         self._log('Scheduling to cluster...\n')
         Stage_crun.__call__(self, **kwargs)
 
-                    
+
 
 def crun_factory(**kwargs):
     stage = Stage_crun()
@@ -924,7 +936,7 @@ def crun_factory(**kwargs):
         if key == 'fatalConditions':    stage.fatalConditions(value)
         if key == 'syslog':             stage.log().syslog(value)
     return stage
-                    
+
 if __name__ == "__main__":
 
     def stage_preconditions(**kwargs):
@@ -936,7 +948,7 @@ if __name__ == "__main__":
         for key, value in kwargs.iteritems():
             if key == 'ret':    ret = value
         return ret
-        
+
     def stage_postconditions(**kwargs):
         '''
         Callback for a stage preconditions.
@@ -948,14 +960,14 @@ if __name__ == "__main__":
         return ret
 
     stage1 = Stage_crun(name='Stage 1', fatalConditions=True, syslog=True)
-        
+
     # Set the stage pre- and post-conditions callbacks.
     stage1.def_preconditions(    stage_preconditions,    ret=True)
     stage1.def_postconditions(   stage_postconditions,   ret=True)
     stage1_postconditions, stage1_args = stage1.def_postconditions()
     #stage1.def_postconditions(   stage.def_preconditions()[0], **stage.def_preconditions()[1] )
     stage1(cmd='sleep 1')
-    
+
     stage2 = crun_factory(name='Stage 2', fatalConditions=True, syslog=True)
     stage2.def_preconditions(   stage1_postconditions,  **stage1_args)
     stage2.def_postconditions(  stage_postconditions,   ret=True)
@@ -969,4 +981,3 @@ if __name__ == "__main__":
 
     print pipeline.stage_get('Stage 2').stdout()
     print pipeline.stage_get(1).stdout()
-    
