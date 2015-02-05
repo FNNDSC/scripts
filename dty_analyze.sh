@@ -9,6 +9,7 @@ G_RC=20
 
 G_STAGES="123"
 G_DENSITYLIST="AreaDensity ParticleDensity"
+G_CURVATURELIST="H,K,K1,K2,C,BE,S,thickness"
 G_TOKEN="cloudCoreOverlap"
 G_OUTDIR="./"
 G_FILTER="le5"
@@ -33,6 +34,7 @@ G_SYNPOSIS="
                                 -t <splitToken>                         \
                                 -o <outputDir>                          \
                                 -s <surface>                            \
+                                -c <curvatureList>                      \
                                 -h <hemi>                               \
                                 -t <STAGES>
 
@@ -79,6 +81,9 @@ G_SYNPOSIS="
         -s <surface>
         The surface to filter on.
 
+        -c <curvatureList>
+        The curvature list to filter on and use for area overlap calculations.
+
         -h <hemi>
         The hemisphere to filter on.
 
@@ -116,7 +121,25 @@ EM_preconditionFail="I couldn't find a necessary precondition."
 EC_noOutRootDir=54
 EC_preconditionFail=60
 
-while getopts v:s:h:S:p:o:t: option ; do
+function curv_filt
+{
+    FSTRING="$1"
+    FILT="$2"
+
+    CURVHITS=""
+    for CURV in $(echo $FILT | tr ',' ' ') ; do
+#        echo "Scanning for $CURV"
+        CURVHIT=$(echo "$FSTRING" | grep "$CURV-")
+        if (( ${#CURVHIT} )) ; then
+            CURVHITS=$(printf "%s\n%s" "$CURVHIT" "$CURVHITS")
+        fi
+    done
+
+    echo "$CURVHITS"
+
+}
+
+while getopts v:s:h:S:p:o:t:c: option ; do
         case "$option"
         in
                 o) G_OUTDIR=$OPTARG             ;;
@@ -124,6 +147,7 @@ while getopts v:s:h:S:p:o:t: option ; do
                    b_prefixList=${#PREFIXLIST}  ;;
                 S) G_FILTER=$OPTARG             ;;
                 s) G_SURFACE=$OPTARG            ;;
+                c) G_CURVATURELIST=$OPTARG      ;;
                 h) G_HEMI=$OPTARG               ;;
                 t) G_STAGES="$OPTARG"           ;;
                 v) let Gi_verbose=$OPTARG       ;;
@@ -172,7 +196,7 @@ STAMPLOG=${G_LOGDIR}/${G_SELF}.log
 stage_stamp "Init | ($(pwd)) $G_SELF $*" $STAMPLOG
 
 STAGENUM="dty_analyze-1"
-STAGEPROC="summaryTables-$G_FILTER"
+STAGEPROC="summaryTables-$G_FILTER-$G_CURVATURELIST"
 STAGE=${STAGENUM}-${STAGEPROC}
 STAGE1RELDIR=${G_OUTRUNDIR}/${STAGE}
 STAGE1FULLDIR=${G_OUTDIR}/${STAGE}
@@ -196,6 +220,7 @@ if (( ${barr_stage[1]} )) ; then
                                     grep $G_SURFACE                         |\
                                     grep $G_HEMI)
                 fi
+                PREFIXHITS=$(curv_filt "$PREFIXHITS" "$G_CURVATURELIST")
                 b_HITS=$(echo "$PREFIXHITS" | wc -l)
                 if (( ! ${#PREFIXHITS} )) ; then b_HITS=0; fi
                 lprint "Saving p-test lists for $PREFIX-$G_FILTER-$G_HEMI-$G_SURFACE"
@@ -218,9 +243,20 @@ if (( ${barr_stage[1]} )) ; then
             done
         fi
 
+#        CURVHITS=""
+#        for CURV in $(echo $G_CURVATURELIST | tr ',' ' ') ; do
+#            echo "Scanning for $CURV"
+#            CURVHIT=$(echo "$ALLHITS" | grep "$CURV-")
+#            CURVHITS=$(printf "%s\n%s" "$CURVHITS" "$CURVHIT")
+#        done
+
+#        echo "$CURVHITS"
+
         for DTY in $G_DENSITYLIST ; do
             touch ${G_OUTDIR}/${STAGE}/$DTY-$G_HEMI-$G_SURFACE.txt;
         done
+
+#        ALLHITS="$CURVHITS"
         for HIT in $ALLHITS ; do
                 DIR=$(echo $HIT   | $XARGS -i% echo "dirname %"   | sh)
                 FILE=$(echo $HIT  | $XARGS -i% echo "basename %"  | sh)
@@ -243,7 +279,7 @@ else
 fi
 
 STAGENUM="dty_analyze-2"
-STAGEPROC="statTables-$G_FILTER"
+STAGEPROC="statTables-$G_FILTER-$G_CURVATURELIST"
 STAGE=${STAGENUM}-${STAGEPROC}
 STAGE2RELDIR=${G_OUTRUNDIR}/${STAGE}
 STAGE2FULLDIR=${G_OUTDIR}/${STAGE}
@@ -299,7 +335,7 @@ if (( ${barr_stage[2]} )) ; then
 fi
 
 STAGENUM="dty_analyze-3"
-STAGEPROC="cutoffs-$G_FILTER"
+STAGEPROC="cutoffs-$G_FILTER-$G_CURVATURELIST"
 STAGE=${STAGENUM}-${STAGEPROC}
 STAGE3RELDIR=${G_OUTRUNDIR}/${STAGE}
 STAGE3FULLDIR=${G_OUTDIR}/${STAGE}
