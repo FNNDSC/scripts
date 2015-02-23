@@ -8,6 +8,8 @@ cd $dir
 mkdir jpegCompressed
 mv *.dcm jpegCompressed/
 
+cd ../
+
 for file in $dir/jpegCompressed/*.dcm
 do
     if [[ -f $file ]]; then
