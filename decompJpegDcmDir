@@ -8,9 +8,7 @@ cd $dir
 mkdir jpegCompressed
 mv *.dcm jpegCompressed/
 
-cd ../
-
-for file in $dir/jpegCompressed/*.dcm
+for file in jpegCompressed/*.dcm
 do
     if [[ -f $file ]]; then
         #http://wiki.bash-hackers.org/syntax/pe#substring_removal
