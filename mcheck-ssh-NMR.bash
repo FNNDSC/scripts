@@ -103,6 +103,7 @@ TAUTONA=tautona.tch.harvard.edu
 YESNABY=yesnaby.tch.harvard.edu
 CHRISMGHPCC=chris-mghpcc.tch.harvard.edu
 CHRISCHPC=chris-chpc.tch.harvard.edu
+BRAIN=brain.chpc.ac.za
 
 H1=96.237.51.69
 
@@ -114,7 +115,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=49
+targetList=50
 #
 ##
 ### REVERSE TUNNELS -- from dreev
@@ -269,6 +270,10 @@ TARGET_CHECK[47]="tunnel.bash --reverse	--from rudolph@${GATE}:2468 --to ${CHRIS
 TARGETACTION[47]="tunnel.bash --reverse	--from rudolph@${GATE}:2468 --to ${CHRISCHPC}:22"
 TARGET_CHECK[48]="tunnel.bash --reverse	--from rudolph@${GATE}:2444 --to ${CHRISCHPC}:443 --isRunning"
 TARGETACTION[48]="tunnel.bash --reverse	--from rudolph@${GATE}:2444 --to ${CHRISCHPC}:443"
+
+# ChRIS@brain.chpc.ac.za
+TARGET_CHECK[49]="tunnel.bash --reverse	--from rpienaar@${BRAIN}:5120 --to localhost:22 --isRunning"
+TARGETACTION[49]="tunnel.bash --reverse	--from rpienaar@${BRAIN}:5120 --to localhost:22"
 
 # Process command line options
 while getopts hv: option ; do
