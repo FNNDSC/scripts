@@ -1,0 +1,12 @@
+{
+  "name": "scripts",
+  "version": "0.0.1",
+  "authors": [
+    "FNNDSC Developers <dev@babymri.org>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/FNNDSC/scripts/",
+  "dependencies": {
+    "_common": "FNNDSC/_common"
+  }
+}
