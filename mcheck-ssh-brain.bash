@@ -74,12 +74,20 @@ EC_badRestart=10
 
 DOOR=door.nmr.mgh.harvard.edu
 SUN=sun.chpc.ac.za
-H1=98.118.51.216
+H1=96.237.51.69
 
-targetList=1
+targetList=5
 
 TARGET_CHECK[0]="tunnel.bash --forward	--from 2525 --via rpienaar@${SUN} --to smtp.chpc.ac.za:25 --isRunning"
 TARGETACTION[0]="tunnel.bash --forward	--from 2525 --via rpienaar@${SUN} --to smtp.chpc.ac.za:25"
+TARGET_CHECK[1]="tunnel.bash --forward	--from 2468 --via rpienaar@${SUN} --to localhost:2468 --isRunning"
+TARGETACTION[1]="tunnel.bash --forward	--from 2468 --via rpienaar@${SUN} --to localhost:2468"
+TARGET_CHECK[2]="tunnel.bash --forward	--from 2444 --via rpienaar@${SUN} --to localhost:2444 --isRunning"
+TARGETACTION[2]="tunnel.bash --forward	--from 2444 --via rpienaar@${SUN} --to localhost:2444"
+TARGET_CHECK[3]="tunnel.bash --forward	--from 2214 --via rudolph@${DOOR} --to localhost:2214 --isRunning"
+TARGETACTION[3]="tunnel.bash --forward	--from 2214 --via rudolph@${DOOR} --to localhost:2214"
+TARGET_CHECK[4]="tunnel.bash --forward	--from 4443 --via rudolph@${DOOR} --to localhost:4443 --isRunning"
+TARGETACTION[4]="tunnel.bash --forward	--from 4443 --via rudolph@${DOOR} --to localhost:4443"
 
 
 # Process command line options
