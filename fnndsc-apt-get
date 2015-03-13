@@ -28,7 +28,8 @@ G_SYNOPSIS="
 
   SYNOPSIS
   
-        fnndsc-apt-get [-h <hostlist>] [-v <verbosityLevel>] [-l <packageLog>] \\
+        fnndsc-apt-get	[-h <hostlist>] [-v <verbosityLevel>] [-l <packageLog>] \\
+			[-i]							\\
                         [apt-get-args]
 
   DESC
@@ -56,6 +57,10 @@ G_SYNOPSIS="
         
 	-v <verbosityLevel> (Optional)
 	Verbosity level. A value of '10' is a good choice here.
+
+	-i
+	Ignore release check. If specified, don't check if the host
+	and target release are the same.
         
   HISTORY
     
@@ -67,6 +72,9 @@ G_SYNOPSIS="
 
   26 June 2014
   o Consolidate all cluster nodes into 'pices'.
+
+  13 March 2015
+  o Add '-i' flag.
 "
 
 A_args="checking command line arguments"
@@ -87,13 +95,17 @@ EC_release=12
 EC_noAptGetArgs=14
 EC_execRemoteApt=15
 
-while getopts h:l:v: option ; do
+declare -i Gb_skipReleaseCheck=0
+
+
+while getopts h:l:v:i option ; do
     case "$option" 
     in
-        v) Gi_verbose=$OPTARG   ;;
-        h) G_HOSTLIST=$OPTARG   ;;
-        l) G_LOG=$OPTARG        ;;
-        *) synopsis_show        ;;
+        v) Gi_verbose=$OPTARG   	;;
+        h) G_HOSTLIST=$OPTARG   	;;
+        l) G_LOG=$OPTARG        	;;
+	i) Gb_skipReleaseCheck=1	;;
+        *) synopsis_show        	;;
     esac
 done
 
@@ -112,20 +124,23 @@ if (( ! ${#APTGETARGS} )) ; then fatal noAptGetArgs ; fi
 
 for HOST in $(echo "$G_HOSTLIST" | tr ',' ' ') ; do
         cprint "Remote host" "[ $HOST ]"
-        lprint "Local release info" 
-        LOCALRELEASE=$(cat /etc/issue)
-        rprint "[ $LOCALRELEASE ]"
 
-        lprint "Remote release info"
-        REMOTERELEASE=$(ssh $HOST cat /etc/issue)
-        rprint "[ $REMOTERELEASE ]"
+	if (( !Gb_skipReleaseCheck )) ; then
+	        lprint "Local release info" 
+        	LOCALRELEASE=$(cat /etc/issue)
+        	rprint "[ $LOCALRELEASE ]"
 
-        lprint "Local and remote release"
-        if [[ "$LOCALRELEASE" == "$REMOTERELEASE" ]]  ; then
-                rprint "[ ok ]"
-        else
-                fatal release
-        fi
+        	lprint "Remote release info"
+        	REMOTERELEASE=$(ssh $HOST cat /etc/issue)
+        	rprint "[ $REMOTERELEASE ]"
+
+        	lprint "Local and remote release"
+        	if [[ "$LOCALRELEASE" == "$REMOTERELEASE" ]]  ; then
+                	rprint "[ ok ]"
+        	else
+                	fatal release
+        	fi
+	fi
         statusPrint "Executing remote \"apt-get $APTGETARGS\"" "\n"
         ssh -t $HOST sudo apt-get "$APTGETARGS"
         REMOTESTATUS=$?
