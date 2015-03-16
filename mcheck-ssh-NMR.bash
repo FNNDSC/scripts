@@ -275,7 +275,7 @@ TARGETACTION[48]="tunnel.bash --reverse	--from rudolph@${GATE}:2444 --to ${CHRIS
 TARGET_CHECK[49]="tunnel.bash --reverse	--from rpienaar@${BRAIN}:5120 --to localhost:22 --isRunning"
 TARGETACTION[49]="tunnel.bash --reverse	--from rpienaar@${BRAIN}:5120 --to localhost:22"
 TARGET_CHECK[50]="tunnel.bash --reverse	--from rudolph@${GATE}:10403  --to ${CHRISCHPC}:10502 --isRunning"
-TARGETACTION[50]="tunnel.bash --reverse	--from rudolph@${GATE}:10403  --to ${CHIRSCHPC}:10502"
+TARGETACTION[50]="tunnel.bash --reverse	--from rudolph@${GATE}:10403  --to ${CHRISCHPC}:10502"
 
 
 # Process command line options
