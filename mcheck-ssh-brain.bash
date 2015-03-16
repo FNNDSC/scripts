@@ -12,7 +12,7 @@
 source common.bash
 
 G_REPORTLOG=/tmp/${G_SELF}.reportLog.$G_PID
-G_ADMINUSERS=daniel.ginsburg@childrens.harvard.edu
+G_ADMINUSERS=rudolph.pienaar@childrens.harvard.edu
 
 declare -i targetList
 
@@ -76,18 +76,23 @@ DOOR=door.nmr.mgh.harvard.edu
 SUN=sun.chpc.ac.za
 H1=96.237.51.69
 
-targetList=5
+targetList=7
 
-TARGET_CHECK[0]="tunnel.bash --forward	--from 2525 --via rpienaar@${SUN} --to smtp.chpc.ac.za:25 --isRunning"
-TARGETACTION[0]="tunnel.bash --forward	--from 2525 --via rpienaar@${SUN} --to smtp.chpc.ac.za:25"
-TARGET_CHECK[1]="tunnel.bash --forward	--from 2468 --via rpienaar@${SUN} --to localhost:2468 --isRunning"
-TARGETACTION[1]="tunnel.bash --forward	--from 2468 --via rpienaar@${SUN} --to localhost:2468"
-TARGET_CHECK[2]="tunnel.bash --forward	--from 2444 --via rpienaar@${SUN} --to localhost:2444 --isRunning"
-TARGETACTION[2]="tunnel.bash --forward	--from 2444 --via rpienaar@${SUN} --to localhost:2444"
-TARGET_CHECK[3]="tunnel.bash --forward	--from 2214 --via rudolph@${DOOR} --to localhost:2214 --isRunning"
-TARGETACTION[3]="tunnel.bash --forward	--from 2214 --via rudolph@${DOOR} --to localhost:2214"
-TARGET_CHECK[4]="tunnel.bash --forward	--from 4443 --via rudolph@${DOOR} --to localhost:4443 --isRunning"
-TARGETACTION[4]="tunnel.bash --forward	--from 4443 --via rudolph@${DOOR} --to localhost:4443"
+ TARGET_CHECK[0]="tunnel.bash --forward	--from 2525 --via rpienaar@${SUN} --to smtp.chpc.ac.za:25 --isRunning"
+ TARGETACTION[0]="tunnel.bash --forward	--from 2525 --via rpienaar@${SUN} --to smtp.chpc.ac.za:25"
+ TARGET_CHECK[1]="tunnel.bash --forward	--from 2468 --via rpienaar@${SUN} --to localhost:2468 --isRunning"
+ TARGETACTION[1]="tunnel.bash --forward	--from 2468 --via rpienaar@${SUN} --to localhost:2468"
+ TARGET_CHECK[2]="tunnel.bash --forward	--from 2444 --via rpienaar@${SUN} --to localhost:2444 --isRunning"
+ TARGETACTION[2]="tunnel.bash --forward	--from 2444 --via rpienaar@${SUN} --to localhost:2444"
+ TARGET_CHECK[3]="tunnel.bash --forward	--from 2214 --via rudolph@${DOOR} --to localhost:2214 --isRunning"
+ TARGETACTION[3]="tunnel.bash --forward	--from 2214 --via rudolph@${DOOR} --to localhost:2214"
+ TARGET_CHECK[4]="tunnel.bash --forward	--from 4443 --via rudolph@${DOOR} --to localhost:4443 --isRunning"
+ TARGETACTION[4]="tunnel.bash --forward	--from 4443 --via rudolph@${DOOR} --to localhost:4443"
+
+ TARGET_CHECK[5]="tunnel.bash --forward --from 10402 --via rudolph@${DOOR} --to localhost:10402 --isRunning"
+ TARGETACTION[5]="tunnel.bash --forward --from 10402 --via rudolph@${DOOR} --to localhost:10402"
+ TARGET_CHECK[6]="tunnel.bash --forward --from 10403 --via rudolph@${DOOR} --to localhost:10403 --isRunning"
+ TARGETACTION[6]="tunnel.bash --forward --from 10403 --via rudolph@${DOOR} --to localhost:10403"
 
 
 # Process command line options
