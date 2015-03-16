@@ -21,8 +21,10 @@ import     sys
 import     getpass
 import     argparse
 import     time
+import     glob
 import     numpy             as         np
 from       random            import     randint
+import     re
 
 # System dependency imports
 import     nibabel           as         nib
@@ -65,6 +67,16 @@ class med2image(object):
             return self._str_desc
 
     def log(self): return self._log
+
+    @staticmethod
+    def urlify(astr, astr_join = '_'):
+        # Remove all non-word characters (everything except numbers and letters)
+        astr = re.sub(r"[^\w\s]", '', astr)
+        
+        # Replace all runs of whitespace with an underscore
+        astr = re.sub(r"\s+", astr_join, astr)
+        
+        return astr
 
     def __init__(self, **kwargs):
 
@@ -188,7 +200,7 @@ class med2image(object):
         The output filename to save the slice to.
 
         '''
-        self._log('outputfile = %s\n' % astr_outputFile)
+        self._log('Outputfile = %s\n' % astr_outputFile)
         pylab.imsave(astr_outputFile, self._Mnp_2Dslice, cmap = cm.Greys_r)
 
 
@@ -198,7 +210,34 @@ class med2image_dcm(med2image):
     '''
     def __init__(self, **kwargs):
         med2image.__init__(self, **kwargs)
-        self._dcm = dicom.read_file(self._str_inputFile)
+
+        l_dcmFileNames = glob.glob('*.dcm')
+        slices         = len(l_dcmFileNames)
+
+        if self._b_convertMiddleSlice:
+            self._sliceToConvert = int(slices/2)
+            self._dcm            = dicom.read_file(l_dcmFileNames[self._sliceToConvert])
+            self._str_inputFile  = l_dcmFileNames[self._sliceToConvert]
+            str_outputFile       = l_dcmFileNames[self._sliceToConvert]
+            if not self._str_outputFileStem.startswith('%'):
+                self._str_outputFileStem, ext = os.path.splitext(l_dcmFileNames[self._sliceToConvert])
+        else:
+            self._dcm = dicom.read_file(self._str_inputFile)
+        if self._str_outputFileStem.startswith('%'):
+            str_spec = self._str_outputFileStem
+            self._str_outputFileStem = ''
+            for key in str_spec.split('%')[1:]:
+                str_fileComponent = ''
+                if key == 'inputFile':
+                    str_fileName, str_ext = os.path.splitext(self._str_inputFile) 
+                    str_fileComponent = str_fileName
+                else:
+                    str_fileComponent = eval('self._dcm.%s' % key)
+                    str_fileComponent = med2image.urlify(str_fileComponent)
+                if not len(self._str_outputFileStem):
+                    self._str_outputFileStem = str_fileComponent
+                else:
+                    self._str_outputFileStem = self._str_outputFileStem + '-' + str_fileComponent
         image = self._dcm.pixel_array
         self._Mnp_2Dslice = image
 
@@ -207,10 +246,16 @@ class med2image_dcm(med2image):
         Runs the DICOM conversion based on internal state.
         '''
         self._log('Converting DICOM image.\n')
-        self._log('PatientName:    %s\n' % self._dcm.PatientName)
-        self._log('PatientAge:     %s\n' % self._dcm.PatientAge)
-        self._log('PatientSex:     %s\n' % self._dcm.PatientSex)
-        self._log('PatientID:      %s\n' % self._dcm.PatientID)
+        self._log('PatientName:                                %s\n' % self._dcm.PatientName)
+        self._log('PatientAge:                                 %s\n' % self._dcm.PatientAge)
+        self._log('PatientSex:                                 %s\n' % self._dcm.PatientSex)
+        self._log('PatientID:                                  %s\n' % self._dcm.PatientID)
+        self._log('SeriesDescription:                          %s\n' % self._dcm.SeriesDescription)
+        self._log('ProtocolName:                               %s\n' % self._dcm.ProtocolName)
+        if self._b_convertMiddleSlice:
+            self._log('Converting middle slice in DICOM series:    %d\n' % self._sliceToConvert)
+
+
         misc.mkdir(self._str_outputDir)
         str_outputFile = '%s/%s.%s' % (self._str_outputDir,
                                        self._str_outputFileStem,
@@ -341,6 +386,27 @@ def synopsis(ab_shortOnly = False):
         The output file stem to store conversion. If this is specified
         with an extension, this extension will be used to specify the
         output file type.
+        
+        SPECIAL CASES:
+        For DICOM data, the <outputFileStem> can be set to the value of
+        an internal DICOM tag. The tag is specified by preceding the tag
+        name with a percent character '%', so 
+        
+            -o %ProtocolName
+            
+        will use the DICOM 'ProtocolName' to name the output file. Note
+        that special characters (like spaces) in the DICOM value are 
+        replaced by underscores '_'.
+        
+        Multiple tags can be specified, for example
+        
+            -o %PatientName%PatientID%ProtocolName
+            
+        and the output filename will have each DICOM tag string as 
+        specified in order, connected with dashes.
+        
+        A special %inputFile is available to specify the input file that
+        was read (without extension).
 
         [-t|--outputFileType <outputFileType>]
         The output file type. If different to <outputFileStem> extension,
@@ -364,14 +430,14 @@ def synopsis(ab_shortOnly = False):
         [-x|--man]
         Show full help.
 
-	[-y|--synopsis]
-	Show brief help.
+        [-y|--synopsis]
+        Show brief help.
 
     EXAMPLES
 
     NIfTI
 
-    o Convert each slice in a NIfTI volume 'vol.nii' to a jpg called 
+    o Convert each slice in a NIfTI volume 'vol.nii' to a jpg called
       'image-sliceXXX.jpg' and store results in a directory called 'out':
 
     		med2image.py -i vol.nii -d out -o image.jpg -s -1
@@ -414,6 +480,7 @@ if __name__ == '__main__':
                         dest='inputFile')
     parser.add_argument("-o", "--outputFileStem",
                         help="output file",
+                        default="output.jpg",
                         dest='outputFileStem')
     parser.add_argument("-d", "--outputDir",
                         help="output image directory",
@@ -492,6 +559,7 @@ if __name__ == '__main__':
                                 outputDir         = args.outputDir,
                                 outputFileStem    = args.outputFileStem,
                                 outputFileType    = args.outputFileType,
+                                sliceToConvert    = args.sliceToConvert,
                              )
 
 
