@@ -115,7 +115,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=50
+targetList=51
 #
 ##
 ### REVERSE TUNNELS -- from dreev
@@ -274,6 +274,9 @@ TARGETACTION[48]="tunnel.bash --reverse	--from rudolph@${GATE}:2444 --to ${CHRIS
 # ChRIS@brain.chpc.ac.za
 TARGET_CHECK[49]="tunnel.bash --reverse	--from rpienaar@${BRAIN}:5120 --to localhost:22 --isRunning"
 TARGETACTION[49]="tunnel.bash --reverse	--from rpienaar@${BRAIN}:5120 --to localhost:22"
+TARGET_CHECK[50]="tunnel.bash --reverse	--from rudolph@${GATE}:10403  --to ${CHRISCHPC}:10502 --isRunning"
+TARGETACTION[50]="tunnel.bash --reverse	--from rudolph@${GATE}:10403  --to ${CHIRSCHPC}:10502"
+
 
 # Process command line options
 while getopts hv: option ; do
