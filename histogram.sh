@@ -24,6 +24,10 @@ G_SYNOPSIS="
 
 	o Should be used as part of a pipe.
 
+  ACKNOWLEDGEMENTS
+
+	o http://www.smallmeans.com/notes/shell-history/
+
 "
 let b_removeBlankLines=0
 let b_showInput=0
