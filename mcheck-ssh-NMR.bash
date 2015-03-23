@@ -115,7 +115,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=51
+targetList=52
 #
 ##
 ### REVERSE TUNNELS -- from dreev
@@ -260,22 +260,24 @@ TARGET_CHECK[45]="tunnel.bash --reverse	--from rudolph@${GATE}:2443 --to ${CHRIS
 TARGETACTION[45]="tunnel.bash --reverse	--from rudolph@${GATE}:2443 --to ${CHRISMGHPCC}:443 " 
 TARGET_CHECK[46]="tunnel.bash --forward	--from 7900 --via rudolph@${GATE} --to tesla:5900 --isRunning"
 TARGETACTION[46]="tunnel.bash --forward	--from 7900 --via rudolph@${GATE} --to tesla:5900"
+TARGET_CHECK[47]="tunnel.bash --forward	--from 7901 --via rudolph@${GATE} --to tesla:5901 --isRunning"
+TARGETACTION[47]="tunnel.bash --forward	--from 7901 --via rudolph@${GATE} --to tesla:5901"
 
 #TARGET_CHECK[47]="tunnel.bash --reverse	--from rudolph@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778' --isRunning"
 #TARGETACTION[47]="tunnel.bash --reverse	--from rudolph@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778'"
 #TARGET_CHECK[48]="tunnel.bash --reverse	--from rudolph@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778' --isRunning"
 #TARGETACTION[48]="tunnel.bash --reverse	--from rudolph@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778'"
 
-TARGET_CHECK[47]="tunnel.bash --reverse	--from rudolph@${GATE}:2468 --to ${CHRISCHPC}:22 --isRunning"
-TARGETACTION[47]="tunnel.bash --reverse	--from rudolph@${GATE}:2468 --to ${CHRISCHPC}:22"
-TARGET_CHECK[48]="tunnel.bash --reverse	--from rudolph@${GATE}:2444 --to ${CHRISCHPC}:443 --isRunning"
-TARGETACTION[48]="tunnel.bash --reverse	--from rudolph@${GATE}:2444 --to ${CHRISCHPC}:443"
+TARGET_CHECK[48]="tunnel.bash --reverse	--from rudolph@${GATE}:2468 --to ${CHRISCHPC}:22 --isRunning"
+TARGETACTION[48]="tunnel.bash --reverse	--from rudolph@${GATE}:2468 --to ${CHRISCHPC}:22"
+TARGET_CHECK[49]="tunnel.bash --reverse	--from rudolph@${GATE}:2444 --to ${CHRISCHPC}:443 --isRunning"
+TARGETACTION[49]="tunnel.bash --reverse	--from rudolph@${GATE}:2444 --to ${CHRISCHPC}:443"
 
 # ChRIS@brain.chpc.ac.za
-TARGET_CHECK[49]="tunnel.bash --reverse	--from rpienaar@${BRAIN}:5120 --to localhost:22 --isRunning"
-TARGETACTION[49]="tunnel.bash --reverse	--from rpienaar@${BRAIN}:5120 --to localhost:22"
-TARGET_CHECK[50]="tunnel.bash --reverse	--from rudolph@${GATE}:10403  --to ${CHRISCHPC}:10502 --isRunning"
-TARGETACTION[50]="tunnel.bash --reverse	--from rudolph@${GATE}:10403  --to ${CHRISCHPC}:10502"
+TARGET_CHECK[50]="tunnel.bash --reverse	--from rpienaar@${BRAIN}:5120 --to localhost:22 --isRunning"
+TARGETACTION[50]="tunnel.bash --reverse	--from rpienaar@${BRAIN}:5120 --to localhost:22"
+TARGET_CHECK[51]="tunnel.bash --reverse	--from rudolph@${GATE}:10403  --to ${CHRISCHPC}:10502 --isRunning"
+TARGETACTION[51]="tunnel.bash --reverse	--from rudolph@${GATE}:10403  --to ${CHRISCHPC}:10502"
 
 
 # Process command line options
