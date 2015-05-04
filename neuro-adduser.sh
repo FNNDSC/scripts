@@ -129,7 +129,7 @@ else
    exit
 fi
 
-USERID=$( cat /tmp/userslist.txt | grep uidNumber | awk '{print $2 | "sort -nk2"}' | awk 'END{print}' | tr -d '\r')
+USERID=$( cat /tmp/userslist.txt | grep uidNumber | awk '{print $2 | "sort -n -k 1"}' | awk 'END{print}' | tr -d '\r')
 USERID=$(expr $USERID + 1)
 
 echo "user will be assigned id: ${USERID}"
