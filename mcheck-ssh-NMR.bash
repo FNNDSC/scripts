@@ -105,7 +105,7 @@ CHRISMGHPCC=chris-mghpcc.tch.harvard.edu
 CHRISCHPC=chris-chpc.tch.harvard.edu
 BRAIN=brain.chpc.ac.za
 
-H1=98.110.227.249
+H1=108.20.43.104
 
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
