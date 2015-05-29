@@ -66,7 +66,7 @@ A_args="checking command line arguments"
 A_packages="collecting package info from remote host"
 A_release="checking release versions"
 A_noCmd="checking on command line"
-A_execRemoteApt="executing remote apt-get"
+A_execRemoteApt="executing remote command"
 
 EM_args="you *must* specify a '-h <remoteHost>'."
 EM_packages="I was not able to successfully collect the package state."
@@ -113,7 +113,7 @@ for HOST in $(echo "$G_HOSTLIST" | tr ',' ' ') ; do
         ssh -t $HOST "${CMD}"
         REMOTESTATUS=$?
         lprint "Checking return result"
-        ret_check $REMOTESTATUS || fatal execRemoteApt
+        ret_check $REMOTESTATUS || warn execRemoteApt
         logstr=$(sysprint "| (whoami=$(whoami), remote=$HOST) ${CMD}")
         echo $logstr >> $G_LOG
 done
