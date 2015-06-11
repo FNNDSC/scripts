@@ -218,12 +218,12 @@ TARGETACTION[28]="tunnel.bash --reverse	--from rudolph@${GATE}:27000  --to ${MAT
 
 
 # ChRIS @ NMR
-TARGET_CHECK[29]="tunnel.bash --forward	--from 1148 --via rudolph@${GATE} --to chris:22 --isRunning"
-TARGETACTION[29]="tunnel.bash --forward	--from 1148 --via rudolph@${GATE} --to chris:22"
-TARGET_CHECK[30]="tunnel.bash --forward	--from 1188 --via rudolph@${GATE} --to chris:8000 --isRunning"
-TARGETACTION[30]="tunnel.bash --forward	--from 1188 --via rudolph@${GATE} --to chris:8000"
-TARGET_CHECK[31]="tunnel.bash --forward	--from 1143 --via rudolph@${GATE} --to chris:443 --isRunning"
-TARGETACTION[31]="tunnel.bash --forward	--from 1143 --via rudolph@${GATE} --to chris:443"
+TARGET_CHECK[29]="tunnel.bash --forward	--from 1148 --via rudolph@${GATE} --to machris:22 --isRunning"
+TARGETACTION[29]="tunnel.bash --forward	--from 1148 --via rudolph@${GATE} --to machris:22"
+TARGET_CHECK[30]="tunnel.bash --forward	--from 1188 --via rudolph@${GATE} --to machris:8000 --isRunning"
+TARGETACTION[30]="tunnel.bash --forward	--from 1188 --via rudolph@${GATE} --to machris:8000"
+TARGET_CHECK[31]="tunnel.bash --forward	--from 1143 --via rudolph@${GATE} --to machris:443 --isRunning"
+TARGETACTION[31]="tunnel.bash --forward	--from 1143 --via rudolph@${GATE} --to machris:443"
 
 TARGET_CHECK[32]="tunnel.bash --reverse	--from rudolph@${GATE}:4443 --to ${CHRIS}:443 --isRunning"
 TARGETACTION[32]="tunnel.bash --reverse	--from rudolph@${GATE}:4443 --to ${CHRIS}:443"
