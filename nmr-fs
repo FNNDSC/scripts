@@ -120,6 +120,7 @@ export PACKAGEDIR=/usr/pubsw/packages
 export FSL_DIR=${PACKAGEDIR}/fsl/current
 export SUBJECTS_DIR=$(pwd)
 export FREESURFER=/usr/local/freesurfer
+export FREESURFER_HOME=${FREESURFER}/stable
 ENV=nmr
 
 if (( $(hostname | grep eris | wc -l) || $(hostname | grep cmu | wc -l) )) ; then
