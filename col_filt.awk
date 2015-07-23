@@ -35,6 +35,12 @@ function synopsis_show() {
      printf("\n");
      printf("\t-v filtExpr=<filtExpr>\n");
      printf("\tThe filter expression. Default is \"gte\" -- one of \"gte\", \"ge\", \"lte\", \"le\".\n");
+     printf("\t\t\"gte\" -- greater than or equal to.\n");
+     printf("\t\t\"gt\"  -- greater than.\n");
+     printf("\t\t\"lte\" -- less than or equal to.\n");
+     printf("\t\t\"lt\"  -- less than.\n");
+     printf("\t\t\"uhl\" -- upper hard limit: values larger than this are hard limited.\n");
+     printf("\t\t\"lhl\" -- lower hard limit: values lower than this are hard limited.\n");
      printf("\n");
      printf("\t-v width=<cellWidth>\n");
      printf("\tSet the display cell width to <cellWidth>. Default is 12.\n");
@@ -88,17 +94,27 @@ function colPrint() {
 {
     switch(filtExpr) {
 	case "gte": 
-        if($filtCol+0.0 >= f_cutoff) colPrint();
-	break;
+            if($filtCol+0.0 >= f_cutoff) colPrint();
+	    break;
 	case "gt": 
-        if($filtCol+0.0 >  f_cutoff) colPrint();
-	break;
+            if($filtCol+0.0 >  f_cutoff) colPrint();
+	    break;
 	case "lte": 
-        if($filtCol+0.0 <= f_cutoff) colPrint();
-	break;
+            if($filtCol+0.0 <= f_cutoff) colPrint();
+	    break;
 	case "lt": 
-        if($filtCol+0.0 <= f_cutoff) colPrint();
-	break;
+            if($filtCol+0.0 <= f_cutoff) colPrint();
+	    break;
+	case "uhl": 
+            if($filtCol+0.0 >= f_cutoff) 
+		$filtCol = f_cutoff;
+	    colPrint();
+	    break;
+	case "lhl": 
+            if($filtCol+0.0 <= f_cutoff) 
+		$filtCol = f_cutoff;
+	    colPrint();
+	    break;
     }
 }
 
