@@ -211,18 +211,34 @@ class med2image_dcm(med2image):
     def __init__(self, **kwargs):
         med2image.__init__(self, **kwargs)
 
-        l_dcmFileNames = glob.glob('*.dcm')
-        slices         = len(l_dcmFileNames)
+        self.l_dcmFileNames = sorted(glob.glob('*.dcm'))
+        self.slices         = len(self.l_dcmFileNames)
 
         if self._b_convertMiddleSlice:
-            self._sliceToConvert = int(slices/2)
-            self._dcm            = dicom.read_file(l_dcmFileNames[self._sliceToConvert])
-            self._str_inputFile  = l_dcmFileNames[self._sliceToConvert]
-            str_outputFile       = l_dcmFileNames[self._sliceToConvert]
+            self._sliceToConvert = int(self.slices/2)
+            self._dcm            = dicom.read_file(self.l_dcmFileNames[self._sliceToConvert])
+            self._str_inputFile  = self.l_dcmFileNames[self._sliceToConvert]
+            str_outputFile       = self.l_dcmFileNames[self._sliceToConvert]
             if not self._str_outputFileStem.startswith('%'):
-                self._str_outputFileStem, ext = os.path.splitext(l_dcmFileNames[self._sliceToConvert])
+                self._str_outputFileStem, ext = os.path.splitext(self.l_dcmFileNames[self._sliceToConvert])
+        if not self._b_convertMiddleSlice and self._sliceToConvert != -1:
+            self._dcm = dicom.read_file(self.l_dcmFileNames[self._sliceToConvert])
         else:
             self._dcm = dicom.read_file(self._str_inputFile)
+        if self._sliceToConvert == -1:
+            self._b_3D = True
+            self._dcm = dicom.read_file(self._str_inputFile)
+            image = self._dcm.pixel_array
+            shape2D = image.shape
+            print(shape2D)
+            self._Vnp_3DVol = np.empty( (shape2D[0], shape2D[1], self.slices) )
+            i = 0
+            for img in self.l_dcmFileNames:
+                self._dcm = dicom.read_file(img)
+                image = self._dcm.pixel_array
+                print('%s: %s\n' % (img, image.shape))
+                self._Vnp_3DVol[:,:,i] = image
+                i += 1
         if self._str_outputFileStem.startswith('%'):
             str_spec = self._str_outputFileStem
             self._str_outputFileStem = ''
@@ -255,12 +271,21 @@ class med2image_dcm(med2image):
         if self._b_convertMiddleSlice:
             self._log('Converting middle slice in DICOM series:    %d\n' % self._sliceToConvert)
 
-
         misc.mkdir(self._str_outputDir)
-        str_outputFile = '%s/%s.%s' % (self._str_outputDir,
-                                       self._str_outputFileStem,
-                                       self._str_outputFileType)
-        self.slice_save(str_outputFile)
+        if not self._b_3D:
+            str_outputFile = '%s/%s.%s' % (self._str_outputDir,
+                                        self._str_outputFileStem,
+                                        self._str_outputFileType)
+            self.slice_save(str_outputFile)
+        else:
+            dims = self._Vnp_3DVol.shape
+            for i in range(0, dims[2]):
+                self._Mnp_2Dslice       = self._Vnp_3DVol[:,:,i]
+                str_outputFile = '%s/%s-slice%03d.%s' % (self._str_outputDir,
+                                                        self._str_outputFileStem,
+                                                        i,
+                                                        self._str_outputFileType)
+                self.slice_save(str_outputFile)
 
 class med2image_nii(med2image):
     '''
@@ -390,9 +415,9 @@ def synopsis(ab_shortOnly = False):
         SPECIAL CASES:
         For DICOM data, the <outputFileStem> can be set to the value of
         an internal DICOM tag. The tag is specified by preceding the tag
-        name with a percent character '%', so 
+        name with a percent character '%%', so 
         
-            -o %ProtocolName
+            -o %%ProtocolName
             
         will use the DICOM 'ProtocolName' to name the output file. Note
         that special characters (like spaces) in the DICOM value are 
@@ -400,12 +425,12 @@ def synopsis(ab_shortOnly = False):
         
         Multiple tags can be specified, for example
         
-            -o %PatientName%PatientID%ProtocolName
+            -o %%PatientName%%PatientID%%ProtocolName
             
         and the output filename will have each DICOM tag string as 
         specified in order, connected with dashes.
         
-        A special %inputFile is available to specify the input file that
+        A special %%inputFile is available to specify the input file that
         was read (without extension).
 
         [-t|--outputFileType <outputFileType>]
@@ -531,8 +556,12 @@ if __name__ == '__main__':
     str_outputFileStem, str_outputFileExtension     = os.path.splitext(args.outputFileStem)
     if len(str_outputFileExtension):
         str_outputFileExtension = str_outputFileExtension.split('.')[1]
-    str_inputFileStem,  str_inputFileExtension      = os.path.splitext(args.inputFile)
-
+    try:
+        str_inputFileStem,  str_inputFileExtension      = os.path.splitext(args.inputFile)
+    except:
+        print(synopsis(False))
+        sys.exit(1)
+    
     if not len(args.outputFileType) and len(str_outputFileExtension):
         args.outputFileType = str_outputFileExtension
 
