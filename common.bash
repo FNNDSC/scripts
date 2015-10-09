@@ -315,11 +315,11 @@ function ret_check
 
 	if [[ $ret != "0" ]] ; then
 		if (( Gi_verbose )) ; then 
-		    printf "%*s\n" 	$G_RC	"[ $FAIL ]"
+		    printf "\e[1;31m%*s\e[0m\n" 	$G_RC	"[ $FAIL ]"
 		fi
 	else
 		if (( Gi_verbose )) ; then
-		    printf "%*s\n" 	$G_RC	"[ $PASS ]"
+		    printf "\e[1;36m%*s\e[0m\n" 	$G_RC	"[ $PASS ]"
 		fi
 	fi
 	return $ret
