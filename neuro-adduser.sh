@@ -499,10 +499,6 @@ if (( b_purge )) ; 		then
 	exit		
 fi
 
-if (( b_deleteFromGroup )) ; then
-	user_deleteFromGroup "$GROUPLIST"
-fi
-
 if (( b_deleteFromLDAP )) ; 	then	
 	user_deleteFromLDAPConfirm;
 	lprint "Deleting primary user entry" "1;31" "-"
