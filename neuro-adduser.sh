@@ -16,6 +16,8 @@ declare -i b_deleteFromLDAP=0
 declare -i b_OK=0
 declare -i i=0
 declare -i b_changeGroupOnly=0
+declare -i b_createNewGroup=0
+declare -i b_deleteFromGroup=0
 
 let Gi_verbose=1
 verbosity_check
@@ -33,14 +35,19 @@ G_SYNOPSIS="
         neuro-adduser.sh    -u <username>                      \\
                             -g|-G <groupname>                  \\
 			    -d -D 			       \\
-			    -p
+			    -p				       \\
+			    -N <newGroupName,newGroupID>
 
  DESCRIPTION
 
         'neuro-adduser.sh' is a general FNNDSC LDAP user administration
 	script. In most cases it is used to add a user to the LDAP
-	system and setup the user's directories, initialze the user's
-	env and add important symbolic links.
+	system and add the user to exist LDAP groups. It also sets up
+	the user's directories, initialze the user's env and adds important
+	symbolic links.
+	
+	It can also modify some attributes of an existing user and 
+	also create new groups from scratch.
 
 	It can also be used to remove a used from LDAP (-d) and also
 	purge the user's directories (-D).
@@ -69,6 +76,7 @@ G_SYNOPSIS="
 		SECONDARY GROUPS:
 		o mi2b2
 		o chrisgp
+		o (possibly others)
 		
 	This can be a comma separated list of groups as well. The first group
 	in the list is considered the primary group and defines where the 
@@ -80,6 +88,10 @@ G_SYNOPSIS="
 	The '-G' designates a modification on an existing user -- typically
 	used when a user needs to be added to other groups after having
 	already been created.
+	
+	-N <newGroupName,newGroupID>
+	If specified will ignore all other flags and create a new LDAP 
+	called <newGroupName> with group ID <newGroupID>.
 
 	-d
 	Delete the user from the LDAP database (and also LDAP groups).
@@ -166,6 +178,13 @@ function user_deleteFromLDAP
 	rm $LDIF
 }
 
+function LDAP_dump
+{
+	FILE=/tmp/LDAPdump.txt
+	if (( ${#1} )) ; then FILE=$1; 	fi
+	ldapsearch -b "dc=fnndsc" -D "cn=admin,dc=fnndsc" -w "$LDAPPWD" -h fnndsc > $FILE
+}
+
 function user_deleteFromGroup
 {
 	LDIF=/tmp/deleteUserFromGroupLDAP.txt
@@ -176,8 +195,18 @@ function user_deleteFromGroup
 	delete: memberUid
 	memberUid: $G_USERNAME" > $LDIF
 
-	ldapmodify -x -D "cn=admin,dc=fnndsc" -w "$LDAPPWD" -h fnndsc -f $LDIF 
+	ldapmodify -x -D "cn=admin,dc=fnndsc" -w "$LDAPPWD" -h fnndsc -f $LDIF >/dev/null 2>/dev/null
 	rm $LDIF
+}
+
+function user_deleteFromGroupList
+{
+	GROUPLIST=$1
+	for group in $GROUPLIST ; do
+		lprint "Deleting $G_USERNAME from LDAP group <$group>" "1;31" "-" 
+		user_deleteFromGroup $group 2>/dev/null >/dev/null
+		ret_check $?
+	done	
 }
 
 function user_check
@@ -195,6 +224,22 @@ function user_check
 	  done
 	fi
 
+}
+
+function group_createNewLDAP
+{
+	GROUP=$1
+	GID=$2
+	
+	LDIF=/tmp/createNewGroupLDAP.txt
+	
+	echo "dn: cn=${GROUP},ou=groups,dc=fnndsc
+	objectClass: top
+	objectClass: posixGroup
+	gidNumber: $GID" > $LDIF
+	
+	ldapadd -x -D "cn=admin,dc=fnndsc" -w "$LDAPPWD" -h fnndsc -f $LDIF >/dev/null 2>/dev/null
+	rm $LDIF
 }
 
 function group_check
@@ -321,7 +366,7 @@ function homedir_set
 	case "$group"
 	in
 		"grantlab")
-			REMOTEHOST=fnndsc
+			REMOTEHOST=tautona
 			HOMEDIR="/neuro/labs/grantlab/users/$G_USERNAME"
 			NETHOME=$HOMEDIR
 			GROUPID="1102"
@@ -359,16 +404,21 @@ function homedir_set
 # Process command options --->
 ###/// 
 
-while getopts u:g:G:dDp option ; do
+while getopts u:g:G:dDpN:r: option ; do
         case "$option" 
         in
                 u)      G_USERNAME=$OPTARG	;;
                 g)      G_GROUPLIST=$OPTARG	;;
 		G)	G_GROUPLIST=$OPTARG	
 			b_changeGroupOnly=1	;;
-		d)	b_deleteFromLDAP=1	;;
+		r)	G_GROUPLIST=$OPTARG
+			b_deleteFromGroup=1	;;
+		d)	b_deleteFromLDAP=1
+			b_deleteFromGroup=1	;;
 		D)	b_purge=1		;;
 		p)	b_changePasswdOnly=1	;;
+		N)	b_createNewGroup=1	
+			NEWGROUPSPEC=$OPTARG	;;
                 \?)     synopsis_show		;;
         esac
 done        
@@ -385,6 +435,18 @@ if [[ "$HOSTNAME" != "fnndsc" ]] ; then fatal wrongHost ; fi
 # First check on one-off functions:
 if (( b_changePasswdOnly )) ; 	then	passwd_set; exit; 	fi
 
+if (( b_createNewGroup )) ; then
+	NEWGROUPNAME=$(echo $NEWGROUPSPEC 	| awk -F\, '{print $1}')
+	NEWGROUPID=$(echo $NEWGROUPSPEC 	| awk -F\, '{print $2}')
+
+	status "--> Creating new LDAP group" ""
+	group_createNewLDAP $NEWGROUPNAME $NEWGROUPID
+	ret=$?
+	ret_check $ret 				\
+		"Could not create new group -- already in LDAP"		\
+		"new LDAP group, name <$NEWGROUPNAME>, gid <$NEWGROUPID>" 
+	exit 
+fi
 
 ###\\\
 # Some error checking --->
@@ -400,7 +462,13 @@ ret_check $?
 echo ""
 # Now, check if target group spec is valid and set home dir based
 # on *first* group spec
-LDAPGROUPLIST="grantlab gaablab sheridanlab nelsonlab mi2b2 meggp chrisgp"
+LDAPFILE=/tmp/LDAP.txt
+LDAP_dump $LDAPFILE
+LDAPGROUPLIST=$( cat $LDAPFILE  		|\
+		 grep groups 			|\
+		 awk '{if(NF==4) print $0;}'    |\
+		 awk '{print $2}' 		|\
+		 tr -d ',' | tr '\n' ' ')
 GROUPLIST=$(echo $G_GROUPLIST | tr ',' ' ')
 i=0
 for group in $GROUPLIST ; do
@@ -408,7 +476,7 @@ for group in $GROUPLIST ; do
 	[[ $LDAPGROUPLIST =~ (^| )$group($| ) ]] && b_OK=1 || b_OK=0
 	if (( b_OK )) ; then
 		rprint "[ Valid group ]" "1;32"
-		if (( !i && !b_changeGroupOnly )) ; then
+		if (( !i && !b_changeGroupOnly && !b_deleteFromGroup )) ; then
 			homedir_set $group
 		fi
 
@@ -430,19 +498,22 @@ if (( b_purge )) ; 		then
 	user_purge
 	exit		
 fi
+
+if (( b_deleteFromGroup )) ; then
+	user_deleteFromGroup "$GROUPLIST"
+fi
+
 if (( b_deleteFromLDAP )) ; 	then	
 	user_deleteFromLDAPConfirm;
 	lprint "Deleting primary user entry" "1;31" "-"
 	user_deleteFromLDAP
 	ret_check $?
-	for group in $GROUPLIST ; do
-		lprint "Deleting $G_USERNAME from LDAP group <$group>" "1;31" "-" 
-		user_deleteFromGroup $group 2>/dev/null >/dev/null
-		ret_check $?
-	done	
-	exit
 fi
 
+if (( b_deleteFromGroup )) ; then
+	user_deleteFromGroupList "$GROUPLIST"
+	exit 0
+fi
 
 ############################
 #                          #
@@ -456,18 +527,17 @@ fi
 
 status "--> Looking for next available user id"
 
-ldapsearch -b "dc=fnndsc" -D "cn=admin,dc=fnndsc" -w "$LDAPPWD" -h fnndsc > /tmp/userslist.txt
+LDAP_dump $LDAPFILE
 ret_check $? 				\
 	"LDAP user access error"	\
 	"Found next LDAP uid" || 	\
 		fatal checkingOnExistingUsers
 
-USERID=$(cat /tmp/userslist.txt | grep uidNumber | awk '{print $2 | "sort -n -k 1"}' | awk 'END{print}' | tr -d '\r')
+USERID=$(cat $LDAPFILE | grep uidNumber | awk '{print $2 | "sort -n -k 1"}' | awk 'END{print}' | tr -d '\r')
 USERID=$(expr $USERID + 1)
 
 lprint "$G_USERNAME" 	"1;32" 
 rprint "[ $USERID ]" 	"1;36"
-rm /tmp/userslist.txt
 
 #################################################
 # add user with correct uid but dummmy password #
