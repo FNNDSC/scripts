@@ -214,7 +214,7 @@ function user_check
 	ret=$1
 	if [[ $ret != "0" ]]  ; then
 	  while true; do
-		read -p "Do you wish to: (a) abort; (d)elete the user and exit; (i) ignore and continue? " adi
+		read -p "Do you wish to: (a)bort; (d)elete the user and exit; (i)gnore and continue? " adi
 		case $adi in 
 			[Aa]*) exit							;;
 			[Dd]*) user_deleteFromLDAP; exit				;;
@@ -248,12 +248,12 @@ function group_check
 	group=$2
 	if [[ $ret != "0" ]]  ; then
 	  while true; do
-		read -p "Do you wish to: (a) abort; (d)elete the user from <${group}> and exit; (i) ignore and continue? " adi
+		read -p "Do you wish to: (a)bort; (d)elete the user from <${group}> and exit; (i)gnore and continue? " adi
 		case $adi in 
 			[Aa]*) exit							;;
 			[Dd]*) user_deleteFromGroup $group; exit 			;;
 			[Ii]*) break							;;
-			*)	echo "Please answer [a]bort, [d]elete or [i]gnore." 	;;
+			*)	echo "Please answer (a)bort, (d)elete, or (i)gnore." 	;;
 		esac
 	  done
 	fi
@@ -321,13 +321,13 @@ function user_deleteFromLDAPConfirm
 	echo ""
 	
 	while true; do
-		read -p "Do you wish to: (a) abort; (d)elete the user from LDAP? "  ap
+		read -p "Do you wish to: (a)bort or (d)elete the user from LDAP? "  ap
 		case $ap in 
 			[Aa]*) 	exit							;;
 			[Dd]*) 	status "Deleting from LDAP..." 
 				echo ""
 				break 							;;
-			*)	echo "Please answer [a]bort, [p]urge" 			;;
+			*)	echo "Please answer (a)bort or (p)urge" 		;;
 		esac
   	done
 }
@@ -338,13 +338,13 @@ function user_purgeConfirm
 	echo ""
 	
 	while true; do
-		read -p "Do you wish to: (a) abort; (p)urge the user's home dirs? "  ap
+		read -p "Do you wish to: (a)bort or (p)urge the user's home dirs? "  ap
 		case $ap in 
 			[Aa]*) 	exit							;;
 			[Pp]*) 	status "Purging..." 
 				echo ""
 				break 							;;
-			*)	echo "Please answer [a]bort, [p]urge" 			;;
+			*)	echo "Please answer (a)bort or (p)urge" 		;;
 		esac
   	done
 }
