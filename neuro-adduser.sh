@@ -546,6 +546,7 @@ if (( !b_forceUID )) ; then
     USERID=$(expr $USERID + 1)
 else
     status "--> Setting UID manually"
+    ret_check $?
 fi
 
 lprint "$G_USERNAME" 	"1;32" 
