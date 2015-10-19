@@ -18,6 +18,7 @@ declare -i i=0
 declare -i b_changeGroupOnly=0
 declare -i b_createNewGroup=0
 declare -i b_deleteFromGroup=0
+delcare -i b_forceUID=0
 
 let Gi_verbose=1
 verbosity_check
@@ -33,6 +34,7 @@ G_SYNOPSIS="
  SYNOPSIS
 
         neuro-adduser.sh    -u <username>                      \\
+			    -U <uid>			       \\
                             -g|-G <groupname>                  \\
 			    -d -D 			       \\
 			    -p				       \\
@@ -61,6 +63,9 @@ G_SYNOPSIS="
         The user name which should match the part of the BCH email before @.
         e.g. daniel.haehn
         
+	-U <uid>
+	If specified, force the user's uid to be <uid> instead of autogenerating.
+	
         -g <groupname>
         The group that the user will be part of. Valid LDAP groups are:
 	
@@ -275,6 +280,10 @@ function passwd_set
 
 function user_addToLDAP
 {
+	if (( ! ${#LASTNAME} )) ; then
+	    LASTNAME=FIRSTNAME
+	fi
+	
 	echo "dn: uid=$G_USERNAME,ou=people,dc=fnndsc
 	objectClass: inetOrgPerson
 	objectClass: posixAccount
@@ -404,10 +413,12 @@ function homedir_set
 # Process command options --->
 ###/// 
 
-while getopts u:g:G:dDpN:r: option ; do
+while getopts u:U:g:G:dDpN:r: option ; do
         case "$option" 
         in
                 u)      G_USERNAME=$OPTARG	;;
+		U)	b_forceUID=1
+			USERID=$OPTARG		;;
                 g)      G_GROUPLIST=$OPTARG	;;
 		G)	G_GROUPLIST=$OPTARG	
 			b_changeGroupOnly=1	;;
@@ -520,17 +531,22 @@ fi
 ###############################################
 # get highest uidNumber and increment it by 1 #
 ###############################################
+if (( !b_forceUID )) ; then
+    status "--> Looking for next available user id"
 
-status "--> Looking for next available user id"
-
-LDAP_dump $LDAPFILE
-ret_check $? 				\
+    LDAP_dump $LDAPFILE
+    ret_check $? 			\
 	"LDAP user access error"	\
 	"Found next LDAP uid" || 	\
 		fatal checkingOnExistingUsers
 
-USERID=$(cat $LDAPFILE | grep uidNumber | awk '{print $2 | "sort -n -k 1"}' | awk 'END{print}' | tr -d '\r')
-USERID=$(expr $USERID + 1)
+    USERID=$(	cat $LDAPFILE 		| grep uidNumber 	|\
+	     	awk '{print $2}'  	| sort -n -k 1 		|\
+		tr -d '\r' 		| tail -n 1)
+    USERID=$(expr $USERID + 1)
+else
+    status "--> Setting UID manually"
+fi
 
 lprint "$G_USERNAME" 	"1;32" 
 rprint "[ $USERID ]" 	"1;36"
