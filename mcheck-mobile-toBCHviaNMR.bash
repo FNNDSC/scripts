@@ -106,7 +106,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=20
+targetList=22
 
 #
 ##
@@ -117,18 +117,18 @@ targetList=20
  TARGETACTION[0]="tunnel.bash --forward	--from 7777  --via rudolph@${DOOR} --to localhost:7777"
  TARGET_CHECK[1]="tunnel.bash --forward	--from 10402 --via rudolph@${DOOR} --to localhost:10402 --isRunning"
  TARGETACTION[1]="tunnel.bash --forward	--from 10402 --via rudolph@${DOOR} --to localhost:10402"
- TARGET_CHECK[2]="tunnel.bash --forward	--from 10401 --via rudolph@${GATE}   --to kaos:10401 --isRunning"
- TARGETACTION[2]="tunnel.bash --forward	--from 10401 --via rudolph@${GATE}   --to kaos:10401"
+ TARGET_CHECK[2]="tunnel.bash --forward	--from 10401 --via rudolph@${DOOR} --to kaos:10401 --isRunning"
+ TARGETACTION[2]="tunnel.bash --forward	--from 10401 --via rudolph@${DOOR} --to kaos:10401"
  TARGET_CHECK[3]="tunnel.bash --forward	--from 9900  --via rudolph@${DOOR} --to localhost:9900 --isRunning"
  TARGETACTION[3]="tunnel.bash --forward	--from 9900  --via rudolph@${DOOR} --to localhost:9900"
- TARGET_CHECK[4]="tunnel.bash --forward	--from 7776  --via rudolph@${GATE}   --to kaos:22 --isRunning"
- TARGETACTION[4]="tunnel.bash --forward	--from 7776  --via rudolph@${GATE}   --to kaos:22"
- TARGET_CHECK[5]="tunnel.bash --forward	--from 8800  --via rudolph@${GATE}   --to kaos:80 --isRunning"
- TARGETACTION[5]="tunnel.bash --forward	--from 8800  --via rudolph@${GATE}   --to kaos:80"
- TARGET_CHECK[6]="tunnel.bash --forward	--from 4900  --via rudolph@${GATE}   --to tesla:5900 --isRunning"
- TARGETACTION[6]="tunnel.bash --forward	--from 4900  --via rudolph@${GATE}   --to tesla:5900"
- TARGET_CHECK[7]="tunnel.bash --reverse	--from rudolph@${GATE}:1601          --to localhost:22 --isRunning"
- TARGETACTION[7]="tunnel.bash --reverse	--from rudolph@${GATE}:1601          --to localhost:22"
+ TARGET_CHECK[4]="tunnel.bash --forward	--from 7776  --via rudolph@${DOOR} --to kaos:22 --isRunning"
+ TARGETACTION[4]="tunnel.bash --forward	--from 7776  --via rudolph@${DOOR} --to kaos:22"
+ TARGET_CHECK[5]="tunnel.bash --forward	--from 8800  --via rudolph@${DOOR} --to kaos:80 --isRunning"
+ TARGETACTION[5]="tunnel.bash --forward	--from 8800  --via rudolph@${DOOR} --to kaos:80"
+ TARGET_CHECK[6]="tunnel.bash --forward	--from 4900  --via rudolph@${DOOR} --to tesla:5900 --isRunning"
+ TARGETACTION[6]="tunnel.bash --forward	--from 4900  --via rudolph@${DOOR} --to tesla:5900"
+ TARGET_CHECK[7]="tunnel.bash --reverse	--from rudolph@${DOOR}:1601        --to localhost:22 --isRunning"
+ TARGETACTION[7]="tunnel.bash --reverse	--from rudolph@${DOOR}:1601        --to localhost:22"
  TARGET_CHECK[8]="tunnel.bash --forward	--from 4212  --via rudolph@${DOOR} --to localhost:4212 --isRunning"
  TARGETACTION[8]="tunnel.bash --forward	--from 4212  --via rudolph@${DOOR} --to localhost:4212"
  TARGET_CHECK[9]="tunnel.bash --forward	--from 4214  --via rudolph@${DOOR} --to localhost:4214 --isRunning"
@@ -151,8 +151,12 @@ TARGET_CHECK[17]="tunnel.bash --forward	--from 27000 --via rudolph@${DOOR} --to 
 TARGETACTION[17]="tunnel.bash --forward	--from 27000 --via rudolph@${DOOR} --to localhost:27000"
 TARGET_CHECK[18]="tunnel.bash --forward	--from 2137  --via rudolph@${DOOR} --to localhost:2137 --isRunning"
 TARGETACTION[18]="tunnel.bash --forward	--from 2137  --via rudolph@${DOOR} --to localhost:2137"
-TARGET_CHECK[19]="tunnel.bash --forward	--from 1143  --via rudolph@${GATE}   --to chris:443 --isRunning"
-TARGETACTION[19]="tunnel.bash --forward	--from 1143  --via rudolph@${GATE}   --to chris:443"
+TARGET_CHECK[19]="tunnel.bash --forward	--from 1143  --via rudolph@${DOOR} --to machris:443 --isRunning"
+TARGETACTION[19]="tunnel.bash --forward	--from 1143  --via rudolph@${DOOR} --to machris:443"
+TARGET_CHECK[20]="tunnel.bash --forward	--from 4443  --via rudolph@${DOOR} --to localhost:4443 --isRunning"
+TARGETACTION[20]="tunnel.bash --forward	--from 4443  --via rudolph@${DOOR} --to localhost:4443"
+TARGET_CHECK[21]="tunnel.bash --forward	--from 3228  --via rudolph@${DOOR} --to localhost:3228 --isRunning"
+TARGETACTION[21]="tunnel.bash --forward	--from 3228  --via rudolph@${DOOR} --to localhost:3228"
 
 # Process command line options
 while getopts hv: option ; do
