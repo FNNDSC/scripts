@@ -105,7 +105,7 @@ function colPrint() {
 	case "lt": 
             if($filtCol+0.0 <= f_cutoff) colPrint();
 	    break;
-	case "uhl": 
+	case "uhl":
             if($filtCol+0.0 >= f_cutoff) 
 		$filtCol = f_cutoff;
 	    colPrint();

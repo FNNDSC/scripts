@@ -315,11 +315,11 @@ function ret_check
 
 	if [[ $ret != "0" ]] ; then
 		if (( Gi_verbose )) ; then 
-		    printf "%*s\n" 	$G_RC	"[ $FAIL ]"
+		    printf "\e[1;31m%*s\e[0m\n" 	$G_RC	"[ $FAIL ]"
 		fi
 	else
 		if (( Gi_verbose )) ; then
-		    printf "%*s\n" 	$G_RC	"[ $PASS ]"
+		    printf "\e[1;36m%*s\e[0m\n" 	$G_RC	"[ $PASS ]"
 		fi
 	fi
 	return $ret
@@ -446,14 +446,31 @@ function lprint
 	#
 	# ARGS
 	# $1		in		left column text
+	# $2		in		optional color spec
 	#
 	# DESC
 	# Prints left column text string.
 	#
 	local left=$1
+	declare -i b_color
+        b_color=0
+	LEFTJUSTIFY=""
+		
+	if (( ${#2} )) ; then
+		b_color=1
+		color=$2
+	fi
+	if (( ${#3} )) ; then
+		LEFTJUSTIFY="-"
+	fi
 
 	if (( ! Gi_verbose )) ; then return 1 ; fi
-	printf "%*s"	$G_LC 	"$left"
+	
+	if (( b_color )) ; then
+	    printf "\e[${color}m%*s\e[0m"	"${LEFTJUSTIFY}$G_LC"	"$left"	
+        else
+	    printf "%*s"			"${LEFTJUSTIFY}$G_LC" 	"$left"
+        fi
 }
 
 function lprintn
@@ -461,13 +478,29 @@ function lprintn
         #
         # ARGS
         # $1            in              left column text
+	# $2		in		optional color spec
         #
         # DESC
         # Prints left column text string, followed by \n
         #
         local left=$1
+	declare -i b_color
+        b_color=0
+	LEFTJUSTIFY=""
+		
+	if (( ${#2} )) ; then
+		b_color=1
+		color=$2
+	fi
+	if (( ${#3} )) ; then
+		LEFTJUSTIFY="-"
+	fi
 
-        printf "%*s\n"    $G_LC   "$left"
+	if (( b_color )) ; then
+	    printf "\e[${color}m%*s\n\e[0m"	"${LEFTJUSTIFY}$G_LC"	"$left"	
+        else
+	    printf "%*s\n"			"${LEFTJUSTIFY}$G_LC" 	"$left"
+        fi
 }
 
 function rprint
@@ -480,9 +513,21 @@ function rprint
 	# Prints right column text string, followed by \n
 	#
 	local right=$1
+	declare -i b_color
+        b_color=0
+		
+	if (( ${#2} )) ; then
+		b_color=1
+		color=$2
+	fi
 
 	if (( ! Gi_verbose )) ; then return 1 ; fi
-	printf "%*s\n"	$G_RC	"$right"
+	
+	if (( b_color )) ; then
+	    printf "\e[${color}m%*s\n\e[0m"	$G_RC	"$right"	
+        else
+	    printf "%*s\n"			$G_RC 	"$right"
+        fi
 }
 
 function statusPrint
