@@ -282,8 +282,8 @@ TARGETACTION[51]="tunnel.bash --reverse	--from rudolph@${GATE}:10403  --to ${CHR
 TARGET_CHECK[52]="tunnel.bash --reverse	--from rudolph@${GATE}:8042 --to ${TAUTONA}:8042 --isRunning"
 TARGETACTION[52]="tunnel.bash --reverse	--from rudolph@${GATE}:8042 --to ${TAUTONA}:8042"
 
-TARGET_CHECK[53]="tunnel.bash --reverse	--from babymr5@babymri.org:2222 --to ${TAUTONA}:22 --sshArgs '-p 2222' --isRunning"
-TARGETACTION[53]="tunnel.bash --reverse	--from babymr5@babymri.org:2222 --to ${TAUTONA}:22 --sshArgs '-p 2222'"
+TARGET_CHECK[53]="tunnel.bash --reverse	--from babymr5@babymri.org:3333 --to ${TAUTONA}:22 --sshArgs '-p 2222' --isRunning"
+TARGETACTION[53]="tunnel.bash --reverse	--from babymr5@babymri.org:3333 --to ${TAUTONA}:22 --sshArgs '-p 2222'"
 
 # Process command line options
 while getopts hv: option ; do
