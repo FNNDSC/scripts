@@ -107,8 +107,8 @@ targetList=1
 ### TUNNELS -- to 'FNNDSC' and 'NMR' destinations
 ##
 #
- TARGET_CHECK[0]="tunnel.bash --forward	--from 4444 --via babymr5@babymri.org --to localhost:2222 --sshArgs '-p 2222' --isRunning"
- TARGETACTION[0]="tunnel.bash --forward	--from 4444 --via babymr5@babymri.org --to localhost:2222 --sshArgs '-p 2222'"
+ TARGET_CHECK[0]="tunnel.bash --forward	--from 4444 --via babymr5@babymri.org --to localhost:3333 --sshArgs '-p 2222' --isRunning"
+ TARGETACTION[0]="tunnel.bash --forward	--from 4444 --via babymr5@babymri.org --to localhost:3333 --sshArgs '-p 2222'"
 
 # Process command line options
 while getopts hv: option ; do
