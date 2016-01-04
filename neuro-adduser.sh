@@ -18,7 +18,7 @@ declare -i i=0
 declare -i b_changeGroupOnly=0
 declare -i b_createNewGroup=0
 declare -i b_deleteFromGroup=0
-delcare -i b_forceUID=0
+declare -i b_forceUID=0
 
 let Gi_verbose=1
 verbosity_check
