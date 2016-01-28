@@ -621,8 +621,8 @@ ret_check $? || fatal performingFileOperation
 # set the permissions #
 #######################
 
-status "--> Setting home directory access to 770"
-ssh $REMOTEHOST chmod 770 $HOMEDIR 2>/dev/null
+status "--> Setting home directory access to 750"
+ssh $REMOTEHOST chmod 750 $HOMEDIR 2>/dev/null
 ret_check $? || fatal performingFileOperation
 
 status "--> Setting home directory ownership to $USERID:$GROUPID"
