@@ -430,7 +430,8 @@ while getopts u:U:g:G:dDpN:r: option ; do
 		p)	b_changePasswdOnly=1	;;
 		N)	b_createNewGroup=1	
 			NEWGROUPSPEC=$OPTARG	;;
-                \?)     synopsis_show		;;
+                \?)     synopsis_show		
+			shut_down 1		;;
         esac
 done        
 
