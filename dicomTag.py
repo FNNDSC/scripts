@@ -19,15 +19,16 @@
 from __future__ import print_function
 
 # System imports
-import     os
-import     sys
-import     getpass
-import     argparse
-import     time
-import     glob
-import     numpy             as         np
-from       random            import     randint
-import     re
+import      os
+import      sys
+import      getpass
+import      argparse
+import      time
+import      glob
+import      numpy           as          np
+from        random          import      randint
+import      re
+import      json
 
 # System dependency imports
 import     nibabel           as         nib
@@ -121,8 +122,8 @@ class dicomTag(object):
         self._str_outputDir             = ''
         self._str_inputDir              = ''
 
-        self._str_stdout                = ""
-        self._str_stderr                = ""
+        self._str_stdout                = ''
+        self._str_stderr                = ''
         self._exitCode                  = 0
 
         # The actual data volume and slice
@@ -132,9 +133,23 @@ class dicomTag(object):
         self._l_tagRaw                  = []
         self._d_dcm                     = {}
 
+        self._d_dicom                   = {}
+        self._d_json                    = {}
+
+        # Image conversion
+        self._b_convertToImg            = False
+        self._str_outputImageFile       = ''
+
         # A logger
         self._log                       = msg.Message()
         self._log.syslog(True)
+
+        # Tags
+        self._b_tagList                 = False
+        self._b_tagFile                 = False
+        self._str_tagList               = ''
+        self._str_tagFile               = ''
+        self._l_tag                     = []
 
         # Flags
 
@@ -143,21 +158,40 @@ class dicomTag(object):
             if key == "outputDir":          self._str_outputDir         = value
             if key == "outputFileStem":     self._str_outputFileStem    = value
             if key == "outputFileType":     self._str_outputFileType    = value
+            if key == 'rawType':            self._str_rawType           = value
+            if key == 'imageFile':
+                self._str_outputImageFile   = value
+                if len(self._str_outputImageFile):
+                    self._b_convertToImg    = True
+            if key == 'tagFile':
+                self._str_tagFile           = value
+                if len(self._str_tagFile):
+                    self._b_tagFile         = True
+            if key == 'tagList':
+                self._str_tagList       = value
+                if len(self._str_tagList):
+                    self._b_tagList         = True
 
+        if self._b_tagList:
+            self._l_tag                 = self._str_tagList.split(',')
 
-        self._str_inputDir               = os.path.dirname(self._str_inputFile)
+        if self._b_tagFile:
+            with open(self._str_tagFile) as f:
+                self._l_tag             =  [x.strip('\n') for x in f.readlines()]
+
+        self._str_inputDir              = os.path.dirname(self._str_inputFile)
         if not len(self._str_inputDir): self._str_inputDir = '.'
         str_fileName, str_fileExtension  = os.path.splitext(self._str_outputFileStem)
         if len(self._str_outputFileType):
-            str_fileExtension            = '.%s' % self._str_outputFileType
+            str_fileExtension           = '.%s' % self._str_outputFileType
 
         if len(str_fileExtension) and not len(self._str_outputFileType):
-            self._str_outputFileType     = str_fileExtension
+            self._str_outputFileType    = str_fileExtension
 
         if not len(self._str_outputFileType) and not len(str_fileExtension):
-            self._str_outputFileType     = '.html'
+            self._str_outputFileType    = '.html'
 
-        self._str_outputFile             = '%s.%s'  %\
+        self._str_outputFile            = '%s.%s'  %\
                                             (self._str_outputFileStem,
                                              self._str_outputFileType)
 
@@ -168,8 +202,34 @@ class dicomTag(object):
         self._dcm       = dicom.read_file(self._str_inputFile)
         self._strRaw    = str(self._dcm)
         self._l_tagRaw  = self._dcm.dir()
+        self._d_dcm     = dict(self._dcm)
+
+        for key in self._l_tagRaw:
+            self._d_dicom[key]   = self._dcm.data_element(key)
+
+        if self._b_tagFile or self._b_tagList:
+            for tag in self._l_tag:
+                print('%30s%s' % (tag + ': ', self._d_dicom[tag]))
+        else:
+            if self._str_rawType == 'dir':
+                for tag in self._l_tagRaw:
+                    print('%30s%s' % (tag + ': ', self._d_dicom[tag]))
+            elif self._str_rawType   == 'raw':
+                print(self._dcm)
+            else:
+                print('Specify either "raw" or "dir" for "-r" flag.')
+
+
+        if self._b_convertToImg:
+            self.img_create()
+
+    def img_create(self):
+        '''
+        Create the output jpg of the file.
+        :return:
+        '''
         pylab.imshow(self._dcm.pixel_array, cmap=pylab.cm.bone)
-        pylab.savefig('out.jpg')
+        pylab.savefig(self._str_outputImageFile)
 
     def echo(self, *args):
         self._b_echoCmd         = True
@@ -248,8 +308,10 @@ def synopsis(ab_shortOnly = False):
 
             %s                                     \\
                      -i|--input <inputFile>                 \\
-                        [-l|--tagFile <tagFile>] |          \\
-                        [-t|--tagList <tagList>]            \\
+                        [-F|--tagFile <tagFile>] |          \\
+                        [-T|--tagList <tagList>] |          \\
+                        [-r raw|dir]                        \\
+                    [-I|--image <imageFile>]                \\
                     [-d|--outputDir <outputDir>]            \\
                     [-o|--output <outputFileStem>]          \\
                     [-t|--outputFileType <outputFileType>]  \\
@@ -277,6 +339,22 @@ def synopsis(ab_shortOnly = False):
 
         -i|--inputFile <inputFile>
         Input DICOM file to parse.
+
+        NOTE: If neither -F nor -T are specified, a '-r raw' is
+        assumed.
+
+        -r raw|dir
+
+        -F|--tagFile <tagFile>
+        Read the tags, one-per-line in <tagFile>, and print the
+        corresponding tag information in the DICOM <inputFile>.
+
+        -T|--tagList <tagList>
+        Read the list of comma-separated tags in <tagList>, and print the
+        corresponding tag information parsed from the DICOM <inputFile>.
+
+        -I|--image <imageFile>
+        If specified, also convert the <inputFile> to <imageFile>.
 
         [-d|--outputDir <outputDir>]
         The directory to contain the output tag list.
@@ -314,9 +392,25 @@ if __name__ == '__main__':
     parser.add_argument("-i", "--inputFile",
                         help="input file",
                         dest='inputFile')
+    parser.add_argument("-F", "--tagFile",
+                        help="file containing tags to parse",
+                        dest='tagFile',
+                        default='')
+    parser.add_argument("-T", "--tagList",
+                        help="comma-separated tag list",
+                        dest='tagList',
+                        default='')
+    parser.add_argument("-r",
+                        help="display raw tags",
+                        dest='rawType',
+                        default='raw')
+    parser.add_argument("-I", "--imageFile",
+                        help="image file to convert DICOM input",
+                        dest='imageFile',
+                        default='')
     parser.add_argument("-o", "--outputFileStem",
                         help="output file",
-                        default="output.jpg",
+                        default="",
                         dest='outputFileStem')
     parser.add_argument("-d", "--outputDir",
                         help="output image directory",
@@ -366,25 +460,30 @@ if __name__ == '__main__':
     if len(str_outputFileExtension):
         args.outputFileStem = str_outputFileStem
 
-    print("extension = %s " % str_outputFileExtension)
-
     b_htmlExt           =  str_outputFileExtension   == 'html'
     b_jsonExt           =  str_outputFileExtension   == 'json'
 
     if not b_htmlExt:
         C_dicomTag     = dicomTag(
-                                inputFile         = args.inputFile,
-                                outputDir         = args.outputDir,
-                                outputFileStem    = args.outputFileStem,
-                                outputFileType    = args.outputFileType
+                                inputFile           = args.inputFile,
+                                outputDir           = args.outputDir,
+                                outputFileStem      = args.outputFileStem,
+                                outputFileType      = args.outputFileType,
+                                tagFile             = args.tagFile,
+                                tagList             = args.tagList,
+                                rawType             = args.rawType,
+                                imageFile           = args.imageFile
                             )
 
     if b_htmlExt:
         C_dicomTag   = dicomTag_html(
-                                inputFile         = args.inputFile,
-                                outputDir         = args.outputDir,
-                                outputFileStem    = args.outputFileStem,
-                                outputFileType    = args.outputFileType
+                                inputFile           = args.inputFile,
+                                outputDir           = args.outputDir,
+                                outputFileStem      = args.outputFileStem,
+                                outputFileType      = args.outputFileType,
+                                tagFile             = args.tagFile,
+                                tagList             = args.tagList,
+                                imageFile           = args.imageFile
                              )
 
 
