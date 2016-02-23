@@ -96,15 +96,8 @@ GLACIER=glacier.tch.harvard.edu
 RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
+DOOR=door.nmr.mgh.harvard.edu
 H1=108.20.43.104
-
-verbosity_check
-REQUIREDFILES="common.bash tunnel.bash pgrep"
-
-for file in $REQUIREDFILES ; do
-#        printf "%40s"   "Checking for $file"
-        file_checkOnPath $file >/dev/null || fatal fileCheck
-done
 
 targetList=20
 
@@ -165,6 +158,16 @@ while getopts hv: option ; do
                         shut_down 1 ;;
         esac
 done
+
+verbosity_check
+REQUIREDFILES="common.bash tunnel.bash pgrep"
+
+for file in $REQUIREDFILES ; do
+#        printf "%40s"   "Checking for $file"
+        file_checkOnPath $file >/dev/null || fatal fileCheck
+done
+
+
 
 rm -f $G_REPORTLOG
 b_logGenerate=0
