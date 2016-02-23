@@ -146,8 +146,8 @@ TARGET_CHECK[18]="tunnel.bash --forward	--from 2137  --via rudolph@${DOOR} --to 
 TARGETACTION[18]="tunnel.bash --forward	--from 2137  --via rudolph@${DOOR} --to localhost:2137"
 TARGET_CHECK[19]="tunnel.bash --forward	--from 1143  --via rudolph@${DOOR} --to chris:443 --isRunning"
 TARGETACTION[19]="tunnel.bash --forward	--from 1143  --via rudolph@${DOOR} --to chris:443"
-TARGET_CHECK[20]="tunnel.bash --forward	--from 3128  --via rudolph@${DOOR} --to localhost:3128 --isRunning"
-TARGETACTION[20]="tunnel.bash --forward	--from 3128  --via rudolph@${DOOR} --to localhost:3128"
+TARGET_CHECK[20]="tunnel.bash --forward	--from 3228  --via rudolph@${DOOR} --to localhost:3228 --isRunning"
+TARGETACTION[20]="tunnel.bash --forward	--from 3228  --via rudolph@${DOOR} --to localhost:3228"
 TARGET_CHECK[21]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:22 --sshArgs '-p 7778' --isRunning"
 TARGETACTION[21]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:22 --sshArgs '-p 7778'"
 
