@@ -2,13 +2,13 @@
 #
 # NAME
 #
-#        dicomTag
+#        dicomTag.py
 #
 # DESCRIPTION
 #
 #       'dicomTag' reads an input DICOM file
-#       and returns a JSON formatted list of the
-#       header information.
+#       and returns information about the tag
+#       (i.e. meta) data.
 #
 # HISTORY
 #
