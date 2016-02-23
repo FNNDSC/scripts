@@ -377,8 +377,7 @@ def synopsis(ab_shortOnly = False):
 
     EXAMPLES
 
-        o See https://github.com/FNNDSC/dicomTag for more help and source.
-
+        o See https://github.com/FNNDSC/scripts/blob/master/dicomTag.py for more help and source.
 
     ''' % (scriptName)
     if ab_shortOnly:
