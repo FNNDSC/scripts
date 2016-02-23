@@ -99,7 +99,7 @@ GATE=gate.nmr.mgh.harvard.edu
 DOOR=door.nmr.mgh.harvard.edu
 H1=108.20.43.104
 
-targetList=21
+targetList=22
 
 #
 ##
@@ -148,6 +148,9 @@ TARGET_CHECK[19]="tunnel.bash --forward	--from 1143  --via rudolph@${DOOR} --to 
 TARGETACTION[19]="tunnel.bash --forward	--from 1143  --via rudolph@${DOOR} --to chris:443"
 TARGET_CHECK[20]="tunnel.bash --forward	--from 3128  --via rudolph@${DOOR} --to localhost:3128 --isRunning"
 TARGETACTION[20]="tunnel.bash --forward	--from 3128  --via rudolph@${DOOR} --to localhost:3128"
+TARGET_CHECK[21]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:22 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[21]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:22 --sshArgs '-p 7778'"
+
 
 # Process command line options
 while getopts hv: option ; do
