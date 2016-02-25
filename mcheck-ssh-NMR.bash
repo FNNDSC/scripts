@@ -319,6 +319,7 @@ for i in $TARGETRESTARTED ; do
         echo ""
 done
 
+messageFile=/tmp/$SELF.message.$PID
 if [ "$b_logGenerate" -eq "1" ] ; then
         message="
 	
@@ -330,9 +331,11 @@ if [ "$b_logGenerate" -eq "1" ] ; then
 $(cat $G_REPORTLOG)
 	
         "
-	messageFile=/tmp/$SELF.message.$PID
 	echo "$message" > $messageFile
 	mail -s "Failed conditions restarted" $G_ADMINUSERS < $messageFile
+fi
+
+if [[ -f $messageFile ]] ; then
 	rm -f $messageFile 2>/dev/null
 fi
 
