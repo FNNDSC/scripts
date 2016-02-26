@@ -1,6 +1,6 @@
 #!/bin/bash
 
-G_VERSION="2014a"
+G_VERSION="2015b"
 G_SYNOPSIS="
 
     NAME
@@ -50,6 +50,9 @@ G_SYNOPSIS="
 	08 August 2013
 	o Added '-l' specifically for cases when the BCH offered version
 	  of MatLAB has been installed.
+
+	26 February 2016
+	o Set default to 2015b.
 "
 
 HOST=$(hostname -s)
