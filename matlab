@@ -24,6 +24,10 @@ G_SYNOPSIS="
 	-v <version> (Default: $G_VERSION )
 	Force a specific version of MatLAB to run. Currently supported
 	are '2010a', '2011b', '2012a'. 
+
+	-H
+	Use the BCH provided licensed MatLAB. Currently this applies only to 
+	version 2015a.
         
     DESCRIPTION
     
@@ -53,6 +57,9 @@ G_SYNOPSIS="
 
 	26 February 2016
 	o Set default to 2015b.
+
+	14 March 2016
+	o Add license concept. Basically, use a '-H' to run the Hospital version. 
 "
 
 HOST=$(hostname -s)
@@ -62,12 +69,14 @@ OSTYPE=$(uname -s)
 
 declare -i b_local=0
 declare -i b_useLocal=0
+declare -i b_useBCHlicense=0
 
-while getopts clv: option ; do
+while getopts clv:H option ; do
     case "$option" 
     in
         c) MARGS="-nosplash -nodesktop" ;;
 	l) b_local=1			;;
+	H) b_useBCHlicense=1		;;
         v) G_VERSION="$OPTARG"          ;;
         *) echo "$G_SYNOPSIS"
            exit 1                       ;;
@@ -77,41 +86,43 @@ done
 printf "Setting version to R$G_VERSION...\n"
 
 if (( b_local )) ; then
-    printf "Checking for local BCH installation on this computer, %s\n" $(hostname)
+    printf "Checking for local installation on this computer, %s\n" $(hostname)
     case $(uname)
     in
 	Linux) 	export MPATH=/usr/local/matlab/R${G_VERSION}/bin	;;
 	Darwin)	export MPATH=/Applications/MATLAB_R${G_VERSION}.app/bin	;;
     esac
     if [[ -x $MPATH/matlab ]] ; then
-	printf "Found local BCH installation.\n"
+	printf "Found local installation.\n"
 	export PATH=$MPATH:$PATH
 	b_useLocal=1
     else
-	printf "No standard BCH installation found.\n"
+	printf "No standard local installation found.\n"
 	b_useLocal=0
     fi
 fi
 
 if (( ! b_useLocal )) ; then
-    if [[ $HOST_PREFIX == "rc" ]] ; then
-        printf "Using FNNDSC licensed version of MatLAB...\n"
-        export MPATH=/neuro/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin
-        export PATH=$MPATH:$PATH
+    LICENSE=""
+    if (( b_useBCHlicense )) ; then 
+	LICENSE="-H"
+	printf "NOTE: Using the BCH provided license (and installation)."
     else
-        printf "Using BCH licensed install of MatLAB...\n"
-        case $(uname) 
-        in 
-            Linux)  export MPATH=/neuro/arch/x86_64-Linux/packages/matlab/R${G_VERSION}/bin
+	printf "NOTE: Using a non-BCH provided license (and installation)."
+    fi
+    case $(uname) 
+    in 
+            Linux)  export MPATH=/neuro/arch/x86_64-Linux/packages/matlab/R${G_VERSION}${LICENSE}/bin
               	    export PATH=$MPATH:$PATH
                     ;;
-            Darwin) export MPATH=/neuro/arch/x86_64-Darwin/packages/matlab/MATLAB_R${G_VERSION}.app/bin
+            Darwin) export MPATH=/neuro/arch/x86_64-Darwin/packages/matlab/MATLAB_R${G_VERSION}${LICENSE}.app/bin
                     export PATH=$MPATH:$PATH
 		    ;;
-        esac
-    fi
+    esac
 fi
 
+
+printf "Starting MatLAB ($G_VERSION) from MPATH=$MPATH...\n"
 echo "$MPATH/matlab $MARGS"
 
 $MPATH/matlab $MARGS 
