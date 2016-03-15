@@ -102,13 +102,16 @@ if (( b_local )) ; then
     fi
 fi
 
+if [[ "${G_VERSION: -1}" == "H" || $(( b_useBCHlicense == 1)) ]] ; then
+	printf "NOTE: Using the BCH provided license (and installation).\n"
+else
+	printf "NOTE: Using a non-BCH provided license (and installation).\n"
+fi
+
 if (( ! b_useLocal )) ; then
     LICENSE=""
     if (( b_useBCHlicense )) ; then 
 	LICENSE="-H"
-	printf "NOTE: Using the BCH provided license (and installation).\n"
-    else
-	printf "NOTE: Using a non-BCH provided license (and installation).\n"
     fi
     case $(uname) 
     in 
