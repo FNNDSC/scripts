@@ -1,6 +1,6 @@
 #!/bin/bash
 
-G_VERSION="2015b"
+G_VERSION="2015a"
 G_SYNOPSIS="
 
     NAME
@@ -106,9 +106,9 @@ if (( ! b_useLocal )) ; then
     LICENSE=""
     if (( b_useBCHlicense )) ; then 
 	LICENSE="-H"
-	printf "NOTE: Using the BCH provided license (and installation)."
+	printf "NOTE: Using the BCH provided license (and installation).\n"
     else
-	printf "NOTE: Using a non-BCH provided license (and installation)."
+	printf "NOTE: Using a non-BCH provided license (and installation).\n"
     fi
     case $(uname) 
     in 
