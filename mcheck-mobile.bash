@@ -97,7 +97,7 @@ RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
 DOOR=door.nmr.mgh.harvard.edu
-H1=108.20.43.104
+H1=173.48.111.167
 
 targetList=22
 
