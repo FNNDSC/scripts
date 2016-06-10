@@ -98,8 +98,8 @@ GLACIER=glacier.tch.harvard.edu
 RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
-DOOR=door.nmr.mgh.harvard.edu
-#DOOR=gate.nmr.mgh.harvard.edu
+#DOOR=door.nmr.mgh.harvard.edu
+DOOR=gate.nmr.mgh.harvard.edu
 H1=173.48.111.167
 
 verbosity_check
