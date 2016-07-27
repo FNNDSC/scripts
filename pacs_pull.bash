@@ -465,7 +465,7 @@ for EL in $(echo $GLST | tr , ' '); do
     if (( ${#STATIONTABLE} )) ; then
     	echo "$STATIONTABLE" | sed 's/\(.*\)/I: \1/'
     fi
-    UILINE=$(cat $G_FINDSCUSTUDYSTD| grep StudyInstanceUID)
+    UILINE=$(cat $G_FINDSCUSTUDYSTD| grep -a StudyInstanceUID)
     #echo "UILINE=$UILINE"
     UI=$(echo "$UILINE" | awk '{print $4}')
     #echo "UI=$UI"
@@ -494,6 +494,7 @@ for EL in $(echo $GLST | tr , ' '); do
    	     -k $G_ServiceID=$G_SERVICEID				    \
 	     -k $G_PerformedStationAETitle=$G_PERFORMEDSTATIONAETITLE	    \
              $G_QUERYHOST $G_QUERYPORT 2>> $G_FINDSCUSERIESSTD"
+        #echo "$QUERTSERIES"
         eval "$QUERYSERIES"
 	#exit 0
       done
@@ -520,7 +521,7 @@ for EL in $(echo $GLST | tr , ' '); do
     rm $G_FINDSCUSERIESSTD.bak
     rprint "[ ok ]"
     lprint "I: Filtering down UI list"
-    UILINE=$(cat $G_FINDSCUSERIESSTD| grep StudyInstanceUID | uniq)
+    UILINE=$(cat $G_FINDSCUSERIESSTD| grep -a StudyInstanceUID | uniq)
     UI=$(echo "$UILINE" | awk '{print $4}')
     rprint "[ ok ]"
     lprint "I: Sorting UI series files"
