@@ -113,7 +113,7 @@ for HOST in $(echo "$G_HOSTLIST" | tr ',' ' ') ; do
         ssh -t $HOST "${CMD}"
         REMOTESTATUS=$?
         lprint "Checking return result"
-        ret_check $REMOTESTATUS || warn execRemoteApt
+        ret_check $REMOTESTATUS || beware execRemoteApt
         logstr=$(sysprint "| (whoami=$(whoami), remote=$HOST) ${CMD}")
         echo $logstr >> $G_LOG
 done
