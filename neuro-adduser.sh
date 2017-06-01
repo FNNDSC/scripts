@@ -75,6 +75,7 @@ G_SYNOPSIS="
 		o gaablab
 		o nelsonlab
 		o meggp
+		o cbdgp
 		o collabs
 		o visitors
 		
@@ -403,6 +404,12 @@ function homedir_set
 			HOMEDIR="/local_mount/space/zeus/2/chb/meglab/users/$G_USERNAME"
 			NETHOME="/neuro/labs/meglab/users/$G_USERNAME"
 			GROUPID="1102"
+			;;
+		"cbdgp")
+			REMOTEHOST=zeus
+			GROUPID="1102"
+			HOMEDIR="/local_mount/space/zeus/2/chb/meglab/users/$G_USERNAME"
+			NETHOME="/neuro/labs/meglab/users/$G_USERNAME"
 			;;
 		* )	fatal invalidPrimaryGroup
 	esac
