@@ -104,6 +104,7 @@ YESNABY=yesnaby.tch.harvard.edu
 CHRISMGHPCC=chris-mghpcc.tch.harvard.edu
 CHRISCHPC=chris-chpc.tch.harvard.edu
 BRAIN=brain.chpc.ac.za
+FIONA=10.17.24.60
 
 H1=173.48.120.248
 
