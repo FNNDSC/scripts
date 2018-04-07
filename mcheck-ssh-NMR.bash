@@ -82,13 +82,13 @@ EC_fileCheck=1
 
 DREEV=dreev.tch.harvard.edu
 JOHANNESBURG=johannesburg.tch.harvard.edu
-BERLIN=berlin.tch.harvard.edu
-OSX1476=osx1476.tch.harvard.edu
+ZEUS=zeus.tch.harvard.edu
+SEVILLE=seville.tch.harvard.edu
 DURBAN=durban.tch.harvard.edu
 NATAL=natal.tch.harvard.edu
-PARIS=paris.tch.harvard.edu
+CENTAURI=centauri.tch.harvard.edu
 SHAKA=shaka.tch.harvard.edu
-GLACIER=glacier.tch.harvard.edu
+PANGEA=pangea.tch.harvard.edu
 RCDRNO=rc-drno.tch.harvard.edu
 RCRUSSIA=rc-russia.tch.harvard.edu
 RCMAJESTY=rc-majesty.tch.harvard.edu
@@ -124,8 +124,8 @@ targetList=55
 TARGET_CHECK[0]="tunnel.bash --reverse 	--from rudolph@${GATE}:9900 	--to ${JOHANNESBURG}:5900 --isRunning"
 TARGETACTION[0]="tunnel.bash --reverse 	--from rudolph@${GATE}:9900 	--to ${JOHANNESBURG}:5900"
 # VNC screen access to osx1476
-TARGET_CHECK[1]="tunnel.bash --reverse	--from rudolph@${GATE}:1476 	--to ${OSX1476}:5900 --isRunning"
-TARGETACTION[1]="tunnel.bash --reverse	--from rudolph@${GATE}:1476 	--to ${OSX1476}:5900"
+TARGET_CHECK[1]="tunnel.bash --reverse	--from rudolph@${GATE}:1476 	--to ${SEVILLE}:22 --isRunning"
+TARGETACTION[1]="tunnel.bash --reverse	--from rudolph@${GATE}:1476 	--to ${SEVILLE}:22"
 # VNC screen access to Siemens Longwood 3.0T
 TARGET_CHECK[2]="tunnel.bash --reverse	--from rudolph@${GATE}:5214	--to 10.3.1.214:5900 --isRunning"
 TARGETACTION[2]="tunnel.bash --reverse	--from rudolph@${GATE}:5214	--to 10.3.1.214:5900"
@@ -148,16 +148,16 @@ TARGETACTION[7]="tunnel.bash --reverse	--from rudolph@${GATE}:8880	--to ${NATAL}
 TARGET_CHECK[8]="tunnel.bash --reverse 	--from rudolph@${GATE}:11112	--to ${JOHANNESBURG}:11112 --isRunning"
 TARGETACTION[8]="tunnel.bash --reverse 	--from rudolph@${GATE}:11112	--to ${JOHANNESBURG}:11112"
 # SVN source code repositories
-TARGET_CHECK[9]="tunnel.bash --reverse	--from rudolph@${GATE}:5555	--to ${BERLIN}:22 --isRunning"
-TARGETACTION[9]="tunnel.bash --reverse	--from rudolph@${GATE}:5555	--to ${BERLIN}:22"
+TARGET_CHECK[9]="tunnel.bash --reverse	--from rudolph@${GATE}:5555	--to ${ZEUS}:22 --isRunning"
+TARGETACTION[9]="tunnel.bash --reverse	--from rudolph@${GATE}:5555	--to ${ZEUS}:22"
 TARGET_CHECK[10]="tunnel.bash --reverse	--from rudolph@${GATE}:5556	--to ${NATAL}:22 --isRunning"
 TARGETACTION[10]="tunnel.bash --reverse	--from rudolph@${GATE}:5556	--to ${NATAL}:22"
-TARGET_CHECK[11]="tunnel.bash --reverse	--from rudolph@${GATE}:4212	--to ${PARIS}:22 --isRunning"
-TARGETACTION[11]="tunnel.bash --reverse	--from rudolph@${GATE}:4212	--to ${PARIS}:22"
+TARGET_CHECK[11]="tunnel.bash --reverse	--from rudolph@${GATE}:4212	--to ${CENTAURI}:22 --isRunning"
+TARGETACTION[11]="tunnel.bash --reverse	--from rudolph@${GATE}:4212	--to ${CENTAURI}:22"
 TARGET_CHECK[12]="tunnel.bash --reverse	--from rudolph@${GATE}:4214	--to ${SHAKA}:22 --isRunning"
 TARGETACTION[12]="tunnel.bash --reverse	--from rudolph@${GATE}:4214	--to ${SHAKA}:22"
-TARGET_CHECK[13]="tunnel.bash --reverse	--from rudolph@${GATE}:4216 	--to ${GLACIER}:22 --isRunning"
-TARGETACTION[13]="tunnel.bash --reverse	--from rudolph@${GATE}:4216 	--to ${GLACIER}:22"
+TARGET_CHECK[13]="tunnel.bash --reverse	--from rudolph@${GATE}:4216 	--to ${PANGEA}:22 --isRunning"
+TARGETACTION[13]="tunnel.bash --reverse	--from rudolph@${GATE}:4216 	--to ${PANGEA}:22"
 TARGET_CHECK[14]="tunnel.bash --reverse --from rudolph@${GATE}:7777 	--to ${JOHANNESBURG}:22 --isRunning"
 TARGETACTION[14]="tunnel.bash --reverse --from rudolph@${GATE}:7777 	--to ${JOHANNESBURG}:22"
 TARGET_CHECK[15]="tunnel.bash --reverse	--from rudolph@${GATE}:4215	--to ${PRETORIA}:22 --isRunning"
@@ -165,8 +165,8 @@ TARGETACTION[15]="tunnel.bash --reverse	--from rudolph@${GATE}:4215	--to ${PRETO
 # Cluster repository
 TARGET_CHECK[16]="tunnel.bash --reverse	--from rudolph@${GATE}:3204	--to ${RCDRNO}:22 --isRunning"
 TARGETACTION[16]="tunnel.bash --reverse	--from rudolph@${GATE}:3204	--to ${RCDRNO}:22"
-TARGET_CHECK[17]="tunnel.bash --reverse	--from rudolph@${GATE}:2121   --to ${FNNDSC}:21 --isRunning"
-TARGETACTION[17]="tunnel.bash --reverse	--from rudolph@${GATE}:2121   --to ${FNNDSC}:21"
+TARGET_CHECK[17]="tunnel.bash --reverse	--from rudolph@${GATE}:2121   	--to ${FNNDSC}:21 --isRunning"
+TARGETACTION[17]="tunnel.bash --reverse	--from rudolph@${GATE}:2121   	--to ${FNNDSC}:21"
 TARGET_CHECK[18]="tunnel.bash --reverse	--from rudolph@${GATE}:3203	--to ${RCRUSSIA}:22 --isRunning"
 TARGETACTION[18]="tunnel.bash --reverse	--from rudolph@${GATE}:3203	--to ${RCRUSSIA}:22"
 # ChRIS VM
