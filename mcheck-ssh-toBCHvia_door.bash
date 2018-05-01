@@ -100,7 +100,7 @@ PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
 DOOR=door.nmr.mgh.harvard.edu
 #DOOR=entry.nmr.mgh.harvard.edu
-H1=173.48.115.251
+H1=173.48.112.38
 
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
