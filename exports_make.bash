@@ -79,7 +79,7 @@ if [[ $G_STYLE != "Linux" && $G_STYLE != "Darwin" ]] ; then fatal args;   fi
 if (( Gb_siteNum )) ; then
     sitenum=$G_siteNum
 else
-    sitenum=54
+    sitenum=55
 fi
 
 # Format: <label>;<netmask>
@@ -137,6 +137,7 @@ NETMASK[50]="1 Autumn Street, TCHpeap subnet 22;10.23.106.0"
 NETMASK[51]="7 Landmark, subnet 1;10.72.76.0"
 NETMASK[52]="7 Landmark, subnet 2;10.72.77.0"
 NETMASK[53]="7 Landmark, subnet 3;10.72.84.0"
+NETMASK[54]="7 Landmark, subnet 4;10.72.85.0"
 
 shift $(($OPTIND - 1))
 EXPORTLIST=$*
