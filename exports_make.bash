@@ -136,7 +136,7 @@ NETMASK[49]="1 Autumn Street, VPN;172.18.192.0"
 NETMASK[50]="1 Autumn Street, TCHpeap subnet 22;10.23.106.0"
 NETMASK[51]="7 Landmark, subnet 1;10.72.76.0"
 NETMASK[52]="7 Landmark, subnet 2;10.72.77.0"
-NETMASK[53]="7 Landmark, subnet 3;10.74.84.0"
+NETMASK[53]="7 Landmark, subnet 3;10.72.84.0"
 
 shift $(($OPTIND - 1))
 EXPORTLIST=$*
