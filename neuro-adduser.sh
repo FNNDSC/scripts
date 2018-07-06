@@ -376,7 +376,7 @@ function homedir_set
 	case "$group"
 	in
 		"grantlab")
-			REMOTEHOST=tautona
+			REMOTEHOST=fnndsc
 			HOMEDIR="/neuro/labs/grantlab/users/$G_USERNAME"
 			NETHOME=$HOMEDIR
 			GROUPID="1102"
@@ -406,10 +406,10 @@ function homedir_set
 			GROUPID="1102"
 			;;
 		"cbdgp")
-			REMOTEHOST=zeus
+			REMOTEHOST=fnndsc
 			GROUPID="1102"
-			HOMEDIR="/local_mount/space/zeus/2/chb/meglab/users/$G_USERNAME"
-			NETHOME="/neuro/labs/meglab/users/$G_USERNAME"
+			HOMEDIR="/neuro/labs/meglab/users/$G_USERNAME"
+			NETHOME=$HOMEDIR
 			;;
 		* )	fatal invalidPrimaryGroup
 	esac
