@@ -8,7 +8,7 @@ NAME
 
 SYNOPSIS
 
-    age_calc.py <birthDate> <scanDate>   
+    age_calc.py <birthDate> <scanDate> 
 
 DESCRIPTION
 
@@ -40,6 +40,9 @@ HISTORY
 12 April 2010
 o Initial development implementation.
 
+05 December 2018
+o Minor updates to python3
+
 """
 import sys 
 import datetime
@@ -56,14 +59,29 @@ scanY, scanM, scanD = int(scanDateStr[0:4]), int(scanDateStr[4:6]), int(scanDate
 birthDate = datetime.date(birthY, birthM, birthD)
 scanDate = datetime.date(scanY, scanM, scanD)
 
-dateDiff = scanDate - birthDate
+dateDiff = abs(scanDate - birthDate)
+print('%05d days | ' % dateDiff.days, end = '')
 if dateDiff.days < 31:
-    print '%03dD' % dateDiff.days
-elif dateDiff.days < (9*30.42):
-    print '%03dW' % (dateDiff.days / 7)
-elif dateDiff.days < (2*365.25):
-    print '%03dM' % (dateDiff.days / 30.42)
+    print('%03dD | ' % dateDiff.days, end = '')
+elif dateDiff.days < (9*30.44):
+    print('%03dW | ' % (dateDiff.days / 7), end = '')
+elif dateDiff.days < (2*365.2524):
+    print('%03dM | ' % (dateDiff.days / 30.44), end = '')
 else:
-    print '%03dY' % (dateDiff.days / 365.25)
+    print('%03dY | ' % (dateDiff.days / 365.2425), end = '')
+        
+# How many years is this?
+YR              = int(dateDiff.days / 365.2425)
+
+# How many months (after YR) is this?
+daysAfterYR     = int(dateDiff.days - (YR * 365.2425))
+MO              = int(daysAfterYR / 30.44)
+
+# How many days (after YR/MO) is this?
+daysAfterYRMO   = daysAfterYR - (MO * 30.44)
+DA              = daysAfterYRMO
+
+print('%02d-yr/%02d-mo/%02d-da' % (YR, MO, DA))
+
 
 sys.exit(0)
