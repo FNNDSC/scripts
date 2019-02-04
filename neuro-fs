@@ -64,6 +64,9 @@ G_SYNOPSIS="
         
 	Jan 24 2014
 	o Switch 'chb' for 'neuro'.
+
+	Feb 04 2019
+	o Add explicit PATH pointer to /neuro/arch/scripts
 "
 function synopsis_show
 {
@@ -140,7 +143,7 @@ unset TIX_LIBRARY
 OS=$(uname -a | awk '{print $1}')
 export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-neuro-fs-${G_VERSION}${G_REVISION}]"
 
-export PATH=$PATH:${PACKAGEDIR}/mricron:${PACKAGEDIR}/dtk/current/dtk
+export PATH=$PATH:/neuro/arch/scripts:${PACKAGEDIR}/mricron:${PACKAGEDIR}/dtk/current/dtk
 
 # MatLAB exports
 ## Matlab compiler Runtime (MCR)
