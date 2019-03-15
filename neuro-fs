@@ -129,12 +129,16 @@ export PACKAGEDIR=/neuro/arch/${HOSTTYPE}-${OS}/packages
 export DTDIR=${PACKAGEDIR}/dtk/current/dtk
 export DSI_PATH=${DTDIR}/matrices
 
-export PATH=$PATH:${CHB_SCRIPTPATH}:${FSLDIR}:${FSLDIR}/bin
+export FSDIR=${PACKAGEDIR}/freesurfer/${G_VERSION}${G_REVISION}
+
 export FSL_DIR=${PACKAGEDIR}/fsl/current
 export SUBJECTS_DIR=$(pwd)
 
-source ${PACKAGEDIR}/freesurfer/${G_VERSION}${G_REVISION}/SetUpFreeSurfer.sh
+source ${FSDIR}/SetUpFreeSurfer.sh
 source ${FSL_DIR}/etc/fslconf/fsl.sh
+export PATH=${FSDIR}/bin:$PATH:${CHB_SCRIPTPATH}:${FSLDIR}:${FSLDIR}/bin
+
+
 unset TCLLIBPATH
 unset TCL_LIBRARY
 unset TK_LIBRARY
