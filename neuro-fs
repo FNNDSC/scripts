@@ -134,6 +134,7 @@ export FSDIR=${PACKAGEDIR}/freesurfer/${G_VERSION}${G_REVISION}
 export FSL_DIR=${PACKAGEDIR}/fsl/current
 export SUBJECTS_DIR=$(pwd)
 
+export FREESURFER_HOME=${FSDIR}
 source ${FSDIR}/SetUpFreeSurfer.sh
 source ${FSL_DIR}/etc/fslconf/fsl.sh
 export PATH=${FSDIR}/bin:$PATH:${CHB_SCRIPTPATH}:${FSLDIR}:${FSLDIR}/bin
