@@ -5,6 +5,7 @@ OPTIND=1
 
 G_VERSION="stable"
 G_REVISION=""
+G_BASE="${G_BASE}"
 Gb_revisionSet=0
 G_SYNOPSIS="
 
@@ -14,7 +15,7 @@ G_SYNOPSIS="
         
     SYNOPSIS
     
-        neuro-fs [<version>] [<revision>]
+        neuro-fs [<version>] [<revision>] [<baseDir>]
         
     ARGS
     
@@ -29,6 +30,17 @@ G_SYNOPSIS="
 	specified, the environment will default to whatever has been configured
 	as the default revsion for a given version. This default will have been
 	setup by the system administrator.
+	
+	<baseDir>
+	The base directory of the installation, up to an 'arch' directory. 
+	In the FNNDSC case, this is typically 
+	
+	        ${G_BASE}
+	        
+	however for local installations that follow the same directory layout
+	as the FNNDSC, this can be something like
+	
+	        /home/rudolphpienaar
         
     DESCRIPTION
     
@@ -66,7 +78,11 @@ G_SYNOPSIS="
 	o Switch 'chb' for 'neuro'.
 
 	Feb 04 2019
-	o Add explicit PATH pointer to /neuro/arch/scripts
+	o Add explicit PATH pointer to ${G_BASE}/arch/scripts
+
+	Mar 22 2019
+	o Add <baseDir>.
+
 "
 function synopsis_show
 {
@@ -83,10 +99,11 @@ function synopsis_show
 #       1st command ling arg    : set G_VERSION
 #       if exist 2nd arg        : set G_REVISION
 #       additional args         : show help and exit
-if (( $# <= 2 )) ; then
+if (( $# <= 3 )) ; then
     if [[ $1 == "-x" ]] ; then synopsis_show 1; fi
-    if (( ${#1} )) ; then G_VERSION=$1;  fi
-    if (( $#==2 )) ; then G_REVISION=$2; fi
+    if (( ${#1} )) ; then G_VERSION=$1;         fi
+    if (( ${#2} )) ; then G_REVISION=$2;        fi
+    if (( ${#3} )) ; then G_BASE=$3;            fi
 else
     synopsis_show 1
 fi
@@ -124,7 +141,7 @@ OS=$(uname -a | awk '{print $1}')
 HOSTTYPE=$(echo $HOSTTYPE | awk '{print tolower($0)}')
 echo "Host type is ${HOSTTYPE}-${OS}"
 
-export PACKAGEDIR=/neuro/arch/${HOSTTYPE}-${OS}/packages
+export PACKAGEDIR=${G_BASE}/arch/${HOSTTYPE}-${OS}/packages
 
 export DTDIR=${PACKAGEDIR}/dtk/current/dtk
 export DSI_PATH=${DTDIR}/matrices
@@ -148,11 +165,11 @@ unset TIX_LIBRARY
 OS=$(uname -a | awk '{print $1}')
 export PROMPTPREFIX="[$name:${HOSTTYPE}-${OS}-neuro-fs-${G_VERSION}${G_REVISION}]"
 
-export PATH=$PATH:/neuro/arch/scripts:${PACKAGEDIR}/mricron:${PACKAGEDIR}/dtk/current/dtk
+export PATH=$PATH:${G_BASE}/arch/scripts:${PACKAGEDIR}/mricron:${PACKAGEDIR}/dtk/current/dtk
 
 # MatLAB exports
 ## Matlab compiler Runtime (MCR)
-#export MCRROOT=/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current
-#export LD_LIBRARY_PATH=/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/runtime/glnxa64:/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/bin/glnxa64:/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/os/glnxa64:/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/java/jre/glnxa64/jre/lib/amd64/native_threads:/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/java/jre/glnxa64/jre/lib/amd64/server:/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/java/jre/glnxa64/jre/lib/amd64:$LD_LIBRARY_PATH
-#export XAPPLRESDIR=/neuro/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/X11/app-defaults
+#export MCRROOT=${G_BASE}/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current
+#export LD_LIBRARY_PATH=${G_BASE}/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/runtime/glnxa64:${G_BASE}/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/bin/glnxa64:${G_BASE}/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/os/glnxa64:${G_BASE}/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/java/jre/glnxa64/jre/lib/amd64/native_threads:${G_BASE}/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/java/jre/glnxa64/jre/lib/amd64/server:${G_BASE}/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/sys/java/jre/glnxa64/jre/lib/amd64:$LD_LIBRARY_PATH
+#export XAPPLRESDIR=${G_BASE}/arch/x86_64-Linux/packages/matlab/MATLAB_Compiler_Runtime/current/X11/app-defaults
 
