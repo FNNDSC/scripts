@@ -5,7 +5,7 @@ OPTIND=1
 
 G_VERSION="stable"
 G_REVISION=""
-G_BASE="${G_BASE}"
+G_BASE="/neuro"
 Gb_revisionSet=0
 G_SYNOPSIS="
 
