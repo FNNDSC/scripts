@@ -75,11 +75,12 @@ EC_badRestart=10
 DOOR=door.nmr.mgh.harvard.edu
 H1=98.118.51.216
 
-targetList=1
+targetList=2
 
 TARGET_CHECK[0]="ps -Af  | grep 7778 | grep -v grep | wc -l"
 TARGETACTION[0]="/usr/sbin/sshd -p 7778"
-
+TARGET_CHECK[1]="ps -Af  | grep twonky | grep -v grep | wc -l"
+TARGETACTION[1]="/usr/local/share/twonky/twonkystarter"
 
 # Process command line options
 while getopts h option ; do
