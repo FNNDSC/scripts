@@ -24,7 +24,7 @@ fi
 # Current weather, already in color so no need to override
 echo " "
 # Replace Edmonton with your city name, GPS, etc. See: curl wttr.in/:help
-curl "wttr.in/$LOC?0&m" --silent --max-time 3
+curl "https://wttr.in/$LOC?0&m" --silent --max-time 3
 # Timeout #. Increase for slow connection---^
 echo " "
 echo " "                # Pad with blank lines for calendar & time to fit
