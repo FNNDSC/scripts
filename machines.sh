@@ -63,6 +63,8 @@ declare -a a_FNNDSC=(
         rhino
         hagrid
         johannesburg
+	fnndsc
+	fnndsc-clone
         poisonivy
         riddler
         bellatrix
