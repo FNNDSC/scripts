@@ -66,6 +66,7 @@ declare -a a_FNNDSC=(
 	fnndsc
 	fnndsc-clone
 	fnndsc.childrens.harvard.edu
+	nightwing
         poisonivy
         riddler
         bellatrix
