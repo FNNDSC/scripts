@@ -65,6 +65,7 @@ declare -a a_FNNDSC=(
         johannesburg
 	fnndsc
 	fnndsc-clone
+	fnndsc.childrens.harvard.edu
         poisonivy
         riddler
         bellatrix
