@@ -23,6 +23,7 @@ declare -a a_FNNDSC=(
         skopje
         seville
         arcadia
+        london
         simonstown
         pretoria
         capetown
@@ -48,6 +49,7 @@ declare -a a_FNNDSC=(
         chris-tmp
         chopin
         minerva
+        oxford
         radview
         centurion
         dubrovnik
@@ -58,15 +60,15 @@ declare -a a_FNNDSC=(
         montreal
         severus
         zebra
-        meerkat
         rhino
-	hagrid
-	johannesburg
-	poisonivy
+        hagrid
+        johannesburg
+        poisonivy
         riddler
         bellatrix
         dobby
         sirius
         harleyq
+        meerkat
 )
 
