@@ -19,6 +19,7 @@ declare -a a_FNNDSC=(
         centauri
         ulsan
         havana
+	patmos
         goldreef
         skopje
         seville
