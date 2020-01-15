@@ -41,7 +41,7 @@ declare -a a_FNNDSC=(
         sun
         chris-tmp
         chopin
-        minerva
+        dover 
         oxford
         radview
         centurion
