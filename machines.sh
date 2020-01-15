@@ -1,16 +1,9 @@
 declare -a a_PICES=(
         rc-drno
-        rc-russia
-        rc-thunderball
-        rc-goldfinger
         rc-twice
-        rc-majesty
-        rc-forever
         rc-live
         rc-golden
-        rc-loved
-        rc-moonraker
-        rc-only)
+        )
 
 declare -a a_FNNDSC=(
         titan
@@ -37,7 +30,6 @@ declare -a a_FNNDSC=(
         winterfell
         westeros
         maracuja
-        tautona
         longwood
         hercules
         hippocrates
