@@ -106,6 +106,7 @@ CHRISMGHPCC=chris-mghpcc.tch.harvard.edu
 CHRISCHPC=chris-chpc.tch.harvard.edu
 BRAIN=brain.chpc.ac.za
 FIONA=10.17.24.60
+PANGEA=pangea.tch.harvard.edu
 
 H1=108.49.45.138
 verbosity_check
@@ -116,7 +117,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=47
+targetList=49
 #
 ##
 ### REVERSE TUNNELS -- from dreev
@@ -261,16 +262,23 @@ TARGET_CHECK[45]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpiena
 TARGETACTION[45]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2443 --to ${CHRISMGHPCC}:443 " 
 TARGET_CHECK[46]="tunnel.bash --forward --sshArgs '-p 22022'	--from 7900 --via rudolphpienaar@${GATE} --to tesla:5900 --isRunning"
 TARGETACTION[46]="tunnel.bash --forward --sshArgs '-p 22022'	--from 7900 --via rudolphpienaar@${GATE} --to tesla:5900"
-TARGET_CHECK[47]="tunnel.bash --forward --sshArgs '-p 22022'	--from 7901 --via rudolphpienaar@${GATE} --to tesla:5901 --isRunning"
-TARGETACTION[47]="tunnel.bash --forward --sshArgs '-p 22022'	--from 7901 --via rudolphpienaar@${GATE} --to tesla:5901"
+
+TARGET_CHECK[47]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:7639 --to ${TITAN}:22 --isRunning"
+TARGETACTION[47]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:7639 --to ${TITAN}:22" 
+TARGET_CHECK[48]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:7901 --to ${PANGEA}:7901 --isRunning"
+TARGETACTION[48]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:7901 --to ${PANGEA}:7901" 
+
+
+#TARGET_CHECK[47]="tunnel.bash --forward --sshArgs '-p 22022'	--from 7901 --via rudolphpienaar@${GATE} --to tesla:5901 --isRunning"
+#TARGETACTION[47]="tunnel.bash --forward --sshArgs '-p 22022'	--from 7901 --via rudolphpienaar@${GATE} --to tesla:5901"
 
 #TARGET_CHECK[47]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778' --isRunning"
 #TARGETACTION[47]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778'"
 #TARGET_CHECK[48]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778' --isRunning"
 #TARGETACTION[48]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778'"
 
-TARGET_CHECK[48]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2468 --to ${CHRISCHPC}:22 --isRunning"
-TARGETACTION[48]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2468 --to ${CHRISCHPC}:22"
+#TARGET_CHECK[48]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2468 --to ${CHRISCHPC}:22 --isRunning"
+#TARGETACTION[48]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2468 --to ${CHRISCHPC}:22"
 #TARGET_CHECK[49]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2444 --to ${CHRISCHPC}:443 --isRunning"
 #TARGETACTION[49]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2444 --to ${CHRISCHPC}:443"
 
