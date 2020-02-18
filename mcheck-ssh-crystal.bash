@@ -107,6 +107,7 @@ CHRISCHPC=chris-chpc.tch.harvard.edu
 BRAIN=brain.chpc.ac.za
 FIONA=10.17.24.60
 PANGEA=pangea.tch.harvard.edu
+TITAN=titan.tch.harvard.edu
 
 H1=108.49.45.138
 verbosity_check
