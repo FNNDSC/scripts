@@ -54,6 +54,7 @@ declare -a a_FNNDSC=(
         severus
         zebra
         rhino
+	meerkat
         hagrid
         johannesburg
 	fnndsc
