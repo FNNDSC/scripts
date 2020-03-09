@@ -51,7 +51,6 @@ declare -a a_FNNDSC=(
         fiona-bch
         antalya
         montreal
-        severus
         zebra
         rhino
 	meerkat
@@ -60,6 +59,7 @@ declare -a a_FNNDSC=(
 	fnndsc
 	fnndsc-clone
 	fnndsc.childrens.harvard.edu
+	severus
 	nightwing
 	clayface
         poisonivy
@@ -68,6 +68,5 @@ declare -a a_FNNDSC=(
         dobby
         sirius
         harleyq
-        meerkat
 )
 
