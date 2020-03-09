@@ -60,11 +60,11 @@ declare -a a_FNNDSC=(
 	fnndsc-clone
 	fnndsc.childrens.harvard.edu
 	severus
+	bellatrix
 	nightwing
 	clayface
         poisonivy
         riddler
-        bellatrix
         dobby
         sirius
         harleyq
