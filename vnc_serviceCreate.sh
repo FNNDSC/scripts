@@ -53,10 +53,10 @@ G_SYNOPSIS="
 
   EXAMPLES
 
-        $> vnc_serviceCreate.sh -H /home/rudolph        \
-                                -U rudolph              \
-                                -G fnndsc               \
-                                -g 1920x1080            \
+        $> vnc_serviceCreate.sh -H /home/rudolph        \\
+                                -U rudolph              \\
+                                -G fnndsc               \\
+                                -g 1920x1080            \\
                                 -d 24  > service.txt
         
         Creates a service file with the given specs as per 
