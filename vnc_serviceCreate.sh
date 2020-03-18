@@ -8,7 +8,7 @@ bg="black"
 fg="purple"
 HOME="/home/rudolph"
 USER="rudolph"
-GROUP="fnndsc"
+GROUP="grantlab"
 geometry="1920x1080"
 depth="24"
 
@@ -93,7 +93,7 @@ WorkingDirectory=$HOME
 
 PIDFile=${HOME}/.vnc/%H:%i.pid
 ExecStartPre=-/usr/bin/vncserver -kill :%i > /dev/null 2>&1
-ExecStart=/usr/bin/vncserver -depth $depth -geometry $geometry :%i
+ExecStart=/usr/bin/vncserver -depth $depth -geometry $geometry :%i -localhost no
 ExecStop=/usr/bin/vncserver -kill :%i
 
 [Install]
