@@ -82,7 +82,7 @@ if(( ${#HOME} )) ; then
 
         IFS='' read -r -d '' String <<EOF
 [Unit]
-Description=Start TightVNC server at startup
+Description=Start system VNC server at startup
 After=syslog.target network.target
 
 [Service]
