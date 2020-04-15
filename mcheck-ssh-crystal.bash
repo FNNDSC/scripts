@@ -118,7 +118,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=49
+targetList=53
 #
 ##
 ### REVERSE TUNNELS -- from dreev
@@ -161,15 +161,15 @@ TARGET_CHECK[12]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpiena
 TARGETACTION[12]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:4214	--to ${SHAKA}:22"
 TARGET_CHECK[13]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:4216 	--to ${PANGEA}:22 --isRunning"
 TARGETACTION[13]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:4216 	--to ${PANGEA}:22"
-TARGET_CHECK[14]="tunnel.bash --reverse --sshArgs '-p 22022' --from rudolphpienaar@${GATE}:7777 	--to ${JOHANNESBURG}:22 --isRunning"
-TARGETACTION[14]="tunnel.bash --reverse --sshArgs '-p 22022' --from rudolphpienaar@${GATE}:7777 	--to ${JOHANNESBURG}:22"
+TARGET_CHECK[14]="tunnel.bash --reverse --sshArgs '-p 22022'    --from rudolphpienaar@${GATE}:7777 	--to ${JOHANNESBURG}:22 --isRunning"
+TARGETACTION[14]="tunnel.bash --reverse --sshArgs '-p 22022'    --from rudolphpienaar@${GATE}:7777 	--to ${JOHANNESBURG}:22"
 TARGET_CHECK[15]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:4215	--to ${PRETORIA}:22 --isRunning"
 TARGETACTION[15]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:4215	--to ${PRETORIA}:22"
 # Cluster repository
 TARGET_CHECK[16]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:3204	--to ${RCDRNO}:22 --isRunning"
 TARGETACTION[16]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:3204	--to ${RCDRNO}:22"
-TARGET_CHECK[17]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2121   --to ${FNNDSC}:21 --isRunning"
-TARGETACTION[17]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2121   --to ${FNNDSC}:21"
+TARGET_CHECK[17]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2121      --to ${FNNDSC}:21 --isRunning"
+TARGETACTION[17]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2121      --to ${FNNDSC}:21"
 TARGET_CHECK[18]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:3203	--to ${RCRUSSIA}:22 --isRunning"
 TARGETACTION[18]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:3203	--to ${RCRUSSIA}:22"
 # ChRIS VM
@@ -269,7 +269,14 @@ TARGETACTION[47]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpiena
 TARGET_CHECK[48]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:7901 --to ${PANGEA}:7901 --isRunning"
 TARGETACTION[48]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:7901 --to ${PANGEA}:7901" 
 
-
+TARGET_CHECK[49]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:3000 --to ${TITAN}:3000 --isRunning"
+TARGETACTION[49]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:3000 --to ${TITAN}:3000" 
+TARGET_CHECK[50]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:5000 --to ${TITAN}:5000 --isRunning"
+TARGETACTION[50]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:5000 --to ${TITAN}:5000" 
+TARGET_CHECK[51]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8000 --to ${TITAN}:8000 --isRunning"
+TARGETACTION[51]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8000 --to ${TITAN}:8000" 
+TARGET_CHECK[52]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8010 --to ${TITAN}:8010 --isRunning"
+TARGETACTION[52]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8010 --to ${TITAN}:8010" 
 #TARGET_CHECK[47]="tunnel.bash --forward --sshArgs '-p 22022'	--from 7901 --via rudolphpienaar@${GATE} --to tesla:5901 --isRunning"
 #TARGETACTION[47]="tunnel.bash --forward --sshArgs '-p 22022'	--from 7901 --via rudolphpienaar@${GATE} --to tesla:5901"
 
