@@ -118,7 +118,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=53
+targetList=54
 #
 ##
 ### REVERSE TUNNELS -- from dreev
@@ -277,6 +277,8 @@ TARGET_CHECK[51]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpiena
 TARGETACTION[51]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8000 --to ${TITAN}:8000" 
 TARGET_CHECK[52]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8010 --to ${TITAN}:8010 --isRunning"
 TARGETACTION[52]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8010 --to ${TITAN}:8010" 
+TARGET_CHECK[53]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:6000 --to ${TITAN}:6000 --isRunning"
+TARGETACTION[53]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:6000 --to ${TITAN}:6000" 
 #TARGET_CHECK[47]="tunnel.bash --forward --sshArgs '-p 22022'	--from 7901 --via rudolphpienaar@${GATE} --to tesla:5901 --isRunning"
 #TARGETACTION[47]="tunnel.bash --forward --sshArgs '-p 22022'	--from 7901 --via rudolphpienaar@${GATE} --to tesla:5901"
 
