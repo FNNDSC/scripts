@@ -185,8 +185,8 @@ TARGET_CHECK[34]="tunnel.bash --forward --sshArgs '-p 22022' --from 8000 --via r
 TARGETACTION[34]="tunnel.bash --forward --sshArgs '-p 22022' --from 8000 --via rudolphpienaar@${DOOR} --to localhost:8000"
 TARGET_CHECK[35]="tunnel.bash --forward --sshArgs '-p 22022' --from 8010 --via rudolphpienaar@${DOOR} --to localhost:8010 --isRunning"
 TARGETACTION[35]="tunnel.bash --forward --sshArgs '-p 22022' --from 8010 --via rudolphpienaar@${DOOR} --to localhost:8010"
-TARGET_CHECK[36]="tunnel.bash --forward --sshArgs '-p 22022' --from 6000 --via rudolphpienaar@${DOOR} --to localhost:6000 --isRunning"
-TARGETACTION[36]="tunnel.bash --forward --sshArgs '-p 22022' --from 6000 --via rudolphpienaar@${DOOR} --to localhost:6000"
+TARGET_CHECK[36]="tunnel.bash --forward --sshArgs '-p 22022' --from 6001 --via rudolphpienaar@${DOOR} --to localhost:6001 --isRunning"
+TARGETACTION[36]="tunnel.bash --forward --sshArgs '-p 22022' --from 6001 --via rudolphpienaar@${DOOR} --to localhost:6001"
 
 while getopts hv: option ; do
         case "$option"
