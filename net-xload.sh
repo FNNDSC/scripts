@@ -145,7 +145,8 @@ while getopts u:R:C:w:W:h:b:f:v:X:Y:U:H:P:G:s:I:O: option ; do
         b) bg=$OPTARG                   ;;
         f) fg=$OPTARG                   ;;
 	s) sleepBetweenLoop=$OPTARG	;;
-        *) synopsis_show                ;;
+        *) synopsis_show                
+	   shut_down 1			;;
     esac
 done
 
