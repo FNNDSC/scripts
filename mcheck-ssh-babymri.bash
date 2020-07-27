@@ -106,8 +106,11 @@ CHRISMGHPCC=chris-mghpcc.tch.harvard.edu
 CHRISCHPC=chris-chpc.tch.harvard.edu
 BRAIN=brain.chpc.ac.za
 FIONA=10.17.24.60
+<<<<<<< HEAD
 PANGEA=pangea.tch.harvard.edu
 TITAN=titan.tch.harvard.edu
+=======
+>>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
 
 H1=173.76.111.254
 verbosity_check
@@ -200,10 +203,17 @@ TARGETACTION[23]="tunnel.bash --forward --sshArgs '-p 2222' --from 10301 --via b
 ### FORWARD TUNNELS -- to site H1
 ##
 #
+<<<<<<< HEAD
 TARGET_CHECK[24]="tunnel.bash --forward --from 9000 --via babymr5@${H1} --to localhost:80 --sshArgs '-p 7778' --isRunning"
 TARGETACTION[24]="tunnel.bash --forward --from 9000 --via babymr5@${H1} --to localhost:80 --sshArgs '-p 7778'"
 TARGET_CHECK[25]="tunnel.bash --forward --from 6812 --via babymr5@${H1} --to localhost:22 --sshArgs '-p 7778' --isRunning"
 TARGETACTION[25]="tunnel.bash --forward --from 6812 --via babymr5@${H1} --to localhost:22 --sshArgs '-p 7778'"
+=======
+TARGET_CHECK[24]="tunnel.bash --forward --from 9000 --via rudolphpienaar@${H1} --to localhost:80 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[24]="tunnel.bash --forward --from 9000 --via rudolphpienaar@${H1} --to localhost:80 --sshArgs '-p 7778'"
+TARGET_CHECK[25]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:22 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[25]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:22 --sshArgs '-p 7778'"
+>>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
 
 #
 ##
@@ -251,8 +261,13 @@ TARGET_CHECK[39]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GAT
 TARGETACTION[39]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3901 --to ${PRETORIA}:5901"
 TARGET_CHECK[40]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3902 --to ${PRETORIA}:5902 --isRunning"
 TARGETACTION[40]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3902 --to ${PRETORIA}:5902"
+<<<<<<< HEAD
 TARGET_CHECK[41]="tunnel.bash --forward --sshArgs '-p 2222'	--from 2901 --via babymr5@${H1} --to localhost:5901 --sshArgs '-p 7778' --isRunning"
 TARGETACTION[41]="tunnel.bash --forward --sshArgs '-p 2222'	--from 2901 --via babymr5@${H1} --to localhost:5901 --sshArgs '-p 7778'"
+=======
+TARGET_CHECK[41]="tunnel.bash --forward --sshArgs '-p 2222'	--from 2901 --via rudolphpienaar@${H1} --to localhost:5901 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[41]="tunnel.bash --forward --sshArgs '-p 2222'	--from 2901 --via rudolphpienaar@${H1} --to localhost:5901 --sshArgs '-p 7778'"
+>>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
 TARGET_CHECK[42]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3904 --to ${PRETORIA}:5904 --isRunning"
 TARGETACTION[42]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3904 --to ${PRETORIA}:5904"
 TARGET_CHECK[43]="tunnel.bash --forward --sshArgs '-p 2222'	--from 6901 --via babymr5@${GATE} --to kaos:5901 --isRunning"
@@ -260,6 +275,7 @@ TARGETACTION[43]="tunnel.bash --forward --sshArgs '-p 2222'	--from 6901 --via ba
 TARGET_CHECK[44]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2439 --to ${CHRISMGHPCC}:22 --isRunning"
 TARGETACTION[44]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2439 --to ${CHRISMGHPCC}:22 " 
 TARGET_CHECK[45]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2443 --to ${CHRISMGHPCC}:443 --isRunning"
+<<<<<<< HEAD
 TARGETACTION[45]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2443 --to ${CHRISMGHPCC}:443 "
 
 TARGET_CHECK[46]="tunnel.bash --forward --sshArgs '-p 22022'	--from 7900 --via babymr5@${GATE} --to tesla:5900 --isRunning"
@@ -280,6 +296,40 @@ TARGET_CHECK[52]="tunnel.bash --reverse --sshArgs '-p 22022'	--from babymr5@${GA
 TARGETACTION[52]="tunnel.bash --reverse --sshArgs '-p 22022'	--from babymr5@${GATE}:8010 --to ${TITAN}:8010" 
 TARGET_CHECK[53]="tunnel.bash --reverse --sshArgs '-p 22022'	--from babymr5@${GATE}:6001 --to ${TITAN}:6001 --isRunning"
 TARGETACTION[53]="tunnel.bash --reverse --sshArgs '-p 22022'	--from babymr5@${GATE}:6001 --to ${TITAN}:6001" 
+=======
+TARGETACTION[45]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2443 --to ${CHRISMGHPCC}:443 " 
+TARGET_CHECK[46]="tunnel.bash --forward --sshArgs '-p 2222'	--from 7900 --via babymr5@${GATE} --to tesla:5900 --isRunning"
+TARGETACTION[46]="tunnel.bash --forward --sshArgs '-p 2222'	--from 7900 --via babymr5@${GATE} --to tesla:5900"
+TARGET_CHECK[47]="tunnel.bash --forward --sshArgs '-p 2222'	--from 7901 --via babymr5@${GATE} --to tesla:5901 --isRunning"
+TARGETACTION[47]="tunnel.bash --forward --sshArgs '-p 2222'	--from 7901 --via babymr5@${GATE} --to tesla:5901"
+
+#TARGET_CHECK[47]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rudolphpienaar@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778' --isRunning"
+#TARGETACTION[47]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rudolphpienaar@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778'"
+#TARGET_CHECK[48]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rudolphpienaar@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778' --isRunning"
+#TARGETACTION[48]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rudolphpienaar@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778'"
+
+TARGET_CHECK[48]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2468 --to ${CHRISCHPC}:22 --isRunning"
+TARGETACTION[48]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2468 --to ${CHRISCHPC}:22"
+#TARGET_CHECK[49]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2444 --to ${CHRISCHPC}:443 --isRunning"
+#TARGETACTION[49]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2444 --to ${CHRISCHPC}:443"
+
+# FIONA BOX
+#TARGET_CHECK[49]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2460 --to ${FIONA}:22 --isRunning"
+#TARGETACTION[49]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2460 --to ${FIONA}:22"
+
+
+# ChRIS@brain.chpc.ac.za
+#TARGET_CHECK[50]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rpienaar@${BRAIN}:5120 --to localhost:22 --isRunning"
+#TARGETACTION[50]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rpienaar@${BRAIN}:5120 --to localhost:22"
+#TARGET_CHECK[51]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:10403  --to ${CHRISCHPC}:10502 --isRunning"
+#TARGETACTION[51]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:10403  --to ${CHRISCHPC}:10502"
+
+#TARGET_CHECK[52]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:8042 --to ${TAUTONA}:8042 --isRunning"
+#TARGETACTION[52]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:8042 --to ${TAUTONA}:8042"
+
+#TARGET_CHECK[53]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@babymri.org:3333 --to ${TAUTONA}:22 --sshArgs '-p 2222' --isRunning"
+#TARGETACTION[53]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@babymri.org:3333 --to ${TAUTONA}:22 --sshArgs '-p 2222'"
+>>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
 
 
 

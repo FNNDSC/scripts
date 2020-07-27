@@ -112,7 +112,11 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
+<<<<<<< HEAD
 targetList=37
+=======
+targetList=30
+>>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
  TARGET_CHECK[0]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOOR}:10301 --to localhost:10401 --isRunning"
  TARGETACTION[0]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOOR}:10301 --to localhost:10401"
  TARGET_CHECK[1]="tunnel.bash --forward --sshArgs '-p 2222' --from 4212 --via babymr5@${DOOR} --to localhost:4212 --isRunning"
@@ -173,6 +177,7 @@ TARGET_CHECK[28]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOO
 TARGETACTION[28]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOOR}:7900 --to tesla:5900"
 TARGET_CHECK[29]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOOR}:7901 --to tesla:5901 --isRunning"
 TARGETACTION[29]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOOR}:7901 --to tesla:5901"
+<<<<<<< HEAD
 TARGET_CHECK[30]="tunnel.bash --forward --sshArgs '-p 22022' --from 7639 --via babymr5@${DOOR} --to localhost:7639 --isRunning"
 TARGETACTION[30]="tunnel.bash --forward --sshArgs '-p 22022' --from 7639 --via babymr5@${DOOR} --to localhost:7639"
 TARGET_CHECK[31]="tunnel.bash --forward --sshArgs '-p 22022' --from 7901 --via babymr5@${DOOR} --to localhost:7901 --isRunning"
@@ -188,6 +193,8 @@ TARGETACTION[35]="tunnel.bash --forward --sshArgs '-p 22022' --from 8010 --via b
 TARGET_CHECK[36]="tunnel.bash --forward --sshArgs '-p 22022' --from 6001 --via babymr5@${DOOR} --to localhost:6001 --isRunning"
 TARGETACTION[36]="tunnel.bash --forward --sshArgs '-p 22022' --from 6001 --via babymr5@${DOOR} --to localhost:6001"
 
+=======
+>>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
 
 while getopts hv: option ; do
         case "$option"

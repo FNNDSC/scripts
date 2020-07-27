@@ -6,7 +6,12 @@ source common.bash
 G_USERNAME="-x"
 G_GROUPLIST="-x"
 
+<<<<<<< HEAD
 LDAPPWD="xzaq!@#$"
+=======
+echo -n "Enter toor (admin) password:"
+read -s LDAPPWD
+>>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
 
 LDIF=/tmp/LDIF.txt
 
@@ -118,8 +123,19 @@ G_SYNOPSIS="
         30 May 2012
         o First version.
 	
+<<<<<<< HEAD
 	08 Oct 2015
 	o Major updates and refactoring.
+=======
+        08 Oct 2015
+        o Major updates and refactoring.
+	      
+        09 Jun 2020
+        o Remove hard-coded LDAPPWD
+        o Read password from stdin
+            Type it in interactively, or you could use a here-string.
+            Example: ./neuro-adduser.sh -u person.name -g grantlab <<< correct.horse.battery.staple
+>>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
 "
 ###\\\
 # Global variables --->
