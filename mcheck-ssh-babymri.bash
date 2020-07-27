@@ -139,8 +139,8 @@ TARGETACTION[3]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE
 TARGET_CHECK[4]="tunnel.bash --reverse --sshArgs '-p 2222' 	--from babymr5@${GATE}:10402 	--to ${PRETORIA}:10401 --isRunning"
 TARGETACTION[4]="tunnel.bash --reverse --sshArgs '-p 2222' 	--from babymr5@${GATE}:10402 	--to ${PRETORIA}:10401"
 # Web access to 'durban'
-TARGET_CHECK[5]="tunnel.bash --reverse --sshArgs '-p 2222' 	--from babymr5@${GATE}:8000 	--to ${DURBAN}:80 --isRunning"
-TARGETACTION[5]="tunnel.bash --reverse --sshArgs '-p 2222' 	--from babymr5@${GATE}:8000 	--to ${DURBAN}:80"
+TARGET_CHECK[5]="tunnel.bash --reverse --sshArgs '-p 2222' 	--from babymr5@${GATE}:8011 	--to ${DURBAN}:80 --isRunning"
+TARGETACTION[5]="tunnel.bash --reverse --sshArgs '-p 2222' 	--from babymr5@${GATE}:8011 	--to ${DURBAN}:80"
 # Web access to 'johannesburg'
 TARGET_CHECK[6]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:8800	--to ${JOHANNESBURG}:80 --isRunning"
 TARGETACTION[6]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:8800	--to ${JOHANNESBURG}:80"
