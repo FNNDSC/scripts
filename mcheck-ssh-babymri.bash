@@ -30,9 +30,9 @@ G_SYNOPSIS="
        mcheck-ssh-crystal.bash
 
  DESCRIPTION
- 
+
         'mcheck-ssh-crystal.bash' is used to check that certain script-defined
-	conditions are true. If any of these conditions are false, it executes 
+	conditions are true. If any of these conditions are false, it executes
 	a set of corrective actions.
 
 	It should typically be called from a cron process, and this particular
@@ -42,7 +42,7 @@ G_SYNOPSIS="
 	This particular script sets up the web of ssh-tunnel connections allowing
 	connections to FNNDSC hosts. These tunnels are made *directly* to NMR
 	hosts, and are not via an intermediary, 'dreev.tch.harvard.edu'.
-		
+
  PRECONDITIONS
 
 	 o Conditions to check are defined in the script code itself. These
@@ -51,7 +51,7 @@ G_SYNOPSIS="
     	   corrective action to run should the check command be false.
  	o  Conditions to check should be described in such a manner that, should
     	   the condition be false, the check command returns zero (0).
- 
+
  POSTCONDITIONS
 
 	o The corrective action (per condition) is executed if the check condition
@@ -59,9 +59,9 @@ G_SYNOPSIS="
 
  HISTORY
  24 April 2014
-  o Adpated from mcheck-ssh-dreev.bash and opens reverse --sshArgs '-p 2222' tunnels directly to 
+  o Adpated from mcheck-ssh-dreev.bash and opens reverse --sshArgs '-p 2222' tunnels directly to
     'door.nmr.mgh.harvard.edu.
-    
+
  07 December 2017
   o Added 'crystal' changes.
 
@@ -106,8 +106,10 @@ CHRISMGHPCC=chris-mghpcc.tch.harvard.edu
 CHRISCHPC=chris-chpc.tch.harvard.edu
 BRAIN=brain.chpc.ac.za
 FIONA=10.17.24.60
+PANGEA=pangea.tch.harvard.edu
+TITAN=titan.tch.harvard.edu
 
-H1=173.76.111.254
+H1=108.49.45.138
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
 
@@ -179,7 +181,7 @@ TARGETACTION[19]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GAT
 ### (1/2) FORWARD TUNNELS -- maps a port on localhost to port on intermediary;
 ### these are connection points for reverse --sshArgs '-p 2222' tunnels back to NMR.
 ##
-# 
+#
 # tesla VNC
 TARGET_CHECK[20]="tunnel.bash --forward --sshArgs '-p 2222'	--from 4900 --via babymr5@${GATE} --to tesla:4900 --isRunning"
 TARGETACTION[20]="tunnel.bash --forward --sshArgs '-p 2222'	--from 4900 --via babymr5@${GATE} --to tesla:4900"
@@ -198,10 +200,10 @@ TARGETACTION[23]="tunnel.bash --forward --sshArgs '-p 2222' --from 10301 --via b
 ### FORWARD TUNNELS -- to site H1
 ##
 #
-TARGET_CHECK[24]="tunnel.bash --forward --from 9000 --via rudolphpienaar@${H1} --to localhost:80 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[24]="tunnel.bash --forward --from 9000 --via rudolphpienaar@${H1} --to localhost:80 --sshArgs '-p 7778'"
-TARGET_CHECK[25]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:22 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[25]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:22 --sshArgs '-p 7778'"
+TARGET_CHECK[24]="tunnel.bash --forward --from 9000 --via babymr5@${H1} --to localhost:80 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[24]="tunnel.bash --forward --from 9000 --via babymr5@${H1} --to localhost:80 --sshArgs '-p 7778'"
+TARGET_CHECK[25]="tunnel.bash --forward --from 6812 --via babymr5@${H1} --to localhost:22 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[25]="tunnel.bash --forward --from 6812 --via babymr5@${H1} --to localhost:22 --sshArgs '-p 7778'"
 
 #
 ##
@@ -249,47 +251,35 @@ TARGET_CHECK[39]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GAT
 TARGETACTION[39]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3901 --to ${PRETORIA}:5901"
 TARGET_CHECK[40]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3902 --to ${PRETORIA}:5902 --isRunning"
 TARGETACTION[40]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3902 --to ${PRETORIA}:5902"
-TARGET_CHECK[41]="tunnel.bash --forward --sshArgs '-p 2222'	--from 2901 --via rudolphpienaar@${H1} --to localhost:5901 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[41]="tunnel.bash --forward --sshArgs '-p 2222'	--from 2901 --via rudolphpienaar@${H1} --to localhost:5901 --sshArgs '-p 7778'"
+TARGET_CHECK[41]="tunnel.bash --forward --sshArgs '-p 2222'	--from 2901 --via babymr5@${H1} --to localhost:5901 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[41]="tunnel.bash --forward --sshArgs '-p 2222'	--from 2901 --via babymr5@${H1} --to localhost:5901 --sshArgs '-p 7778'"
 TARGET_CHECK[42]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3904 --to ${PRETORIA}:5904 --isRunning"
 TARGETACTION[42]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3904 --to ${PRETORIA}:5904"
 TARGET_CHECK[43]="tunnel.bash --forward --sshArgs '-p 2222'	--from 6901 --via babymr5@${GATE} --to kaos:5901 --isRunning"
 TARGETACTION[43]="tunnel.bash --forward --sshArgs '-p 2222'	--from 6901 --via babymr5@${GATE} --to kaos:5901"
 TARGET_CHECK[44]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2439 --to ${CHRISMGHPCC}:22 --isRunning"
-TARGETACTION[44]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2439 --to ${CHRISMGHPCC}:22 " 
+TARGETACTION[44]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2439 --to ${CHRISMGHPCC}:22 "
 TARGET_CHECK[45]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2443 --to ${CHRISMGHPCC}:443 --isRunning"
-TARGETACTION[45]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2443 --to ${CHRISMGHPCC}:443 " 
+TARGETACTION[45]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2443 --to ${CHRISMGHPCC}:443 "
+
 TARGET_CHECK[46]="tunnel.bash --forward --sshArgs '-p 2222'	--from 7900 --via babymr5@${GATE} --to tesla:5900 --isRunning"
 TARGETACTION[46]="tunnel.bash --forward --sshArgs '-p 2222'	--from 7900 --via babymr5@${GATE} --to tesla:5900"
-TARGET_CHECK[47]="tunnel.bash --forward --sshArgs '-p 2222'	--from 7901 --via babymr5@${GATE} --to tesla:5901 --isRunning"
-TARGETACTION[47]="tunnel.bash --forward --sshArgs '-p 2222'	--from 7901 --via babymr5@${GATE} --to tesla:5901"
 
-#TARGET_CHECK[47]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rudolphpienaar@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778' --isRunning"
-#TARGETACTION[47]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rudolphpienaar@${H1}:2468 --to ${CHRISCHPC}:22 --sshArgs '-p 7778'"
-#TARGET_CHECK[48]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rudolphpienaar@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778' --isRunning"
-#TARGETACTION[48]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rudolphpienaar@${H1}:2444 --to ${CHRISCHPC}:443 --sshArgs '-p 7778'"
+TARGET_CHECK[47]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:7639 --to ${TITAN}:22 --isRunning"
+TARGETACTION[47]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:7639 --to ${TITAN}:22"
+TARGET_CHECK[48]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:7901 --to ${PANGEA}:7901 --isRunning"
+TARGETACTION[48]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:7901 --to ${PANGEA}:7901"
 
-TARGET_CHECK[48]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2468 --to ${CHRISCHPC}:22 --isRunning"
-TARGETACTION[48]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2468 --to ${CHRISCHPC}:22"
-#TARGET_CHECK[49]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2444 --to ${CHRISCHPC}:443 --isRunning"
-#TARGETACTION[49]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2444 --to ${CHRISCHPC}:443"
-
-# FIONA BOX
-#TARGET_CHECK[49]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2460 --to ${FIONA}:22 --isRunning"
-#TARGETACTION[49]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:2460 --to ${FIONA}:22"
-
-
-# ChRIS@brain.chpc.ac.za
-#TARGET_CHECK[50]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rpienaar@${BRAIN}:5120 --to localhost:22 --isRunning"
-#TARGETACTION[50]="tunnel.bash --reverse --sshArgs '-p 2222'	--from rpienaar@${BRAIN}:5120 --to localhost:22"
-#TARGET_CHECK[51]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:10403  --to ${CHRISCHPC}:10502 --isRunning"
-#TARGETACTION[51]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:10403  --to ${CHRISCHPC}:10502"
-
-#TARGET_CHECK[52]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:8042 --to ${TAUTONA}:8042 --isRunning"
-#TARGETACTION[52]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:8042 --to ${TAUTONA}:8042"
-
-#TARGET_CHECK[53]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@babymri.org:3333 --to ${TAUTONA}:22 --sshArgs '-p 2222' --isRunning"
-#TARGETACTION[53]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@babymri.org:3333 --to ${TAUTONA}:22 --sshArgs '-p 2222'"
+TARGET_CHECK[49]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3000 --to ${TITAN}:3000 --isRunning"
+TARGETACTION[49]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:3000 --to ${TITAN}:3000"
+TARGET_CHECK[50]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:5000 --to ${TITAN}:5000 --isRunning"
+TARGETACTION[50]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:5000 --to ${TITAN}:5000"
+TARGET_CHECK[51]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:8000 --to ${TITAN}:8000 --isRunning"
+TARGETACTION[51]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:8000 --to ${TITAN}:8000"
+TARGET_CHECK[52]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:8010 --to ${TITAN}:8010 --isRunning"
+TARGETACTION[52]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:8010 --to ${TITAN}:8010"
+TARGET_CHECK[53]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:6001 --to ${TITAN}:6001 --isRunning"
+TARGETACTION[53]="tunnel.bash --reverse --sshArgs '-p 2222'	--from babymr5@${GATE}:6001 --to ${TITAN}:6001"
 
 
 
@@ -330,14 +320,14 @@ done
 messageFile=/tmp/$SELF.message.$PID
 if [ "$b_logGenerate" -eq "1" ] ; then
         message="
-	
+
 	$SELF
-        
+
 	Some of the events I am monitoring signalled a FAILED condition
 	The events and the corrective action I implemented are:
-	
+
 $(cat $G_REPORTLOG)
-	
+
         "
 	echo "$message" > $messageFile
 	mail -s "Failed conditions restarted" $G_ADMINUSERS < $messageFile
