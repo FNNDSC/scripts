@@ -30,9 +30,9 @@ G_SYNOPSIS="
        mcheck-ssh-toBCHvia_babymri.bash
 
  DESCRIPTION
- 
+
         'mcheck-ssh-toBCHvia_babymri.bash' is used to check that certain script-defined
-	conditions are true. If any of these conditions are false, it executes 
+	conditions are true. If any of these conditions are false, it executes
 	a set of corrective actions.
 
 	It should typically be called from a cron process, and this particular
@@ -41,7 +41,7 @@ G_SYNOPSIS="
 
 	This particular script sets up the web of ssh-tunnel connections allowing
 	connections to FNNDSC hosts.
-		
+
  PRECONDITIONS
 
 	 o Conditions to check are defined in the script code itself. These
@@ -50,7 +50,7 @@ G_SYNOPSIS="
     	   corrective action to run should the check command be false.
  	o  Conditions to check should be described in such a manner that, should
     	   the condition be false, the check command returns zero (0).
- 
+
  POSTCONDITIONS
 
 	o The corrective action (per condition) is executed if the check condition
@@ -64,11 +64,11 @@ G_SYNOPSIS="
   o Re-routed all tunnels through 'kaos' to prevent accidental flooding of tunnel
     nexus hosts.
   o Added 'maxTunnel' check -- script will not open new tunnels if 'maxTunnel' is
-    exceeded (this is an added check against flooding).   
+    exceeded (this is an added check against flooding).
 
  30 April 2013
   o Reroute via 'door' to BCH.
-  
+
  07 December 2017
   o Update to use host 'crystal'.
 
@@ -112,11 +112,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-<<<<<<< HEAD
 targetList=37
-=======
-targetList=30
->>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
  TARGET_CHECK[0]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOOR}:10301 --to localhost:10401 --isRunning"
  TARGETACTION[0]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOOR}:10301 --to localhost:10401"
  TARGET_CHECK[1]="tunnel.bash --forward --sshArgs '-p 2222' --from 4212 --via babymr5@${DOOR} --to localhost:4212 --isRunning"
@@ -177,24 +173,21 @@ TARGET_CHECK[28]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOO
 TARGETACTION[28]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOOR}:7900 --to tesla:5900"
 TARGET_CHECK[29]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOOR}:7901 --to tesla:5901 --isRunning"
 TARGETACTION[29]="tunnel.bash --reverse --sshArgs '-p 2222' --from babymr5@${DOOR}:7901 --to tesla:5901"
-<<<<<<< HEAD
-TARGET_CHECK[30]="tunnel.bash --forward --sshArgs '-p 22022' --from 7639 --via babymr5@${DOOR} --to localhost:7639 --isRunning"
-TARGETACTION[30]="tunnel.bash --forward --sshArgs '-p 22022' --from 7639 --via babymr5@${DOOR} --to localhost:7639"
-TARGET_CHECK[31]="tunnel.bash --forward --sshArgs '-p 22022' --from 7901 --via babymr5@${DOOR} --to localhost:7901 --isRunning"
-TARGETACTION[31]="tunnel.bash --forward --sshArgs '-p 22022' --from 7901 --via babymr5@${DOOR} --to localhost:7901"
-TARGET_CHECK[32]="tunnel.bash --forward --sshArgs '-p 22022' --from 3000 --via babymr5@${DOOR} --to localhost:3000 --isRunning"
-TARGETACTION[32]="tunnel.bash --forward --sshArgs '-p 22022' --from 3000 --via babymr5@${DOOR} --to localhost:3000"
-TARGET_CHECK[33]="tunnel.bash --forward --sshArgs '-p 22022' --from 5000 --via babymr5@${DOOR} --to localhost:5000 --isRunning"
-TARGETACTION[33]="tunnel.bash --forward --sshArgs '-p 22022' --from 5000 --via babymr5@${DOOR} --to localhost:5000"
-TARGET_CHECK[34]="tunnel.bash --forward --sshArgs '-p 22022' --from 8000 --via babymr5@${DOOR} --to localhost:8000 --isRunning"
-TARGETACTION[34]="tunnel.bash --forward --sshArgs '-p 22022' --from 8000 --via babymr5@${DOOR} --to localhost:8000"
-TARGET_CHECK[35]="tunnel.bash --forward --sshArgs '-p 22022' --from 8010 --via babymr5@${DOOR} --to localhost:8010 --isRunning"
-TARGETACTION[35]="tunnel.bash --forward --sshArgs '-p 22022' --from 8010 --via babymr5@${DOOR} --to localhost:8010"
-TARGET_CHECK[36]="tunnel.bash --forward --sshArgs '-p 22022' --from 6001 --via babymr5@${DOOR} --to localhost:6001 --isRunning"
-TARGETACTION[36]="tunnel.bash --forward --sshArgs '-p 22022' --from 6001 --via babymr5@${DOOR} --to localhost:6001"
+TARGET_CHECK[30]="tunnel.bash --forward --sshArgs '-p 2222' --from 7639 --via babymr5@${DOOR} --to localhost:7639 --isRunning"
+TARGETACTION[30]="tunnel.bash --forward --sshArgs '-p 2222' --from 7639 --via babymr5@${DOOR} --to localhost:7639"
+TARGET_CHECK[31]="tunnel.bash --forward --sshArgs '-p 2222' --from 7901 --via babymr5@${DOOR} --to localhost:7901 --isRunning"
+TARGETACTION[31]="tunnel.bash --forward --sshArgs '-p 2222' --from 7901 --via babymr5@${DOOR} --to localhost:7901"
+TARGET_CHECK[32]="tunnel.bash --forward --sshArgs '-p 2222' --from 3000 --via babymr5@${DOOR} --to localhost:3000 --isRunning"
+TARGETACTION[32]="tunnel.bash --forward --sshArgs '-p 2222' --from 3000 --via babymr5@${DOOR} --to localhost:3000"
+TARGET_CHECK[33]="tunnel.bash --forward --sshArgs '-p 2222' --from 5000 --via babymr5@${DOOR} --to localhost:5000 --isRunning"
+TARGETACTION[33]="tunnel.bash --forward --sshArgs '-p 2222' --from 5000 --via babymr5@${DOOR} --to localhost:5000"
+TARGET_CHECK[34]="tunnel.bash --forward --sshArgs '-p 2222' --from 8000 --via babymr5@${DOOR} --to localhost:8000 --isRunning"
+TARGETACTION[34]="tunnel.bash --forward --sshArgs '-p 2222' --from 8000 --via babymr5@${DOOR} --to localhost:8000"
+TARGET_CHECK[35]="tunnel.bash --forward --sshArgs '-p 2222' --from 8010 --via babymr5@${DOOR} --to localhost:8010 --isRunning"
+TARGETACTION[35]="tunnel.bash --forward --sshArgs '-p 2222' --from 8010 --via babymr5@${DOOR} --to localhost:8010"
+TARGET_CHECK[36]="tunnel.bash --forward --sshArgs '-p 2222' --from 6001 --via babymr5@${DOOR} --to localhost:6001 --isRunning"
+TARGETACTION[36]="tunnel.bash --forward --sshArgs '-p 2222' --from 6001 --via babymr5@${DOOR} --to localhost:6001"
 
-=======
->>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
 
 while getopts hv: option ; do
         case "$option"
@@ -231,14 +224,14 @@ done
 
 if [ "$b_logGenerate" -eq "1" ] ; then
         message="
-	
+
 	$SELF
-        
+
 	Some of the events I am monitoring signalled a FAILED condition
 	The events and the corrective action I implemented are:
-	
+
 $(cat $G_REPORTLOG)
-	
+
         "
 	messageFile=/tmp/$SELF.message.$PID
 	echo "$message" > $messageFile

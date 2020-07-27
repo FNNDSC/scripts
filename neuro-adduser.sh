@@ -6,12 +6,8 @@ source common.bash
 G_USERNAME="-x"
 G_GROUPLIST="-x"
 
-<<<<<<< HEAD
-LDAPPWD="xzaq!@#$"
-=======
 echo -n "Enter toor (admin) password:"
 read -s LDAPPWD
->>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
 
 LDIF=/tmp/LDIF.txt
 
@@ -52,8 +48,8 @@ G_SYNOPSIS="
 	system and add the user to exist LDAP groups. It also sets up
 	the user's directories, initialze the user's env and adds important
 	symbolic links.
-	
-	It can also modify some attributes of an existing user and 
+
+	It can also modify some attributes of an existing user and
 	also create new groups from scratch.
 
 	It can also be used to remove a used from LDAP (-d) and also
@@ -62,18 +58,18 @@ G_SYNOPSIS="
 	Finally, it can also be used to set/change the password for the
 	user (-p).
 
- ARGUMENTS                                
+ ARGUMENTS
 
         -u <username>
         The user name which should match the part of the BCH email before @.
         e.g. daniel.haehn
-        
+
 	-U <uid>
 	If specified, force the user's uid to be <uid> instead of autogenerating.
-	
+
         -g <groupname>
         The group that the user will be part of. Valid LDAP groups are:
-	
+
 		PRIMARY GROUPS:
 		o grantlab
 		o sheridanlab
@@ -83,59 +79,54 @@ G_SYNOPSIS="
 		o cbdgp
 		o collabs
 		o visitors
-		
+
 		SECONDARY GROUPS:
 		o mi2b2
 		o chrisgp
 		o (possibly others)
-		
+
 	This can be a comma separated list of groups as well. The first group
-	in the list is considered the primary group and defines where the 
+	in the list is considered the primary group and defines where the
 	user's home directory will be created.
-	
+
 	If a secondary group is specified as the first argument to '-g' then
 	the script will terminate with an error.
-	
+
 	The '-G' designates a modification on an existing user -- typically
 	used when a user needs to be added to other groups after having
 	already been created.
-	
+
 	-N <newGroupName,newGroupID>
-	If specified will ignore all other flags and create a new LDAP 
+	If specified will ignore all other flags and create a new LDAP
 	called <newGroupName> with group ID <newGroupID>.
 
 	-d
 	Delete the user from the LDAP database (and also LDAP groups).
 
 	-D
-	Delete (purge!) the user's actual home diretory and associated symbolic 
+	Delete (purge!) the user's actual home diretory and associated symbolic
 	links. Use with care!
 
 	-p
 	Only set the user's password.
-        
+
  HISTORY
 
         21 Nov 2012
         o remove the toor username for ssh
-        o should run the script as root to take advantage of the passwordless ssh 
+        o should run the script as root to take advantage of the passwordless ssh
 
         30 May 2012
         o First version.
-	
-<<<<<<< HEAD
-	08 Oct 2015
-	o Major updates and refactoring.
-=======
+
         08 Oct 2015
         o Major updates and refactoring.
-	      
+
         09 Jun 2020
         o Remove hard-coded LDAPPWD
         o Read password from stdin
             Type it in interactively, or you could use a here-string.
             Example: ./neuro-adduser.sh -u person.name -g grantlab <<< correct.horse.battery.staple
->>>>>>> 1fa706d0e24139ed276950d336aa5b18edbdfdff
 "
 ###\\\
 # Global variables --->
@@ -211,7 +202,7 @@ function user_deleteFromGroup
 {
 	LDIF=/tmp/deleteUserFromGroupLDAP.txt
 	group=$1
-		
+
 	echo "dn: cn=${group},ou=groups,dc=fnndsc
 	changetype: modify
 	delete: memberUid
@@ -225,10 +216,10 @@ function user_deleteFromGroupList
 {
 	GROUPLIST=$1
 	for group in $GROUPLIST ; do
-		lprint "Deleting $G_USERNAME from LDAP group <$group>" "1;31" "-" 
+		lprint "Deleting $G_USERNAME from LDAP group <$group>" "1;31" "-"
 		user_deleteFromGroup $group 2>/dev/null >/dev/null
 		ret_check $?
-	done	
+	done
 }
 
 function user_check
@@ -237,7 +228,7 @@ function user_check
 	if [[ $ret != "0" ]]  ; then
 	  while true; do
 		read -p "Do you wish to: (a)bort; (d)elete the user and exit; (i)gnore and continue? " adi
-		case $adi in 
+		case $adi in
 			[Aa]*) exit							;;
 			[Dd]*) user_deleteFromLDAP; exit				;;
 			[Ii]*) break							;;
@@ -252,14 +243,14 @@ function group_createNewLDAP
 {
 	GROUP=$1
 	GID=$2
-	
+
 	LDIF=/tmp/createNewGroupLDAP.txt
-	
+
 	echo "dn: cn=${GROUP},ou=groups,dc=fnndsc
 	objectClass: top
 	objectClass: posixGroup
 	gidNumber: $GID" > $LDIF
-	
+
 	ldapadd -x -D "cn=admin,dc=fnndsc" -w "$LDAPPWD" -h fnndsc -f $LDIF >/dev/null 2>/dev/null
 	rm $LDIF
 }
@@ -271,7 +262,7 @@ function group_check
 	if [[ $ret != "0" ]]  ; then
 	  while true; do
 		read -p "Do you wish to: (a)bort; (d)elete the user from <${group}> and exit; (i)gnore and continue? " adi
-		case $adi in 
+		case $adi in
 			[Aa]*) exit							;;
 			[Dd]*) user_deleteFromGroup $group; exit 			;;
 			[Ii]*) break							;;
@@ -286,13 +277,13 @@ function passwd_set
 {
 
 	status "--> Setting the user password"
-	echo "" ; ldappasswd -h fnndsc -D "cn=admin,dc=fnndsc" -w "$LDAPPWD" -S "uid=$G_USERNAME,ou=people,dc=fnndsc" 
+	echo "" ; ldappasswd -h fnndsc -D "cn=admin,dc=fnndsc" -w "$LDAPPWD" -S "uid=$G_USERNAME,ou=people,dc=fnndsc"
 	ret=$?
 
 	ret_check $ret					\
 		"Could not set user password"		\
 		"User password successfully set"  ||	\
-		fatal couldNotSetPasswd	
+		fatal couldNotSetPasswd
 }
 
 function user_addToLDAP
@@ -300,7 +291,7 @@ function user_addToLDAP
 	if (( ! ${#LASTNAME} )) ; then
 	    LASTNAME=FIRSTNAME
 	fi
-	
+
 	echo "dn: uid=$G_USERNAME,ou=people,dc=fnndsc
 	objectClass: inetOrgPerson
 	objectClass: posixAccount
@@ -336,7 +327,7 @@ function user_addToGroupAndCheck {
 	ret=$?
 	ret_check $ret					\
 		"$G_USERNAME already in <$group>" \
-		"$G_USERNAME added to <$group>"	
+		"$G_USERNAME added to <$group>"
 
 	group_check $ret $group
 }
@@ -345,12 +336,12 @@ function user_deleteFromLDAPConfirm
 {
 	status "About to DELETE user from LDAP" "1;31"
 	echo ""
-	
+
 	while true; do
 		read -p "Do you wish to: (a)bort or (d)elete the user from LDAP? "  ap
-		case $ap in 
+		case $ap in
 			[Aa]*) 	exit							;;
-			[Dd]*) 	status "Deleting from LDAP..." 
+			[Dd]*) 	status "Deleting from LDAP..."
 				echo ""
 				break 							;;
 			*)	echo "Please answer (a)bort or (p)urge" 		;;
@@ -362,12 +353,12 @@ function user_purgeConfirm
 {
 	status "About to PURGE user home directory" "1;31"
 	echo ""
-	
+
 	while true; do
 		read -p "Do you wish to: (a)bort or (p)urge the user's home dirs? "  ap
-		case $ap in 
+		case $ap in
 			[Aa]*) 	exit							;;
-			[Pp]*) 	status "Purging..." 
+			[Pp]*) 	status "Purging..."
 				echo ""
 				break 							;;
 			*)	echo "Please answer (a)bort or (p)urge" 		;;
@@ -397,25 +388,25 @@ function homedir_set
 			NETHOME=$HOMEDIR
 			GROUPID="1102"
 			;;
-		"gaablab")	
+		"gaablab")
 			REMOTEHOST=fnndsc
 			HOMEDIR="/neuro/labs/gaablab/users/$G_USERNAME"
 			NETHOME=$HOMEDIR
 			GROUPID="1102"
 			;;
-		"sheridanlab")	
+		"sheridanlab")
 			REMOTEHOST=fnndsc
 			HOMEDIR="/neuro/labs/sheridanlab/users/$G_USERNAME"
 			NETHOME=$HOMEDIR
 			GROUPID="1102"
 			;;
-		"nelsonlab")	
+		"nelsonlab")
 			REMOTEHOST=fnndsc
 			HOMEDIR="/neuro/labs/nelsonlab/users/$G_USERNAME"
 			NETHOME=$HOMEDIR
 			GROUPID="1102"
 			;;
-		"meggp")	
+		"meggp")
 			REMOTEHOST=zeus
 			HOMEDIR="/local_mount/space/zeus/2/chb/meglab/users/$G_USERNAME"
 			NETHOME="/neuro/labs/meglab/users/$G_USERNAME"
@@ -432,18 +423,18 @@ function homedir_set
 	PRIMARYGROUP=$group
 }
 
-###\\\ 
+###\\\
 # Process command options --->
-###/// 
+###///
 
 while getopts u:U:g:G:dDpN:r: option ; do
-        case "$option" 
+        case "$option"
         in
                 u)      G_USERNAME=$OPTARG	;;
 		U)	b_forceUID=1
 			USERID=$OPTARG		;;
                 g)      G_GROUPLIST=$OPTARG	;;
-		G)	G_GROUPLIST=$OPTARG	
+		G)	G_GROUPLIST=$OPTARG
 			b_changeGroupOnly=1	;;
 		r)	G_GROUPLIST=$OPTARG
 			b_deleteFromGroup=1	;;
@@ -451,12 +442,12 @@ while getopts u:U:g:G:dDpN:r: option ; do
 			b_deleteFromGroup=1	;;
 		D)	b_purge=1		;;
 		p)	b_changePasswdOnly=1	;;
-		N)	b_createNewGroup=1	
+		N)	b_createNewGroup=1
 			NEWGROUPSPEC=$OPTARG	;;
-                \?)     synopsis_show		
+                \?)     synopsis_show
 			shut_down 1		;;
         esac
-done        
+done
 
 lprint "Am I root?" "0;35" "-"
 ret_check $EUID "Not root" "ok" || fatal notRoot
@@ -464,7 +455,7 @@ ret_check $EUID "Not root" "ok" || fatal notRoot
 # Are we running on the correct host?
 lprint "Checking on <hostname>" "0;35" "-"
 HOSTNAME=$(cat /etc/hostname | awk '{print $1}')
-ret_check $? 
+ret_check $?
 if [[ "$HOSTNAME" != "fnndsc" ]] ; then fatal wrongHost ; fi
 
 # First check on one-off functions:
@@ -479,8 +470,8 @@ if (( b_createNewGroup )) ; then
 	ret=$?
 	ret_check $ret 				\
 		"Could not create new group -- already in LDAP"		\
-		"new LDAP group, name <$NEWGROUPNAME>, gid <$NEWGROUPID>" 
-	exit 
+		"new LDAP group, name <$NEWGROUPNAME>, gid <$NEWGROUPID>"
+	exit
 fi
 
 ###\\\
@@ -520,7 +511,7 @@ for group in $GROUPLIST ; do
 		fi
 	else
 		rprint "[ Invalid group ]" "1;31"
-		fatal invalidGroup 
+		fatal invalidGroup
 	fi
 	((i++))
 done
@@ -528,13 +519,13 @@ done
 if (( b_changeGroupOnly )) ; then exit;	fi
 
 echo ""
-if (( b_purge )) ; 		then	
-	user_purgeConfirm 
+if (( b_purge )) ; 		then
+	user_purgeConfirm
 	user_purge
-	exit		
+	exit
 fi
 
-if (( b_deleteFromLDAP )) ; 	then	
+if (( b_deleteFromLDAP )) ; 	then
 	user_deleteFromLDAPConfirm;
 	lprint "Deleting primary user entry" "1;31" "-"
 	user_deleteFromLDAP
@@ -573,7 +564,7 @@ else
     ret_check $?
 fi
 
-lprint "$G_USERNAME" 	"1;32" 
+lprint "$G_USERNAME" 	"1;32"
 rprint "[ $USERID ]" 	"1;36"
 
 #################################################
@@ -590,7 +581,7 @@ user_addToLDAP
 ret=$?
 ret_check $ret 				\
 	"Could not add user -- already in LDAP"		\
-	"$G_USERNAME added to LDAP" 
+	"$G_USERNAME added to LDAP"
 user_check $ret
 
 # cleaning up tmp files
@@ -602,10 +593,10 @@ rm $LDIF
 
 for group in $GROUPLIST ; do
 	user_addToGroupAndCheck $group
-done	
+done
 
 #######################
-#		      #	
+#                     #
 # FILE SYSTEM ACTIONS #
 #                     #
 #######################
