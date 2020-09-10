@@ -112,7 +112,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=38
+targetList=39
  TARGET_CHECK[0]="tunnel.bash --reverse --sshArgs '-p 22022' --from rudolphpienaar@${DOOR}:10301 --to localhost:10401 --isRunning"
  TARGETACTION[0]="tunnel.bash --reverse --sshArgs '-p 22022' --from rudolphpienaar@${DOOR}:10301 --to localhost:10401"
  TARGET_CHECK[1]="tunnel.bash --forward --sshArgs '-p 22022' --from 4212 --via rudolphpienaar@${DOOR} --to localhost:4212 --isRunning"
@@ -189,6 +189,8 @@ TARGET_CHECK[36]="tunnel.bash --forward --sshArgs '-p 22022' --from 6001 --via r
 TARGETACTION[36]="tunnel.bash --forward --sshArgs '-p 22022' --from 6001 --via rudolphpienaar@${DOOR} --to localhost:6001"
 TARGET_CHECK[37]="tunnel.bash --forward --sshArgs '-p 22022' --from 6156 --via rudolphpienaar@${DOOR} --to localhost:6156 --isRunning"
 TARGETACTION[37]="tunnel.bash --forward --sshArgs '-p 22022' --from 6156 --via rudolphpienaar@${DOOR} --to localhost:6156"
+TARGET_CHECK[38]="tunnel.bash --forward --sshArgs '-p 22022' --from 1344 --via rudolphpienaar@${DOOR} --to localhost:1344 --isRunning"
+TARGETACTION[38]="tunnel.bash --forward --sshArgs '-p 22022' --from 1344 --via rudolphpienaar@${DOOR} --to localhost:1344"
 
 while getopts hv: option ; do
         case "$option"
