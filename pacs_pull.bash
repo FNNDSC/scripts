@@ -269,7 +269,8 @@ function moveSERIES_cmd
                    -k $G_SeriesInstanceUID=$SERIESUIDTOPULL             \
                    $G_QUERYHOST $G_QUERYPORT"
 
-    eval "$PULL"
+#    eval "$PULL"
+    echo "$PULL"
     rprint "[ $? ]"
     Gb_final=$(( Gb_final || $? ))
 }
@@ -288,7 +289,7 @@ function moveSTUDY_cmd
                    -k $G_StudyInstanceUID=${STUDYIDTOPULL}              \
                    $G_QUERYHOST $G_QUERYPORT"
 
-    eval "$PULL"
+#    eval "$PULL"
     rprint "[ $? ]"
     Gb_final=$(( Gb_final || $? ))
 }
@@ -448,7 +449,7 @@ for EL in $(echo $GLST | tr , ' '); do
    	     -k $G_ServiceID=$G_SERVICEID				    \
 	     -k $G_PerformedStationAETitle=$G_PERFORMEDSTATIONAETITLE	    \
              $G_QUERYHOST $G_QUERYPORT 2> $G_FINDSCUSTUDYSTD"
-
+    echo "$QUERYSTUDY"
     QUERY="$QUERYSTUDY"
     lprint "I: Results of 'findscu'"
     eval "$QUERY"
@@ -494,7 +495,7 @@ for EL in $(echo $GLST | tr , ' '); do
    	     -k $G_ServiceID=$G_SERVICEID				    \
 	     -k $G_PerformedStationAETitle=$G_PERFORMEDSTATIONAETITLE	    \
              $G_QUERYHOST $G_QUERYPORT 2>> $G_FINDSCUSERIESSTD"
-        #echo "$QUERTSERIES"
+        echo "$QUERYSERIES"
         eval "$QUERYSERIES"
 	#exit 0
       done
