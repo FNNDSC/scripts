@@ -288,8 +288,8 @@ TARGETACTION[55]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpiena
 
 TARGET_CHECK[56]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:3156 --to megalodon.tch.harvard.edu:3000 --isRunning"
 TARGETACTION[56]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:3156 --to megalodon.tch.harvard.edu:3000" 
-TARGET_CHECK[57]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8156 --to megalodon.tch.harvard.edu:8000 --isRunning"
-TARGETACTION[57]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8156 --to megalodon.tch.harvard.edu:8000" 
+TARGET_CHECK[57]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8156 --to megalodon.tch.harvard.edu:8156 --isRunning"
+TARGETACTION[57]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8156 --to megalodon.tch.harvard.edu:8156" 
 TARGET_CHECK[58]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:7000 --to megalodon.tch.harvard.edu:7000 --isRunning"
 TARGETACTION[58]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:7000 --to megalodon.tch.harvard.edu:7000" 
 
