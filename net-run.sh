@@ -399,12 +399,14 @@ for host in "${a_HOST[@]}" ; do
         STR=$(eval "$CMD")
         # Remove last string "|"
         STR=${STR%?}
-        # Now add spacing/formatting...
-        echo "$STR" | awk -v CW=$COLWIDTH -F \| '{
-        for(i=1; i<=NF; i++) 
-            printf("%*s|", CW, $i); 
-        printf("\n");}'
-        ((i++))
+	if (( ${#STR} )) ; then
+           # Now add spacing/formatting...
+           echo "$STR" | awk -v CW=$COLWIDTH -F \| '{
+           for(i=1; i<=NF; i++) 
+               printf("%*s|", CW, $i); 
+           printf("\n");}'
+           ((i++))
+	fi
 	if (( sleepBetweenLoop )) ;  then
 	    sleep $sleepBetweenLoop
 	fi
