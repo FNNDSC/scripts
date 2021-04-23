@@ -202,8 +202,8 @@ TARGETACTION[23]="tunnel.bash --forward --sshArgs '-p 22022' --from 10301 --via 
 #
 TARGET_CHECK[24]="tunnel.bash --forward --from 9000 --via rudolphpienaar@${H1} --to localhost:80 --sshArgs '-p 7778' --isRunning"
 TARGETACTION[24]="tunnel.bash --forward --from 9000 --via rudolphpienaar@${H1} --to localhost:80 --sshArgs '-p 7778'"
-TARGET_CHECK[25]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:7778 --sshArgs '-p 7778' --isRunning"
-TARGETACTION[25]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:7778 --sshArgs '-p 7778'"
+TARGET_CHECK[25]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:22 --sshArgs '-p 7778' --isRunning"
+TARGETACTION[25]="tunnel.bash --forward --from 6812 --via rudolphpienaar@${H1} --to localhost:22 --sshArgs '-p 7778'"
 
 #
 ##
