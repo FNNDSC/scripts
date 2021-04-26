@@ -109,7 +109,7 @@ FIONA=10.17.24.60
 PANGEA=pangea.tch.harvard.edu
 TITAN=titan.tch.harvard.edu
 
-H1=108.49.45.138
+H1=173.48.102.146
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
 
