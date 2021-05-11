@@ -150,6 +150,8 @@ NETMASK[63]="7 Landmark, wifi subnet 4;10.23.55.0"
 NETMASK[64]="Sanjay 3D Lab;10.16.7.0"
 NETMASK[65]="Sanjay 3D Lab;10.3.70.0"
 NETMASK[66]="e2 cluster;10.36.172.0"
+NETMASK[67]="6 Landmark, subnet 1; 10.72.9.0"
+NETMASK[68]="6 Landmark, subnet 2; 10.72.8.0"
 
 shift $(($OPTIND - 1))
 EXPORTLIST=$*
