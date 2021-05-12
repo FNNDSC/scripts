@@ -108,6 +108,7 @@ BRAIN=brain.chpc.ac.za
 FIONA=10.17.24.60
 PANGEA=pangea.tch.harvard.edu
 TITAN=titan.tch.harvard.edu
+OLYMPUS=olympus.tch.harvard.edu
 
 H1=173.48.102.146
 verbosity_check
@@ -118,7 +119,7 @@ for file in $REQUIREDFILES ; do
         file_checkOnPath $file >/dev/null || fatal fileCheck
 done
 
-targetList=59
+targetList=60
 #
 ##
 ### REVERSE TUNNELS -- from dreev
@@ -293,6 +294,8 @@ TARGETACTION[57]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpiena
 TARGET_CHECK[58]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:7000 --to megalodon.tch.harvard.edu:7000 --isRunning"
 TARGETACTION[58]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:7000 --to megalodon.tch.harvard.edu:7000" 
 
+TARGET_CHECK[59]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2884 --to ${OLYMPUS}:22 --isRunning"
+TARGETACTION[59]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:2884 --to ${OLYMPUS}:22" 
 
 
 
