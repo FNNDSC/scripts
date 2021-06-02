@@ -102,7 +102,7 @@ RCDRNO=rc-drno.tch.harvard.edu
 PRETORIA=pretoria.tch.harvard.edu
 GATE=gate.nmr.mgh.harvard.edu
 DOOR=xtal200.harvard.edu
-H1=108.49.45.138
+H1=173.48.102.146
 
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
