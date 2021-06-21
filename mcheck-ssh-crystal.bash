@@ -109,6 +109,7 @@ FIONA=10.17.24.60
 PANGEA=pangea.tch.harvard.edu
 TITAN=titan.tch.harvard.edu
 OLYMPUS=olympus.tch.harvard.edu
+CUBENEXT=cube-next.tch.harvard.edu
 
 H1=173.48.102.146
 verbosity_check
@@ -274,8 +275,8 @@ TARGET_CHECK[49]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpiena
 TARGETACTION[49]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:3000 --to ${TITAN}:3000" 
 TARGET_CHECK[50]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:5000 --to ${TITAN}:5000 --isRunning"
 TARGETACTION[50]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:5000 --to ${TITAN}:5000" 
-TARGET_CHECK[51]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8000 --to ${TITAN}:8000 --isRunning"
-TARGETACTION[51]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8000 --to ${TITAN}:8000" 
+TARGET_CHECK[51]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8000 --to ${CUBENEXT}:8000 --isRunning"
+TARGETACTION[51]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8000 --to ${CUBENEXT}:8000" 
 TARGET_CHECK[52]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8010 --to ${TITAN}:8010 --isRunning"
 TARGETACTION[52]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:8010 --to ${TITAN}:8010" 
 TARGET_CHECK[53]="tunnel.bash --reverse --sshArgs '-p 22022'	--from rudolphpienaar@${GATE}:6001 --to ${TITAN}:6001 --isRunning"
