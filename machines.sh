@@ -36,7 +36,7 @@ declare -a a_FNNDSC=(
         red
         sox
         santorini
-        zeus
+        cube-next
         athena
         sun
         chris-tmp
@@ -51,6 +51,7 @@ declare -a a_FNNDSC=(
         fiona-bch
         antalya
         montreal
+	chris-next
         zebra
         rhino
 	meerkat
