@@ -49,9 +49,9 @@ printf "          "     # Blank out ", country" with x spaces
 #tput cuf $DateColumn    # Position to column 27 for date display
 
 # -h needed to turn off formating: https://askubuntu.com/questions/1013954/bash-substring-stringoffsetlength-error/1013960#1013960
-cal > /tmp/terminal1
+cal > $HOME/tmp/terminal1
 # -h not supported in Ubuntu 18.04. Use second answer: https://askubuntu.com/a/1028566/307523
-tr -cd '\11\12\15\40\60-\136\140-\176' < /tmp/terminal1  > /tmp/terminal
+tr -cd '\11\12\15\40\60-\136\140-\176' < $HOME/tmp/terminal1  > $HOME/tmp/terminal
 
 CalLineCnt=1
 Today=$(date +"%e")
@@ -80,7 +80,7 @@ while IFS= read -r Cal; do
     tput cud1               # Down one line
     tput cuf $DateColumn    # Move 27 columns right
     CalLineCnt=$((++CalLineCnt))
-done < /tmp/terminal
+done < $HOME/tmp/terminal
 
 printf "\033[00m"           # color -- bright white (default)
 echo ""
@@ -98,13 +98,13 @@ tput cuf $TimeColumn    # Move 49 columns right
 # Do we have the toilet package?
 if hash toilet 2>/dev/null; then
     echo " "$(date +"%H:%M")" " | \
-        toilet -f future --filter border > /tmp/terminal
+        toilet -f future --filter border > $HOME/tmp/terminal
 # Do we have the figlet package?
 elif hash figlet 2>/dev/null; then
-    echo $(date +"%H:%M") | figlet > /tmp/terminal
+    echo $(date +"%H:%M") | figlet > $HOME/tmp/terminal
 # else use standard font
 else
-    echo $(date +"%H:%M") > /tmp/terminal
+    echo $(date +"%H:%M") > $HOME/tmp/terminal
 fi
 
 while IFS= read -r Time; do
@@ -112,7 +112,7 @@ while IFS= read -r Time; do
     printf "$Time"
     tput cud1               # Up one line
     tput cuf $TimeColumn    # Move 49 columns right
-done < /tmp/terminal
+done < $HOME/tmp/terminal
 
 tput rc                     # Restore saved cursor position.
 
