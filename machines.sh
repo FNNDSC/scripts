@@ -5,7 +5,7 @@ declare -a a_PICES=(
         rc-golden
         )
 
-declare -a a_FNNDSC=(
+declare -a a_FNNDSCold=(
         titan
         pangea
         hollywood
@@ -69,5 +69,56 @@ declare -a a_FNNDSC=(
         dobby
         sirius
         harleyq
+)
+
+declare -a a_FNNDSC=(
+        titan
+        pangea
+        hollywood
+        centauri
+        ulsan
+        havana
+	patmos
+        goldreef
+        skopje
+        seville
+        arcadia
+        london
+        simonstown
+       	cube-next 
+        capetown
+        shaka
+        sunnyside
+        rio
+        oklahoma
+        naples
+        toledo
+        maracuja
+        longwood
+        hercules
+        hippocrates
+        red
+        sox
+        santorini
+        athena
+        sun
+        chris-tmp
+        chopin
+       	stormwind 
+        oxford
+        radview
+        centurion
+        dubrovnik
+        megalodon
+        luna
+	chris-next
+        zebra
+        rhino
+	meerkat
+        hagrid
+        johannesburg
+	fnndsc
+	severus
+        sirius
 )
 
