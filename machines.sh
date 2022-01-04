@@ -9,7 +9,7 @@ declare -a a_FNNDSCold=(
         titan
         pangea
         hollywood
-        centauri
+       	centauri	
         ulsan
         havana
 	patmos
@@ -75,7 +75,7 @@ declare -a a_FNNDSC=(
         titan
         pangea
         hollywood
-        centauri
+       	rodinia 
         ulsan
         havana
 	patmos
