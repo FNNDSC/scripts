@@ -9,10 +9,10 @@ declare -a a_FNNDSCold=(
         titan
         pangea
         hollywood
-       	centauri	
+        centauri    
         ulsan
         havana
-	patmos
+        patmos
         goldreef
         skopje
         seville
@@ -51,19 +51,19 @@ declare -a a_FNNDSCold=(
         fiona-bch
         antalya
         montreal
-	chris-next
+        chris-next
         zebra
         rhino
-	meerkat
+        meerkat
         hagrid
         johannesburg
-	fnndsc
-	fnndsc-clone
-	fnndsc.childrens.harvard.edu
-	severus
-	bellatrix
-	nightwing
-	clayface
+        fnndsc
+        fnndsc-clone
+        fnndsc.childrens.harvard.edu
+        severus
+        bellatrix
+        nightwing
+        clayface
         poisonivy
         riddler
         dobby
@@ -75,17 +75,17 @@ declare -a a_FNNDSC=(
         titan
         pangea
         hollywood
-       	rodinia 
+        rodinia 
         ulsan
         havana
-	patmos
+        patmos
         goldreef
         skopje
         seville
         arcadia
         london
         simonstown
-       	cube-next 
+        cube-next 
         capetown
         shaka
         sunnyside
@@ -104,21 +104,21 @@ declare -a a_FNNDSC=(
         sun
         chris-tmp
         chopin
-       	stormwind 
+        stormwind 
         oxford
         radview
         centurion
         dubrovnik
         megalodon
         luna
-	chris-next
+        chris-next
         zebra
         rhino
-	meerkat
+        meerkat
         hagrid
         johannesburg
-	fnndsc
-	severus
+        fnndsc
+        severus
         sirius
 )
 
