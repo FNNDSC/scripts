@@ -120,5 +120,11 @@ declare -a a_FNNDSC=(
         fnndsc
         severus
         sirius
+	wangsimni
+	monterrey
+	morelia
+	guadalajara
+	eljobo
+	
 )
 
