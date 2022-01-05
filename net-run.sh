@@ -12,6 +12,7 @@ declare -i sleepBetweenLoop=0
 declare -i b_continueProcessing=0
 declare -i b_cmdSuffix=0
 declare -i COLWIDTH=25
+declare -i HOSTWIDTH=20
 tunnelUser="rudolph"
 tunnelHost="localhost"
 tunnelPort=4216
@@ -128,7 +129,7 @@ G_SYNOPSIS="
 
   EXAMPLES
 
-      LONG STYLE
+    LONG STYLE
 
         Quoting can be tricky!
 
@@ -207,12 +208,6 @@ G_SYNOPSIS="
                                   ps aux | sort -nrk 3,3 |
                                   head -n 1 \" -E
 
-        * apt tools:
-
-        net-run.sh -G FNNDSC -C \"source ~rudolphpienaar/.bashrc ;
-                                  hostname |
-                                  xargs -i@ printf '%${C}s: ' @ ;
-                                  sudo apt update \" -E
         * bogomips:
 
         printf '\n%${C}s' hostname ; printf '%15s\n' bogomips ;\\
@@ -224,9 +219,48 @@ G_SYNOPSIS="
                                   sed 's|bogomips||' | sed 's|:||' |
                                   tail -n 1\" -E
 
+        * apt tools (for example):
+
+        net-run.sh -G FNNDSC -C \"source ~rudolphpienaar/.bashrc ;
+                                  hostname |
+                                  xargs -i@ printf '%${C}s: ' @ ;
+                                  sudo apt update \" -E
+
+    SHORT STYLE
+
+        This style is useful to run simple arbitrary commands and
+        preserve some beautification formatting (note the -B for backgrounding
+        the ssh command and increasing overall speed):
+
+
+        net-run.sh -G FNNDSC -W 73 -c \"whoami\" -E -s 1
+
+        net-run.sh -G FNNDSC -W 40 -c \"lsmem | grep 'Total online'\" -E -B
+
+        net-run.sh -G FNNDSC -c \"sudo apt update && sudo apt upgrade\" -E -s 1
+
     MACRO STYLE
 
-    net-run.sh -G FNNDSC -S uptime -E -s 1
+        Several macros are available that are referenced by a single macro
+        name, for example the machine uptime:
+
+        net-run.sh -G FNNDSC -S uptime -E -s 1
+
+        Available macros include:
+
+            uptime
+            processors
+            osver
+            prettyname
+            uname
+            meminfo
+            loadavg
+            bogomips
+            CPU
+            who
+            top
+
+        These can be specified either singly, or in a comma separated string.
 
 "
 
@@ -234,43 +268,43 @@ function macro_process
 {
     CW=$COLWIDTH
     PRE="source ~rudolphpienaar/.bashrc ; hostname |
-                                          xargs -i@ printf '%${CW}s| ' @"
+                                          xargs -i@ printf '%s| ' @"
     l_macro=$(echo $1 | tr ',' ' ')
-    printf "\n%${CW}s|" hostname
+    printf "\n%${HOSTWIDTH}s │" hostname
     cmd=$PRE
     for macro in $l_macro; do
         case $macro
         in
-            "uptime")       printf "%${CW}s|" $macro;
+            "uptime")       printf "%${CW}s │" $macro;
                             cmd="$cmd ;     uptime                          |
                                             tr '\n' '|'"                    ;;
-            "processors")   printf "%${CW}s|" $macro;
+            "processors")   printf "%${CW}s │" $macro;
                             cmd="$cmd ;     cat /proc/cpuinfo               |
                                             grep processor                  |
                                             wc -l | xargs -i@ echo ' '@     |
                                             tr '\n' '|'"                    ;;
-            "osver")        printf "%${CW}s|" $macro;
+            "osver")        printf "%${CW}s │" $macro;
                             cmd="$cmd;      cat /etc/issue.net              |
                                             tr '\n' '|'"                    ;;
-            "prettyname")   printf "%${CW}s|\t" $macro;
+            "prettyname")   printf "%${CW}s │\t" $macro;
                             cmd="$cmd;      cat /etc/os-release             |
                                             grep -E 'PRETTY'                |
                                             sed 's|PRETTY_NAME=||'          |
                                             tr '\n' '|'"                    ;;
-            "uname")        printf "%${CW}s|" $macro;
+            "uname")        printf "%${CW}s │" $macro;
                             cmd="$cmd;      uname -a                        |
                                             tr '\n' '|'"                    ;;
-            "meminfo")      printf "%${CW}s|" $macro;
+            "meminfo")      printf "%${CW}s │" $macro;
                             cmd="$cmd;      cat /proc/meminfo               |
                                             grep MemTotal                   |
                                             sed 's|MemTotal:||'             |
                                             sed 's|^[[:space:]]*||'         |
                                             xargs -i@ printf '%12s\n' @     |
                                             tr '\n' '|'"                    ;;
-            "loadavg")      printf "%${CW}s|" $macro;
+            "loadavg")      printf "%${CW}s │" $macro;
                             cmd="$cmd;      cat /proc/loadavg               |
                                             tr '\n' '|'"                    ;;
-            "bogomips")     printf "%${CW}s|" $macro;
+            "bogomips")     printf "%${CW}s │" $macro;
                             cmd="$cmd;      cat /proc/cpuinfo               |
                                             grep bogo                       |
                                             sed 's|bogomips||'              |
@@ -278,7 +312,7 @@ function macro_process
                                             sed 's|^[[:space:]]*||'         |
                                             tail -n 1                       |
                                             tr '\n' '|'"                    ;;
-            "CPU")          printf "%${CW}s|" $macro;
+            "CPU")          printf "%${CW}s │" $macro;
                             cmd="$cmd;      cat /proc/cpuinfo               |
                                             grep name                       |
                                             sed 's|model name||'            |
@@ -286,16 +320,16 @@ function macro_process
                                             sed 's|^[[:space:]]*||'         |
                                             tail -n 1                       |
                                             tr '\n' '|'"                    ;;
-            "who")          printf "%${CW}s|" $macro;
+            "who")          printf "%${CW}s │" $macro;
                             cmd="$cmd;      who                             |
                                             head -n 1                       |
                                             tr '\n' '|'"                    ;;
-            "user")         printf "%${CW}s|" $macro;
+            "user")         printf "%${CW}s │" $macro;
                             cmd="$cmd;      who                             |
                                             head -n 1                       |
                                             sed 's/\(.*\)\(. \) \(.*\)/\1/' |
                                             tr '\n' '|'"                    ;;
-            "top")          printf "%${CW}s|" $macro;
+            "top")          printf "%${CW}s │" $macro;
                             cmd="$cmd;      ps aux | sort -nrk 3,3          |
                                             head -n 1                       |
                                             tr '\n' '|'"                    ;;
@@ -312,36 +346,34 @@ function macro_process
 function suffix_process
 {
     PRE="source ~rudolphpienaar/.bashrc ; hostname |
-                                          xargs -i@ printf '%${COLWIDTH}s\t ' @"
+                                          xargs -i@ printf '%s| ' @"
     cmd="$PRE; $1"
-    printf "\n%${COLWIDTH}s" hostname ; printf ' %s\n' "$1" ;
+    printf "\n%${HOSTWIDTH}s │" hostname ; printf "%${COLWIDTH}s │\n" "$1" ;
 }
-
-
 
 while getopts u:R:C:v:U:H:P:G:s:ELBI:O:S:c:W: option ; do
     case "$option"
     in
-        u) user=$OPTARG                 ;;
-        W) COLWIDTH=$OPTARG             ;;
-        E) b_errorSink=1                ;;
-        L) b_localEcho=1                ;;
-        B) b_detach=1                   ;;
-        I) hostIgnore=$OPTARG           ;;
-        O) onlyTheseHosts=$OPTARG       ;;
-        U) tunnelUser=$OPTARG
-           b_tunnelUse=1                ;;
-        H) tunnelHost=$OPTARG
-           b_tunnelUse=1                ;;
-        P) tunnelPort=$OPTARG
-           b_tunnelUse=1                ;;
-        G) GROUP=$OPTARG                ;;
-        v) Gi_verbose=$OPTARG           ;;
-        s) sleepBetweenLoop=$OPTARG     ;;
-        S) macro=$OPTARG                ;;
-        C) cmd="$OPTARG"                ;;
-        c) suffix="$OPTARG"
-       b_cmdSuffix=1                    ;;
+        u)  user=$OPTARG                    ;;
+        W)  COLWIDTH=$OPTARG                ;;
+        E)  b_errorSink=1                   ;;
+        L)  b_localEcho=1                   ;;
+        B)  b_detach=1                      ;;
+        I)  hostIgnore=$OPTARG              ;;
+        O)  onlyTheseHosts=$OPTARG          ;;
+        U)  tunnelUser=$OPTARG
+            b_tunnelUse=1                   ;;
+        H)  tunnelHost=$OPTARG
+            b_tunnelUse=1                   ;;
+        P)  tunnelPort=$OPTARG
+            b_tunnelUse=1                   ;;
+        G)  GROUP=$OPTARG                   ;;
+        v)  Gi_verbose=$OPTARG              ;;
+        s)  sleepBetweenLoop=$OPTARG        ;;
+        S)  macro=$OPTARG                   ;;
+        C)  cmd="$OPTARG"                   ;;
+        c)  suffix="$OPTARG"
+            b_cmdSuffix=1                   ;;
         \?) synopsis_show
             exit 1;;
     esac
@@ -397,15 +429,17 @@ for host in "${a_HOST[@]}" ; do
         if (( b_localEcho )); then echo $CMD ; fi
         # Grab output of remote call
         STR=$(eval "$CMD")
-        # Remove last string "|"
-        STR=${STR%?}
         if (( ${#STR} )) ; then
-           # Now add spacing/formatting...
-           echo "$STR" | awk -v CW=$COLWIDTH -F \| '{
-           for(i=1; i<=NF; i++)
-               printf("%*s|", CW, $i);
-           printf("\n");}'
-           ((i++))
+            # Now add spacing/formatting...
+            echo "$STR" | awk -v CW=$COLWIDTH -v HW=$HOSTWIDTH -F \| '{
+            for(i=1; i<=NF; i++)
+                if(i==1) {
+                    printf("%*s │", HW, $i)
+                } else {
+                    printf("%*s │", CW, $i);
+                }
+            printf("\n");}'
+            ((i++))
         fi
         if (( sleepBetweenLoop )) ;  then
             sleep $sleepBetweenLoop
