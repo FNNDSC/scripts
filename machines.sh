@@ -104,7 +104,6 @@ declare -a a_FNNDSC=(
         santorini
         athena
         sun
-        chris-tmp
         chopin
         stormwind 
         oxford
@@ -120,6 +119,7 @@ declare -a a_FNNDSC=(
         hagrid
         johannesburg
         fnndsc
+	fnndsc.childrens.harvard.edu
         severus
         sirius
 	wangsimni
