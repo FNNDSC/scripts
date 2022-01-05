@@ -7,6 +7,7 @@ declare -a a_PICES=(
 
 declare -a a_FNNDSCold=(
         titan
+	olympus
         pangea
         hollywood
         centauri    
@@ -73,7 +74,8 @@ declare -a a_FNNDSCold=(
 
 declare -a a_FNNDSC=(
         titan
-        pangea
+        olympus
+	pangea
         hollywood
         rodinia 
         ulsan
@@ -125,6 +127,5 @@ declare -a a_FNNDSC=(
 	morelia
 	guadalajara
 	eljobo
-	
 )
 
