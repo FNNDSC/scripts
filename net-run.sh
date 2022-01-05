@@ -43,7 +43,7 @@ G_SYNOPSIS="
                         [-H <tunnelHost>]                               \\
                         [-I <ignoreHostList>]                           \\
                         [-O <onyTheseHosts>]                            \\
-		                [-s <sleepBetweenLoop>]                         \\
+                        [-s <sleepBetweenLoop>]                         \\
                         [-v <verbosityLevel>]                           \\
                         [-E]                                            \\
                         [-L]                                            \\
@@ -80,8 +80,8 @@ G_SYNOPSIS="
                 * bogomips
                 * uname
                 * top
-        * who
-        * user
+                * who
+                * user
 
         For each <macro>, the results will be presented in column
         dominant tabular form.
@@ -108,7 +108,7 @@ G_SYNOPSIS="
 
         [-u <user>]
         Remote ssh user -- typically the user on the remote host on
-        which the xload process will run.
+        which to run the <cmd> process.
 
         [-U <tunnelUser>]
         If access to the remote host is via an ssh tunnel, this
