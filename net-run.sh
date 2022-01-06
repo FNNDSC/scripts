@@ -413,8 +413,8 @@ for host in "${a_HOST[@]}" ; do
         b_continueProcessing=1
     fi
     if (( b_continueProcessing )) ; then
-        if [[ "$host" == "tautona" ]] ; then
-            user=rpienaar
+        if [[ "$host" == "rodinia" ]] ; then
+            user=rudolph
         else
             user=$origUser
         fi
@@ -437,8 +437,10 @@ for host in "${a_HOST[@]}" ; do
                 if(i==1) {
                     printf("%*s │", HW, $i)
                 } else {
-                    if(length($i) && (i<NF))
+                    if(i==NF && length($i))
                         printf("%*s │", CW, $i);
+                    else if(i<NF)
+                        printf("%*s │", CW, $i)
                 }
             printf("\n");}'
             ((i++))
