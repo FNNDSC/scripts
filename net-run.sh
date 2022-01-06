@@ -429,6 +429,7 @@ for host in "${a_HOST[@]}" ; do
         if (( b_localEcho )); then echo $CMD ; fi
         # Grab output of remote call
         STR=$(eval "$CMD")
+        # echo "$STR"
         if (( ${#STR} )) ; then
             # Now add spacing/formatting...
             echo "$STR" | awk -v CW=$COLWIDTH -v HW=$HOSTWIDTH -F \| '{
@@ -436,7 +437,8 @@ for host in "${a_HOST[@]}" ; do
                 if(i==1) {
                     printf("%*s │", HW, $i)
                 } else {
-                    printf("%*s │", CW, $i);
+                    if(length($i) && (i<NF))
+                        printf("%*s │", CW, $i);
                 }
             printf("\n");}'
             ((i++))
