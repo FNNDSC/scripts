@@ -111,7 +111,7 @@ TITAN=titan.tch.harvard.edu
 OLYMPUS=olympus.tch.harvard.edu
 CUBENEXT=cube-next.tch.harvard.edu
 
-H1=173.48.102.146
+H1=173.48.120.27
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
 
