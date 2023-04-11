@@ -117,7 +117,7 @@ G_SYNOPSIS="
   o To transmit to the dcmtk server on 'kaos':
 
     $>dicom_dirSend.bash -v 10 -a ELLENGRANT -h kaos.nmr.mgh.harvard.edu \\
-      -p 10401 <DIR1>... <DIRn>
+      -p 10401 -E dcm <DIR1>... <DIRn>
 
   o To anonymize and override MRN and SubjectName:
 
@@ -164,7 +164,7 @@ EC_dirAccess="50"
 while getopts v:a:c:h:p:s:APkE:K:O:N:M: option ; do
         case "$option"
         in
-                v) Gi_verbose=$OPTARG					;;
+                v) Gi_verbose=$OPTARG			;;
                 A) Gb_anonymize=1                       ;;
                 P) Gb_partialAnonymize=1                ;;
                 M) G_MRN=$OPTARG
@@ -219,9 +219,9 @@ fi
 
 topDir=$(pwd)
 for DIR in $DCMLIST ; do
-	    statusPrint	"Checking access to $DIR" "\n"
+	statusPrint	"Checking access to $DIR" "\n"
         lprint          "Access check"
-	    dirExist_check "$DIR" || fatal dirCheck
+	dirExist_check "$DIR" || fatal dirCheck
         if (( Gb_anonymize  || Gb_partialAnonymize)) ; then
             statusPrint "Anonymizing $DIR..." "\n"
             INPUTDIR=$DIR
@@ -244,8 +244,10 @@ for DIR in $DCMLIST ; do
         fi
         statusPrint	"Transmitting *$G_FILEEXT files in $DIR..." "\n"
         cd "$DIR" >/dev/null
+        CMD="$G_STORESCU -aet $G_AETITLE -aec $G_AETITLE $G_HOST $G_LISTENPORT *${G_FILEEXT}"
+	cprint "Command: " "$CMD"
         lprint          "Transmission"
-        $G_STORESCU -aet $G_CAETITLE -aec $G_AETITLE $G_HOST $G_LISTENPORT *${G_FILEEXT}
+        eval "$CMD"
         ret_check $? || fatal storescu
         cd ../
         if (( !Gb_keepAnonymize && ( Gb_anonymize || Gb_partialAnonymize) )) ; then
