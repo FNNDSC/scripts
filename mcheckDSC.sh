@@ -211,9 +211,9 @@ function forwardWeb_create
     forwardTunnel_bore $(viaCrystalPort 4218) $(toLocal 4218)
     forwardTunnel_bore $(viaCrystalPort 4219) $(toLocal 4219)
     forwardTunnel_bore $(viaCrystalPort 4220) $(toLocal 4220)
-    forwardTunnel_bore $(viaCrystalPort 30104) $(toLocal 4217)
-    forwardTunnel_bore $(viaCrystalPort 30031) $(toLocal 4217)
-    forwardTunnel_bore $(viaCrystalPort 30101) $(toLocal 4217)
+    forwardTunnel_bore $(viaCrystalPort 30104) $(toLocal 30104)
+    forwardTunnel_bore $(viaCrystalPort 30031) $(toLocal 30031)
+    forwardTunnel_bore $(viaCrystalPort 30101) $(toLocal 30101)
 }
 
 # Process command line options
