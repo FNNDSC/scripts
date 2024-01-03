@@ -28,35 +28,45 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-       mcheckDSC.bash [-r|-f]
+       mcheckDSC.bash [-r|-f] [-c <CMD>]
+
+ ARGS
+
+    [-f]
+    Perform a set of 'forward' connections.
+
+    [-r]
+    Perform a set of 'reverse' connections.
+
+    [-c <CMD>]
+    Check/restart the <CMD>.
 
  DESCRIPTION
 
-    'mcheck-ssh-crystal.bash' is used to check that certain script-defined
-	conditions are true. If any of these conditions are false, it executes
-	a set of corrective actions.
+    'mcheckDSC.sh' is used to check that certain script-defined conditions
+    are true. If any of these conditions are false, it executes a set of
+    corrective actions.
 
-	It should typically be called from a cron process, and this particular
-	version of 'mcheck' is tailored to monitoring ssh tunnels between this
-	host and remote hosts.
+    It should typically be called from a cron process, and this particular
+    version of 'mcheck' is tailored to monitoring ssh tunnels between this
+    host and remote hosts.
 
-	This particular script sets up the web of ssh-tunnel connections allowing
-	connections to FNNDSC hosts and contains both the _forward_ and _reverse_
-    web connection. The choice of which to us is controlled by the [-r|-f]
-    flags.
+    Additionally, this incarnation of 'mcheck' contains both the _forward_
+    and _reverse_ web connection. The choice of which to us is controlled
+    by the [-r|-f] flags.
 
  PRECONDITIONS
 
-	o   Conditions to check are defined in the script code itself. These
+    o   Conditions to check are defined in the script code itself. These
         are specified in two arrays: the first describing (per condition)
-    	the command to check; the second describing (per condition) whatever
-    	corrective action to run should the check command be false.
- 	o   Conditions to check should be described in such a manner that, should
-    	the condition be false, the check command returns zero (0).
+        the command to check; the second describing (per condition) whatever
+        corrective action to run should the check command be false.
+    o   Conditions to check should be described in such a manner that, should
+        the condition be false, the check command returns zero (0).
 
  POSTCONDITIONS
 
-	o The corrective action (per condition) is executed if the check condition
+    o The corrective action (per condition) is executed if the check condition
       returns false (0).
 
  HISTORY
@@ -133,6 +143,14 @@ function forwardTunnelCmd
 }
 
 let tunnelCount=0
+function monitorCmd
+{
+    CMD="$1"
+    TARGET_CHECK[$tunnelCount]="$CMD"
+    TARGETACTION[$tunnelCount]="$CMD"
+    ((tunnelCount++))
+}
+
 function reverseTunnel_bore
 {
     fromHostPort=$1
@@ -217,12 +235,14 @@ function forwardWeb_create
 }
 
 # Process command line options
-while getopts frhv: option ; do
+CMD=""
+while getopts frhv:c: option ; do
     case "$option"
     in
         r)  b_reverse=1             ;;
         f)  b_forward=1             ;;
-        v) 	let Gi_verbose=$OPTARG	;;
+        c)  CMD="$OPTARG"       ;;
+        v)  let Gi_verbose=$OPTARG  ;;
         h)  echo "$G_SYNOPSIS"
             shut_down 1             ;;
         \?) echo "$G_SYNOPSIS"
@@ -232,23 +252,26 @@ done
 
 if ((b_reverse)) ; then
     reverseWeb_create
-else
+fi
+if ((b_forward)) ; then
     forwardWeb_create
 fi
-
+if [[ ! -z "$CMD" ]] ; then
+    monitorCmd "$CMD"
+fi
 rm -f $G_REPORTLOG
 b_logGenerate=0
 echo $TARGET_CHECK
 for i in $(seq 0 $(expr $tunnelCount - 1)) ; do
     echo ${TARGET_CHECK[$i]}
     result=$(eval ${TARGET_CHECK[$i]})
-	if (( result == 0 )) ; then
-		lprintn "Restarting target action..."
-	    eval "${TARGETACTION[$i]} "
-		ret_check $? || fatal badRestart
-		TARGETRESTARTED="$TARGETRESTARTED $i"
-		b_logGenerate=1
-	fi
+    if (( result == 0 )) ; then
+        lprintn "Restarting target action..."
+        eval "${TARGETACTION[$i]} "
+        ret_check $? || fatal badRestart
+        TARGETRESTARTED="$TARGETRESTARTED $i"
+        b_logGenerate=1
+    fi
 done
 
 for i in $TARGETRESTARTED ; do
@@ -262,20 +285,20 @@ messageFile=/tmp/$SELF.message.$PID
 if [ "$b_logGenerate" -eq "1" ] ; then
         message="
 
-	$SELF
+    $SELF
 
-	Some of the events I am monitoring signalled a FAILED condition
-	The events and the corrective action I implemented are:
+    Some of the events I am monitoring signalled a FAILED condition
+    The events and the corrective action I implemented are:
 
 $(cat $G_REPORTLOG)
 
         "
-	echo "$message" > $messageFile
-	mail -s "Failed conditions restarted" $G_ADMINUSERS < $messageFile
+    echo "$message" > $messageFile
+    mail -s "Failed conditions restarted" $G_ADMINUSERS < $messageFile
 fi
 
 if [[ -f $messageFile ]] ; then
-	rm -f $messageFile 2>/dev/null
+    rm -f $messageFile 2>/dev/null
 fi
 
 # This is commented out otherwise cron noise becomes unbearable
