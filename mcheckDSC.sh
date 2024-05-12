@@ -99,7 +99,7 @@ EC_badRestart=10
 EC_fileCheck=1
 
 GATE=xtal200.harvard.edu
-H1=173.48.117.130
+H1=108.20.194.153
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
 
