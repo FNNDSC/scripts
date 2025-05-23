@@ -3,7 +3,7 @@
 # Copyright 2010 Rudolph Pienaar, Dan Ginsburg, FNNDSC
 # Childrens Hospital Boston
 #
-# GPL v2
+# SPDX-License-Identifier: MIT
 #
 # pacs_pull.bash -- General purpose PACS query/retrieve
 #                   text-based front end.

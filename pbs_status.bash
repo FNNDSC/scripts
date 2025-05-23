@@ -5,7 +5,7 @@
 # Copyright 2010 Dan Ginsburg
 # Children's Hospital Boston
 #
-# GPL v2
+# SPDX-License-Identifier: MIT
 #
 
 # "include" the set of common script functions

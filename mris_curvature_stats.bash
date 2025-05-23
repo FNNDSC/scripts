@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 
-# GPL v2
+# SPDX-License-Identifier: MIT
 #
 
 # "include" the set of common script functions

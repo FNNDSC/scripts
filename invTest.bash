@@ -5,7 +5,7 @@
 # Copyright 2014 Rudolph Pienaar
 # Boston Children's Hospital
 #
-# GPL v2
+# SPDX-License-Identifier: MIT
 #
 
 

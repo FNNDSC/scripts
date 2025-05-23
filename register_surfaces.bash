@@ -4,7 +4,7 @@
 # Copyright 2010 Rudolph Pienaar, Dan Ginsburg, FNNDSC
 # Childrens Hospital Boston
 #
-# GPL v2
+# SPDX-License-Identifier: MIT
 #
 # register_surfaces.bash -- Register a set of subject surfaces to 
 #                           a reference subject

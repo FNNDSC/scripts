@@ -5,7 +5,7 @@
 # Copyright 2008 Rudolph Pienaar
 # Massachusetts General Hospital
 #
-# GPL v2
+# SPDX-License-Identifier: MIT
 #
 source common.bash
 

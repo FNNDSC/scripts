@@ -5,7 +5,7 @@
 # Copyright 2009 Dan Ginsburg
 # Children's Hospital Boston
 #
-# GPL v2
+# SPDX-License-Identifier: MIT
 #
 # $1 = Package directory
 # $2 = Scripts directory
