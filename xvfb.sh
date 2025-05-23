@@ -5,7 +5,7 @@
 # Copyright 2011 Rudolph Pienaar
 # Children's Hospital Boston
 #
-# GPL v2
+# SPDX-License-Identifier: MIT
 #
 
 # "include" the set of common script functions
