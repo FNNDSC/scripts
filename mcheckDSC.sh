@@ -170,8 +170,8 @@ function forwardTunnel_bore
     TARGETACTION[$tunnelCount]="$(forwardTunnelCmd $fromPort $viaHost $toHostPort $sshArgs)"
     ((tunnelCount++))
 }
-FROMWAYPOINT=rudolphpienaar@${GATE}
-HOMEWAYPOINT=rudolphpienaar@${H1}
+FROMWAYPOINT=rudolphpienaar@${H1}
+HOMEWAYPOINT=rudolphpienaar@${GATE}
 function fromPort
 {
     port=$1
@@ -187,7 +187,7 @@ function viaCrystalPort
 function viaHomePort
 {
     port=$1
-    echo "$port $HOMEWAYPOINT"
+    echo "$port $FROMWAYPOINT"
 }
 
 function toGalena
@@ -199,7 +199,9 @@ function toGalena
 function sshInto
 {
     host=$1
-    echo "${host}:22"
+    port=$2
+    [[ -z $port ]] && port=22
+    echo "${host}:${port}"
 }
 
 function toLocal
@@ -211,15 +213,15 @@ function toLocal
 function reverseWeb_create
 {
     reverseTunnel_bore $(fromPort 4216) $(sshInto pangea)
-    reverseTunnel_bore $(fromPort 4217) $(sshInto rodinia)
+    reverseTunnel_bore $(fromPort 4217) $(sshInto centauri)
     reverseTunnel_bore $(fromPort 4218) $(sshInto centurion)
     reverseTunnel_bore $(fromPort 4219) $(sshInto olympus)
     reverseTunnel_bore $(fromPort 4220) $(sshInto titan)
     reverseTunnel_bore $(toGalena 30104)
     reverseTunnel_bore $(toGalena 30031)
     reverseTunnel_bore $(toGalena 30101)
-    forwardTunnel_bore $(viaHomePort 6812) $(sshInto localhost) 7778
-    forwardTunnel_bore $(viaHomePort 6813) $(sshInto 192.168.1.200) 7778
+    forwardTunnel_bore $(viaHomePort 6812) $(sshInto localhost 7778) 7778
+    forwardTunnel_bore $(viaHomePort 6813) $(sshInto 10.0.0.230) 7778
 }
 
 function forwardWeb_create
