@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PASSWD=$1
+
 # Start a new tmux session
 tmux new-session -d -s mail_session
 
@@ -11,7 +13,7 @@ tmux split-window -h
 
 # Execute commands in each pane
 tmux select-pane -t 0
-tmux send-keys "cd ~/src/outwright ; source venv/bin/activate ; outwright --email rudolph.pienaar@childrens.harvard.edu --password 2024CrispyAutumn --notification ~/tmp/notifications/notification.txt" C-m
+tmux send-keys "cd ~/src/outwright ; source venv/bin/activate ; outwright --email rudolph.pienaar@childrens.harvard.edu --password $1 --notification ~/tmp/notifications/notification.txt" C-m
 
 tmux select-pane -t 1
 tmux send-keys "cd ~/tmp/mail ; tail -f messages.mbox | bat --paging=never -l log" C-m

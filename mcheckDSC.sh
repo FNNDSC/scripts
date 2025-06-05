@@ -98,8 +98,8 @@ EM_fileCheck="it seems that a dependency is missing."
 EC_badRestart=10
 EC_fileCheck=1
 
-GATE=xtal200.harvard.edu
-H1=108.20.194.153
+GATE=10.0.0.180
+H1=73.238.37.110
 verbosity_check
 REQUIREDFILES="common.bash tunnel.bash pgrep"
 
@@ -124,7 +124,7 @@ function reverseTunnelCmd
     fromHostPort=$1
     toHostPort=$2
 
-    echo "tunnel.bash --reverse --sshArgs '-p 22022' --from $fromHostPort --to $toHostPort"
+    echo "tunnel.bash --reverse --sshArgs '-p 7778' --from $fromHostPort --to $toHostPort"
 }
 
 function forwardTunnelCmd
@@ -135,7 +135,7 @@ function forwardTunnelCmd
     sshArgs=$4
 
     if [[ -z "$sshArgs" ]] ; then
-        sshArgs="-p 22022"
+        sshArgs="-p 7778"
     else
         sshArgs="-p $sshArgs"
     fi
