@@ -181,7 +181,7 @@ function fromPort
 function viaCrystalPort
 {
     port=$1
-    echo "$port $FROMWAYPOINT"
+    echo "$port $HOMEWAYPOINT"
 }
 
 function viaHomePort
