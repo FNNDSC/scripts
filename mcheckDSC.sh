@@ -11,7 +11,9 @@
 # "include" the set of common script functions
 source common.bash
 
-G_REPORTLOG=/tmp/${G_SELF}.reportLog.$G_PID
+[ -d "${TMPDIR:-}" ] && TMP="$TMPDIR" || TMP="/tmp"
+
+G_REPORTLOG=$TMP/${G_SELF}.reportLog.$G_PID
 G_ADMINUSERS=rudolph.pienaar@childrens.harvard.edu
 
 declare -i targetList
@@ -20,6 +22,7 @@ declare -a TARGET_CHECK
 declare -a TARGETACTION
 declare -i b_forward=0
 declare -i b_reverse=0
+declare -i b_outside=0
 G_SYNOPSIS="
 
  NAME
@@ -28,7 +31,7 @@ G_SYNOPSIS="
 
  SYNOPSIS
 
-       mcheckDSC.bash [-r|-f] [-c <CMD>]
+       mcheckDSC.bash [-r|-f] [-o] [-c <CMD>]
 
  ARGS
 
@@ -37,6 +40,10 @@ G_SYNOPSIS="
 
     [-r]
     Perform a set of 'reverse' connections.
+
+    [-o]
+    Typically used with the "forward" connection and taken to mean
+    "outside", i.e. outside the home LAN.
 
     [-c <CMD>]
     Check/restart the <CMD>.
@@ -54,6 +61,9 @@ G_SYNOPSIS="
     Additionally, this incarnation of 'mcheck' contains both the _forward_
     and _reverse_ web connection. The choice of which to us is controlled
     by the [-r|-f] flags.
+
+    The options [-o] flag when used with a forward connection means to
+    create the forward hop from "outside" the home LAN.
 
  PRECONDITIONS
 
@@ -113,10 +123,10 @@ function log
 {
     LOG=$*
     if ((!logCall)); then
-        echo "$LOG" > /tmp/log.txt
+        echo "$LOG" > $TMP/log.txt
         ((logCall++))
     else
-        echo "$LOG" >> /tmp/log.txt
+        echo "$LOG" >> $TMP/log.txt
     fi
 }
 function reverseTunnelCmd
@@ -180,6 +190,9 @@ function fromPort
 
 function viaCrystalPort
 {
+    if (( b_outside )) ; then
+        HOMEWAYPOINT=$FROMWAYPOINT
+    fi
     port=$1
     echo "$port $HOMEWAYPOINT"
 }
@@ -238,12 +251,13 @@ function forwardWeb_create
 
 # Process command line options
 CMD=""
-while getopts frhv:c: option ; do
+while getopts frohv:c: option ; do
     case "$option"
     in
         r)  b_reverse=1             ;;
         f)  b_forward=1             ;;
-        c)  CMD="$OPTARG"       ;;
+        o)  b_outside=1             ;;
+        c)  CMD="$OPTARG"           ;;
         v)  let Gi_verbose=$OPTARG  ;;
         h)  echo "$G_SYNOPSIS"
             shut_down 1             ;;
@@ -283,7 +297,7 @@ for i in $TARGETRESTARTED ; do
         echo ""
 done
 
-messageFile=/tmp/$SELF.message.$PID
+messageFile=$TMP/$SELF.message.$PID
 if [ "$b_logGenerate" -eq "1" ] ; then
         message="
 
